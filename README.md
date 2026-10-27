@@ -1168,6 +1168,7 @@ bun run verify           # lint, knip, check, test types, tests, build, check:pw
 bun run import           # convert a folder of charts into the three documents
 bun run icons            # regenerate public/icons from public/icons/brand-mark.svg
 bun run fonts            # re-download the self-hosted fonts from Google Fonts
+bun run cards            # render the social cards (og-image, GitHub preview) from og-card.html
 ```
 
 Verify every change with `bun run verify`: it runs lint, knip, `astro check`,
@@ -1481,8 +1482,11 @@ layout**) and the traps worth knowing. Read it before a structural change.
   Workers Builds branch preview. A playlist provider is its own project.
 - `scripts/generate-icons.mjs` / `scripts/fetch-fonts.mjs` — regenerate the icon
   set and the self-hosted fonts.
-- `scripts/og-card.html` — the source layout of `public/og-image.png` (rendered
-  at 1200×630 in a browser; a designed asset, not built).
+- `scripts/og-card.html` — the source layout of both social cards, rendered by
+  `bun run cards`: `public/og-image.png` at **1200×630** for Open Graph/Twitter
+  and `.github/social-preview.png` at **1280×640** for GitHub's repository
+  social preview (upload it under Settings → General → Social preview; GitHub
+  does not read it from the repo). Designed assets, not built ones.
 - `public/_headers` — security + cache headers.
 
 ## Deployment
