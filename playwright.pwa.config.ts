@@ -44,7 +44,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `bun run build && bunx astro preview --host 127.0.0.1 --port ${PORT} --ignore-lock`,
+    command: `bun run build && bun run preview --host 127.0.0.1 --port ${PORT} --ignore-lock`,
     url: `http://127.0.0.1:${PORT}/app`,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,

@@ -1172,8 +1172,11 @@ bun run fonts            # re-download the self-hosted fonts from Google Fonts
 
 Verify every change with `bun run verify`: it runs lint, knip, `astro check`,
 the tests' typecheck, the unit tests, the build, the PWA gate and the size budget,
-in that order, and CI runs the same command. Lint is **oxlint**: one fast binary, one
-small rules file, and no formatter — this repo's formatting is left as it is.
+in that order, and CI runs the same command. Every script that calls Astro says
+`bun --bun astro …`: without `--bun` Bun hands the bin to the machine's Node
+through its shebang, and Astro then refuses to run on a Node below its own floor.
+Lint is **oxlint**: one fast binary, one small rules file, and no formatter — this
+repo's formatting is left as it is.
 The gates are configured in `.oxlintrc.json`, `knip.jsonc` and
 `tsconfig.test.json`. The app's `tsconfig.json` still leaves tests out of
 `astro check`; `tsconfig.test.json` includes them with the test runner's types.
