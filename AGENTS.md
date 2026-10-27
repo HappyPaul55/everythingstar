@@ -103,13 +103,18 @@ bun run fonts            # re-download the self-hosted fonts
 ```
 
 Use **Bun** for everything: `bun` (never `npm`) and `bunx` (never `npx`). The
-lockfile is `bun.lock`. Verify every change with `bun run verify`, which runs
-the gates in order; CI runs the same command. Lint is **oxlint** (fast, one
-config, no formatter) with its rules in `.oxlintrc.json`; knip's entries are in
-`knip.jsonc`, and the tests' typecheck in `tsconfig.test.json` (so
-`tsconfig.json` keeps its test exclusion). The size caps live in
-`scripts/check-budget.ts`; the PWA gate is `scripts/check-pwa.ts`. `bun run test:e2e`
-starts the dev server and drives the
+lockfile is `bun.lock`. A script that runs Astro says `bun --bun astro …`, because
+Bun otherwise executes a package bin through its `#!/usr/bin/env node` shebang and
+the machine's Node ends up enforcing Astro's own engines floor (that is what broke
+CI on `astro@7.4.2`, which wants Node ≥22.23.4 where `ubuntu-latest` had 22.23.3).
+There is deliberately **no script named `astro`**: `bun <word>` resolves a script
+before a bin, so one would recurse into itself. Verify every change with
+`bun run verify`, which runs the gates in order; CI runs the same command. Lint is
+**oxlint** (fast, one config, no formatter) with its rules in `.oxlintrc.json`;
+knip's entries are in `knip.jsonc`, and the tests' typecheck in
+`tsconfig.test.json` (so `tsconfig.json` keeps its test exclusion). The size caps
+live in `scripts/check-budget.ts`; the PWA gate is `scripts/check-pwa.ts`.
+`bun run test:e2e` starts the dev server and drives the
 island's screens in headless Chromium; its specs in `tests/e2e/` route every
 external document to a fixture, and `tests/e2e/loop.spec.ts` is the guard for the
 screen machine end to end. In CI the browser suite uses every core but one, and

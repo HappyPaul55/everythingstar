@@ -11,6 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       # setup-bun reads the Bun version from package.json's `packageManager`.
+      # The scripts run Astro on Bun's own runtime (`bun --bun astro …`), so the
+      # runner image's Node is never the version Astro checks itself against.
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - run: bun run verify
