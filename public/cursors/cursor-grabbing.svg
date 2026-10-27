@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- grabbing: the hand closed. The fingers are curled, so only the knuckle ridge shows
+       above the palm — the same four columns as `grab`, cut short — with the creases
+       between them drawn back on top, because a union has no valleys of its own. Hotspot
+       is the palm (16 16). -->
+  <defs>
+    <g id="fist">
+      <rect x="9.5" y="11.4" width="3.7" height="7.4" rx="1.85" />
+      <rect x="13.3" y="10.6" width="3.7" height="8.2" rx="1.85" />
+      <rect x="17.1" y="11" width="3.7" height="7.8" rx="1.85" />
+      <rect x="20.9" y="12.4" width="3.6" height="6.4" rx="1.8" />
+      <rect x="8.9" y="14.8" width="15.6" height="13.2" rx="5.8" />
+      <rect
+        x="-4.8"
+        y="-2.6"
+        width="9.6"
+        height="5.2"
+        rx="2.6"
+        transform="translate(8.4 20.9) rotate(-19)"
+      />
+    </g>
+  </defs>
+  <use
+    href="#fist"
+    x="1.3"
+    y="1.3"
+    fill="#0c0d0a"
+    stroke="#0c0d0a"
+    stroke-width="1.8"
+    stroke-linejoin="round"
+  />
+  <use href="#fist" fill="#ffd400" stroke="#0c0d0a" stroke-width="1.8" stroke-linejoin="round" />
+  <use href="#fist" fill="#ffd400" />
+  <g fill="none" stroke="#0c0d0a" stroke-width="1.7" stroke-linecap="round">
+    <path d="M12.85 12.4 V17.4" />
+    <path d="M16.65 11.6 V17.4" />
+    <path d="M20.45 13.4 V17.4" />
+  </g>
+</svg>

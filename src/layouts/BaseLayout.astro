@@ -1,0 +1,200 @@
+---
+import "../styles/global.css";
+// The game's own stylesheet is deliberately not here: only `/play` (and the
+// game-only layouts) need it, and inlining it into every page put ~100 KB of
+// stage CSS on the landing, privacy and 404 pages.
+import { getEntry } from "astro:content";
+import Seo from "../components/layout/Seo.astro";
+import Header from "../components/layout/Header.astro";
+import Footer from "../components/layout/Footer.astro";
+import ServiceWorker from "../components/pwa/ServiceWorker.astro";
+import InstallPrompt from "../components/pwa/InstallPrompt.astro";
+import { localeFromPath, tFor } from "../i18n/astro";
+import { HTML_LANG } from "../i18n/locales";
+
+interface Crumb {
+  name: string;
+  path: string;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  path?: string;
+  noindex?: boolean;
+  breadcrumbs?: Crumb[];
+  /**
+   * Share the first viewport between the site header and the page, so the page
+   * is fully visible without scrolling and the footer sits below the fold. `/play`
+   * asks for it: its stage is a screen, not a section of a document, and a stage
+   * measured against the whole viewport while the header takes the top of it is a
+   * stage whose bottom edge (and progress bar) can only be reached by scrolling.
+   * The paper pages keep the ordinary document flow.
+   */
+  frame?: boolean;
+}
+
+const {
+  title,
+  description,
+  path,
+  noindex = false,
+  breadcrumbs,
+  frame = false,
+} = Astro.props;
+
+const siteEntry = await getEntry("site", "main");
+if (!siteEntry) {
+  throw new Error("Missing site settings entry (site/main).");
+}
+const site = siteEntry.data;
+const locale = localeFromPath(Astro.url.pathname);
+const t = tFor(locale);
+// A page that does not name its own path still gets its own canonical rather
+// than the home page's. `build.format: "file"` leaves `.html` on the build-time
+// pathname; `canonicalUrl` is what drops it.
+const canonicalPath = path ?? Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang={HTML_LANG[locale]}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+
+    <Seo
+      title={title}
+      description={description}
+      path={canonicalPath}
+      noindex={noindex}
+      breadcrumbs={breadcrumbs}
+      locale={locale}
+      settings={site}
+    />
+
+    <link
+      rel="preload"
+      href="/fonts/permanent-marker-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
+
+    <!-- Icons (generated with the `favicons` package) -->
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/icons/favicon-16x16.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/icons/favicon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="48x48"
+      href="/icons/favicon-48x48.png"
+    />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0c0d0a" />
+    <meta name="application-name" content={site.shortName} />
+    <link
+      rel="apple-touch-icon"
+      sizes="57x57"
+      href="/icons/apple-touch-icon-57x57.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="60x60"
+      href="/icons/apple-touch-icon-60x60.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="72x72"
+      href="/icons/apple-touch-icon-72x72.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="76x76"
+      href="/icons/apple-touch-icon-76x76.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="114x114"
+      href="/icons/apple-touch-icon-114x114.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="120x120"
+      href="/icons/apple-touch-icon-120x120.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="144x144"
+      href="/icons/apple-touch-icon-144x144.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="152x152"
+      href="/icons/apple-touch-icon-152x152.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="167x167"
+      href="/icons/apple-touch-icon-167x167.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/icons/apple-touch-icon-180x180.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="1024x1024"
+      href="/icons/apple-touch-icon-1024x1024.png"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content={site.shortName} />
+    <meta name="msapplication-TileColor" content="#0c0d0a" />
+    <meta name="msapplication-TileImage" content="/icons/mstile-144x144.png" />
+    <meta name="msapplication-config" content="/icons/browserconfig.xml" />
+    <slot name="head" />
+    <InstallPrompt />
+    <ServiceWorker />
+  </head>
+  <body>
+    <a class="skip-link no-print" href="#main">{t("common.skipToContent")}</a>
+
+    <p class="print-only print-masthead">
+      {site.name} · {site.url.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+    </p>
+
+    {
+      frame ? (
+        <div class="site-frame">
+          <Header settings={site} />
+          <slot />
+        </div>
+      ) : (
+        <>
+          <Header settings={site} />
+          <slot />
+        </>
+      )
+    }
+    <Footer settings={site} />
+  </body>
+</html>

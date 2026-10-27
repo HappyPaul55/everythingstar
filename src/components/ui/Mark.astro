@@ -1,0 +1,47 @@
+---
+interface Props {
+  class?: string;
+  size?: number;
+}
+
+const { class: className = "", size = 32 } = Astro.props;
+
+// Unique per instance so multiple marks on a page do not clash.
+const clipId = `mark-half-${Math.random().toString(36).slice(2, 9)}`;
+// The star's outline, and its clipped half-fill, kept from the sibling mark so
+// the family of marks shares one construction.
+const star =
+  "M44 23 L46.704 29.279 L53.511 29.910 L48.375 34.421 L49.878 41.090 L44 37.6 L38.122 41.090 L39.625 34.421 L34.489 29.910 L41.296 29.279 Z";
+---
+
+<svg
+  class={className || undefined}
+  width={size}
+  height={size}
+  viewBox="0 0 64 64"
+  aria-hidden="true"
+  focusable="false"
+>
+  <defs>
+    <clipPath id={clipId}>
+      <rect x="0" y="0" width="44" height="64"></rect>
+    </clipPath>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#FFD400"></rect>
+  <text
+    x="20"
+    y="44"
+    text-anchor="middle"
+    fill="#0C0D0A"
+    font-family="'Permanent Marker','Segoe UI',ui-sans-serif,system-ui,sans-serif"
+    font-weight="400"
+    font-size="30">E</text
+  >
+  <path
+    d={star}
+    fill="none"
+    stroke="#0C0D0A"
+    stroke-width="2"
+    stroke-linejoin="round"></path>
+  <path d={star} fill="#0C0D0A" clip-path={`url(#${clipId})`}></path>
+</svg>

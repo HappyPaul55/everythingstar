@@ -1,0 +1,49 @@
+# Cloudflare static asset headers
+# https://developers.cloudflare.com/workers/static-assets/headers/
+
+# `frame-ancestors 'self'`, not 'none': the homepage's live window embeds
+# `/arcade` as a same-origin iframe. Every page is still unframeable by another
+# site, and `frame-src 'self'` is what lets the window itself load.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), geolocation=(), microphone=(self)
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'unsafe-inline' https://www.youtube.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob: https:; font-src 'self'; connect-src 'self' https:; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; worker-src 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests
+
+# Hashed build assets never change
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Self-hosted fonts. The names are hand-written rather than hashed and
+# `bun run fonts` can replace a file, so a week is the most they can promise.
+/fonts/*
+  Cache-Control: public, max-age=604800
+
+# Icons
+/icons/*
+  Cache-Control: public, max-age=604800
+
+# The service worker is checked, not remembered: a stale one would keep serving
+# an old build.
+/sw.js
+  Cache-Control: no-cache
+  Service-Worker-Allowed: /
+# The manifest is checked too: a remembered one would keep an old name.
+/manifest.webmanifest
+  Cache-Control: no-cache
+
+# App Links verification (Android). Android checks both the exact path and the
+# content type, so these are per-file: `security.txt` is text, not JSON.
+/.well-known/assetlinks.json
+  Content-Type: application/json
+  Cache-Control: public, max-age=3600
+/.well-known/security.txt
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: public, max-age=3600
+
+# Generated sitemaps
+/sitemap-index.xml
+  Cache-Control: public, max-age=3600
+/sitemap-0.xml
+  Cache-Control: public, max-age=3600

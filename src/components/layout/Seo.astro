@@ -1,0 +1,154 @@
+---
+import type { SiteSettings } from "../../lib/site";
+import { DEFAULT_LOCALE, HTML_LANG, OG_LOCALE, type Locale } from "../../i18n/locales";
+import { tFor } from "../../i18n/astro";
+import { canonicalUrl, OG_IMAGE_VERSION } from "../../lib/seo";
+
+interface Crumb {
+  name: string;
+  path: string;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  path?: string;
+  noindex?: boolean;
+  breadcrumbs?: Crumb[];
+  locale?: Locale;
+  settings: SiteSettings;
+}
+
+const {
+  title,
+  description,
+  path = "/",
+  noindex = false,
+  breadcrumbs = [],
+  locale = DEFAULT_LOCALE,
+  settings,
+} = Astro.props;
+
+const canonical = canonicalUrl(settings.url, path);
+const siteRoot = canonicalUrl(settings.url, "/");
+const authorId = `${canonicalUrl(settings.authorUrl, "/")}#person`;
+const ogImage = new URL(
+  `/og-image.png?v=${OG_IMAGE_VERSION}`,
+  settings.url,
+).href;
+const t = tFor(locale);
+const ogAlt = t("seo.ogAlt", { name: settings.name });
+
+const author = {
+  "@type": "Person",
+  "@id": authorId,
+  name: settings.author,
+  url: settings.authorUrl,
+};
+
+/* The game itself, as one entity. `VideoGame` is the precise type — the site is
+   one playable thing rather than a shop — and every field here is something the
+   game actually is. There is no rating and no review count because there are no
+   reviews. */
+const game = {
+  "@type": "VideoGame",
+  "@id": `${siteRoot}#game`,
+  name: settings.name,
+  url: siteRoot,
+  description: t("site.description"),
+  image: ogImage,
+  applicationCategory: "GameApplication",
+  genre: "Rhythm game",
+  gamePlatform: "Web browser",
+  operatingSystem: "Any",
+  browserRequirements: t("seo.requiresJs"),
+  inLanguage: HTML_LANG[locale],
+  isAccessibleForFree: true,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "GBP" },
+  codeRepository: settings.repo,
+  license: settings.licenseUrl,
+  author: { "@id": authorId },
+};
+
+const website = {
+  "@type": "WebSite",
+  "@id": `${siteRoot}#website`,
+  url: siteRoot,
+  name: settings.name,
+  description: t("site.description"),
+  inLanguage: HTML_LANG[locale],
+  publisher: { "@id": authorId },
+};
+
+/* One page entity per indexable page. A noindex page is deliberately left out:
+   the head already tells a crawler to ignore it, and describing it in the graph
+   as well would only contradict that. */
+const webPage = {
+  "@type": "WebPage",
+  "@id": `${canonical}#webpage`,
+  url: canonical,
+  name: title,
+  description,
+  isPartOf: { "@id": `${siteRoot}#website` },
+  inLanguage: HTML_LANG[locale],
+};
+
+const graph: unknown[] = [author, game, website];
+if (!noindex) graph.push(webPage);
+
+if (breadcrumbs.length > 0) {
+  graph.push({
+    "@type": "BreadcrumbList",
+    "@id": `${canonical}#breadcrumb`,
+    itemListElement: breadcrumbs.map((crumb, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: crumb.name,
+      item: canonicalUrl(settings.url, crumb.path),
+    })),
+  });
+}
+
+const jsonLd = { "@context": "https://schema.org", "@graph": graph };
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+<meta
+  name="robots"
+  content={noindex ? "noindex, follow" : "index, follow, max-image-preview:large"}
+/>
+<meta name="author" content={settings.author} />
+<meta name="color-scheme" content="dark light" />
+<link
+  rel="sitemap"
+  type="application/xml"
+  title={t("seo.sitemap")}
+  href="/sitemap-index.xml"
+/>
+
+<!-- Open Graph. Every page here is a standing document rather than a dated
+     article, so the type is the same one everywhere. -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={settings.name} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:locale" content={OG_LOCALE[locale]} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:secure_url" content={ogImage} />
+<meta property="og:image:alt" content={ogAlt} />
+
+<!-- Twitter. There is no account to name, so `twitter:site` and
+     `twitter:creator` are omitted rather than guessed. -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+<meta name="twitter:image:alt" content={ogAlt} />
+
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />

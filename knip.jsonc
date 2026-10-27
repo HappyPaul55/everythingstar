@@ -1,0 +1,20 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  // Astro pages are the app's entry points; the package scripts are the rest.
+  "entry": [
+    "src/pages/**/*.astro",
+    "scripts/**/*.{ts,mjs}",
+    "tests/e2e/**/*.spec.ts"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx,astro,css}",
+    "scripts/**/*.{ts,mjs}",
+    "tests/e2e/**/*.ts"
+  ],
+  // `react-dom` and `@types/react-dom` need no ignore entry: knip reads them as the
+  // peer dependencies of the used `@astrojs/react`, and the `astro`/`knip` binaries
+  // are resolved from the package scripts. Ignoring any of them would only mute a
+  // real finding later.
+  // A type exported for its own file's use is not dead code.
+  "ignoreExportsUsedInFile": { "interface": true, "type": true }
+}

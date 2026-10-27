@@ -1,0 +1,51 @@
+---
+import { getEntry } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Container from "../components/ui/Container.astro";
+import Button from "../components/ui/Button.astro";
+import { localeFromPath, tFor } from "../i18n/astro";
+import { localePath } from "../i18n/paths";
+import { pageTitle } from "../lib/seo";
+
+const site = (await getEntry("site", "main"))!.data;
+const locale = localeFromPath(Astro.url.pathname);
+const t = tFor(locale);
+---
+
+<BaseLayout
+  title={pageTitle(t("notFound.title"), site.name)}
+  description={t("seo.descriptionNotFound")}
+  path={localePath(locale, "/404")}
+  noindex
+>
+  <main
+    id="main"
+    tabindex="-1"
+    class="spray-paper pt-[clamp(3rem,10vw,7rem)] pb-[clamp(4rem,10vw,7rem)]"
+  >
+    <Container>
+      <div class="max-w-[44rem]">
+        <p class="comment">
+          <span class="slash" aria-hidden="true">//</span> {t("notFound.comment")}
+        </p>
+        <h1
+          class="mt-5 font-display text-[clamp(2.2rem,6vw,4rem)] leading-[1.02]"
+        >
+          {t("notFound.titleBefore")} <span class="mark">{t("notFound.titleMark")}</span
+          >{t("notFound.titleAfter")}
+        </h1>
+        <p class="mt-5 max-w-[34rem] text-[clamp(1rem,1.4vw,1.12rem)] text-ink-soft">
+          {t("notFound.body")}
+        </p>
+        <div class="mt-8 flex flex-wrap gap-3.5">
+          <Button href={localePath(locale, "/")} variant="primary"
+            >{t("notFound.home")}</Button
+          >
+          <Button href={localePath(locale, "/play")} variant="outline">
+            {t("notFound.play")} <span aria-hidden="true">→</span>
+          </Button>
+        </div>
+      </div>
+    </Container>
+  </main>
+</BaseLayout>

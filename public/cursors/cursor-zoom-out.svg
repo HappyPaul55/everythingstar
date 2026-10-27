@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- zoom out: the magnifier with a minus in the glass — the same drawing as zoom-in
+       with the sign's stem dropped. Hotspot is the middle of the glass. -->
+  <defs>
+    <g id="lens">
+      <circle cx="13" cy="13" r="8" />
+      <path d="M18.7 18.7 L26.3 26.3" />
+    </g>
+    <path id="minus" d="M10.9 13 H15.1" />
+  </defs>
+  <g transform="translate(1.3 1.3)" fill="none" stroke="#0c0d0a" stroke-linecap="round">
+    <use href="#lens" stroke-width="6.8" />
+    <use href="#minus" stroke-width="2.6" />
+  </g>
+  <g fill="none" stroke="#0c0d0a" stroke-linecap="round">
+    <use href="#lens" stroke-width="6.8" />
+  </g>
+  <g fill="none" stroke="#ffd400" stroke-linecap="round">
+    <use href="#lens" stroke-width="3.6" />
+  </g>
+  <use href="#minus" fill="none" stroke="#0c0d0a" stroke-width="2.6" stroke-linecap="round" />
+</svg>

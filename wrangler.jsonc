@@ -1,0 +1,26 @@
+{
+  // Must match the connected Cloudflare Worker name, which Workers Builds
+  // supplies as the CI worker name; a mismatch is overridden at deploy time and
+  // logged as a warning.
+  "name": "client-everythingstar-happypaul55-com",
+  // Static assets only: `bun run build` writes `dist/` and Cloudflare serves it
+  // from the edge cache. There is deliberately no `main` and no Worker script,
+  // because this project has no API. Anything the game needs at runtime comes
+  // from the browser: playlists are URLs on other projects, read over CORS.
+  "compatibility_date": "2026-10-14",
+  // Custom domains are managed in the Cloudflare dashboard. Explicitly disable the
+  // workers.dev route and version preview URLs so neither is re-enabled on deploy.
+  // Branch previews are served from <branch>.everythingstar.happypaul55.com, because
+  // the custom domain is enabled for preview traffic.
+  "workers_dev": false,
+  "preview_urls": false,
+  // Workers Builds runs `wrangler preview` for a branch build, and that command
+  // requires a `previews` block even when there is nothing Preview-specific to
+  // set: assets, compatibility and the like stay at the top level. There are no
+  // bindings here to point at staging, so the block is empty on purpose.
+  "previews": {},
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page"
+  }
+}

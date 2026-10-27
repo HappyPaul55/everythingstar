@@ -1,0 +1,48 @@
+# build output
+dist/
+
+# Audio as downloaded: a pack's masters, its duplicate formats and its alternates.
+# `public/` is deployed verbatim, so only what the game actually serves belongs in
+# it — see AUDIO.md for the ids, the formats and the folders that ship.
+audio-src/
+
+# wrangler local state
+.wrangler/
+
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+preview.log
+
+# environment variables
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+
+# macOS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Playwright MCP scratch output
+.playwright-mcp/
+
+# Playwright test output (JUnit report, traces, failure screenshots)
+test-results/
+playwright-report/
+
+# Local cache used by scripts and the dev server
+.cache/
+
+# Local binaries / downloads (never part of the site)
+*.exe

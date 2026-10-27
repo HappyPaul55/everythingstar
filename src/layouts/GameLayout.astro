@@ -1,0 +1,83 @@
+---
+/**
+ * The game alone, with no website around it.
+ *
+ * `/app` (the installed PWA's start), `/embed` (the native app's page), `/open`
+ * (the link entry) and `/arcade` (the attract entry, and the homepage's window)
+ * mount the island here. None of them wants a header or a footer: they are entries,
+ * not pages of the site, so they are `noindex` and get no social furniture. The
+ * public game page is `/play`, which lives in the site shell (`BaseLayout`) with
+ * the marketing header and footer around the stage.
+ */
+import { getEntry } from "astro:content";
+import "../styles/global.css";
+import "../styles/band.css";
+import ServiceWorker from "../components/pwa/ServiceWorker.astro";
+import InstallPrompt from "../components/pwa/InstallPrompt.astro";
+import { HTML_LANG, DEFAULT_LOCALE, type Locale } from "../i18n/locales";
+
+interface Props {
+  /** The document title. */
+  title?: string;
+  /** The screen reader's heading; the visual heading is the game's own poster. */
+  heading?: string;
+  /** The page's locale, which the entries read from their URL. */
+  locale?: Locale;
+}
+
+const site = (await getEntry("site", "main"))!.data;
+const {
+  title = site.name,
+  heading = site.name,
+  locale = DEFAULT_LOCALE,
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang={HTML_LANG[locale]}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="theme-color" content="#0c0d0a" />
+
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="color-scheme" content="dark" />
+    <title>{title}</title>
+    <meta name="description" content={site.description} />
+
+    <!-- The installed game: same manifest and worker as the website, so a
+         player who lands on /app directly can still install it. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="application-name" content={site.name} />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content={site.name} />
+
+    <link
+      rel="preload"
+      href="/fonts/permanent-marker-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/icons/apple-touch-icon-180x180.png"
+    />
+    <InstallPrompt />
+    <ServiceWorker />
+  </head>
+  <body>
+    <main id="main">
+      <h1 class="sr-only">{heading}</h1>
+      <slot />
+    </main>
+  </body>
+</html>

@@ -1,0 +1,37 @@
+---
+/**
+ * The game alone, with no website around it.
+ *
+ * This is the page the native app bundles as its entry point, and the page the
+ * installed PWA opens on. It deliberately does **not** use `BaseLayout`: no
+ * header, no footer, no skip link, no marketing shell and no canonical/Open Graph
+ * furniture. What is left is the stage island and the styles it needs, so there is
+ * no website chrome to hide (or fail to hide) on a phone.
+ *
+ * `/play` is the public web game page and uses the site shell (BaseLayout), so a
+ * visitor finds the header and footer around it. This page is the PWA entry:
+ * it is `noindex`, it is not in the sitemap, and it is safe to load at `/app`.
+ * The native app has its own `/embed` URL.
+ */
+import { getEntry } from "astro:content";
+import GameLayout from "../layouts/GameLayout.astro";
+import GameApp from "../components/game/GameApp.tsx";
+import { localeFromPath } from "../i18n/astro";
+
+const site = (await getEntry("site", "main"))!.data;
+const locale = localeFromPath(Astro.url.pathname);
+---
+
+<GameLayout title={site.name} locale={locale}>
+  <GameApp
+    client:load
+    locale={locale}
+    credits={{
+      author: site.author,
+      authorUrl: site.authorUrl,
+      repo: site.repo,
+      license: site.license,
+      licenseUrl: site.licenseUrl,
+    }}
+  />
+</GameLayout>

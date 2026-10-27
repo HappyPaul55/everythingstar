@@ -1,0 +1,121 @@
+name: Bug report
+description: Something in the game or the site is wrong, broken or confusing.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. A report with a reproduction is worth ten without one.
+
+        Before you file: the built-in library is EverythingStar FOSS, not this repository, and
+        the [status section](https://github.com/HappyPaul55/everythingstar/blob/main/README.md#status-what-is-built-and-where-it-stops)
+        lists what is known to be missing. If a song will not load, note its **playlist URL** —
+        the song itself lives with the provider.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you saw, in your own words. The screen, the song and the moment in it.
+      placeholder: On the band screen, pressing Play with two players did nothing…
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: From a fresh load, if you can. Say which screen you started on.
+      placeholder: |
+        1. Open /play
+        2. Choose a song from the built-in library
+        3. Add a second player on drums
+        4. Press Play
+    validations:
+      required: true
+
+  - type: input
+    id: expected
+    attributes:
+      label: What you expected
+      placeholder: The countdown should start with both panels on stage.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where it happens
+      options:
+        - Landing page or another shell page
+        - Welcome or menu
+        - Jukebox (songs list, search, preview)
+        - Playlists dialog / adding a playlist
+        - Band screen (players, difficulties, controllers)
+        - A run (highways, melody, judging, pause, practice)
+        - Results
+        - Options / calibration
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: song-source
+    attributes:
+      label: Where the song came from
+      description: The playlist URL, or "built-in" for EverythingStar FOSS. A folder and an import live only in your browser, so a song name is enough there.
+      placeholder: built-in / https://example.com/playlist.json / a folder on my machine
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: controllers
+    attributes:
+      label: What you were playing with
+      description: Tick everything involved. "The machine" means the seat nobody was holding.
+      options:
+        - label: Keyboard
+        - label: Gamepad (including a plastic guitar or drum kit)
+        - label: MIDI keyboard or kit
+        - label: Microphone
+        - label: Touch / a phone
+        - label: The machine (a seat nobody was holding)
+
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and OS
+      description: Name and version, and whether the page was fullscreen.
+      placeholder: Firefox 143 on Windows 11; fullscreen
+    validations:
+      required: true
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console errors
+      description: Open the browser's developer tools, reproduce, and paste anything red. An empty answer is fine if the console is clean.
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Read-out from `?dev=1`
+      description: |
+        Add `?dev=1` to `/play`, open the **Dev** chip, and copy what is relevant: the screen,
+        the frame-rate and note counts, the controller read-out, and — for a silent or broken song —
+        the audio diagnostics (`data-stems`, `data-sources`, `data-unreadable`, and any element errors).
+
+  - type: textarea
+    id: media
+    attributes:
+      label: Screenshot or recording
+      description: Drag an image here. A phone-width screenshot is as useful as a desktop one for layout bugs.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before sending
+      options:
+        - label: I searched the existing issues.
+          required: true
+        - label: This is not a security report (those go through SECURITY.md, not a public issue).
+          required: true

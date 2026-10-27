@@ -1,0 +1,22 @@
+---
+/**
+ * Capture Chromium's one-shot install prompt before the island hydrates.
+ *
+ * `beforeinstallprompt` fires once, after the page has loaded, and the game's
+ * Options screen can be several hundred kilobytes of JavaScript away. This inline
+ * listener is in the head on every page, so the event is kept even when React has
+ * not mounted yet; `src/components/game/pwa/install.ts` adopts the stash when it
+ * starts watching. `preventDefault` is what suppresses Chromium's own mini-infobar,
+ * which is the only way to show the prompt from the game's own Install button.
+ *
+ * Inline on purpose: a bundled module is deferred, which is the race this exists to
+ * remove. The CSP already allows inline scripts (`script-src 'unsafe-inline'`).
+ */
+---
+
+<script is:inline>
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    window.__everythingstarInstallPrompt = event;
+  });
+</script>

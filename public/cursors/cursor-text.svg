@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- text: the I-beam, stroked three times for the same inked edge and hard shadow as
+       everything else. Hotspot is its middle (16 16), where a text cursor belongs. -->
+  <defs>
+    <path id="beam" fill="none" stroke-linecap="round" d="M9.6 6.8 H22.4 M16 6.8 V25.2 M9.6 25.2 H22.4" />
+  </defs>
+  <use href="#beam" x="1.3" y="1.3" stroke="#0c0d0a" stroke-width="6.8" />
+  <use href="#beam" stroke="#0c0d0a" stroke-width="6.8" />
+  <use href="#beam" stroke="#ffd400" stroke-width="3.6" />
+</svg>

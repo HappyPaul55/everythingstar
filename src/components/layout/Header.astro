@@ -1,0 +1,95 @@
+---
+import type { SiteSettings } from "../../lib/site";
+import Container from "../ui/Container.astro";
+import Mark from "../ui/Mark.astro";
+import { localeFromPath, tFor } from "../../i18n/astro";
+import { localePath } from "../../i18n/paths";
+import { siteNav } from "../../lib/nav";
+
+interface Props {
+  settings: SiteSettings;
+}
+
+const { settings } = Astro.props;
+const locale = localeFromPath(Astro.url.pathname);
+const t = tFor(locale);
+
+// Play and Privacy; the pill for Play stands out from the plain links.
+const nav = siteNav(locale, t).filter((item) => item.href !== "/play");
+
+// `build.format: "file"` means Astro.url.pathname is /play.html at build time,
+// while the served URL is extensionless. Normalise both sides before comparing.
+const normalizePath = (value: string) =>
+  value
+    .replace(/index\.html$/, "")
+    .replace(/\.html$/, "")
+    .replace(/\/+$/, "") || "/";
+const isActive = (href: string) =>
+  normalizePath(Astro.url.pathname) === normalizePath(href);
+
+const current = (href: string) => (isActive(href) ? "page" : undefined);
+const playHref = localePath(locale, "/play");
+---
+
+<header
+  id="site-header"
+  class="on-ink no-print relative z-30 bg-ink"
+>
+  <div class="hazard hazard--thin" aria-hidden="true"></div>
+  <Container class="relative flex items-center justify-between gap-6 py-[0.9rem]">
+    <a
+      class="inline-flex items-center gap-[0.6rem]"
+      href={localePath(locale, "/")}
+    >
+      <Mark size={30} />
+      <span
+        class="font-display text-[1.15rem] leading-none text-cream sm:text-[1.3rem]"
+      >
+        {settings.name}
+      </span>
+    </a>
+
+    <nav class="nav-links nav-links--bar" aria-label={t("nav.primary")}>
+      {
+        nav.map((item) => (
+          <a href={item.href} aria-current={current(item.href)}>
+            {item.label}
+          </a>
+        ))
+      }
+      <a class="nav-pill" href={playHref} aria-current={current(playHref)}
+        >{t("nav.play")}</a
+      >
+    </nav>
+
+    <details class="nav-disclosure">
+      <summary class="nav-toggle" aria-label={t("nav.menu")}>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M4 7h16M4 12h16M4 17h16"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"></path>
+        </svg>
+      </summary>
+      <nav class="nav-links nav-links--panel" aria-label={t("nav.primary")}>
+        {
+          nav.map((item) => (
+            <a href={item.href} aria-current={current(item.href)}>
+              {item.label}
+            </a>
+          ))
+        }
+        <a class="nav-pill" href={playHref} aria-current={current(playHref)}
+          >{t("nav.play")}</a
+        >
+      </nav>
+    </details>
+  </Container>
+</header>

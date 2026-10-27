@@ -1,0 +1,49 @@
+{
+  "name": "client-everythingstar-happypaul55-com",
+  "type": "module",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "bun@1.4.2",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build && bun scripts/build-sw.ts",
+    "preview": "astro preview",
+    "check": "astro check",
+    "lint": "oxlint .",
+    "typecheck:tests": "tsc --noEmit -p tsconfig.test.json",
+    "test": "bun test",
+    "test:e2e": "playwright test",
+    "test:pwa": "playwright test --config playwright.pwa.config.ts",
+    "knip": "knip",
+    "budget": "bun scripts/check-budget.ts",
+    "check:pwa": "bun scripts/check-pwa.ts",
+    "verify": "bun run lint && bun run knip && bun run check && bun run typecheck:tests && bun test && bun run build && bun run check:pwa && bun run budget",
+    "import": "bun scripts/import/index.ts",
+    "icons": "bun scripts/generate-icons.mjs",
+    "fonts": "bun scripts/fetch-fonts.mjs",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/react": "^7.1.0",
+    "@astrojs/sitemap": "^3.7.4",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.4.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "1.63.0",
+    "@types/bun": "1.4.3",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "favicons": "^7.3.1",
+    "knip": "^6.42.0",
+    "oxlint": "1.89.0",
+    "typescript": "^6.0.3"
+  }
+}

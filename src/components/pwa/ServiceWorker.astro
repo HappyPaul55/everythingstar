@@ -1,0 +1,14 @@
+---
+/**
+ * The worker that makes the installed game work offline.
+ *
+ * A hoisted module, so Astro bundles it once per page. It is a no-op in
+ * development and inside the native WebView; see `src/lib/pwa/register.ts`.
+ */
+---
+
+<script>
+  import { registerServiceWorker } from "../../lib/pwa/register";
+
+  registerServiceWorker();
+</script>

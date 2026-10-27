@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- The pointer over something pressable: the stage's own hand, drawn the way the
+       stickers are — yellow, inked in, with the hard offset shadow. The hotspot is the
+       fingertip (11 3), so the hand points with the very tip of the index finger.
+
+       The hand is a **union**: one group of rounded digits, drawn three times — the
+       shadow, the outline, and a fill-only pass that paints the joins away, so only the
+       silhouette keeps an edge. Tune the digits here; the passes look after themselves.
+       Authoring note: `x`/`y` on <use> is the offset, so the shadow is the same group
+       moved 1.2 down-right rather than a second copy of the drawing. -->
+  <defs>
+    <g id="hand">
+      <!-- index finger, up -->
+      <rect x="8.6" y="2.6" width="5" height="12.6" rx="2.5" />
+      <!-- the fist, which is the back of the hand -->
+      <rect x="9" y="13.2" width="17" height="15.6" rx="6" />
+      <!-- the thumb, out to the left and low on the palm -->
+      <rect
+        x="-4.8"
+        y="-2.6"
+        width="9.6"
+        height="5.2"
+        rx="2.6"
+        transform="translate(8.4 20.9) rotate(-19)"
+      />
+      <!-- the three folded fingers, their tips descending to the right -->
+      <rect
+        x="-4.6"
+        y="-2.45"
+        width="9.2"
+        height="4.9"
+        rx="2.45"
+        transform="translate(16.6 12) rotate(-34)"
+      />
+      <rect
+        x="-4.6"
+        y="-2.45"
+        width="9.2"
+        height="4.9"
+        rx="2.45"
+        transform="translate(20.8 13.8) rotate(-34)"
+      />
+      <rect
+        x="-4.3"
+        y="-2.3"
+        width="8.6"
+        height="4.6"
+        rx="2.3"
+        transform="translate(24.6 16) rotate(-34)"
+      />
+    </g>
+  </defs>
+  <!-- the hard offset shadow -->
+  <use
+    href="#hand"
+    x="1.2"
+    y="1.2"
+    fill="#0c0d0a"
+    stroke="#0c0d0a"
+    stroke-width="1.8"
+    stroke-linejoin="round"
+  />
+  <!-- the outline, then the fill that closes it up -->
+  <use href="#hand" fill="#ffd400" stroke="#0c0d0a" stroke-width="1.8" stroke-linejoin="round" />
+  <use href="#hand" fill="#ffd400" />
+</svg>

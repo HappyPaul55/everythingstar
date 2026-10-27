@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Play EverythingStar
+    url: https://everythingstar.happypaul55.com
+    about: Try the live game first — the bug may already be fixed on main.
+  - name: What is built, and what is not
+    url: https://github.com/HappyPaul55/everythingstar/blob/main/README.md#status-what-is-built-and-where-it-stops
+    about: Drum fills, a kick pedal and the other known gaps are listed here.
+  - name: Report a security issue
+    url: https://github.com/HappyPaul55/everythingstar/blob/main/SECURITY.md
+    about: Please do not open a public issue for a vulnerability.

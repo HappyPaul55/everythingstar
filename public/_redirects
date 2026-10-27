@@ -1,0 +1,5 @@
+# Cloudflare redirects
+# https://developers.cloudflare.com/workers/static-assets/redirects/
+#
+# Nothing needs redirecting yet — add one line per redirect, e.g.:
+# /old-path   /new-path   301

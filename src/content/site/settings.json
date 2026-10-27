@@ -1,0 +1,15 @@
+[
+  {
+    "id": "main",
+    "name": "EverythingStar",
+    "shortName": "EverythingStar",
+    "tagline": "One stage, every way to play",
+    "description": "A free browser rhythm game on one stage: instruments on guitar, bass, keys and drums, lyric typing on a keyboard, and karaoke. No account needed.",
+    "url": "https://everythingstar.happypaul55.com",
+    "author": "HappyPaul55",
+    "authorUrl": "https://www.happypaul55.com",
+    "repo": "https://github.com/HappyPaul55/everythingstar",
+    "license": "AGPL-3.0",
+    "licenseUrl": "https://www.gnu.org/licenses/agpl-3.0.html"
+  }
+]

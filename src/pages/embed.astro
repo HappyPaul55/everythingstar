@@ -1,0 +1,36 @@
+---
+/**
+ * The native app's entry point.
+ *
+ * This is deliberately a **different URL** from `/app` and `/play`. The APK
+ * loads `/embed.html`; the PWA uses `/app`; the website game page is `/play`.
+ * `/app` and `/open` share the same headerless GameLayout, but keeping the app on
+ * its own URL means an old WebView cache, service worker or task can never hand
+ * the app a website page from one of the other routes.
+ *
+ * It deliberately does **not** use `BaseLayout`: no header, footer, skip link,
+ * marketing shell, canonical or Open Graph furniture. What is left is the stage
+ * island and the styles it needs.
+ */
+import { getEntry } from "astro:content";
+import GameLayout from "../layouts/GameLayout.astro";
+import GameApp from "../components/game/GameApp.tsx";
+import { localeFromPath } from "../i18n/astro";
+
+const site = (await getEntry("site", "main"))!.data;
+const locale = localeFromPath(Astro.url.pathname);
+---
+
+<GameLayout title={site.name} locale={locale}>
+  <GameApp
+    client:load
+    locale={locale}
+    credits={{
+      author: site.author,
+      authorUrl: site.authorUrl,
+      repo: site.repo,
+      license: site.license,
+      licenseUrl: site.licenseUrl,
+    }}
+  />
+</GameLayout>

@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.happypaul55.everythingstar",
+      "sha256_cert_fingerprints": [
+        "64:33:05:7E:F0:E7:3D:7F:07:4E:1A:A4:58:FB:71:AE:EB:5E:12:7B:53:F8:74:6A:55:23:01:D4:A5:53:79:E0"
+      ]
+    }
+  }
+]

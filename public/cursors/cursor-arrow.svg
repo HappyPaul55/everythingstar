@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- The default pointer: a chunky tag arrow in the brand's yellow, inked in and
+       given the hard offset shadow the stickers carry. Hotspot is the tip (3 2). -->
+  <path
+    transform="translate(1.4 1.4)"
+    fill="#0c0d0a"
+    d="M3 2 L3 23.6 L8.7 17.9 L12.5 26.2 L16.6 24.4 L12.8 16.2 L21.3 16.2 Z"
+  />
+  <path
+    fill="#ffd400"
+    stroke="#0c0d0a"
+    stroke-width="2"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+    d="M3 2 L3 23.6 L8.7 17.9 L12.5 26.2 L16.6 24.4 L12.8 16.2 L21.3 16.2 Z"
+  />
+</svg>

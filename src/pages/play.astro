@@ -1,0 +1,45 @@
+---
+import { getEntry } from "astro:content";
+// Order matters: `band.css` declares the components layer, so Tailwind's theme
+// and base layers have to be established first. `/app`, `/arcade`, `/embed` and
+// `/open` get this from `GameLayout`'s global-then-band imports; `/play` keeps
+// the game stylesheet out of the marketing pages, so it states the pair here.
+import "../styles/global.css";
+import "../styles/band.css";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import GameApp from "../components/game/GameApp.tsx";
+import { localeFromPath, tFor } from "../i18n/astro";
+import { localePath } from "../i18n/paths";
+
+const site = (await getEntry("site", "main"))!.data;
+const locale = localeFromPath(Astro.url.pathname);
+const t = tFor(locale);
+---
+
+<BaseLayout
+  title={t("seo.titlePlay", { name: site.name })}
+  description={t("seo.descriptionPlay")}
+  path={localePath(locale, "/play")}
+  frame
+>
+  <main id="main" tabindex="-1">
+    <h1 class="sr-only">{t("play.heading")}</h1>
+    {/* The public game page is a page on the site: it keeps the marketing header
+        and footer around the stage, which is the thing /app, /embed and /open
+        deliberately drop. Fullscreen hides the shell (global.css), so a player
+        who takes the screen gets the game alone. The credits page names the
+        author, the source and the licence, and they come from the site's own
+        settings rather than a second copy in the dictionary. */}
+    <GameApp
+      client:load
+      locale={locale}
+      credits={{
+        author: site.author,
+        authorUrl: site.authorUrl,
+        repo: site.repo,
+        license: site.license,
+        licenseUrl: site.licenseUrl,
+      }}
+    />
+  </main>
+</BaseLayout>

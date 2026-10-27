@@ -1,0 +1,5 @@
+# Unit tests are `*.test.ts` under `src/`. The browser tests are Playwright specs
+# under `tests/e2e/` and run with `bun run test:e2e`; Bun's test runner also
+# discovers `*.spec.ts`, so keep them out of `bun test`.
+[test]
+pathIgnorePatterns = ["tests/e2e/**"]

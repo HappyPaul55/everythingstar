@@ -1,0 +1,58 @@
+---
+/**
+ * The homepage's live window: the game playing itself, in a phone-shaped screen.
+ *
+ * It is an **iframe** of `/arcade`, not another island in this page. The game wants
+ * a document of its own — a viewport, a theme, keyboard and focus, a service worker
+ * — and borrowing the marketing page's for it would make the hero's accessibility
+ * and scrolling the game's. The iframe keeps all of that on the other side of a
+ * boundary and leaves this page with no JavaScript of its own.
+ *
+ * `players=1&sound=0&demo=1&chrome=0` is the home window: one player, the frame
+ * clock rather than a mixer and the song's audio, no idle, and no fullscreen corner.
+ * The whole screen is a link into the game; the label below it is the visible and
+ * accessible one, so a play plaque never sits over the hit line.
+ */
+import { localeFromPath, tFor } from "../../i18n/astro";
+import { localePath } from "../../i18n/paths";
+
+const locale = localeFromPath(Astro.url.pathname);
+const t = tFor(locale);
+const play = localePath(locale, "/play");
+const windowUrl = `${localePath(locale, "/arcade")}?players=1&sound=0&demo=1&chrome=0`;
+---
+
+<div class="relative mx-auto w-full max-w-[21rem]">
+  <div
+    class="relative aspect-[9/16] overflow-hidden rounded-brand border-[3px] border-ink bg-ink shadow-[10px_10px_0_var(--color-yellow)]"
+  >
+    <iframe
+      class="pointer-events-none absolute inset-0 h-full w-full border-0"
+      src={windowUrl}
+      title={t("home.stageDemo")}
+      loading="lazy"
+      tabindex="-1"
+      aria-hidden="true"
+    ></iframe>
+    <a
+      class="absolute inset-0 z-10 rounded-brand"
+      href={play}
+      tabindex="-1"
+      aria-hidden="true"
+    ></a>
+  </div>
+  <div class="mt-4 flex items-baseline justify-between gap-3">
+    <p
+      class="font-mono text-[0.66rem] uppercase tracking-[0.16em] text-[rgba(250,250,244,0.55)]"
+    >
+      {t("home.stageCaption")}
+    </p>
+    <a
+      class="shrink-0 font-mono text-[0.7rem] font-bold uppercase tracking-[0.12em] text-yellow no-underline hover:text-cream focus-visible:outline-cream"
+      href={play}
+      aria-label={t("home.stagePlay")}
+    >
+      {t("home.ctaPlay")} <span aria-hidden="true">→</span>
+    </a>
+  </div>
+</div>

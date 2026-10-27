@@ -1,0 +1,73 @@
+name: Feature request
+description: Suggest a mode, an engine behaviour, a library feature or an accessibility fix.
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        EverythingStar has three ways to play — Instruments, Typing and Vocals — and
+        **all three are built**. What is still open is scope rather than a missing mode,
+        and the README's
+        [status section](https://github.com/HappyPaul55/everythingstar/blob/main/README.md#status-what-is-built-and-where-it-stops)
+        is the honest list of what is built and where it stops. A request that starts
+        from that list is easier to place.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What would you add or change
+      description: The behaviour, not the implementation. What does a player do, and what do they see or hear?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part
+      options:
+        - Instruments (guitar, bass, keys, drums)
+        - Typing (lyric typing)
+        - Vocals / karaoke (singing, the microphone)
+        - Jukebox and the song list
+        - Playlists, playlists providers, chart sources
+        - Band screen and controllers
+        - Audio and the mixer
+        - Accessibility or reduced motion
+        - Site pages, docs or the build
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it helps
+      description: Who is it for, and what can they not do today? "It would be cool" is a fine start, but say what it unlocks.
+    validations:
+      required: true
+
+  - type: textarea
+    id: shape
+    attributes:
+      label: How it might fit
+      description: |
+        Optional, but useful: does it need a new screen, a new chart part, a new source reader,
+        a setting, or a change to a pure rule in `src/lib/game/`? A link to the file you mean is
+        better than a guess about how the whole thing works.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you tried instead
+      description: Another mode, another controller, a different song, a setting you changed.
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: This does not need a server, an API or a Worker in this repository — a provider would be its own project.
+          required: true
+        - label: I read CONTRIBUTING.md and the status section.
+          required: true

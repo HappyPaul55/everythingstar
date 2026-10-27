@@ -1,0 +1,37 @@
+---
+/**
+ * The arcade entry: the game alone, left to play itself.
+ *
+ * This is the same game-only shell as `/embed` — no header, no footer, no skip
+ * link, no marketing furniture — with one difference: if nobody touches it, the
+ * island starts an attract demo after the idle. Any real input gives the welcome
+ * back, which is the front door of an ordinary visit.
+ *
+ * The query string is read by the island on the client, not here: the page is
+ * statically built, and the homepage's phone-shaped window uses the same document
+ * with `players=1&sound=0&demo=1&chrome=0`.
+ *
+ * `noindex`: an entry and a kiosk, not a page for a search to land on.
+ */
+import { getEntry } from "astro:content";
+import GameLayout from "../layouts/GameLayout.astro";
+import GameApp from "../components/game/GameApp.tsx";
+
+const site = (await getEntry("site", "main"))!.data;
+const locale = "en" as const;
+---
+
+<GameLayout title={`Arcade — ${site.name}`} heading={`${site.name} arcade`}>
+  <GameApp
+    client:load
+    locale={locale}
+    attract
+    credits={{
+      author: site.author,
+      authorUrl: site.authorUrl,
+      repo: site.repo,
+      license: site.license,
+      licenseUrl: site.licenseUrl,
+    }}
+  />
+</GameLayout>

@@ -1,0 +1,99 @@
+---
+import Container from "../ui/Container.astro";
+import Button from "../ui/Button.astro";
+import StageWindow from "./StageWindow.astro";
+import { localeFromPath, tFor } from "../../i18n/astro";
+import { localePath } from "../../i18n/paths";
+
+const locale = localeFromPath(Astro.url.pathname);
+const t = tFor(locale);
+
+const modes = [
+  { n: "01", title: t("mode.instrumentsTitle"), body: t("mode.instrumentsBody") },
+  { n: "02", title: t("mode.typeTitle"), body: t("mode.typeBody") },
+  { n: "03", title: t("mode.karaokeTitle"), body: t("mode.karaokeBody"), accent: true },
+];
+---
+
+<main id="main" tabindex="-1">
+  <section
+    class="on-ink spray-ink pt-[clamp(3rem,8vw,5rem)] pb-[clamp(3.5rem,8vw,6rem)]"
+  >
+    <Container>
+      <div class="grid items-center gap-x-12 gap-y-12 lg:grid-cols-[1.05fr_1fr]">
+        <div>
+          <p class="comment">
+            <span class="slash" aria-hidden="true">//</span> {t("home.comment")}
+          </p>
+          <h1
+            class="mt-5 max-w-[18ch] font-display text-[clamp(2.6rem,8vw,5rem)] leading-[1.02] text-cream"
+          >
+            {t("home.titleBefore")} <span class="mark">{t("home.titleMark")}</span
+            >{t("home.titleAfter")}
+          </h1>
+          <p
+            class="mt-6 max-w-[44rem] text-[clamp(1.02rem,1.6vw,1.2rem)] leading-[1.6] text-[rgba(250,250,244,0.72)]"
+          >
+            {t("home.lede")}
+          </p>
+          <div class="mt-9 flex flex-wrap gap-3.5">
+            <Button href={localePath(locale, "/play")} variant="primary">
+              {t("home.ctaPlay")} <span aria-hidden="true">→</span>
+            </Button>
+            <Button href={localePath(locale, "/privacy")} variant="outlineInk"
+              >{t("home.ctaPrivacy")}</Button
+            >
+          </div>
+        </div>
+
+        <StageWindow />
+      </div>
+    </Container>
+  </section>
+
+  <section class="spray-paper py-[clamp(3rem,8vw,5.5rem)]">
+    <Container>
+      <p class="comment">
+        <span class="slash" aria-hidden="true">//</span> {t("home.modesComment")}
+      </p>
+      <p class="mt-5 max-w-[46rem] text-[clamp(1rem,1.4vw,1.12rem)] text-ink-soft">
+        {t("home.modesLede")}
+      </p>
+
+      <div class="mt-10 grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
+        {
+          modes.map((mode) => (
+            <article class:list={["sticker", mode.accent && "sticker--accent"]}>
+              <span class="sticker__index">{mode.n}</span>
+              <h2 class="sticker__title">{mode.title}</h2>
+              <p class="sticker__body">{mode.body}</p>
+            </article>
+          ))
+        }
+      </div>
+    </Container>
+  </section>
+
+  <section class="on-ink spray-ink py-[clamp(3rem,8vw,5.5rem)]">
+    <Container>
+      <p class="comment">
+        <span class="slash" aria-hidden="true">//</span> {t("home.statusComment")}
+      </p>
+      <h2
+        class="mt-5 max-w-[20ch] font-display text-[clamp(2rem,5vw,3rem)] leading-[1.05] text-cream"
+      >
+        {t("home.statusTitle")}
+      </h2>
+      <p
+        class="mt-5 max-w-[46rem] text-[clamp(1rem,1.4vw,1.12rem)] leading-[1.6] text-[rgba(250,250,244,0.72)]"
+      >
+        {t("home.statusBody")}
+      </p>
+      <div class="mt-8">
+        <Button href={localePath(locale, "/play")} variant="primary">
+          {t("home.statusCta")} <span aria-hidden="true">→</span>
+        </Button>
+      </div>
+    </Container>
+  </section>
+</main>

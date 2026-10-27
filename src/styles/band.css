@@ -1,0 +1,5411 @@
+/* ==================================================================
+   Band stage
+   The game's layout: a full-width melody region (singers + keys) above
+   a lanes region of 1:1 instrument panels. The geometry is computed in
+   src/lib/game/band/layout.ts and applied as inline sizes; this file
+   only styles what that geometry produces. Inner sizing uses CSS
+   container units, so one panel is legible at 300px and at 1080px.
+
+   Radii come from the three-value scale and nothing else: `--radius-brand`
+   for a surface (a panel, a control bar, a card), `--radius-inner` for
+   anything sitting inside one or for a small control (a button, an option,
+   a row, a note), and `--radius-pill` only for a text label (a chip).
+================================================================== */
+
+/* State Tailwind's layer order before declaring anything.
+   This file is bundled on its own for `/play` (the marketing pages deliberately
+   do not carry the stage CSS), and in the production build it can be
+   concatenated **before** `global.css`. A bare `@layer components` would then
+   make `components` the first layer, so Tailwind's preflight (`base`) would be
+   parsed after it and reset the welcome title, the mode chips and every
+   `.band-btn`. This statement fixes the order whichever file the bundler puts
+   first; `global.css` has the same order from Tailwind's own import. */
+@layer properties, theme, base, components, utilities;
+
+@layer components {
+  /* --- Stage root (owned by the island; the fullscreen target) --- */
+  .band {
+    position: relative;
+    width: 100%;
+    height: 100dvh;
+    background: var(--color-ink);
+  }
+  /* --- The stage's own scrollbars ---
+     One thin bar in the stage's colours: the browser's is wide enough to break
+     the frame it sits in, and the jukebox's song list makes that plain. Both
+     spellings are set, because `scrollbar-width` does not inherit and the WebKit
+     pseudo-elements are what a Safari predating the standard still reads. Scoped
+     to the stage, so the paper pages keep their own. */
+  .band,
+  .band * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(250, 250, 244, 0.26) transparent;
+  }
+  .band *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .band *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .band *::-webkit-scrollbar-thumb {
+    background: rgba(250, 250, 244, 0.26);
+    border-radius: var(--radius-inner);
+  }
+  .band *::-webkit-scrollbar-thumb:hover {
+    background: rgba(250, 250, 244, 0.45);
+  }
+  .band *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  .band:fullscreen {
+    /* The fullscreen element is fixed to the screen, not left at its place in a
+       scrolled `/play` document: the author's `position: relative` above otherwise
+       overrides the user agent's own rule for `:fullscreen`, and the stage can then
+       sit wherever the page was scrolled to. `100dvh` is the viewport that is
+       actually visible, which is the one the device's safe areas are measured
+       inside. */
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    background: var(--color-ink);
+  }
+  /* --- The game's own cursor ---
+     The desktop's arrow belongs to the desktop: over a stage made of ink and electric
+     yellow it is the one thing that is not ours. So the game draws its **own set** — the
+     whole palette of pointers, not just the two a stage has to have, so nothing has to
+     be answered with the desktop's chrome. Every file in `public/cursors/` is a
+     hand-authored **SVG and nothing else**: Chromium, Gecko and WebKit all take an SVG
+     cursor, so there is no raster twin to keep in step, and each one carries its own
+     `width`/`height` — which is the thing that lets an engine take it as a cursor at all.
+     An engine that will not has the **keyword at the end of the declaration** to fall
+     back on, which is why every `cursor` here ends in `auto`, `pointer`, `text` or the
+     rest rather than a bare `url()`. The hotspot is written here beside each url, because
+     it belongs to how the mark is used, not to the drawing.
+
+     **Applied**: the arrow at rest, the hand on anything pressable, the I-beam in a field
+     you type in, `not-allowed` on a control that refuses, `grab`/`grabbing` on a slider,
+     and `wait` on the loading screen. **Held in reserve**, defined and ready for the
+     screen that needs them: `help`, `move`, `zoom-in`, `zoom-out`.
+
+     Applied only where there **is** a mouse: a touch screen has no pointer to draw, and
+     leaving `cursor` alone there costs nothing. */
+  .band {
+    --cursor-arrow: url("/cursors/cursor-arrow.svg") 3 2;
+    --cursor-hand: url("/cursors/cursor-hand.svg") 11 3;
+    --cursor-text: url("/cursors/cursor-text.svg") 16 16;
+    --cursor-wait: url("/cursors/cursor-wait.svg") 16 16;
+    --cursor-help: url("/cursors/cursor-help.svg") 16 16;
+    --cursor-move: url("/cursors/cursor-move.svg") 16 16;
+    --cursor-not-allowed: url("/cursors/cursor-not-allowed.svg") 16 16;
+    --cursor-grab: url("/cursors/cursor-grab.svg") 16 16;
+    --cursor-grabbing: url("/cursors/cursor-grabbing.svg") 16 16;
+    --cursor-zoom-in: url("/cursors/cursor-zoom-in.svg") 13 13;
+    --cursor-zoom-out: url("/cursors/cursor-zoom-out.svg") 13 13;
+  }
+  @media (pointer: fine) {
+    .band {
+      cursor: var(--cursor-arrow), auto;
+    }
+    /* One list of what is pressable, so a new control is never the one thing still
+       drawn by the desktop. */
+    .band a[href],
+    .band button,
+    .band summary,
+    .band label,
+    .band select,
+    .band [role="button"],
+    .band input[type="checkbox"],
+    .band input[type="radio"] {
+      cursor: var(--cursor-hand), pointer;
+    }
+    .band input[type="text"],
+    .band input[type="search"],
+    .band input[type="url"],
+    .band input[type="email"],
+    .band input[type="number"],
+    .band textarea {
+      cursor: var(--cursor-text), text;
+    }
+    /* A slider is something you take hold of, not something you press. */
+    .band input[type="range"]:not(:disabled) {
+      cursor: var(--cursor-grab), grab;
+    }
+    .band input[type="range"]:active:not(:disabled) {
+      cursor: var(--cursor-grabbing), grabbing;
+    }
+    /* The one screen that is a wait, and says so. */
+    .screen--loading {
+      cursor: var(--cursor-wait), wait;
+    }
+  }
+  /* --- Focus on the stage ---
+     The paper pages keep the site's ink outline; on ink that outline is a black
+     ring inside a yellow control. The stage's focus is a cream ring, outside the
+     control where it can be seen, and it is the same ring whether a keyboard or
+     the pad's D-pad put it there. */
+  .band :focus-visible,
+  .band [data-nav-focus] {
+    outline: 3px solid var(--color-cream);
+    outline-offset: 3px;
+    border-radius: var(--radius-inner);
+  }
+  /* A screen, a stage or a dialog is a place, not a control: focusing it is for
+     the screen reader's announcement, and a ring around the whole viewport is not
+     a focus cue anyone needs. */
+  .band .screen:focus-visible,
+  .band .screen__title:focus-visible,
+  .band .band__stage:focus-visible,
+  .band dialog:focus-visible,
+  .band dialog[data-nav-focus] {
+    outline: none;
+  }
+  /* Rows inside a scroller lose an outside ring to the scroller's edge. */
+  .band .song-row:focus-visible,
+  .band .song-row[data-nav-focus],
+  .band .jukebox__letter:focus-visible,
+  .band .jukebox__letter[data-nav-focus] {
+    outline-offset: -3px;
+  }
+  @media (forced-colors: active) {
+    .band :focus-visible,
+    .band [data-nav-focus] {
+      outline: 3px solid CanvasText;
+    }
+  }
+  /* A focus moved by code because the screen changed is not the mouse's focus.
+     When the pointer is what is driving, do not paint a second active control. */
+  :root[data-game-input="pointer"] .band :focus-visible:not([data-nav-focus]) {
+    outline: none;
+  }
+  .band__stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    /* `clip`, not `hidden`: `hidden` still makes this a **scroll container**, and the
+       game's own focus placement (`scrollIntoView` on a highway pad) scrolled it by
+       a few dozen pixels. The stage's children then sat above its top, the progress
+       bar was off the screen and the bottom showed a strip of backdrop — the "game
+       doesn't sit in" report. Toggling `position` reset the scroll, which is why it
+       looked fixed. A clipped box cannot be scrolled at all. `hidden` stays as the
+       fallback for a browser without `clip`. */
+    overflow: hidden;
+    overflow: clip;
+    background: var(--color-ink);
+    /* The stage's gutter, plus the device's own on the edges a control can sit
+       against. In fullscreen and in the installed app the page reaches under the
+       status bar, the notch and the home indicator (`viewport-fit=cover` on both
+       layouts), so the play area is inset by them as well as by the brand's
+       gutter. A browser with none of those resolves every inset to 0 and the
+       stage is exactly what it was. `BandStage` measures the **content box**, so
+       this padding is the frame of the play area rather than space the layout
+       reserves a second time.
+
+       The **bottom** is the exception: the lowest thing on the stage is the
+       highway's deck, not a control, so the neck can run under the home
+       indicator and the gesture bar. Reserving the bottom inset there left a
+       strip of backdrop below the deck — a gap the game did not fill — for a
+       system bar that has nothing on it to press. The top keeps its inset
+       because the score rail is up there, and the sides keep theirs for a
+       landscape notch. */
+    padding: var(--stage-gutter, 16px);
+    padding:
+      calc(var(--stage-gutter, 16px) + env(safe-area-inset-top, 0px))
+      calc(var(--stage-gutter, 16px) + env(safe-area-inset-right, 0px))
+      var(--stage-gutter, 16px)
+      calc(var(--stage-gutter, 16px) + env(safe-area-inset-left, 0px));
+  }
+  .band__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  /* --- The stage opens ---
+     The room arrives first: the song's background, the score rails and the meter
+     are on screen from the moment the stage mounts. The **highways** and the
+     **words** stay offscreen for a quiet beat (`--entrance-lead`), then rise from
+     the floor and drop from the top together while the band's hype plays. The stage
+     mounts for the first entrance of a run, so this is the run's entrance — a pause
+     or a practice restart keeps the same stage and does not replay it. The extra
+     2rem clears the stage gutter, so nothing peeks before the slide begins.
+
+     Only these two things animate: the panel's rails are not part of the highway,
+     and the melody's score cards are not part of the view. */
+  @keyframes highway-rise {
+    from {
+      transform: translateY(calc(100% + 2rem));
+    }
+  }
+  @keyframes lyrics-drop {
+    from {
+      transform: translateY(calc(-100% - 2rem));
+    }
+  }
+  .highway {
+    animation: highway-rise var(--entrance-slide, 650ms)
+      cubic-bezier(0.22, 0.61, 0.36, 1) var(--entrance-lead, 1200ms) both;
+  }
+  .melody > .lyrics-view,
+  .melody > .keys {
+    animation: lyrics-drop var(--entrance-slide, 650ms)
+      cubic-bezier(0.22, 0.61, 0.36, 1) var(--entrance-lead, 1200ms) both;
+  }
+  /* Reduced motion still gets the stage, just without the wait. */
+  @media (prefers-reduced-motion: reduce) {
+    .highway,
+    .melody > .lyrics-view,
+    .melody > .keys {
+      animation-delay: 0ms;
+    }
+  }
+
+  /* --- Song progress ---
+     Across the top of the stage and *on* the gutter, not inside it: the gutter
+     keeps the play areas clear of the edge, and the bar is the one thing that
+     belongs right on it. Written to the DOM per frame, never through state. */
+  .song-progress {
+    position: absolute;
+    z-index: 2;
+    /* Under the safe area rather than in it: in fullscreen the top of the screen
+       is the status bar or the notch, and a progress bar there is a bar nobody
+       sees. */
+    top: env(safe-area-inset-top, 0px);
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: rgba(250, 250, 244, 0.16);
+    pointer-events: none;
+  }
+  .song-progress__fill {
+    display: block;
+    width: 0;
+    height: 100%;
+    background: var(--color-yellow);
+    box-shadow: 0 0 12px rgba(255, 212, 0, 0.45);
+  }
+  /* A practice run's read-out, under the progress bar: the stretch, its speed and
+     whether it loops. It is a read-out, so it never takes a pointer. */
+  .practice-readout {
+    position: absolute;
+    z-index: 3;
+    top: calc(0.55rem + env(safe-area-inset-top, 0px));
+    right: clamp(0.6rem, 2vmin, 1.6rem);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    max-width: calc(100% - 2rem);
+    margin: 0;
+    padding: 0.28rem 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-cream);
+    background: rgba(12, 13, 10, 0.72);
+    border: 1px solid rgba(250, 250, 244, 0.28);
+    border-radius: var(--radius-inner);
+    pointer-events: none;
+  }
+  .practice-readout__tag {
+    padding: 0.1rem 0.45rem;
+    color: var(--color-ink);
+    background: var(--color-yellow);
+    border-radius: var(--radius-pill);
+  }
+  .practice-readout__section {
+    color: var(--color-yellow);
+  }
+
+  /* --- Backdrop ---
+     The game's own artwork sits on the island root, so **the menus have a room**; a
+     run paints its own back over the top (the song's video, or its art). */
+  .band__backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-color: var(--color-ink);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+  .stage-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  /* A still back: the game's artwork, or a song's cover stretched past its size. */
+  .stage-bg__image {
+    position: absolute;
+    inset: 0;
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+  /* A cover is square and often small, so it is blurred into a back rather than
+     pulled out of shape: an atmosphere, not a picture. */
+  .stage-bg__image--blur {
+    inset: -6%;
+    filter: blur(28px) saturate(1.1);
+  }
+  .stage-bg__video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* A YouTube backdrop has to cover the stage and lose its player chrome, so it
+     is sized from the viewport (the stage is 100dvh) and nudged up in scale. */
+  .stage-bg__embed {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+  /* The IFrame API replaces the element it is given, so the host is a stable box
+     the player is built inside rather than a React child it could reconcile. */
+  .stage-bg__host {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  /* The video is the music but the player has been told not to show it: keep it
+     running and audible, and let the stage's own artwork be the picture. */
+  .stage-bg__embed.is-audio-only {
+    opacity: 0;
+  }
+  .stage-bg__embed iframe {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100vw;
+    height: 56.25vw;
+    min-width: 177.78dvh;
+    min-height: 100dvh;
+    transform: translate(-50%, -50%) scale(1.15);
+    border: 0;
+    pointer-events: none;
+  }
+  .stage-bg__scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(
+        120% 80% at 50% 0%,
+        rgba(12, 13, 10, 0.12),
+        rgba(12, 13, 10, 0.58) 72%
+      ),
+      linear-gradient(to bottom, rgba(12, 13, 10, 0.28), rgba(12, 13, 10, 0.46));
+  }
+  /* A dim over whatever the backdrop is — the song's video, its art or the game's
+     own room — for playing over bright footage. It is the **backdrop** that dims:
+     the layer is the last thing inside `.stage-bg`, above the picture and its scrim
+     and below every panel and note, so text contrast and focus rings are untouched.
+     `--backdrop-dim` is set from the setting, 0..0.8. */
+  .stage-bg__dim {
+    position: absolute;
+    inset: 0;
+    background: var(--color-ink);
+    opacity: var(--backdrop-dim, 0);
+    pointer-events: none;
+  }
+
+  /* --- The room's lights ---
+     A few flares drifting over the backdrop, so a still picture is not a still room.
+     Each is a soft **radial gradient** rather than a shadow or a blur: a 60vmax blurred
+     layer costs a frame of painting per repaint, and these run for as long as the game
+     does. Animated on transform and opacity only, so the compositor does the moving.
+     `screen` because light **adds** — a glow brightens the room instead of sitting on
+     top of it. Decorative: no pointer events, hidden from a screen reader, and still
+     under `prefers-reduced-motion`. */
+  .flares {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    overflow: hidden;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+  /* Set aside while a song's own video is the backdrop: the lights are the game's
+     room, not somebody's footage, and a glow drifting over a film reads as a smear
+     on it. `display` rather than opacity, so the animations cost nothing too. */
+  .flares--hidden {
+    display: none;
+  }
+  .flare {
+    position: absolute;
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0.92);
+    background: radial-gradient(
+      closest-side,
+      rgba(255, 212, 0, 0.55),
+      rgba(255, 212, 0, 0) 72%
+    );
+    animation-name: flare-drift;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    will-change: transform, opacity;
+  }
+  @keyframes flare-drift {
+    from {
+      transform: translate(-50%, -50%) scale(0.9);
+    }
+    to {
+      transform: translate(
+          calc(-50% + var(--flare-drift, 6vmax)),
+          calc(-50% - var(--flare-drift, 6vmax) * 0.6)
+        )
+        scale(1.12);
+    }
+  }
+  /* Reduced motion is handled once, for the whole site, in `global.css`. */
+
+  /* --- Melody region (singers + keys) ---
+     No fill, blur or rule: the region is see-through so the backdrop can be
+     enjoyed, and its text carries its own contrast instead (--on-video-shadow). */
+  .melody {
+    position: relative;
+    z-index: 1;
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 0;
+    container-type: size;
+    overflow: hidden;
+    /* Inherited by the lyric lines and the roll's words. */
+    --on-video-shadow:
+      0 1px 0 rgba(12, 13, 10, 0.9), 0 0 12px rgba(12, 13, 10, 0.8),
+      0 2px 30px rgba(12, 13, 10, 0.6);
+    /* One colour per part, so a duet's second singer reads as their own — and a
+       third, so a trio of harmonies does too. Part 0 is the accent the roll has
+       always used. */
+    --part-0: var(--color-accent);
+    --part-1: var(--color-yellow);
+    --part-2: #ff7ab8;
+  }
+
+  /* --- Lyrics view --- */
+  .lyrics-view {
+    position: relative;
+    flex: none;
+    container-type: size;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.5cqmin;
+    padding: 2.5cqmin 5cqmin;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .lyrics-view__chip {
+    position: absolute;
+    top: 1.6cqmin;
+    left: 2.4cqmin;
+    font-family: var(--font-mono);
+    font-size: clamp(0.5rem, 2.2cqmin, 0.85rem);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    background: var(--color-yellow);
+    border-radius: var(--radius-pill);
+    padding: 0.25em 0.7em;
+  }
+  .lyrics-view__lines {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4cqmin;
+    text-align: center;
+  }
+  .lyrics-view__line {
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 7cqmin, 3.4rem);
+    line-height: 1.12;
+    color: rgba(250, 250, 244, 0.4);
+    text-shadow: var(--on-video-shadow);
+    transition: color 0.3s var(--ease-brand);
+  }
+  .lyrics-view__word.is-active {
+    background: var(--color-yellow);
+    color: var(--color-ink);
+    padding: 0 0.16em;
+    border-radius: var(--radius-inner);
+    /* The fill carries it; a dark halo would only muddy the yellow. */
+    text-shadow: none;
+    box-shadow: 2px 2px 0 0 rgba(12, 13, 10, 0.7);
+  }
+  /* One block per voice. A solo has the one it always had; a duet sets them side
+     by side, separated by the stage's own gutter of space and marked by a rule in
+     that voice's colour. A line both sing simply appears in both blocks. */
+  .lyrics-view__part {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4cqmin;
+  }
+  .lyrics-view__tag {
+    font-family: var(--font-mono);
+    font-size: clamp(0.5rem, 2.2cqmin, 0.85rem);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--part-0);
+    margin-bottom: 0.35em;
+  }
+  .lyrics-view__part.is-part-1 .lyrics-view__tag {
+    color: var(--part-1);
+  }
+  .lyrics-view__part.is-part-2 .lyrics-view__tag {
+    color: var(--part-2);
+  }
+  .lyrics-view--duet .lyrics-view__lines {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 7cqmin;
+    text-align: left;
+  }
+  .lyrics-view--duet .lyrics-view__part {
+    flex: 1 1 0;
+    padding-left: 3.2cqmin;
+    border-left: 3px solid var(--part-0);
+  }
+  .lyrics-view--duet .lyrics-view__part.is-part-1 {
+    border-left-color: var(--part-1);
+  }
+  .lyrics-view--duet .lyrics-view__part.is-part-2 {
+    border-left-color: var(--part-2);
+  }
+  .lyrics-view--duet .lyrics-view__line {
+    font-size: clamp(0.85rem, 5cqmin, 2.2rem);
+  }
+  /* No room for two blocks to be read side by side: stack them. */
+  @container (max-width: 34rem) {
+    .lyrics-view--duet .lyrics-view__lines {
+      flex-direction: column;
+      gap: 3cqmin;
+    }
+  }
+  /* A line still to be sung is drawn in the full colour and simply faded back,
+     so it can rise to exactly the look it will have when it starts: no jump on
+     the hand-over. Its own moment, and the moment it is over, are told apart by
+     that fade, not by a colour change. */
+  .lyrics-view__line.is-active,
+  .lyrics-view__line.is-rising {
+    color: var(--color-cream);
+  }
+  .lyrics-view__line.is-rising {
+    opacity: calc(0.4 + 0.6 * var(--approach, 0));
+    transform: translateY(calc((1 - var(--approach, 0)) * 0.5em));
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .lyrics-view__line.is-rising {
+      transform: none;
+    }
+  }
+  /* --- Keys view (piano roll + the words on its own layer) ---
+     The roll's time axis runs left to right: the notes hold their places and the
+     track's transform carries them past the playhead. The words ride the very
+     same layer — a strip per line, placed at its own moment — so a singer reads
+     them underneath the pitch they belong to, at the pace the notes travel. */
+  .keys {
+    position: relative;
+    flex: none;
+    height: 100%;
+    container-type: size;
+    overflow: hidden;
+    /* The roll's geometry is the game's, not the stylesheet's: `KeysView` writes
+       `--keys-anchor` and `--keys-share` here from `ROLL_ANCHOR`/`ROLL_SHARE` in
+       `melody.ts`, so the playhead below cannot drift from the notes. */
+  }
+  /* The staff lines, across the band the roll occupies. */
+  .keys::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 calc(100% - var(--keys-share)) 0;
+    background-image: repeating-linear-gradient(
+      to top,
+      transparent 0,
+      transparent calc(100% / var(--rows) - 1px),
+      rgba(250, 250, 244, 0.12) calc(100% / var(--rows) - 1px),
+      rgba(250, 250, 244, 0.12) calc(100% / var(--rows))
+    );
+    pointer-events: none;
+  }
+  .keys__chip {
+    position: absolute;
+    z-index: 3;
+    top: 1.6cqmin;
+    left: 2.4cqmin;
+    font-family: var(--font-mono);
+    font-size: clamp(0.5rem, 2.2cqmin, 0.85rem);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    background: var(--color-yellow);
+    border-radius: var(--radius-pill);
+    padding: 0.25em 0.7em;
+  }
+  /* The "now" line: a fixed column the notes and words travel toward. It spans
+     the whole box, because the words ride the same axis as the bars now. */
+  .keys__playhead {
+    position: absolute;
+    z-index: 3;
+    top: 0;
+    bottom: 0;
+    left: var(--keys-anchor);
+    width: 2px;
+    background: rgba(250, 250, 244, 0.5);
+    box-shadow: 0 0 14px rgba(250, 250, 244, 0.35);
+  }
+  /* Where the voice is, at the playhead: a singer can see how close they are
+     rather than only finding out afterwards. Sized in container units like
+     everything else inside a panel, and only shown while something is heard. */
+  .keys__pitch {
+    position: absolute;
+    z-index: 4;
+    left: var(--keys-anchor);
+    width: clamp(0.45rem, 2.6cqmin, 1.2rem);
+    height: clamp(0.45rem, 2.6cqmin, 1.2rem);
+    margin-left: calc(clamp(0.45rem, 2.6cqmin, 1.2rem) / -2);
+    transform: translateY(-50%);
+    border-radius: var(--radius-pill);
+    background: var(--color-yellow);
+    box-shadow: 0 0 0 2px rgba(12, 13, 10, 0.5);
+    opacity: 0;
+    transition: opacity 0.12s var(--ease-brand);
+    pointer-events: none;
+  }
+  /* One translated layer, so the roll moves as one — the words ride it too:
+     a line's strip is placed at its own moment with its own span as its
+     width, in the band the roll leaves below, so a single transform carries
+     the bars and the words past the playhead in lock-step. */
+  .keys__track {
+    position: absolute;
+    inset: 0;
+    will-change: transform;
+  }
+  /* One line's strip, on the roll's own layer: its words, placed at its own
+     moment and drawn for its own span, so the pitch and the reading stay
+     together. The top comes from the part's row in the band below the roll. */
+  .keys__line {
+    position: absolute;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 0.6cqmin;
+    box-sizing: border-box;
+    padding: 0 0.8cqmin;
+    /* The strip is drawn for the line's own span, and its words may run past it
+       — a reader sees what is coming, so they are never clipped. */
+    font-family: var(--font-display);
+    font-size: clamp(0.7rem, 3.4cqmin, 1.5rem);
+    line-height: 1.1;
+    color: rgba(250, 250, 244, 0.4);
+    text-shadow: var(--on-video-shadow);
+    transition: color 0.3s var(--ease-brand);
+  }
+  .keys__line.is-active {
+    /* Above its neighbours, so a long line's words are never covered by the
+       next line's as they pass. */
+    z-index: 3;
+    color: var(--color-cream);
+  }
+  /* A line still to be sung is drawn in the full colour and simply faded back,
+     so it rises to exactly the look it will have when it starts. */
+  .keys__line.is-rising {
+    opacity: calc(0.4 + 0.6 * var(--approach, 0));
+    transform: translateY(calc((1 - var(--approach, 0)) * 0.5em));
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .keys__line.is-rising {
+      transform: none;
+    }
+  }
+  /* Which voice reads the line, in a duet: the words keep their own colour. */
+  .keys__line__tag {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: clamp(0.5rem, 1.8cqmin, 0.75rem);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--part-0);
+    border-left: 3px solid currentColor;
+    padding-left: 0.35em;
+  }
+  .keys__line.is-part-1 .keys__line__tag {
+    color: var(--part-1);
+  }
+  .keys__line.is-part-2 .keys__line__tag {
+    color: var(--part-2);
+  }
+  /* The words themselves: the strip's whole width, so a line that is coming
+     up and a line that is running out keep the same face. */
+  .keys__line__words {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 0.32em;
+  }
+  /* A typist on the part's words says their progress on the line, in the
+     part's own colour: the words are where they type, not a separate card. */
+  .keys__line__typing {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: clamp(0.45rem, 1.6cqmin, 0.65rem);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--part-0);
+  }
+  .keys__line.is-part-1 .keys__line__typing {
+    color: var(--part-1);
+  }
+  .keys__line.is-part-2 .keys__line__typing {
+    color: var(--part-2);
+  }
+  /* A note is a bar for as long as it is held, so a voice holding on reads as
+     one. A bar stops short of the next note in its part rather than running into
+     it. A freeform (spoken or rapped) word has no pitch and so no note here. */
+  .keys__note {
+    position: absolute;
+    z-index: 2;
+    height: clamp(0.32rem, 1.6cqmin, 0.85rem);
+    transform: translateY(-50%);
+    box-shadow: 0 0 0 2px rgba(12, 13, 10, 0.45);
+    transition:
+      opacity 0.16s var(--ease-brand),
+      transform 0.16s var(--ease-brand);
+    /* Voice 0, which a solo song always is. A note is a rounded rectangle in both
+       views, so this matches the highway's note. */
+    border-radius: var(--radius-inner);
+    background: var(--part-0);
+  }
+  /* The second voice has its own colour and **square ends**, so the two are told
+     apart without leaning on the colour alone. The third is a **pill**, so the three
+     voices are distinct shapes however many are on screen. */
+  .keys__note.is-part-1 {
+    border-radius: 0;
+    background: var(--part-1);
+  }
+  .keys__note.is-part-2 {
+    border-radius: var(--radius-pill);
+    background: var(--part-2);
+  }
+  /* Both voices on the same note: one bar, split between them. */
+  .keys__note.is-shared {
+    background: linear-gradient(
+      to bottom,
+      var(--part-0) 0 50%,
+      var(--part-1) 50% 100%
+    );
+  }
+  .keys__note.is-live {
+    box-shadow:
+      0 0 0 2px rgba(12, 13, 10, 0.45),
+      0 0 14px rgba(250, 250, 244, 0.6);
+  }
+  .keys__note.is-hit {
+    opacity: 0.25;
+    /* Shrink toward the note's own onset, so the bar does not slide off the
+       moment it belongs to. */
+    transform-origin: left center;
+    transform: translateY(-50%) scale(0.8);
+  }
+  .keys__note.is-miss {
+    background: var(--color-danger);
+  }
+  /* Announced while the words being delivered are freeform. */
+  .keys__badge {
+    position: absolute;
+    z-index: 3;
+    top: calc(1.6cqmin + 2.4em);
+    left: 2.4cqmin;
+    font-family: var(--font-mono);
+    font-size: clamp(0.5rem, 2.2cqmin, 0.85rem);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    background: var(--color-accent);
+    border-radius: var(--radius-pill);
+    padding: 0.25em 0.7em;
+  }
+  /* The melody's scores: a song with pitch has no player panel to put them in,
+     and a duet's singers are scored apart, so there is one per voice. */
+  .melody-scores {
+    position: absolute;
+    z-index: 3;
+    /* Clear of the temporary preview controls in the top corner; drop the offset
+       when the real setup screen replaces them. */
+    top: calc(1.6cqmin + 4.6rem);
+    right: 2.4cqmin;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.7cqmin;
+    text-shadow: var(--on-video-shadow);
+  }
+  .melody-score {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.2cqmin;
+  }
+  .melody-score__part {
+    font-family: var(--font-mono);
+    font-size: clamp(0.5rem, 2.2cqmin, 0.85rem);
+    font-weight: 700;
+    color: var(--part-0);
+    border-left: 3px solid currentColor;
+    padding-left: 0.4em;
+  }
+  .melody-score.is-part-1 .melody-score__part {
+    color: var(--part-1);
+  }
+  .melody-score.is-part-2 .melody-score__part {
+    color: var(--part-2);
+  }
+  .melody-score__value {
+    font-family: var(--font-display);
+    font-size: clamp(0.9rem, 5cqmin, 2.1rem);
+    line-height: 1;
+    color: var(--color-cream);
+  }
+  .melody-score__combo {
+    font-family: var(--font-mono);
+    font-size: clamp(0.5rem, 2cqmin, 0.78rem);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-yellow);
+  }
+  /* Which role this score is: the words typed, or the words sung. */
+  .melody-score__role {
+    font-family: var(--font-mono);
+    font-size: clamp(0.45rem, 1.8cqmin, 0.7rem);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.72);
+  }
+  /* Which of the song's parts this player has, when it is not the only one. */
+  .melody-score__role-part {
+    font-family: var(--font-mono);
+    font-size: clamp(0.45rem, 1.8cqmin, 0.7rem);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.5);
+  }
+  /* A hero word is outlined rather than filled, so it can sit alongside the
+     active word's yellow fill without the two being confused. */
+  .lyrics-view__word.is-hero {
+    outline: 2px solid var(--color-yellow);
+    outline-offset: 0.12em;
+    border-radius: var(--radius-inner);
+  }
+  /* Typing feedback, on the words themselves, in whichever view is up. */
+  .melody-word.is-done {
+    color: var(--color-accent);
+  }
+  .melody-word.is-missed {
+    color: var(--color-danger);
+  }
+  .melody-char {
+    transition: color 0.1s var(--ease-brand);
+  }
+  .melody-char.is-done {
+    color: var(--color-accent);
+  }
+  .melody-char.is-caret {
+    border-bottom: 2px solid var(--color-yellow);
+  }
+  /* In a duet each score takes its singer's colour, so the numbers read as the
+     same two voices the roll and the words are drawn in. */
+  .melody-scores.is-duet .melody-score__value {
+    font-size: clamp(0.8rem, 3.6cqmin, 1.6rem);
+  }
+  .melody-scores.is-duet .melody-score.is-part-0 .melody-score__value {
+    color: var(--part-0);
+  }
+  .melody-scores.is-duet .melody-score.is-part-1 .melody-score__value {
+    color: var(--part-1);
+  }
+  .melody-scores.is-duet .melody-score.is-part-2 .melody-score__value {
+    color: var(--part-2);
+  }
+
+  /* --- Lanes region --- */
+  .lanes {
+    position: relative;
+    z-index: 1;
+    flex: none;
+    min-height: 0;
+    display: grid;
+    /* Centred across, anchored to the bottom: a row of panels that does not fill
+       its region should stand on the floor rather than float. */
+    justify-content: center;
+    align-content: end;
+    overflow: hidden;
+  }
+  /* The band does not fit, but its panels stay mounted at the smallest grid the
+     layout hands them: a run is judged through its panel, so replacing them with
+     a message would leave the instruments unjudged. This chip says why they are
+     cramped, absolutely positioned so it never becomes a second grid row. */
+  .lanes__notice {
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    bottom: 0.9rem;
+    transform: translateX(-50%);
+    max-width: min(26rem, calc(100% - 2rem));
+    padding: 0.45rem 0.9rem;
+    border: 1px solid rgba(250, 250, 244, 0.24);
+    border-radius: var(--radius-pill);
+    background: rgba(12, 13, 10, 0.88);
+    box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.45);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    line-height: 1.45;
+    text-align: center;
+    color: rgba(250, 250, 244, 0.9);
+    pointer-events: none;
+  }
+  .lanes__grid {
+    display: grid;
+    justify-content: center;
+    align-content: center;
+  }
+
+  /* --- Player panel ---
+     A square for each of several players, or the whole region for a lone one.
+     The score rail is capped and the meter rail hugs the bar, so a bigger stage
+     gives a bigger highway rather than a bigger score. */
+  .player-panel {
+    container-type: size;
+    display: flex;
+    gap: 1%;
+    padding: 1.4%;
+    border: 1px solid rgba(250, 250, 244, 0.2);
+    border-radius: var(--radius-brand);
+    background: rgba(12, 13, 10, 0.74);
+    overflow: hidden;
+  }
+  /* A lone lane with the stage to itself drops the frame and spreads out: score
+     to the far left, meter to the far right, highway centred on the stage. */
+  .player-panel--bare {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+  .player-panel--bare .panel-rail--score,
+  .player-panel--bare .panel-rail--info {
+    width: clamp(5rem, 28%, 12.5rem);
+  }
+  /* A lone player on a phone in portrait has no width to spare for two rails
+     beside the highway: at 390px the score and meter together were taking more
+     than a third of the stage. Put them in a compact row at the top and give the
+     highway the whole width below it. This is only the bare, single-player
+     stage; a band keeps its square panels. */
+  @media (max-width: 40rem) and (orientation: portrait) {
+    .player-panel--bare {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-rows: auto minmax(0, 1fr);
+      grid-template-areas:
+        "score info"
+        "highway highway";
+      gap: 0.4rem 0.7rem;
+      padding: 0.35rem 0 0;
+    }
+    .player-panel--bare .highway,
+    .player-panel--bare .highway--empty {
+      grid-area: highway;
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      margin-inline: 0;
+    }
+    .player-panel--bare .panel-rail--score {
+      grid-area: score;
+      width: auto;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.2rem 0.65rem;
+      overflow: visible;
+    }
+    .player-panel--bare .panel-rail--score .panel-rail__spacer {
+      display: none;
+    }
+    .player-panel--bare .panel-rail--score .panel-rail__tags {
+      gap: 0.25em;
+    }
+    .player-panel--bare .panel-rail--score .panel-stat__label {
+      font-size: clamp(0.35rem, 2.4cqmin, 0.6rem);
+    }
+    .player-panel--bare .panel-rail--score .panel-stat__value {
+      font-size: clamp(0.8rem, 4.6cqmin, 1.5rem);
+    }
+    .player-panel--bare .panel-rail--info {
+      grid-area: info;
+      width: 1.2rem;
+      height: 100%;
+      align-items: stretch;
+    }
+    .player-panel--bare .panel-rail--info .panel-meter {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  /* --- Rails --- */
+  .panel-rail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8cqmin;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .panel-rail--score {
+    flex: none;
+    width: clamp(5rem, 28%, 12.5rem);
+    align-items: flex-start;
+    text-align: left;
+  }
+  .panel-rail--info {
+    flex: none;
+    align-items: flex-end;
+  }
+  .panel-rail__spacer {
+    flex: 1 1 0;
+  }
+  .panel-rail__kind {
+    font-family: var(--font-mono);
+    font-size: clamp(0.4rem, 3cqmin, 0.9rem);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-yellow);
+  }
+  .panel-rail__name {
+    font-family: var(--font-display);
+    font-size: clamp(0.5rem, 4cqmin, 1.3rem);
+    line-height: 1;
+    color: var(--color-cream);
+  }
+  /* Which chart this player is on, and whether the machine is playing for them. */
+  .panel-rail__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3em;
+  }
+  .panel-tag {
+    font-family: var(--font-mono);
+    font-size: clamp(0.35rem, 2.2cqmin, 0.65rem);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.75);
+    border: 1px solid rgba(250, 250, 244, 0.28);
+    border-radius: var(--radius-pill);
+    padding: 0.1em 0.5em;
+  }
+  .panel-tag--auto {
+    color: var(--color-ink);
+    background: var(--color-accent);
+    border-color: transparent;
+  }
+  .panel-stat__label {
+    font-family: var(--font-mono);
+    font-size: clamp(0.4rem, 3cqmin, 0.9rem);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.55);
+  }
+  /* The score and the combo are what a player reads from across a room, so they
+     are the panel's biggest type and they grow with the panel (the `cqmin`), up to
+     the rail's own cap. The rail is wide enough for six figures at the top size. */
+  .panel-stat__value {
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 7cqmin, 3rem);
+    line-height: 0.95;
+    letter-spacing: -0.01em;
+    color: var(--color-cream);
+  }
+  .panel-stat__value--combo {
+    color: var(--color-yellow);
+  }
+
+  /* Power meter: the right rail is only this bar, so it runs the full height and
+     stays slim. It wears the house radius like every other surface. */
+  .panel-meter {
+    position: relative;
+    width: clamp(0.5rem, 4cqmin, 1.75rem);
+    height: 100%;
+    padding: 1px;
+    border: 1px solid rgba(250, 250, 244, 0.35);
+    border-radius: var(--radius-brand);
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+  }
+  .panel-meter__fill {
+    width: 100%;
+    border-radius: var(--radius-brand);
+    background: linear-gradient(
+      to top,
+      var(--color-yellow),
+      var(--color-accent)
+    );
+  }
+  /* Star power: the meter was spent, so the rail says what it bought. The mark is
+     vertical because the tube is slim, and it sits inside the gauge rather than
+     beside it — a second bar would be a second meter. */
+  .panel-rail--info[data-star="on"] .panel-meter {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0.5cqmin color-mix(in srgb, var(--color-accent) 45%, transparent);
+  }
+  .panel-rail--info[data-star="on"] .panel-meter__fill {
+    background: linear-gradient(
+      to top,
+      var(--color-accent),
+      var(--color-yellow)
+    );
+  }
+  .panel-meter__star {
+    position: absolute;
+    inset-block-start: 0.2em;
+    inset-inline-start: 50%;
+    transform: translateX(-50%);
+    writing-mode: vertical-rl;
+    font-family: var(--font-mono);
+    font-size: clamp(0.3rem, 2.2cqmin, 0.55rem);
+    font-weight: 700;
+    line-height: 1;
+    padding: 0.1em;
+    color: var(--color-ink);
+    background: var(--color-accent);
+    border-radius: var(--radius-inner);
+  }
+
+  /* --- Highway (the note area in a panel) ---
+     The neck a player plays on, drawn two ways (`highway--flat` and `highway--3d`,
+     from the `view` setting): face-on, and tilted into perspective. Everything
+     between them is **one plane** — `.highway__deck` — so the tilt is a single
+     `rotateX`; the third axis only stands each note's face up. Nothing on the neck
+     moves to announce a judgement: a note in its hit window glows where it is, a
+     note that lands is taken off the neck and the panel puts its burst on the line,
+     and a miss keeps its place there in red. A note's **skin**
+     (`highway--notes-bars`, `-gems`, `-arrows`, from the `noteStyle` setting) is the
+     shape of its face; every other note type is a channel of its own, and the
+     instrument's kit still supplies the small glyph. */
+  .highway {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    max-width: 42rem;
+    margin-inline: auto;
+    /* Clipped, never scrolled: the tilted deck is taller than the frame on purpose,
+       and a focused pad's `scrollIntoView` must not shift the neck under it. */
+    overflow: hidden;
+    overflow: clip;
+    border: 1px solid rgba(250, 250, 244, 0.14);
+    border-radius: var(--radius-brand);
+    /* Transparent, not black: face-on the deck covers it, and in 3D the space either
+       side of the neck is the room the panel is sitting in rather than a letterbox. */
+    background: transparent;
+    /* The five fret colours, in the classic five-fret order — green, red, yellow, blue,
+       orange — because anyone who has held one of these controllers already
+       knows them, and an open note is its purple bar. A deliberate exception to
+       the brand palette: a note's column is carried by position too, so this is
+       recognition, never a dependency. */
+    --fret-0: #35a03a;
+    --fret-1: #d5322e;
+    --fret-2: #f0c419;
+    --fret-3: #2d78d2;
+    --fret-4: #ef8a1f;
+    --fret-open: #8b5cc7;
+    /* How wide a note — and the pad it lands on — is drawn, as a share of its
+       column. `NOTE_SHARE` in `notes.ts` is the same number said the other way. */
+    --note-share: 68%;
+    /* The one place a note colour falls back to, when it has no column. */
+    --note: var(--color-yellow);
+  }
+  .highway--empty {
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono);
+    font-size: clamp(0.55rem, 2.4cqmin, 0.9rem);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.5);
+  }
+
+  /* The board: dark wood with the stage light pooling under the hit line. It is the
+     whole plane, so in 3D it recedes with everything else. The **grid** across it is
+     not drawn here: those lines are the song's beats, and they are mounted in the
+     track (`.highway__beat`) so they scroll with the notes. */
+  .highway__deck {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(85% 42% at 50% 101%, rgba(255, 212, 0, 0.22), transparent 72%),
+      linear-gradient(180deg, #08090d 0%, #14161c 58%, #1d2028 100%);
+    box-shadow: inset 0 0 3.5rem rgba(0, 0, 0, 0.65);
+    /* The fretboard fades out where the notes come in, rather than stopping on a
+       hard edge: the neck, its rails and the notes on it arrive out of the room. */
+    mask-image: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(0, 0, 0, 0.55) 10%,
+      #000 28%
+    );
+  }
+  /* A beat of the grid, and the bar it belongs to. Positioned in the track exactly
+     as a note is, so the two scroll together and the line a note lands on is the
+     line the beat is. */
+  .highway__beat {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    height: 1px;
+    background: rgba(250, 250, 244, 0.14);
+  }
+  .highway__beat.is-bar {
+    height: 2px;
+    background: rgba(250, 250, 244, 0.34);
+    box-shadow: 0 0 0.6rem rgba(250, 250, 244, 0.2);
+  }
+  /* A drum **fill**: a freestyle window, drawn as a band across the neck that
+     scrolls with the notes. It is a label rather than something to hit, so it is
+     a wash under the notes and never a target of its own — cheap, because it is
+     one element per mounted fill and moves with the track's transform. */
+  .highway__fill {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow: hidden;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-yellow) 22%, transparent),
+      color-mix(in srgb, var(--color-yellow) 8%, transparent)
+    );
+    border-top: 1px dashed color-mix(in srgb, var(--color-yellow) 55%, transparent);
+    border-bottom: 1px dashed color-mix(in srgb, var(--color-yellow) 55%, transparent);
+    pointer-events: none;
+  }
+  .highway__fill-label {
+    margin-top: 0.2rem;
+    font-family: var(--font-mono);
+    font-size: clamp(0.55rem, 2.2cqmin, 0.8rem);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-yellow);
+    text-shadow: 0 1px 0 rgba(12, 13, 10, 0.9), 0 0 10px rgba(12, 13, 10, 0.8);
+    opacity: 0.9;
+  }
+  .highway__columns {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(var(--columns), 1fr);
+  }
+  /* A column's rail: the string down its edge, and a breath of shade so a wide
+     highway still reads as columns rather than one field. */
+  .highway__column {
+    border-right: 1px solid rgba(250, 250, 244, 0.12);
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.35),
+      transparent 22%,
+      transparent 78%,
+      rgba(250, 250, 244, 0.05)
+    );
+  }
+  .highway__column:last-child {
+    border-right: 0;
+  }
+  /* One translated layer: the notes hold their places and this carries them past
+     the hit line, so a frame costs a single style write. A highway note is a
+     button, so there are no ribbons here. */
+  .highway__track {
+    position: absolute;
+    inset: 0;
+    /* Above the hit line (z 3): the line is drawn taller than it used to be, and a
+       note has to land *on* it rather than disappear behind it. */
+    z-index: 4;
+    will-change: transform;
+  }
+  /* A note is a **span** — where its head is and how long it is held — and a **face**
+     on it, which is what it looks like. The span is the note element, so the mounted
+     window, the transform and the judged state never change with the skin; the face
+     is its own element, so a gem can be a rounded head at the hit end of a long tail.
+     Every skin is drawn with gradients and shadows only: no image, no canvas, and
+     nothing that has to repaint on a frame. */
+  .highway__note {
+    position: absolute;
+    z-index: 2;
+    transition:
+      opacity 0.16s var(--ease-brand),
+      transform 0.14s var(--ease-brand);
+  }
+  /* A bar's face is the whole note: a glossy top, a hard edge beneath it and a
+     shadow on the frets, so it reads as a thing sitting *on* the neck. */
+  .highway__face {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-inner);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--note) 55%, white) 0%,
+      var(--note) 44%,
+      color-mix(in srgb, var(--note) 74%, black) 100%
+    );
+    box-shadow:
+      0 0 0 2px rgba(12, 13, 10, 0.5),
+      inset 0 2px 0 0 rgba(250, 250, 244, 0.5),
+      inset 0 -4px 6px rgba(12, 13, 10, 0.45),
+      0 3px 0 0 color-mix(in srgb, var(--note) 45%, black),
+      0 9px 14px rgba(0, 0, 0, 0.5);
+    transition: box-shadow 0.14s var(--ease-brand);
+  }
+  /* Column colours, in the same five-fret order, on the note *and* the pad it lands
+     on. Position carries the same information, so nothing here depends on telling
+     five hues apart. */
+  .highway__note.is-column-0,
+  .highway__pad.is-column-0,
+  .highway__burst.is-column-0 {
+    --note: var(--fret-0);
+  }
+  .highway__note.is-column-1,
+  .highway__pad.is-column-1,
+  .highway__burst.is-column-1 {
+    --note: var(--fret-1);
+  }
+  .highway__note.is-column-2,
+  .highway__pad.is-column-2,
+  .highway__burst.is-column-2 {
+    --note: var(--fret-2);
+  }
+  .highway__note.is-column-3,
+  .highway__pad.is-column-3,
+  .highway__burst.is-column-3 {
+    --note: var(--fret-3);
+  }
+  .highway__note.is-column-4,
+  .highway__pad.is-column-4,
+  .highway__burst.is-column-4 {
+    --note: var(--fret-4);
+  }
+  /* An open note spans the highway: strummed with no frets at all. */
+  .highway__note.is-open,
+  .highway__burst.is-open {
+    --note: var(--fret-open);
+  }
+  /* The drum kit's **kick pedal** has no fret colour: it is the one column under
+     a foot. Cream, and a dashed edge on its pad, so it reads as the pedal rather
+     than as a sixth hand-colour nobody has ever held. */
+  .highway__note.is-kick,
+  .highway__pad.is-kick,
+  .highway__burst.is-kick {
+    --note: var(--color-cream);
+  }
+  .highway__note.is-kick .highway__face {
+    outline: 2px dashed rgba(12, 13, 10, 0.45);
+    outline-offset: -5px;
+  }
+  .highway__pad.is-kick {
+    border-style: dashed;
+  }
+  .highway__note.is-open .highway__face {
+    outline: 2px dashed rgba(12, 13, 10, 0.5);
+    outline-offset: -5px;
+  }
+  /* A hero note wears a thick outer border and a soft glow, and pulses gently.
+     The border is the cue; the glow only makes it louder. */
+  .highway__note.is-hero .highway__face {
+    border: 3px solid var(--color-cream);
+    box-shadow:
+      0 0 0 2px rgba(12, 13, 10, 0.55),
+      inset 0 2px 0 0 rgba(250, 250, 244, 0.5),
+      0 3px 0 0 color-mix(in srgb, var(--note) 45%, black),
+      0 0 18px rgba(250, 250, 244, 0.5);
+    animation: hero-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes hero-pulse {
+    0%,
+    100% {
+      box-shadow:
+        0 0 0 2px rgba(12, 13, 10, 0.55),
+        inset 0 2px 0 0 rgba(250, 250, 244, 0.5),
+        0 3px 0 0 color-mix(in srgb, var(--note) 45%, black),
+        0 0 12px rgba(250, 250, 244, 0.4);
+    }
+    50% {
+      box-shadow:
+        0 0 0 2px rgba(12, 13, 10, 0.55),
+        inset 0 2px 0 0 rgba(250, 250, 244, 0.5),
+        0 3px 0 0 color-mix(in srgb, var(--note) 45%, black),
+        0 0 22px rgba(250, 250, 244, 0.65);
+    }
+  }
+  /* A hopo flips its face *while it can be tapped*: **solid white inside its own
+     fret-coloured border**. The cue goes the moment its chain breaks, so "you
+     must strum this one" is visible rather than memorised. A white fill alone
+     would disappear into the board at distance, and a ring inside the colour read
+     as a box on the note rather than as a different kind of note. */
+  .highway__note.is-hopo .highway__face {
+    background: #fff;
+    border: 3px solid var(--note);
+    box-shadow:
+      0 0 0 2px rgba(12, 13, 10, 0.5),
+      0 3px 0 0 color-mix(in srgb, var(--note) 45%, black),
+      0 9px 14px rgba(0, 0, 0, 0.5);
+  }
+  /* Landing, landed, dropped. A note in its window glows where it is; a note that
+     **lands** leaves the neck entirely — `Highway` stops drawing it, and the burst
+     above the line is its answer — while a miss turns red and keeps travelling past
+     the line, which is what makes "landed" and "dropped" impossible to confuse. */
+  .highway__note.is-live .highway__face {
+    box-shadow:
+      0 0 0 2px rgba(12, 13, 10, 0.5),
+      inset 0 2px 0 0 rgba(250, 250, 244, 0.62),
+      inset 0 -4px 6px rgba(12, 13, 10, 0.38),
+      0 3px 0 0 color-mix(in srgb, var(--note) 45%, black),
+      0 0 18px var(--note),
+      0 10px 18px rgba(0, 0, 0, 0.5);
+  }
+  /* A miss overrides the **column colour**, so the face, the tail and an arrow all go
+     red together without a second set of rules. After the column rules, so it wins. */
+  .highway__note.is-miss {
+    --note: var(--color-danger);
+    opacity: 0.55;
+  }
+  .highway__note.is-miss .highway__face {
+    box-shadow: 0 0 0 2px rgba(12, 13, 10, 0.5);
+  }
+  /* A note the player has hold of lifts clear of the board, so "I have it" is
+     something to see rather than only read off the score. */
+  .highway__note.is-held {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  .highway__note.is-held .highway__face {
+    box-shadow:
+      0 0 0 2px rgba(12, 13, 10, 0.5),
+      inset 0 2px 0 0 rgba(250, 250, 244, 0.65),
+      0 4px 0 0 color-mix(in srgb, var(--note) 40%, black),
+      0 0 22px var(--note),
+      0 14px 22px rgba(0, 0, 0, 0.55);
+  }
+  /* The glyph a bar or gem carries is the instrument's own — a mat's arrows. It is an
+     inline arrow, so it scales with the face rather than with the page's type. */
+  .highway__glyph {
+    height: 68%;
+    width: auto;
+    fill: rgba(12, 13, 10, 0.78);
+    pointer-events: none;
+  }
+  /* The first-run key labels. A cap is **cream on ink**, not a fret colour: the
+     note's own colour is the column, and the label is only its name. It sits on
+     the note's head rather than filling its face, so a gem, an arrow and a plain
+     bar all wear it in the same place. */
+  .highway__key,
+  .highway__pad-key {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.15em;
+    padding: 0.06em 0.28em;
+    border-radius: var(--radius-inner);
+    background: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-mono);
+    font-size: clamp(0.5rem, 2.4cqh, 0.85rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    box-shadow:
+      0 0 0 1px rgba(12, 13, 10, 0.35),
+      0 2px 0 rgba(0, 0, 0, 0.45);
+    pointer-events: none;
+  }
+  .highway__key {
+    position: absolute;
+    z-index: 3;
+    left: 50%;
+    bottom: 0.18em;
+    max-width: 92%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transform: translateX(-50%);
+  }
+  .highway__pad-key {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* --- Gems and arrows: a head, then a tail ---
+     Both skins put the face at the **head** end of the span — the bottom, which is
+     where the hit line is — and draw the hold as a narrow tail behind it. The head's
+     height comes from its width (`aspect-ratio`), so a gem is a puck in a narrow
+     panel and in a wide one, and a five-column neck still has a note shaped like a
+     note. */
+  .highway--notes-gems .highway__face,
+  .highway--notes-arrows .highway__face {
+    top: auto;
+    bottom: 0;
+    z-index: 1;
+    height: auto;
+    aspect-ratio: 1.35;
+    border-radius: var(--radius-pill);
+  }
+  /* The tail runs from the note's top down to the **middle of its face**, so a note
+     covers the lower half of its own tail: an arrow's point and its lower half stay
+     clean, and a gem's tail meets it under the puck. The note is its own size
+     container, so `100cqw` is the note's width; the face is `width / 1.35` tall, and
+     half of that is `width / 2.7`. */
+  .highway--notes-gems .highway__note,
+  .highway--notes-arrows .highway__note {
+    container-type: inline-size;
+  }
+  .highway--notes-gems .highway__note.is-sustain::after,
+  .highway--notes-arrows .highway__note.is-sustain::after {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    left: 34%;
+    right: 34%;
+    top: 0;
+    bottom: calc(100cqw / 2.7);
+    border-radius: var(--radius-pill);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--note) 68%, black),
+      var(--note) 85%
+    );
+    box-shadow: 0 0 0 1.5px rgba(12, 13, 10, 0.45);
+    opacity: 0.9;
+  }
+  /* An open note has no column and no direction: it stays one wide bar in every
+     skin, and the skin's tail would be a strip down the middle of nothing. */
+  .highway--notes-gems .highway__note.is-open .highway__face,
+  .highway--notes-arrows .highway__note.is-open .highway__face {
+    inset: 0;
+    height: auto;
+    aspect-ratio: auto;
+    border-radius: var(--radius-inner);
+  }
+  .highway--notes-gems .highway__note.is-open::after,
+  .highway--notes-arrows .highway__note.is-open::after {
+    display: none;
+  }
+
+  /* --- Arrows ---
+     The glyph **is** the note: a chunky direction in the fret colour with an ink
+     casing, drawn as one path. It carries no face, so the head is transparent and
+     only the arrow (and its tail, for a hold) is drawn. */
+  .highway--notes-arrows .highway__note:not(.is-open) .highway__face {
+    background: none;
+    box-shadow: none;
+    border: 0;
+    animation: none;
+  }
+  .highway--notes-arrows .highway__note.is-sustain::after {
+    left: 40%;
+    right: 40%;
+    /* An arrow's shaft is the same width as the tail, so its casing would show as a
+       dark line down the shaft. In the arrows skin the tail is a clean strip that the
+       arrow's own shaft continues. */
+    box-shadow: none;
+  }
+  .highway--notes-arrows .highway__glyph {
+    height: 100%;
+    fill: color-mix(in srgb, var(--note) 86%, white);
+    stroke: #0c0d0a;
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+    paint-order: stroke;
+  }
+  .highway--notes-arrows .highway__note.is-hopo .highway__glyph {
+    fill: #fff;
+    stroke: var(--note);
+    stroke-width: 1.8;
+  }
+  .highway--notes-arrows .highway__note.is-hero .highway__glyph {
+    stroke: var(--color-cream);
+    stroke-width: 2;
+    filter: drop-shadow(0 0 6px rgba(250, 250, 244, 0.75));
+  }
+  .highway--notes-arrows .highway__note.is-live .highway__glyph {
+    filter: drop-shadow(0 0 9px var(--note));
+  }
+  .highway--notes-arrows .highway__note.is-held .highway__glyph {
+    filter: drop-shadow(0 0 12px var(--note));
+  }
+  /* The hit line: a rail across the neck with a **pad per column** on it. The pads
+     are the frets under the player's fingers — a pad fills only when that column is
+     held, never because a note is landing or was struck. The rail sits on the
+     note's own centre, worked out from the same two fractions the notes are placed
+     by. */
+  .highway__hit {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc((1 - var(--hit-fraction)) * 100% - var(--tap, 4) * 0.5%);
+    z-index: 3;
+    display: grid;
+    grid-template-columns: repeat(var(--columns), 1fr);
+    align-items: center;
+    height: calc(var(--tap, 4) * 1%);
+    min-height: 8px;
+    pointer-events: none;
+  }
+  .highway__hit::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 2px;
+    transform: translateY(-50%);
+    background: rgba(250, 250, 244, 0.3);
+    box-shadow: 0 0 12px rgba(250, 250, 244, 0.3);
+  }
+  .highway__pad {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    align-self: stretch;
+    justify-self: center;
+    width: var(--note-share);
+    min-height: 8px;
+    border: 2px solid color-mix(in srgb, var(--note) 72%, transparent);
+    border-radius: var(--radius-inner);
+    background: color-mix(in srgb, var(--note) 14%, transparent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--note) 28%, transparent);
+  }
+  /* A gem is round, so the pad it lands on is too. */
+  .highway--notes-gems .highway__pad:not(.highway__pad--arrow) {
+    border-radius: var(--radius-pill);
+  }
+  /* A fret held down is a solid block of its own colour: the hand on the line.
+     Instant, not a fade — feedback that arrives after the press is about the past. */
+  .highway__pad.is-held {
+    border-color: var(--note);
+    background: var(--note);
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--note) 45%, transparent),
+      0 0 20px color-mix(in srgb, var(--note) 80%, transparent);
+  }
+  /* A mat's hit area is a row of arrows rather than keys, so the rail grows to hold
+     one — and an arrow marker stays the **whole column wide**, so the press is as
+     easy on a five-column board as on a four-column one. */
+  .highway--markers-arrows .highway__hit {
+    height: auto;
+    min-height: 1.4rem;
+  }
+  .highway__pad--arrow,
+  .highway__pad--arrow.is-held {
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+  .highway__pad-glyph {
+    height: clamp(0.9rem, 4.2cqmin, 1.5rem);
+    width: auto;
+    fill: rgba(250, 250, 244, 0.62);
+    pointer-events: none;
+    transition:
+      fill 0.12s var(--ease-brand),
+      filter 0.12s var(--ease-brand);
+  }
+  .highway__pad--arrow.is-held .highway__pad-glyph {
+    fill: var(--color-cream);
+    filter: drop-shadow(0 0 8px rgba(250, 250, 244, 0.7));
+  }
+  /* The strum's own caption for the first few notes. It sits above the line and
+     outside the tilted deck, so it stays flat while the neck recedes. */
+  .highway__coach {
+    position: absolute;
+    z-index: 8;
+    right: 0.45rem;
+    /* Below the pads, not on top of the rightmost one: the line is the control,
+       the caption sits underneath it. */
+    bottom: 0.08rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+    padding: 0.1em 0.45em;
+    border: 1px solid color-mix(in srgb, var(--color-yellow) 45%, transparent);
+    border-radius: var(--radius-pill);
+    background: rgba(12, 13, 10, 0.78);
+    box-shadow: 0 0.2rem 0.8rem rgba(0, 0, 0, 0.35);
+    color: var(--color-cream);
+    font-family: var(--font-mono);
+    font-size: clamp(0.45rem, 1.8cqh, 0.65rem);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.1;
+    text-transform: uppercase;
+    pointer-events: none;
+  }
+  .highway__coach-keys {
+    color: var(--color-yellow);
+    font-size: 1.15em;
+    letter-spacing: 0.12em;
+  }
+  .highway__coach-word {
+    color: rgba(250, 250, 244, 0.78);
+  }
+
+  /* --- The strike ---
+     A landed note leaves the neck, so this is what answers it: a burst in its own
+     fret colour standing **above** the pad it was played on. It is a layer of its
+     own, outside the track and anchored to the line, so it does not slide away with
+     the song — which is exactly what made a hit look like a miss. One element per
+     hit, alive for `HIT_BURST_MS`, gone when the run's window has passed.
+     Light only: a radial gradient moved and faded on transform and opacity, with no
+     blur, filter or image, because this is drawn on every note of a whole song. */
+  .highway__bursts {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+  }
+  .highway__burst {
+    position: absolute;
+    /* The line itself: `--hit-fraction` is where a note's head meets its pad, and
+       the burst's own height stands all of it above that point. */
+    top: calc(var(--hit-fraction) * 100%);
+    height: clamp(1.3rem, 11cqmin, 3rem);
+    border-radius: 50%;
+    /* A hot core on the line with a coloured bloom around it: the core is what
+       says "here", the bloom is what says "this note". Both are the same gradient
+       family as the room's lights — no blur, so nothing repaints per frame. */
+    background:
+      radial-gradient(
+        30% 62% at 50% 100%,
+        #fff 0%,
+        color-mix(in srgb, var(--note) 82%, white) 30%,
+        transparent 100%
+      ),
+      radial-gradient(
+        58% 120% at 50% 100%,
+        color-mix(in srgb, var(--note) 62%, transparent) 8%,
+        transparent 78%
+      );
+    transform-origin: 50% 100%;
+    transform: translateY(-100%);
+    animation: hit-burst 300ms cubic-bezier(0.16, 0.9, 0.3, 1) forwards;
+    pointer-events: none;
+  }
+  @keyframes hit-burst {
+    0% {
+      opacity: 1;
+      transform: translateY(-100%) scale(0.45, 0.55);
+    }
+    45% {
+      opacity: 0.85;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(calc(-100% - 0.35em)) scale(1.35, 1.15);
+    }
+  }
+  /* The site's one reduced-motion rule ends every animation at once, which would
+     leave the burst invisible — and a hit still needs its answer. Hold a still glow
+     for the same window instead of a flash. */
+  @media (prefers-reduced-motion: reduce) {
+    .highway__burst {
+      animation: none;
+      opacity: 0.85;
+    }
+  }
+
+  /* --- A hit line you can play ---
+     With tapping on, the markers are controls. The track above them is only
+     pictures, and it must let a finger through; the highway is the play surface,
+     so nothing in it may scroll the page under a player trying to tap a beat — a
+     stray second finger that started a pan would cancel the first one's press. */
+  .highway--tap {
+    touch-action: none;
+  }
+  .highway--tap .highway__track,
+  .highway--tap .highway__track * {
+    pointer-events: none;
+  }
+  .highway--tap .highway__hit {
+    pointer-events: auto;
+    touch-action: none;
+  }
+  .highway--tap .highway__pad {
+    appearance: none;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* The visible pad stays the size the note lands on, but the **target** is the
+     whole column, in a band about 3rem tall around the line: a finger is not a
+     2px rail, and two fingers on a chord must not have to find two narrow strips.
+     A pad is `NOTE_SHARE` (0.68) of its column, so 23.5% of the pad on each side
+     reaches exactly the column's edges — neighbours meet without overlapping. The
+     pseudo-element is part of the button, so the press is the pad's. */
+  .highway--tap .highway__pad::before {
+    content: "";
+    position: absolute;
+    inset: -1rem -23.5% -1rem;
+  }
+  /* The pad keeps the stage's own focus treatment off: it is not in the tab
+     order, and a tap is already its own feedback. */
+  .highway--tap .highway__pad:focus {
+    outline: none;
+  }
+
+  /* --- The tilted neck ---
+     One plane, rotated: `perspective` on the frame and a single `rotateX` on the
+     deck. The far half compresses, so the same run-up holds more of the song and
+     the columns converge toward it — the reason to tilt it at all. The deck is made
+     longer than the frame on purpose, so that once tilted it still fills it. */
+  .highway--3d {
+    /* Measured against the panel's own height (`cqh`), so the tilt looks the same
+       in a small box and a big one. */
+    perspective: 170cqh;
+    perspective-origin: 50% 50%;
+    /* The frame's own edge is a rectangle, and the neck inside it is a trapezoid —
+       so a border here would sit on the bounding box rather than on the neck. The
+       deck below carries the edge instead, because it is the plane that tilts. */
+    border-color: transparent;
+  }
+  .highway--3d .highway__deck {
+    top: auto;
+    bottom: 0;
+    height: 222%;
+    transform-origin: 50% 100%;
+    transform: rotateX(48deg);
+    transform-style: preserve-3d;
+    /* On the deck, so it recedes with the columns and its sides stay on the neck. */
+    border: 1px solid rgba(250, 250, 244, 0.14);
+    border-radius: var(--radius-brand);
+  }
+  .highway--3d .highway__track {
+    transform-style: preserve-3d;
+  }
+  /* A note is a **block** on the board, not a tile laid on it. Its height is a face
+     hung off the near edge and stood up: a single perpendicular wall, which is what
+     the eye reads as thickness. The note itself is the top of the block. */
+  .highway--3d .highway__note {
+    transform-style: preserve-3d;
+  }
+  /* The wall hangs off the **face**, so a gem's block is under its head rather than
+     down the length of its tail. */
+  .highway--3d .highway__face {
+    transform-style: preserve-3d;
+  }
+  .highway--3d .highway__face::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: clamp(4px, 2cqmin, 13px);
+    transform-origin: 50% 0%;
+    transform: rotateX(90deg);
+    border-radius: 0 0 var(--radius-inner) var(--radius-inner);
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--note) 62%, black),
+      color-mix(in srgb, var(--note) 32%, black)
+    );
+  }
+  /* A hopo's border is part of its box, and the side wall hangs off the padding
+     box — so reach it back under the border or the white face gains a coloured
+     ledge around its block. */
+  .highway--3d .highway__note.is-hopo .highway__face::before {
+    left: -3px;
+    right: -3px;
+  }
+  /* Everything judged is read in **place**, and nothing on the neck moves. A note
+     in its hit window is lit where it is rather than lifted toward the line, because
+     in a tilted plane a lift also carries it **up the screen** — it would sit above
+     the fret it is about to land on. So: a live note glows, a note that lands leaves
+     the neck and its burst stands on the line (a layer of its own, so the tilt does
+     not carry it away either), a miss goes red where it is, and even a sustain being
+     held stays on its fret — full brightness, a little larger, and glowing, which is
+     the flat neck's own treatment without the lift. */
+  .highway--3d .highway__note.is-miss {
+    transform: none;
+    opacity: 0.7;
+  }
+  /* Last, so a note being held keeps its size even though it also carries `is-hit`
+     (it was struck on the way in): the hold is the state that matters now. */
+  .highway--3d .highway__note.is-held {
+    transform: scale(1.08);
+  }
+  /* The far end fades into the dark, so a small note up there reads as distance
+     rather than as a small note. Only the tilted neck needs it: face-on, the top of
+     the board is as close as the bottom. */
+  .highway__fog {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: none;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      rgba(7, 8, 10, 0.82) 0%,
+      rgba(7, 8, 10, 0.3) 9%,
+      transparent 26%
+    );
+  }
+  .highway--3d .highway__fog {
+    display: block;
+  }
+
+  /* The key map and the auto toggles, one line per player. */
+  .band-controls__keys {
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+    max-width: min(30rem, calc(100vw - 1.2rem));
+    padding: 0.4rem 0.6rem;
+    background: rgba(12, 13, 10, 0.86);
+    border: 1px solid rgba(250, 250, 244, 0.24);
+    border-radius: var(--radius-brand);
+  }
+  .band-key {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .band-key__who {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.7);
+  }
+  .band-key__map {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.04em;
+    color: rgba(250, 250, 244, 0.72);
+    white-space: nowrap;
+  }
+
+  /* What is plugged in, and who is fighting over a key. The warning is drawn in
+     the accent rather than a new red: it is a thing to know about, not an error,
+     and the palette has one accent to spend. */
+  .band-controls__notes {
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+    max-width: min(30rem, calc(100vw - 1.2rem));
+    padding: 0.4rem 0.6rem;
+    background: rgba(12, 13, 10, 0.86);
+    border: 1px solid rgba(250, 250, 244, 0.24);
+    border-radius: var(--radius-brand);
+  }
+  .band-controls__note {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.7);
+  }
+  .band-controls__note--dim {
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    color: rgba(250, 250, 244, 0.6);
+  }
+  .band-controls__note--warn {
+    letter-spacing: 0.04em;
+    text-transform: none;
+    color: var(--color-yellow);
+  }
+  /* A read-out with one thing you can do about it: small, inline, and not a button
+     you would ever press by accident. */
+  .band-controls__mini {
+    margin-left: 0.4rem;
+    padding: 0.05rem 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-cream);
+    background: rgba(12, 13, 10, 0.6);
+    border: 1px solid rgba(250, 250, 244, 0.3);
+    border-radius: var(--radius-inner);
+    cursor: pointer;
+  }
+  .band-controls__mini:hover {
+    color: var(--color-ink);
+    background: var(--color-yellow);
+    border-color: var(--color-yellow);
+  }
+
+  /* --- Screens (the loop around a run) ---
+     **One at a time, and only one of them is the stage.** The welcome, the jukebox,
+     the band screen, the load and the results are pages of their own, filling the
+     island's frame with the whole viewport to themselves; the pause is `--over`,
+     scrimmed over the running stage, because it is something that happens *during*
+     a song. They are overlays rather than routes, so moving between them never
+     reloads the page — and a fullscreen session survives the whole loop. The dev
+     controls sit above all of them (z 30), so the review surface is never covered by
+     the thing it is reviewing. */
+  .screen {
+    position: absolute;
+    inset: 0;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(0.6rem, 2vmin, 1.6rem);
+    overflow: auto;
+    pointer-events: auto;
+    /* A page is a **scrim over the room**, not a sheet of ink: the backdrop is what
+       the menus have instead of a song, and covering it up would be the one thing it
+       is for. Dark enough that the working surfaces read, light enough to see. */
+    background: linear-gradient(
+      180deg,
+      rgba(10, 11, 8, 0.62),
+      rgba(10, 11, 8, 0.82)
+    );
+  }
+  /* The two that sit over the stage: the scrim is what says "during a song". */
+  .screen--over {
+    background: linear-gradient(180deg, rgba(10, 11, 8, 0.86), rgba(10, 11, 8, 0.95));
+  }
+  .screen--welcome {
+    /* The fade stays the brand's; what changes is that it is a **scrim**, not a sheet
+       of ink — the room's artwork is the first thing the game ever shows. A faint
+       glow in each corner (the room's light, and one breath of the accent) warms the
+       empty space around the poster. */
+    background:
+      radial-gradient(120% 90% at 15% 10%, rgba(255, 212, 0, 0.16), transparent 62%),
+      radial-gradient(80% 70% at 92% 100%, rgba(34, 224, 255, 0.08), transparent 62%),
+      linear-gradient(180deg, rgba(10, 11, 8, 0.5), rgba(10, 11, 8, 0.74));
+    overflow: hidden;
+  }
+  /* The way in is the game's **poster**: a hazard-taped marquee over the room. It is
+     one of the two screens that *is* a single thing, so it keeps the centred card —
+     and it wears the same frame the landing page's hero artwork and mode stickers do:
+     a hard offset block in the brand's yellow. */
+  .screen--welcome .screen__panel--title {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.9rem, 3vmin, 2rem);
+    width: min(84rem, 100%);
+    min-height: min(78vh, 52rem);
+    padding: clamp(3rem, 9vmin, 6.5rem) clamp(1.5rem, 7vmin, 6rem);
+    overflow: visible;
+    text-align: center;
+    background: linear-gradient(180deg, rgba(12, 13, 10, 0.72), rgba(12, 13, 10, 0.9));
+    border: 1px solid rgba(250, 250, 244, 0.24);
+    border-radius: var(--radius-brand);
+    /* Kept within the screen's own minimum gutter (`clamp(0.6rem, …)`), so the block
+       always lands inside the frame rather than being clipped by the scrim. */
+    box-shadow: 0.6rem 0.6rem 0 0 var(--color-yellow);
+  }
+  /* Hazard tape across the top and bottom edges, corners rounded to meet the frame. */
+  .screen--welcome .screen__panel--title::before,
+  .screen--welcome .screen__panel--title::after {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 8px;
+    content: "";
+    background-image: repeating-linear-gradient(
+      -45deg,
+      var(--color-yellow) 0 12px,
+      var(--color-ink) 12px 24px
+    );
+  }
+  .screen--welcome .screen__panel--title::before {
+    top: 0;
+    border-radius: var(--radius-brand) var(--radius-brand) 0 0;
+  }
+  .screen--welcome .screen__panel--title::after {
+    bottom: 0;
+    border-radius: 0 0 var(--radius-brand) var(--radius-brand);
+  }
+  .welcome__build {
+    margin: 0;
+  }
+  .welcome__version {
+    color: rgba(250, 250, 244, 0.82);
+  }
+  .screen--welcome .screen__title--welcome {
+    margin: 0;
+    font-size: clamp(3.4rem, 14vmin, 10rem);
+    line-height: 0.92;
+    letter-spacing: -0.035em;
+    width: max-content;
+    max-width: 100%;
+    white-space: normal;
+  }
+  .welcome__word {
+    display: inline;
+  }
+  /* The prefix is sized by the whole name ("Everything"), and the hovered part's
+     word fills that box from its right edge. So swapping the word can never move
+     the "Star" beside it: the wordmark stays put and EverythingStar stays central
+     at rest, while GuitarStar reads right of centre. */
+  .welcome__word--prefix {
+    display: inline-grid;
+  }
+  .welcome__word--prefix > * {
+    grid-area: 1 / 1;
+  }
+  .welcome__word-sizer {
+    visibility: hidden;
+  }
+  .welcome__word-live {
+    text-align: right;
+  }
+  /* Over two lines the Star is centred on its own line, so the part's word is
+     centred on its line too, rather than held against a Star that is not beside
+     it. The box keeps the whole name's width either way, so neither line moves. */
+  .screen__title--welcome[data-wrapped] .welcome__word-live {
+    text-align: center;
+  }
+  .welcome__word--star {
+    margin-left: 0.025em;
+    color: var(--color-yellow);
+    /* The one bit of light in the title, so the wordmark reads as a neon sign. */
+    text-shadow: 0 0 0.35em rgba(255, 212, 0, 0.45);
+  }
+  /* The strapline, a marquee plate under the wordmark. */
+  .welcome__tagline {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: clamp(0.62rem, 1.5vmin, 0.86rem);
+    font-weight: 700;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    /* The tracking adds a trailing space; nudge the tail back so it stays centred. */
+    text-indent: 0.34em;
+    color: rgba(250, 250, 244, 0.72);
+  }
+  /* The three ways to play, said as an arcade strip: the band's instruments and
+     the words, with only the words' place wearing the accent. */
+  .welcome__modes {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .welcome__mode {
+    padding: 0.3rem 0.75rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.8);
+    background: rgba(12, 13, 10, 0.5);
+    border: 1px solid rgba(250, 250, 244, 0.28);
+    border-radius: var(--radius-pill);
+    transition: background-color 120ms ease;
+  }
+  /* The chip under the pointer lights up, and the wordmark above takes its name —
+     the swap itself is `Welcome.tsx`'s, and the name stays until the wordmark is
+     hovered. */
+  .welcome__mode:hover {
+    background: rgba(250, 250, 244, 0.14);
+  }
+  .welcome__mode--accent {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  .screen--welcome .welcome__enter {
+    min-width: min(19rem, 100%);
+    min-height: 3.4rem;
+    padding: 0.95rem 1.6rem;
+    font-size: 0.9rem;
+  }
+  /* The welcome has one button, and the primary hover is its focus cue. */
+  .screen--welcome .welcome__enter:focus-visible,
+  .screen--welcome .welcome__enter[data-nav-focus] {
+    outline: none;
+  }
+  @media (forced-colors: active) {
+    .screen--welcome .welcome__enter:focus-visible,
+    .screen--welcome .welcome__enter[data-nav-focus] {
+      outline: 3px solid CanvasText;
+    }
+  }
+  .screen--welcome .screen__actions {
+    justify-content: center;
+    margin-top: clamp(0.2rem, 1.5vmin, 0.8rem);
+  }
+  @media (max-width: 44rem) {
+    .screen--welcome .screen__panel--title {
+      min-height: min(68vh, 28rem);
+      gap: clamp(0.7rem, 2.4vh, 1.1rem);
+      padding: clamp(2.1rem, 8vmin, 3rem) clamp(0.9rem, 4vmin, 1.4rem);
+      transform: translateY(-2.4rem);
+    }
+    .screen--welcome .screen__title--welcome {
+      font-size: clamp(1.8rem, 10vmin, 3rem);
+      line-height: 0.98;
+    }
+    .welcome__word--star {
+      margin: 0.025em 0 0;
+    }
+    .welcome__tagline {
+      letter-spacing: 0.24em;
+      text-indent: 0.24em;
+    }
+    .welcome__mode {
+      padding: 0.25rem 0.6rem;
+      font-size: 0.62rem;
+    }
+    .screen--welcome .welcome__enter {
+      min-height: 44px;
+      padding: 0.7rem 1rem;
+    }
+  }
+  .screen__panel {
+    width: min(78rem, 100%);
+    max-height: 100%;
+    overflow: auto;
+    padding: clamp(1rem, 2.6vmin, 2.2rem);
+    color: var(--color-cream);
+    background: rgba(20, 21, 17, 0.92);
+    border: 1px solid rgba(250, 250, 244, 0.18);
+    border-radius: var(--radius-brand);
+    box-shadow: 0 1.4rem 3rem rgba(0, 0, 0, 0.45);
+  }
+  /* A **page**, rather than a dialog: the panel *is* the screen — the full height
+     and width of the island, with the screen's padding as its gutter and no card
+     around it. What needs to read as a surface inside it (the song list, the
+     player boxes, the result cards) already carries its own fill and rule, so the
+     page around them does not need one — and a card floating in the middle of a
+     viewport is exactly what made a screen with this much room look like a modal. */
+  .screen__panel--page {
+    align-self: stretch;
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.6rem, 1.6vmin, 1.1rem);
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  /* On a page, the thing at the end of it belongs at the bottom of it. */
+  .screen__panel--page .band-actions {
+    margin-top: auto;
+  }
+  .screen__panel--title {
+    width: min(46rem, 100%);
+  }
+  .screen__panel--centre {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.9rem;
+    width: auto;
+    max-width: min(38rem, 100%);
+    text-align: center;
+  }
+  .screen__comment {
+    margin: 0 0 0.7rem;
+  }
+  .band-btn.screen__back {
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 0.4rem;
+    min-height: 44px;
+    margin-bottom: 0.35rem;
+    padding: 0 0.45rem;
+    font-size: 0.62rem;
+    background: transparent;
+    border-color: transparent;
+  }
+  .band-btn.screen__back::before {
+    position: absolute;
+    z-index: -1;
+    inset: 5px 0;
+    content: "";
+    background: rgba(12, 13, 10, 0.6);
+    border: 1px solid rgba(250, 250, 244, 0.35);
+    border-radius: var(--radius-inner);
+    transition:
+      background-color 0.18s var(--ease-brand),
+      border-color 0.18s var(--ease-brand);
+  }
+  .band .band-btn.screen__back:hover,
+  :root:not([data-game-input="pointer"]) .band .band-btn.screen__back:focus-visible,
+  .band .band-btn.screen__back[data-nav-focus] {
+    background: transparent;
+    border-color: transparent;
+  }
+  .band-btn.screen__back:hover::before,
+  :root:not([data-game-input="pointer"]) .band-btn.screen__back:focus-visible::before,
+  .band-btn.screen__back[data-nav-focus]::before {
+    background: var(--color-cream);
+    border-color: var(--color-cream);
+  }
+  /* A back button is a hover-shaped control, not a ringed one: the cream pill is
+     the whole cue. The `.band` prefix outranks the generic `.band-btn` hover,
+     which would otherwise fill it yellow. */
+  .band .band-btn.screen__back:focus-visible,
+  .band .band-btn.screen__back[data-nav-focus] {
+    outline: none;
+  }
+  @media (forced-colors: active) {
+    .band-btn.screen__back:focus-visible,
+    .band-btn.screen__back[data-nav-focus] {
+      outline: 3px solid CanvasText;
+    }
+  }
+  .screen__back svg {
+    width: 0.85rem;
+    height: 0.85rem;
+    fill: none;
+    stroke: var(--color-yellow);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .screen__title {
+    margin: 0 0 0.5rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.7rem, 5.5vmin, 3.2rem);
+    line-height: 1.04;
+    color: var(--color-cream);
+  }
+  .screen__lede {
+    max-width: 62ch;
+    margin: 0 0 1.1rem;
+    font-size: clamp(0.85rem, 1.7vmin, 1.05rem);
+    line-height: 1.5;
+    color: rgba(250, 250, 244, 0.8);
+  }
+  .screen__panel--centre .screen__lede {
+    margin-bottom: 0.4rem;
+  }
+  .screen__status {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.72);
+  }
+  .screen__hint {
+    margin: 0.7rem 0 0;
+    font-size: 0.78rem;
+    color: rgba(250, 250, 244, 0.6);
+  }
+  /* A song that could not be read, said where the band is chosen: a silent run is a
+     bug report nobody can write, and "No chart for this instrument" on the stage reads
+     as a broken song rather than a folder the browser wants to be let back into. */
+  .screen__warn {
+    max-width: 62ch;
+    margin: 0 0 1.1rem;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid rgba(255, 77, 79, 0.5);
+    border-radius: var(--radius-inner);
+    background: rgba(255, 77, 79, 0.14);
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: var(--color-cream);
+  }
+  /* A load can name several things at once: one problem is a sentence, more than one
+     is a short list. The list keeps the surface it was given and adds no gutter. */
+  .screen__problems {
+    list-style: none;
+  }
+  .screen__problems li + li {
+    margin-top: 0.3rem;
+  }
+  /* The loader's hint is a quiet paragraph otherwise, so its list has no gutter. */
+  .screen__hint.screen__problems {
+    padding: 0;
+  }
+  .screen__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+  /* The pause's three answers are one row at every width: a wrapped "Leave the
+     stage" reads as a lesser fourth choice rather than the third. The row never
+     wraps; on a phone the labels keep their line and the controls give up their
+     padding and letter-spacing instead (the clamps below), so nothing drops. */
+  .screen--paused .screen__actions {
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: clamp(0.3rem, 1.4vw, 0.6rem);
+    width: 100%;
+  }
+  .screen--paused .screen__actions .band-btn {
+    flex: 0 1 auto;
+    min-width: 0;
+    padding: 0.6rem clamp(0.4rem, 1.8vw, 1.1rem);
+    font-size: clamp(0.58rem, 2.3vw, 0.72rem);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+  /* Practice is the pause's own extra door, kept above the three answers so it
+     does not become a fourth in their row. Both controls keep the 44px target. */
+  .screen--paused .screen__practice {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+  }
+  .screen--paused .screen__practice .band-btn {
+    min-height: 44px;
+  }
+  .screen__spinner {
+    width: 2.2rem;
+    height: 2.2rem;
+    border: 3px solid rgba(250, 250, 244, 0.22);
+    border-top-color: var(--color-yellow);
+    border-radius: 50%;
+    animation: band-spin 0.9s linear infinite;
+  }
+
+  /* --- The menu ---
+     The wordmark and its three button-styled choices share the desktop screen. The
+     masthead wears the welcome's poster language — the graffiti tag, the lit
+     wordmark, a strip of hazard tape and the strapline — over the room's own glow,
+     so the two screens read as the same show. */
+  .screen--menu {
+    overflow: hidden;
+    padding: clamp(0.35rem, 2vmin, 1.6rem);
+    background:
+      radial-gradient(120% 90% at 12% 8%, rgba(255, 212, 0, 0.15), transparent 62%),
+      radial-gradient(80% 70% at 95% 100%, rgba(34, 224, 255, 0.08), transparent 62%),
+      linear-gradient(180deg, rgba(10, 11, 8, 0.52), rgba(10, 11, 8, 0.78));
+  }
+  .menu-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr);
+    align-items: center;
+    gap: clamp(2rem, 8vw, 8rem);
+    width: min(84rem, 100%);
+    height: 100%;
+    margin: auto;
+    padding: clamp(0.5rem, 3vmin, 2rem);
+  }
+  /* The masthead: the tag, then the wordmark with its tape rule and strapline
+     centred beneath it. The rule and strapline centre under the **name** rather
+     than the column, so they sit as one block however the column is sized. */
+  .menu__branding {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: clamp(0.6rem, 1.7vmin, 1.1rem);
+    min-width: 0;
+  }
+  .menu__masthead {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0.6rem, 1.7vmin, 1.1rem);
+    width: max-content;
+    max-width: 100%;
+  }
+  .menu__comment {
+    margin: 0;
+  }
+  .menu__brand {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(3.7rem, 8.2vw, 8.7rem);
+    font-weight: 400;
+    line-height: 0.78;
+    letter-spacing: -0.045em;
+    color: var(--color-cream);
+    transform: perspective(900px) rotateY(12deg);
+    transform-origin: center;
+    /* The wordmark drifts, so the hub is never quite still — slow and small, on the
+       wordmark alone. It moves on `translate` (the compositor's job), which also
+       leaves the button's own hover `translate` free to lift on top, and the site's
+       one reduced-motion rule stops it. */
+    animation: menu-float 8s ease-in-out infinite alternate;
+  }
+  @keyframes menu-float {
+    from {
+      translate: 0 0.25rem;
+    }
+    to {
+      translate: 0 -0.25rem;
+    }
+  }
+  /* Hovering the wordmark freezes the drift, so it holds still while it is read and
+     pressed. */
+  .menu__brand:hover,
+  .menu__brand:focus-within {
+    animation-play-state: paused;
+  }
+  .menu__brand span {
+    display: block;
+  }
+  /* The wordmark is the door back to the welcome: a button stripped to plain type
+     that lights up the way the doors below do when it is hovered or focused. */
+  .menu__brand-button {
+    display: block;
+    margin: 0;
+    padding: 0;
+    font: inherit;
+    color: inherit;
+    text-align: inherit;
+    background: none;
+    border: none;
+    cursor: pointer;
+    border-radius: var(--radius-inner);
+    transition: translate 0.22s var(--ease-brand);
+  }
+  .menu__brand-button:hover,
+  :root:not([data-game-input="pointer"]) .menu__brand-button:focus-visible,
+  .menu__brand-button[data-nav-focus] {
+    outline-color: var(--color-cream);
+    translate: 0 -0.1em;
+  }
+  .menu__brand-button:hover .menu__brand-star,
+  :root:not([data-game-input="pointer"]) .menu__brand-button:focus-visible .menu__brand-star,
+  .menu__brand-button[data-nav-focus] .menu__brand-star {
+    text-shadow:
+      0 0 0.45em rgba(255, 212, 0, 0.7),
+      0 0 1.3em rgba(255, 212, 0, 0.45);
+  }
+  /* The wordmark lifts and glows; it does not wear a box. */
+  .menu__brand-button:focus-visible,
+  .menu__brand-button[data-nav-focus] {
+    outline: none;
+  }
+  @media (forced-colors: active) {
+    .menu__brand-button:focus-visible,
+    .menu__brand-button[data-nav-focus] {
+      outline: 3px solid CanvasText;
+    }
+  }
+  .menu__brand-star {
+    margin: 0.14em 0 0 0.62em;
+    color: var(--color-yellow);
+    /* The same neon breath as the welcome, so the wordmark is one wordmark. */
+    text-shadow: 0 0 0.35em rgba(255, 212, 0, 0.45);
+    transition: text-shadow 0.22s var(--ease-brand);
+  }
+  .menu__rule {
+    width: min(20rem, 72%);
+    /* The wordmark's `line-height` is under 1, so its glyphs hang below their box:
+       this needs more air than the masthead's gap to clear the letters. */
+    margin-top: clamp(0.7rem, 3vmin, 1.8rem);
+    /* The global `.hazard` band, rounded so it reads as a strip of tape. */
+    border-radius: var(--radius-pill);
+  }
+  .menu__tagline {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: clamp(0.62rem, 1.4vmin, 0.82rem);
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    text-indent: 0.3em;
+    color: rgba(250, 250, 244, 0.9);
+    /* Over the room rather than a panel, so it carries its own contrast too. */
+    text-shadow:
+      0 1px 0 rgba(12, 13, 10, 0.95),
+      0 0 5px rgba(12, 13, 10, 0.95),
+      0 0 14px rgba(12, 13, 10, 0.8);
+  }
+  .menu__nav {
+    perspective: 1000px;
+  }
+  .menu {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.5rem, 2.2vmin, 1.2rem);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  /* A door: its number, its name over a line of where it leads, and an arrow. */
+  .screen--menu .menu__item {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: clamp(0.7rem, 1.6vw, 1.2rem);
+    width: 100%;
+    min-height: clamp(4.2rem, 9vmin, 6rem);
+    padding: 0.75rem clamp(0.9rem, 2vw, 1.4rem);
+    text-align: left;
+    font-size: clamp(1.05rem, 2vw, 1.5rem);
+    transform: perspective(900px) rotateY(-12deg) rotateX(2deg);
+    transform-origin: center;
+    transition:
+      background-color 0.18s var(--ease-brand),
+      border-color 0.18s var(--ease-brand),
+      color 0.18s var(--ease-brand),
+      box-shadow 0.22s var(--ease-brand),
+      translate 0.22s var(--ease-brand);
+  }
+  /* A door lifts the way the landing page's stickers do: a hard block of the brand's
+     own yellow under it and a step up out of the row. */
+  .screen--menu .menu__item:hover,
+  :root:not([data-game-input="pointer"]) .screen--menu .menu__item:focus-visible,
+  .screen--menu .menu__item[data-nav-focus] {
+    box-shadow: 0.5rem 0.5rem 0 0 var(--color-yellow);
+    translate: -0.25rem -0.25rem;
+  }
+  /* The doors and the wordmark already lift and throw a yellow shadow on focus.
+     The ring would be a second border saying the same thing, so the menu's own
+     focus effect is the whole cue. */
+  .screen--menu .menu__item:focus-visible,
+  .screen--menu .menu__item[data-nav-focus] {
+    outline: none;
+  }
+  @media (forced-colors: active) {
+    .screen--menu .menu__item:focus-visible,
+    .screen--menu .menu__item[data-nav-focus] {
+      outline: 3px solid CanvasText;
+    }
+  }
+  .menu__index {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    /* Opaque ink-soft: the faded ink this used to be dropped the tiny numeral
+       below 4.5:1 on the yellow door. */
+    color: var(--color-ink-soft);
+  }
+  .menu__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.18rem;
+    min-width: 0;
+  }
+  .menu__name {
+    line-height: 1;
+  }
+  .menu__hint {
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    line-height: 1.25;
+    text-transform: none;
+    color: rgba(12, 13, 10, 0.68);
+  }
+  .menu__arrow {
+    font-size: 1.1rem;
+    line-height: 1;
+    color: rgba(12, 13, 10, 0.7);
+    transition: transform 0.22s var(--ease-brand);
+  }
+  .screen--menu .menu__item:hover .menu__arrow,
+  :root:not([data-game-input="pointer"]) .screen--menu .menu__item:focus-visible .menu__arrow,
+  .screen--menu .menu__item[data-nav-focus] .menu__arrow {
+    transform: translateX(0.3rem);
+  }
+  @media (max-width: 44rem) {
+    .menu-layout {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      justify-items: center;
+      align-content: center;
+      gap: clamp(1rem, 3.8vh, 2rem);
+      padding: clamp(0.5rem, 2vh, 0.9rem) 0.75rem clamp(2rem, 8vh, 3rem);
+      transform: translateY(-2rem);
+    }
+    .menu__branding {
+      align-items: center;
+      text-align: center;
+      gap: clamp(0.45rem, 1.5vmin, 0.75rem);
+    }
+    .menu__brand {
+      align-self: center;
+      font-size: clamp(2rem, 10vw, 2.8rem);
+      line-height: 0.84;
+      text-align: center;
+      transform: none;
+    }
+    .menu__brand-star {
+      margin-top: 0.08em;
+    }
+    .menu__rule {
+      width: min(14rem, 58%);
+    }
+    .menu__tagline {
+      letter-spacing: 0.22em;
+      text-indent: 0.22em;
+    }
+    .menu__nav {
+      align-self: center;
+      display: flex;
+      align-items: center;
+      width: min(28rem, calc(100% - 1rem));
+    }
+    .menu {
+      width: 100%;
+      gap: clamp(0.25rem, 1.4vh, 0.6rem);
+    }
+    .screen--menu .menu__item {
+      min-height: clamp(44px, 8vh, 3.5rem);
+      padding: 0.6rem 0.8rem;
+      font-size: clamp(1rem, 5.2vw, 1.3rem);
+      transform: perspective(800px) rotateX(1deg);
+    }
+    .menu__hint {
+      font-size: 0.66rem;
+    }
+  }
+  @media (max-height: 26rem) {
+    .screen--welcome .screen__panel--title {
+      min-height: min(60vh, 12rem);
+      gap: clamp(0.5rem, 2vh, 0.85rem);
+      padding-block: clamp(1.6rem, 6vh, 2.2rem);
+      transform: translateY(-1.2rem);
+    }
+    .screen--welcome .screen__title--welcome {
+      font-size: clamp(1.6rem, 9vmin, 2rem);
+    }
+  }
+  @media (max-height: 30rem) {
+    .menu-layout {
+      gap: 0.75rem;
+      padding: 0.5rem 0.75rem 1.25rem;
+    }
+    .menu__branding {
+      gap: 0.35rem;
+    }
+    .menu__masthead {
+      gap: 0.35rem;
+    }
+    .menu__rule {
+      margin-top: 0.3rem;
+    }
+    .menu__brand {
+      font-size: clamp(1.7rem, 7vh, 2.2rem);
+    }
+    /* On a very short screen the strapline is the first thing to go; the rule stays,
+       so the masthead still reads as the poster's. */
+    .menu__tagline {
+      display: none;
+    }
+    .menu {
+      gap: 0.35rem;
+    }
+    .screen--menu .menu__item {
+      min-height: 44px;
+      padding-block: 0.4rem;
+    }
+    .menu__hint {
+      font-size: 0.64rem;
+    }
+  }
+  @media (max-width: 44rem) and (max-height: 22rem) {
+    .menu-layout {
+      transform: none;
+    }
+  }
+
+  /* --- The options page ---
+     A row per setting: what it is on the left, what changes it on the right, and a
+     dashed rule between rows — so the page reads as a table of four things rather
+     than a paragraph of controls. */
+  .options {
+    display: flex;
+    flex-direction: column;
+    width: min(48rem, 100%);
+  }
+  .option {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.3rem 1.2rem;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px dashed rgba(250, 250, 244, 0.14);
+  }
+  .option:last-child {
+    border-bottom: none;
+  }
+  .option__name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 400;
+    line-height: 1.2;
+  }
+  .option__hint {
+    max-width: 46ch;
+    margin: 0.1rem 0 0;
+    font-size: 0.74rem;
+    line-height: 1.45;
+    color: rgba(250, 250, 244, 0.62);
+  }
+  .option__control {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  /* A stepper: two small square buttons with the value between them. */
+  .option__step {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    line-height: 1;
+    color: var(--color-cream);
+    background: rgba(12, 13, 10, 0.7);
+    border: 1px solid rgba(250, 250, 244, 0.28);
+    border-radius: var(--radius-inner);
+    cursor: pointer;
+  }
+  .option__step:hover,
+  :root:not([data-game-input="pointer"]) .option__step:focus-visible,
+  .option__step[data-nav-focus] {
+    border-color: var(--color-yellow);
+  }
+  /* At the end of its travel it is refused rather than taken away: `aria-disabled`,
+     not `disabled`, because the press is what has to say "not further" — the same
+     rule the band screen's Play keeps. */
+  .option__step[aria-disabled="true"] {
+    color: rgba(250, 250, 244, 0.35);
+    border-color: rgba(250, 250, 244, 0.14);
+  }
+  .option__value {
+    min-width: 4.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    text-align: center;
+    color: rgba(250, 250, 244, 0.88);
+  }
+  /* The lag row holds the stepper and the measured calibration. They wrap together
+     on a narrow screen rather than pushing the button off the row. */
+  .option__control--lag {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .option__calibrate {
+    min-height: 44px;
+  }
+  .option__range {
+    width: min(15rem, 45vw);
+    accent-color: var(--color-yellow);
+  }
+  /* The players stack under their heading: what each of them holds is a row of its
+     own, not a control beside a sentence. */
+  .option--players {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .seats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin: 0.7rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .seat {
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr) auto auto;
+    gap: 0.6rem;
+    align-items: center;
+    padding: 0.35rem 0.5rem;
+    background: rgba(12, 13, 10, 0.55);
+    border: 1px solid rgba(250, 250, 244, 0.12);
+    border-radius: var(--radius-inner);
+  }
+  .seat__who {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.6);
+  }
+  .seat__kind {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 0.85rem;
+  }
+  .seat__kind.is-vocals {
+    color: var(--color-accent);
+  }
+  .seat__device {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    color: rgba(250, 250, 244, 0.68);
+  }
+  /* The band screen's gear, at the size a row needs. */
+  .seat .slot__gear {
+    width: 1.9rem;
+    height: 1.9rem;
+  }
+
+  /* --- The credits ---
+     A list you scroll, one row per thing the game is made of. The role is small
+     print on the left and the name is what is read, so it scans like a credit roll
+     rather than a paragraph. */
+  .credits {
+    width: min(42rem, 100%);
+    max-height: min(58vh, 34rem);
+    overflow-y: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px dashed rgba(250, 250, 244, 0.14);
+  }
+  .credit {
+    display: grid;
+    grid-template-columns: 9rem minmax(0, 1fr);
+    gap: 0.15rem 1rem;
+    padding: 0.6rem 0.2rem;
+    border-bottom: 1px dashed rgba(250, 250, 244, 0.14);
+  }
+  .credit__role {
+    grid-row: span 2;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.55);
+  }
+  .credit__who {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.86rem;
+    line-height: 1.4;
+  }
+  .credit__who a {
+    color: var(--color-yellow);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+  .credit__note {
+    grid-column: 2;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: rgba(250, 250, 244, 0.5);
+  }
+  /* One licence per line, with how many files sit under it. */
+  .credit__source {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    max-width: 34rem;
+  }
+  .credit__count {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: rgba(250, 250, 244, 0.5);
+  }
+  /* Both lists are two columns at a width, and one column on a phone: the setting's
+     control goes under its own name, and a credit's name under its own role. */
+  @media (max-width: 40rem) {
+    .option {
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: start;
+    }
+    .credit {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .credit__role {
+      grid-row: auto;
+    }
+    .credit__note {
+      grid-column: 1;
+    }
+  }
+
+  /* --- The game's own buttons (contrast against the bands' own components) --- */
+  .band-btn {
+    padding: 0.6rem 1.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-cream);
+    background: rgba(12, 13, 10, 0.6);
+    border: 1px solid rgba(250, 250, 244, 0.35);
+    border-radius: var(--radius-inner);
+    cursor: pointer;
+    transition:
+      background-color 0.18s var(--ease-brand),
+      border-color 0.18s var(--ease-brand),
+      color 0.18s var(--ease-brand);
+  }
+  .band-btn:hover:not(:disabled),
+  :root:not([data-game-input="pointer"]) .band-btn:focus-visible:not(:disabled),
+  .band-btn[data-nav-focus]:not(:disabled) {
+    color: var(--color-ink);
+    background: var(--color-yellow);
+    border-color: var(--color-yellow);
+  }
+  .band-btn--primary {
+    color: var(--color-ink);
+    background: var(--color-yellow);
+    border-color: var(--color-yellow);
+  }
+  .band-btn--primary:hover:not(:disabled),
+  :root:not([data-game-input="pointer"]) .band-btn--primary:focus-visible:not(:disabled),
+  .band-btn--primary[data-nav-focus]:not(:disabled) {
+    background: var(--color-cream);
+    border-color: var(--color-cream);
+  }
+  .band-btn--big {
+    padding: 0.8rem 1.5rem;
+    font-size: 0.84rem;
+  }
+  .band-btn:disabled {
+    opacity: 0.4;
+    cursor: var(--cursor-not-allowed), not-allowed;
+  }
+  /* The same look, for the buttons that stay pressable on purpose: a refused action
+     has to be pressable for the press to be what says "not like that" — see
+     `refuse` in AUDIO.md. */
+  .band-btn[aria-disabled="true"] {
+    opacity: 0.4;
+    cursor: var(--cursor-not-allowed), not-allowed;
+  }
+
+  /* --- The jukebox ---
+     A few hundred songs is a list you navigate, not a grid you browse: one
+     column, filed under its letter, with the index to get to a letter and the
+     search to get to a song. The song goes in the slot on the right. */
+  .jukebox {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: clamp(0.7rem, 2vmin, 1.4rem);
+  }
+  .jukebox__list {
+    flex: 1 1 34rem;
+    min-width: 0;
+  }
+  /* The heading, list and selection share the page deliberately. At medium widths,
+     the selection takes the otherwise empty space beside the heading, and the list
+     gets the full row below. On wide screens the heading spans the page, with the
+     list and selection sharing the remaining height. */
+  @media (min-width: 40rem) and (max-width: 61.999rem) {
+    .screen__panel--songs {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(14rem, 0.72fr);
+      grid-template-rows: auto minmax(0, 1fr);
+      min-height: 0;
+    }
+    .jukebox__heading {
+      grid-column: 1;
+      grid-row: 1;
+      min-width: 0;
+    }
+    .screen__panel--songs > .jukebox {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: stretch;
+      min-height: 0;
+    }
+    .screen__panel--songs > .jukebox__selection {
+      grid-column: 2;
+      grid-row: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 2.75rem;
+      align-items: stretch;
+      gap: 0.4rem;
+      min-width: 0;
+    }
+    .screen__panel--songs .jukebox__list {
+      display: flex;
+      flex: 1 1 0;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .screen__panel--songs .jukebox__scroller {
+      flex: 1 1 0;
+      height: auto;
+      min-height: 0;
+      overflow-y: auto;
+    }
+    .screen__panel--songs .jukebox__display {
+      display: grid;
+      grid-column: 1;
+      grid-row: 1;
+      grid-template-columns: minmax(0, 1fr) 2.5rem;
+      grid-template-areas:
+        "now-playing now-playing"
+        "title cover"
+        "chips cover"
+        "artist artist"
+        "offline offline";
+      align-content: start;
+      gap: 0.2rem 0.45rem;
+      flex: none;
+      min-width: 0;
+      padding: 0.65rem;
+    }
+    .screen__panel--songs .jukebox__now-playing {
+      grid-area: now-playing;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .screen__panel--songs .song-art--panel {
+      grid-area: cover;
+      width: 2.5rem;
+      height: 2.5rem;
+      margin: 0;
+    }
+    .screen__panel--songs .jukebox__duration {
+      min-width: 0;
+      margin: 0;
+    }
+    .screen__panel--songs .jukebox__headline {
+      display: contents;
+    }
+    .screen__panel--songs .jukebox__title {
+      grid-area: title;
+      min-width: 0;
+      max-width: 100%;
+      margin: 0;
+      font-size: clamp(1rem, 2.3vmin, 1.35rem);
+      line-height: 1.1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .screen__panel--songs .jukebox__display[data-has-song="false"] .jukebox__title {
+      grid-area: title;
+      grid-column: 1 / -1;
+    }
+    .screen__panel--songs .jukebox__artist {
+      grid-area: artist;
+      min-width: 0;
+      font-size: 0.68rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .screen__panel--songs .jukebox__offline {
+      grid-area: offline;
+      margin-top: 0.1rem;
+    }
+    .screen__panel--songs .jukebox__chips {
+      grid-area: chips;
+      min-width: 0;
+      margin: 0;
+      gap: 0.2rem;
+    }
+    .screen__panel--songs .jukebox__chips--full {
+      display: none;
+    }
+    .screen__panel--songs .jukebox__chips--compact {
+      display: flex;
+      flex: 0 1 auto;
+      flex-wrap: nowrap;
+      max-width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .screen__panel--songs .jukebox__chips--compact .song-chip {
+      flex: none;
+      padding: 0.08rem 0.25rem;
+      font-size: 0.45rem;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .screen__panel--songs .jukebox__history {
+      display: none;
+    }
+    .screen__panel--songs .jukebox__next {
+      grid-column: 2;
+      grid-row: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-width: 2.75rem;
+      min-height: 44px;
+      padding: 0.4rem 0.25rem;
+      font-size: 0.65rem;
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      letter-spacing: 0.08em;
+    }
+    .screen__panel--songs .jukebox__next-full {
+      display: none;
+    }
+    .screen__panel--songs .jukebox__next-compact {
+      display: inline;
+    }
+    .screen__panel--songs .jukebox__next {
+      margin-top: 0;
+    }
+  }
+
+  @media (min-width: 62rem) {
+    .screen__panel--songs {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(16rem, 19rem);
+      grid-template-rows: auto minmax(0, 1fr);
+      min-height: 0;
+    }
+    .jukebox__heading {
+      grid-column: 1 / -1;
+      grid-row: 1;
+    }
+    .screen__panel--songs > .jukebox {
+      grid-column: 1;
+      grid-row: 2;
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: stretch;
+      min-height: 0;
+    }
+    .screen__panel--songs > .jukebox__selection {
+      grid-column: 2;
+      grid-row: 2;
+      align-self: stretch;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .screen__panel--songs .jukebox__list {
+      align-self: stretch;
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      min-height: 0;
+    }
+    /* Stretched, but never squeezed: on a viewport too short for the column's own
+       contents, the page scrolls rather than the panel painting over itself. */
+    .jukebox__display {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+    .jukebox__scroller {
+      flex: 1 1 auto;
+      height: auto;
+      min-height: 12rem;
+    }
+    /* The way on to the band is outside the now-playing surface. */
+    .jukebox__next {
+      margin-top: auto;
+    }
+  }
+  .jukebox__search {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.6rem;
+  }
+  /* What the on-demand playlists are doing, under the field that asked them. It is
+     a line of its own rather than part of the toolbar: a search in flight must not
+     move the field the player is typing in. */
+  .jukebox__search-state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.7rem;
+    margin: -0.15rem 0 0.5rem;
+  }
+  .jukebox__search-line {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    color: rgba(250, 250, 244, 0.62);
+  }
+  .jukebox__search-line.is-warn {
+    color: var(--color-yellow);
+  }
+  .jukebox__search-error {
+    color: rgba(250, 250, 244, 0.5);
+  }
+  .jukebox__search-retry {
+    padding: 0.12rem 0.45rem;
+    font-size: 0.62rem;
+  }
+  /* The list's toolbar: how to find a song, and where the songs come from. */
+  .jukebox__playlists {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .jukebox__playlists-count {
+    padding: 0 0.35rem;
+    font-size: 0.62rem;
+    color: var(--color-ink);
+    background: var(--color-yellow);
+    border-radius: var(--radius-pill);
+  }
+  .jukebox__search-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.62);
+  }
+  .jukebox__input {
+    flex: 1 1 12rem;
+    min-width: 0;
+    padding: 0.45rem 0.6rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: var(--color-cream);
+    background: rgba(12, 13, 10, 0.7);
+    border: 1px solid rgba(250, 250, 244, 0.28);
+    border-radius: var(--radius-inner);
+  }
+  .jukebox__input:focus-visible {
+    border-color: var(--color-yellow);
+  }
+  /* On a phone the toolbar is the field and the button, side by side. The label is not
+     drawn: the placeholder already says what to type, and the width it took is the
+     width the field and the button need to share a row — but it stays in the document,
+     because a placeholder is not a name. */
+  @media (max-width: 40rem) {
+    .jukebox__search-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    /* A lower floor for the field, so the pair fits a small phone's width as one row
+       rather than the button dropping to a line of its own. */
+    .jukebox__search .jukebox__input {
+      flex-basis: 7rem;
+    }
+  }
+  .jukebox__scroller {
+    position: relative;
+    /* A page of its own now, so the list takes the height the stage used to leave
+       over — but not more than the panel can hold without a second scroller. */
+    height: clamp(13rem, 52vh, 30rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid rgba(250, 250, 244, 0.14);
+    border-radius: var(--radius-inner);
+    /* Darker than the other surfaces: a few hundred rows are read *off* this, and the
+       backdrop behind the menus has bright spots in it. */
+    background: rgba(12, 13, 10, 0.62);
+  }
+  /* The windowed list's stand-ins. `Songs.tsx` measures one heading and one row
+     (the row's three tiers are set by the breakpoints beside `.song-row` below)
+     and `jukeboxWindow.ts` turns the counts outside the mounted slice into these
+     two heights. Height only — they hold no content, so the scrollbar and every
+     letter's offset are exactly those of the whole list. */
+  .jukebox__spacer {
+    width: 100%;
+    pointer-events: none;
+  }
+  .jukebox__empty {
+    margin: 0;
+    padding: 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: rgba(250, 250, 244, 0.6);
+  }
+  .song-group__letter {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    margin: 0;
+    padding: 0.2rem 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    color: var(--color-ink);
+    background: var(--color-yellow);
+  }
+  .song-group__count {
+    margin-left: 0.65rem;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    /* Opaque ink-soft: the faded ink this used to be fell under 4.5:1 on yellow. */
+    color: var(--color-ink-soft);
+  }
+  .song-group__count::before {
+    content: "·";
+    margin-right: 0.55rem;
+    color: var(--color-ink-soft);
+  }
+  /* Every column but the title and the artist is a fixed width, so each row's
+     grid resolves to the same tracks and the columns line up down the list. The
+     cells are placed by area, not by order, so a row without one of them still puts
+     the rest where they belong. */
+  .song-row {
+    /* The cover's size *is* its column's width, so the two can never drift apart and
+       a row's art is always square. The tiers below grow it along with the row. */
+    --song-art-size: 1.9rem;
+    /* The row's headline, and the time that heads it: **one size, two faces** — the time
+       is what the song is called read as a number, so below the wide layout it is set at
+       the title's own size rather than as small print beside it. */
+    --song-title-size: 0.88rem;
+    /* The time is a time, not a column. It heads the title's line, so its track need
+       only be as wide as `10:12` — and the width it gives back is what the words spend
+       on being longer titles and artists. */
+    --song-time-width: 2.4rem;
+    /* One row height per breakpoint. Every line is nowrap and ellipsised, so the
+       heading and the row the window measures are the heights of all their
+       neighbours; `jukeboxWindow.ts` depends on that to place the spacers. */
+    display: grid;
+    grid-template-columns:
+      var(--song-art-size) var(--song-time-width) minmax(0, 1.1fr) minmax(0, 0.9fr) 17rem;
+    grid-template-areas: "art time title artist chips";
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.28rem 0.6rem;
+    text-align: left;
+    color: var(--color-cream);
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(250, 250, 244, 0.07);
+    cursor: pointer;
+  }
+  .song-row:hover,
+  :root:not([data-game-input="pointer"]) .song-row:focus-visible,
+  .song-row[data-nav-focus] {
+    background: rgba(255, 212, 0, 0.1);
+  }
+  .song-row.is-active {
+    background: rgba(255, 212, 0, 0.16);
+    box-shadow: inset 3px 0 0 var(--color-yellow);
+  }
+  .song-row__title {
+    grid-area: title;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: var(--song-title-size);
+  }
+  .song-row__artist {
+    grid-area: artist;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 0.74rem;
+    color: rgba(250, 250, 244, 0.6);
+  }
+  /* What a song offers, as one dense line: a bordered chip each would wrap to two
+     lines on a duet with a full kit. If even this is too long for the column it
+     ends in an ellipsis — the conventional "there is more" — and the song's own
+     slot in the now-playing display still lists every instrument in full. It is
+     **one line at every breakpoint**, including the phone: the windowed list
+     measures one row and stands in for every row outside the window, so a row
+     that wrapped would be a different height from its neighbours and the
+     spacers could not be exact. */
+  .song-row__offers {
+    grid-area: chips;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-family: var(--font-mono);
+    font-size: 0.56rem;
+    text-transform: lowercase;
+    color: rgba(250, 250, 244, 0.6);
+  }
+  /* How long it is, at the head of the title's line: "4:00  1999 Forever" is one thing
+     read once. Its track is fixed — or the titles below it would not start at the same
+     x — and the time is left-aligned in it, so the space a short time leaves is the
+     space between a time and its title, not a gap after the cover. */
+  .song-row__time {
+    grid-area: time;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    white-space: nowrap;
+    color: rgba(250, 250, 244, 0.72);
+  }
+  /* Below the wide layout the row goes to **two lines**: the title with the artist
+     underneath, and the instruments keep their own column beside them. A row twice as
+     high says everything a row on a wide screen says, which dropping the artist and the
+     instruments did not — and the cover grows into the height that buys, because a
+     30px thumbnail beside two lines of text is the one thing there that has not
+     noticed the row is taller. */
+  @media (max-width: 80rem) {
+    .song-row {
+      --song-art-size: 2.7rem;
+      /* A time at the title's size: five mono characters of it, `10:12`. */
+      --song-time-width: calc(var(--song-title-size) * 3.1);
+      grid-template-columns:
+        var(--song-art-size) var(--song-time-width) minmax(0, 1fr) 17rem;
+      /* The cover spans the lines; the time is indented on the **title's line only**, and
+         the artist and what the song offers start where the row's text starts. So the
+         time costs its width to the title and to nothing else. */
+      grid-template-areas:
+        "art time  title  chips"
+        "art artist artist chips";
+      row-gap: 0.12rem;
+      padding: 0.42rem 0.6rem;
+    }
+    /* The two lines read as one block in the middle of the row, rather than drifting
+       apart to the edges of a row the taller cover has made room for. */
+    .song-row__title {
+      align-self: end;
+    }
+    .song-row__artist {
+      align-self: start;
+    }
+    .song-row__time {
+      font-size: var(--song-title-size);
+    }
+  }
+  /* On a phone the instruments take a line of their own: there is no width for a column
+     beside a title, and the row is read by scrolling rather than by scanning. */
+  @media (max-width: 40rem) {
+    .song-row {
+      --song-art-size: 3.4rem;
+      grid-template-columns:
+        var(--song-art-size) var(--song-time-width) minmax(0, 1fr);
+      grid-template-areas:
+        "art time  title"
+        "art artist artist"
+        "art chips  chips";
+    }
+    /* Three lines, so nothing needs pulling towards the middle: they sit in the order
+       they are read, against the cover. The offers keep their single line (above), so
+       every row on a phone is the same height for the window. */
+    .song-row__title,
+    .song-row__artist {
+      align-self: center;
+    }
+  }
+
+  /* --- A song's cover ---
+     Art is optional and may be somewhere the browser cannot reach, so the tile is
+     not a fallback but the other way a song is drawn: its initials over the accent
+     the playlist gave it. The card is the same shape either way, so a row does not
+     move because one song has a picture and its neighbour does not. */
+  .song-art {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    flex: none;
+    background: rgba(12, 13, 10, 0.7);
+    border: 1px solid rgba(250, 250, 244, 0.16);
+    border-radius: var(--radius-inner);
+  }
+  .song-art--row {
+    grid-area: art;
+    /* Square, and as wide as its column: `--song-art-size` is the row's to set. */
+    width: var(--song-art-size, 1.9rem);
+    height: var(--song-art-size, 1.9rem);
+  }
+  /* The now-playing cover is **square** — it is an album cover, and the art we are
+     given is drawn square: a wide crop of it cuts the picture rather than framing
+     it. */
+  .song-art--panel {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    margin-bottom: 0.35rem;
+  }
+  .song-art__img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .song-art__tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-display);
+    /* Sized off the tile rather than the page, so one rule draws both. */
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    color: var(--color-cream);
+    background:
+      linear-gradient(
+        135deg,
+        var(--art-accent, var(--color-yellow)) 0 18%,
+        transparent 18% 100%
+      ),
+      rgba(20, 21, 17, 0.9);
+  }
+  .song-art--panel .song-art__tile {
+    font-size: clamp(1.6rem, 5vmin, 2.6rem);
+  }
+  /* In a row the initials are sized off the tile rather than off the page, so the one
+     rule draws a 30px tile and a 54px one at the same proportion. */
+  .song-art--row .song-art__tile {
+    font-size: calc(var(--song-art-size, 1.9rem) * 0.42);
+  }
+
+  /* The index: one letter per line, the ones with no songs out of reach.
+     It is part of the same band as the list and the now-playing column, so it is
+     **stretched to their height** and its letters share it out between them: a
+     column of letters the height of the list beside it is a column of targets you
+     cannot miss, rather than a stub that stops a third of the way down. */
+  .jukebox__index {
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+    gap: 0.05rem;
+    padding: 0.2rem;
+    border: 1px solid rgba(250, 250, 244, 0.14);
+    /* An inset of the list, like the scroller beside it — not a pill. */
+    border-radius: var(--radius-inner);
+    background: rgba(12, 13, 10, 0.6);
+  }
+  /* On a phone the index would take a third of the width and leave the list too
+     narrow to read; the search box is the way through it there. */
+  @media (max-width: 48rem) {
+    .jukebox__index {
+      display: none;
+    }
+  }
+  .jukebox__index[data-idle="true"] {
+    opacity: 0.4;
+  }
+  .jukebox__letter {
+    /* An equal share of the column, whatever height that is — so the index fills
+       its height the way the list fills its own. It is a flex box itself, so the
+       letter sits in the middle of the share it was given rather than at its top. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 0;
+    min-height: 1rem;
+    padding: 0;
+    width: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: clamp(0.6rem, 1.4vmin, 0.85rem);
+    font-weight: 700;
+    line-height: 1;
+    color: var(--color-cream);
+    background: transparent;
+    border: none;
+    /* A small control, like every other option button: the scale's `inner`, not a
+       pill — at this size a pill is a blob. */
+    border-radius: var(--radius-inner);
+    cursor: pointer;
+  }
+  .jukebox__letter:hover:not(:disabled),
+  :root:not([data-game-input="pointer"]) .jukebox__letter:focus-visible:not(:disabled),
+  .jukebox__letter[data-nav-focus]:not(:disabled) {
+    color: var(--color-ink);
+    background: var(--color-yellow);
+  }
+  .jukebox__letter:disabled {
+    color: rgba(250, 250, 244, 0.28);
+    /* A letter the list has no songs under is not pressable — but it is still our
+       arrow, not the desktop's. */
+    cursor: var(--cursor-arrow), default;
+  }
+  .jukebox__letter.is-active {
+    color: var(--color-ink);
+    background: var(--color-yellow);
+  }
+
+  /* The slot on the front: what the jukebox is holding. */
+  .jukebox__display {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.9rem;
+    background: rgba(12, 13, 10, 0.72);
+    border: 1px solid rgba(250, 250, 244, 0.16);
+    border-radius: var(--radius-brand);
+    overflow: hidden;
+  }
+  .jukebox__label {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.55);
+  }
+  .jukebox__now-playing {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .jukebox__duration {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--color-yellow);
+  }
+  .jukebox__title {
+    margin: 0.2rem 0 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.2rem, 3vmin, 1.7rem);
+    line-height: 1.1;
+    color: var(--color-cream);
+  }
+  .jukebox__artist {
+    margin: 0;
+    font-size: 0.78rem;
+    color: rgba(250, 250, 244, 0.66);
+  }
+  /* The optional third thing to do with the song on the front: keep it for a
+     flight. One line beside the artist; the Downloads dialog owns the list. */
+  .jukebox__offline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.6rem;
+    margin-top: 0.25rem;
+  }
+  .jukebox__offline-btn {
+    min-height: 44px;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.06em;
+  }
+  .jukebox__offline-btn > span[aria-hidden] {
+    color: var(--color-yellow);
+  }
+  .jukebox__offline-state {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-yellow);
+  }
+  .jukebox__offline-state > span[aria-hidden] {
+    margin-right: 0.15rem;
+  }
+  .jukebox__offline-progress {
+    display: flex;
+    flex: 1 1 8rem;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 8rem;
+  }
+  .jukebox__offline-bar {
+    height: 0.3rem;
+    overflow: hidden;
+    background: rgba(250, 250, 244, 0.18);
+    border-radius: var(--radius-pill);
+  }
+  .jukebox__offline-bar > span {
+    display: block;
+    height: 100%;
+    background: var(--color-yellow);
+    transition: width 0.2s ease-out;
+  }
+  .jukebox__offline-note {
+    margin: 0;
+    font-size: 0.62rem;
+    line-height: 1.35;
+    color: rgba(250, 250, 244, 0.58);
+  }
+  .jukebox__offline-note.is-warn {
+    color: var(--color-yellow);
+  }
+  .jukebox__offline-retry {
+    padding: 0;
+    font: inherit;
+    color: var(--color-yellow);
+    text-decoration: underline;
+    background: none;
+    border: 0;
+    cursor: var(--cursor-hand), pointer;
+  }
+
+  /* --- Downloads manager ---
+     A native dialog like Playlists, with one row per saved song and the device
+     numbers underneath. The list scrolls on its own so the clear button and the
+     app versions stay in reach on a short phone. */
+  .downloads__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-height: min(50vh, 24rem);
+    margin: 0.6rem 0 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+  }
+  .downloads__row {
+    display: grid;
+    grid-template-areas: "art text actions";
+    grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 0;
+    border-bottom: 1px dashed rgba(250, 250, 244, 0.16);
+  }
+  .downloads__lead {
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: rgba(250, 250, 244, 0.72);
+  }
+  .downloads__row:last-child {
+    border-bottom: 0;
+  }
+  .downloads__row .song-art--row {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  .downloads__text {
+    grid-area: text;
+    min-width: 0;
+  }
+  .downloads__title {
+    margin: 0;
+    overflow: hidden;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    line-height: 1.15;
+    color: var(--color-cream);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .downloads__meta {
+    margin: 0.1rem 0 0;
+    overflow: hidden;
+    font-family: var(--font-mono);
+    font-size: 0.57rem;
+    line-height: 1.3;
+    color: rgba(250, 250, 244, 0.55);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .downloads__remove {
+    grid-area: actions;
+    min-height: 44px;
+    padding: 0.3rem 0.55rem;
+    font-size: 0.56rem;
+    white-space: nowrap;
+  }
+  .downloads__empty {
+    margin: 1rem 0;
+    color: rgba(250, 250, 244, 0.66);
+  }
+  .downloads__footer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+    margin-top: 0.8rem;
+  }
+  .downloads__storage {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: rgba(250, 250, 244, 0.62);
+  }
+  .downloads__note {
+    margin: 0;
+    font-size: 0.62rem;
+    line-height: 1.35;
+    color: rgba(250, 250, 244, 0.58);
+  }
+  .downloads__note.is-warn {
+    color: var(--color-yellow);
+  }
+  .downloads__clear {
+    min-height: 44px;
+    margin-top: 0.2rem;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.58rem;
+  }
+  .downloads__clear:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+  .downloads__app {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1rem;
+    margin: 0.8rem 0 0;
+    padding-top: 0.55rem;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    color: rgba(250, 250, 244, 0.5);
+    border-top: 1px dashed rgba(250, 250, 244, 0.16);
+  }
+  .downloads__app > div {
+    display: flex;
+    gap: 0.3rem;
+  }
+  .downloads__app dt {
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.4);
+  }
+  .downloads__app dd {
+    margin: 0;
+    color: rgba(250, 250, 244, 0.7);
+  }
+  .jukebox__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin: 0.4rem 0 0;
+  }
+  .jukebox__chips--compact {
+    display: none;
+  }
+  .jukebox__selection {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    min-width: 0;
+  }
+  .jukebox__history {
+    flex: 1 1 7rem;
+    min-height: 0;
+    margin-top: 0.25rem;
+    overflow: hidden;
+    border-top: 1px dashed rgba(250, 250, 244, 0.2);
+  }
+  .jukebox__history-table {
+    display: block;
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-family: var(--font-mono);
+    font-size: 0.57rem;
+    line-height: 1.2;
+    color: rgba(250, 250, 244, 0.78);
+  }
+  .jukebox__history-table thead,
+  .jukebox__history-table tbody {
+    display: block;
+  }
+  .jukebox__history-table tbody {
+    max-height: 100%;
+    overflow: hidden;
+  }
+  .jukebox__history-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 3.6rem 4rem;
+    align-items: center;
+    height: 1.45rem;
+  }
+  .jukebox__history-table th,
+  .jukebox__history-table td {
+    min-width: 0;
+    overflow: hidden;
+    padding: 0.1rem 0.2rem;
+    text-align: left;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .jukebox__history-table th {
+    color: rgba(250, 250, 244, 0.48);
+    font-size: 0.52rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .jukebox__history-table td:last-child,
+  .jukebox__history-table th:last-child {
+    text-align: right;
+  }
+  .jukebox__history-table tr.jukebox__history-empty td {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: rgba(250, 250, 244, 0.55);
+  }
+  .jukebox__next {
+    width: 100%;
+  }
+  .jukebox__next-compact {
+    display: none;
+  }
+  @media (max-width: 40rem) {
+    /* Phones use the song list for the full screen; details only appear after a
+       row is chosen, in a native modal that traps focus and handles Escape. */
+    .screen__panel--songs {
+      min-height: 0;
+    }
+    .screen__panel--songs > .jukebox {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      flex-wrap: nowrap;
+      align-items: stretch;
+      width: 100%;
+      min-height: 0;
+    }
+    .screen__panel--songs .jukebox__list {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      width: 100%;
+      min-height: 0;
+    }
+    .screen__panel--songs .jukebox__scroller {
+      flex: 1 1 0;
+      height: auto;
+      min-height: 0;
+      overflow-y: auto;
+    }
+    .screen--songs .jukebox__selection {
+      display: none;
+    }
+    .jukebox__song-dialog .jukebox__selection {
+      display: flex;
+      width: 100%;
+      gap: 0.7rem;
+    }
+    .jukebox__song-dialog .song-art--panel {
+      width: clamp(7rem, 32vw, 10rem);
+      max-width: 100%;
+      aspect-ratio: 1 / 1;
+      align-self: center;
+    }
+  }
+
+  /* --- The band setup: a character box each ---
+     Four boxes to a row, a second row offered once the first is full. Every box
+     is self-contained — what the player takes, how hard, and off with them — so
+     the band reads across the grid the way a character-select screen does, and
+     nothing else on the screen has to say who is playing. */
+  .slots {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: 1fr;
+    align-items: stretch;
+    gap: 0.6rem;
+    margin: 0 0 1rem;
+    padding: 0;
+    list-style: none;
+  }
+  .slot {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 0.5rem;
+    padding: 0.55rem 0.6rem 0.7rem;
+    background: rgba(12, 13, 10, 0.5);
+    border: 1px solid rgba(250, 250, 244, 0.14);
+    border-radius: var(--radius-inner);
+    /* The pickers inside a box answer to the **box**, not the window: the grid
+       gives them four columns, two on a tablet and one on a phone, and the same
+       card is a very different width in each. */
+    container-type: inline-size;
+  }
+  .slot__head {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .slot__who {
+    margin-right: auto;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.7);
+  }
+  /* One player's controller settings: the same corner as the way off the stage, so
+     each box carries its own without a word of copy. Both are a small square so
+     they line up whatever is in them. */
+  .slot__gear {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 1.05rem;
+    height: 1.05rem;
+    padding: 0;
+    color: rgba(250, 250, 244, 0.5);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-inner);
+    cursor: pointer;
+  }
+  .slot__gear svg {
+    width: 0.8rem;
+    height: 0.8rem;
+  }
+  .slot__gear:hover,
+  :root:not([data-game-input="pointer"]) .slot__gear:focus-visible,
+  .slot__gear[data-nav-focus] {
+    color: var(--color-yellow);
+  }
+  .slot__remove {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 1.05rem;
+    height: 1.05rem;
+    padding: 0;
+    font-size: 1.05rem;
+    line-height: 1;
+    color: rgba(250, 250, 244, 0.5);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-inner);
+    cursor: pointer;
+  }
+  .slot__remove:hover,
+  :root:not([data-game-input="pointer"]) .slot__remove:focus-visible,
+  .slot__remove[data-nav-focus] {
+    color: var(--color-accent);
+  }
+  /* The portrait: what this player is, big enough to read across the grid. */
+  .slot__portrait {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 1.5vw, 1.35rem);
+    line-height: 1.05;
+    color: var(--color-yellow);
+  }
+  /* Vocals are the blue part; every instrument keeps the default yellow. */
+  .slot__portrait.is-vocals {
+    color: var(--color-accent);
+  }
+  .slot__kinds {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.2rem;
+  }
+  /* A box too narrow for two tiles a row stacks them, and says the longest label
+     in full ("Simple keys") rather than ellipsising it. */
+  /* How hard, under a dashed rule: what a player takes and how hard they take it
+     are two decisions, and the rule says so without a word of copy. */
+  .slot__foot {
+    margin-top: auto;
+    padding-top: 0.5rem;
+    border-top: 1px dashed rgba(250, 250, 244, 0.24);
+  }
+  /* Every level on one row, sharing the width between them however many there are:
+     a song with one level gets a full-width button, four get a quarter each, and
+     none of them is left dangling on a second line. */
+  .slot__how {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 0.2rem;
+  }
+  .slot__option {
+    padding: 0.2rem 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-cream);
+    background: transparent;
+    border: 1px solid rgba(250, 250, 244, 0.24);
+    border-radius: var(--radius-inner);
+    cursor: pointer;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  /* What the words are taken with is a tile like any other: it is one of the things
+     a box can take, and nothing about it needs saying twice. */
+  /* An active tile keeps its ink text: a hover that recoloured it would be yellow
+     on yellow. It lightens instead, so it still reads as hovered. */
+  .slot__option:hover:not(:disabled):not(.is-active),
+  :root:not([data-game-input="pointer"]) .slot__option:focus-visible:not(:disabled):not(.is-active),
+  .slot__option[data-nav-focus]:not(:disabled):not(.is-active) {
+    color: var(--color-yellow);
+    border-color: var(--color-yellow);
+  }
+  .slot__option.is-active {
+    color: var(--color-ink);
+    background: var(--color-yellow);
+    border-color: var(--color-yellow);
+  }
+  .slot__option.is-active:hover:not(:disabled),
+  :root:not([data-game-input="pointer"]) .slot__option.is-active:focus-visible:not(:disabled),
+  .slot__option.is-active[data-nav-focus]:not(:disabled) {
+    background: var(--color-cream);
+    border-color: var(--color-cream);
+  }
+  /* Vocals are the blue part wherever a part is offered — sung or typed, pitched
+     or lyrics-only. Every instrument keeps the default yellow. */
+  .slot__option.is-vocals {
+    color: var(--color-accent);
+    border-color: color-mix(in srgb, var(--color-accent) 55%, transparent);
+  }
+  .slot__option.is-vocals:hover:not(:disabled):not(.is-active),
+  :root:not([data-game-input="pointer"]) .slot__option.is-vocals:focus-visible:not(:disabled):not(.is-active),
+  .slot__option.is-vocals[data-nav-focus]:not(:disabled):not(.is-active) {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  .slot__option.is-vocals.is-active {
+    color: var(--color-ink);
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  .slot__option.is-vocals.is-active:hover:not(:disabled) {
+    background: var(--color-cream);
+    border-color: var(--color-cream);
+  }
+  /* What the song has no part for is still on the board, out of reach: a sideways
+     glance says why it is disabled, which hiding it would not. It never keeps the
+     active fill, or the label would be ink on yellow on yellow. */
+  .slot__option:disabled {
+    color: rgba(250, 250, 244, 0.28);
+    background: transparent;
+    border-color: rgba(250, 250, 244, 0.12);
+    cursor: var(--cursor-not-allowed), not-allowed;
+  }
+  /* Lyrics have no levels: it is free play, and the box says so where the level
+     buttons would be. */
+  .slot__free {
+    padding: 0.2rem 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--color-accent);
+    border: 1px dashed var(--color-accent);
+    border-radius: var(--radius-inner);
+  }
+  /* A box whose player the song has nothing for — the same shape as a level button,
+     so the space it sits in reads as part of the box rather than a note about it. */
+  .slot__aside {
+    padding: 0.2rem 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--color-accent);
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius-inner);
+  }
+  /* An empty box is a place in the band, waiting for somebody to take it. */
+  .slot--empty {
+    padding: 0.35rem;
+    background: transparent;
+    border-style: dashed;
+    border-color: rgba(250, 250, 244, 0.22);
+  }
+  .slot__join {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    min-height: 7rem;
+    padding: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-align: center;
+    color: rgba(250, 250, 244, 0.55);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-inner);
+    cursor: pointer;
+  }
+  .slot__join:hover,
+  :root:not([data-game-input="pointer"]) .slot__join:focus-visible,
+  .slot__join[data-nav-focus] {
+    color: var(--color-yellow);
+    background: rgba(255, 212, 0, 0.08);
+  }
+  .slot__join-mark {
+    font-size: 1.5rem;
+    line-height: 1;
+    color: var(--color-yellow);
+  }
+  /* What they would be, so pressing join is never a surprise. */
+  .slot__join-take {
+    font-size: 0.54rem;
+    letter-spacing: 0.14em;
+    color: var(--color-yellow);
+  }
+  .slot__join-take.is-vocals {
+    color: var(--color-accent);
+  }
+  /* A box too narrow for two tiles a row stacks them, and says the longest label
+     in full ("Simple keys") rather than ellipsising it. After the base rules, so
+     they are the ones that win. Levels stay on one row whatever happens: they are
+     short words, and they shrink before they wrap. */
+  @container (max-width: 10.5rem) {
+    .slot__kinds {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  @container (max-width: 10rem) {
+    .slot__how .slot__option,
+    .slot__free,
+    .slot__aside {
+      padding: 0.2rem 0.15rem;
+      font-size: 0.5rem;
+      letter-spacing: 0;
+    }
+  }
+  /* The second row is an offer, not a control: dashed, and quiet beside Play. */
+  .band-btn--more {
+    border-style: dashed;
+  }
+  /* Leaving on the left, playing on the right, and the offer between them. The
+     columns are explicit, so the two ends stay where they are whether or not the
+     offer is there to fill the middle. */
+  .band-actions {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.2rem;
+  }
+  .band-actions__more {
+    grid-column: 2;
+    justify-self: center;
+  }
+  .band-actions__play {
+    grid-column: 3;
+    justify-self: end;
+  }
+  /* Two boxes a row once four will not read — and two on a tablet as well, since a
+     box answers for its own width (see the container queries above) and so still
+     says everything in full. */
+  @media (max-width: 76rem) {
+    .slots {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  /* And **one** box a row on a phone. Two boxes side by side leave each about ten
+     rems wide, so its pickers stack one per line and the box grows taller than the
+     screen it is read on; full width they sit two across and every label reads. The
+     phone also stops at the first row of four (see `room` in `Band.tsx`), so the
+     band is four cards to scroll rather than eight. */
+  @media (max-width: 40rem) {
+    .slots {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  /* --- One player's controller (a dialog over the band) ---
+     The band stays where it is behind it, so who is playing is still legible while
+     one of them is being set up. It sits above the screens (z 25) and below the dev
+     panel (z 30). */
+  .config {
+    position: absolute;
+    inset: 0;
+    z-index: 27;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(0.6rem, 2vmin, 1.6rem);
+    overflow: auto;
+    pointer-events: auto;
+    background: rgba(10, 11, 8, 0.78);
+  }
+  .config--native {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100dvh;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    padding: clamp(0.6rem, 2vmin, 1.6rem);
+    border: 0;
+    color: var(--color-cream);
+    background: transparent;
+  }
+  .config--native::backdrop {
+    background: rgba(10, 11, 8, 0.78);
+  }
+  .config__panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    width: min(26rem, 100%);
+    max-height: 100%;
+    overflow: auto;
+    padding: clamp(0.8rem, 2vmin, 1.3rem);
+    color: var(--color-cream);
+    background: rgba(20, 21, 17, 0.96);
+    border: 1px solid rgba(250, 250, 244, 0.18);
+    border-radius: var(--radius-brand);
+    box-shadow: 0 1.4rem 3rem rgba(0, 0, 0, 0.45);
+  }
+  .config__head {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .config__who {
+    margin: 0 auto 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.75);
+  }
+  .config__lead {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    line-height: 1.15;
+    color: var(--color-yellow);
+  }
+  .config__label {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.6);
+  }
+  .config__devices {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.25rem;
+  }
+  /* The mapping, in the game's own monospace: it is a table of keys, not a
+     sentence. */
+  .config__keys {
+    margin: 0;
+    padding: 0.35rem 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    color: var(--color-cream);
+    background: rgba(12, 13, 10, 0.6);
+    border: 1px solid rgba(250, 250, 244, 0.18);
+    border-radius: var(--radius-inner);
+  }
+  .config__hint {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.03em;
+    color: rgba(250, 250, 244, 0.6);
+  }
+  .config__hint.is-warn {
+    color: var(--color-yellow);
+  }
+  .config__steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .config__step {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.2rem 0.35rem;
+    border-radius: var(--radius-inner);
+    background: rgba(12, 13, 10, 0.5);
+  }
+  .config__step.is-done {
+    background: rgba(255, 212, 0, 0.14);
+  }
+  .config__step-name {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.03em;
+    color: rgba(250, 250, 244, 0.7);
+  }
+  .config__step-value {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    color: var(--color-cream);
+  }
+  .config__step.is-done .config__step-value {
+    color: var(--color-yellow);
+  }
+  .config__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  /* --- Practice (a dialog over the pause) ---
+     The stretches and speeds are radio-like buttons rather than a `<select>`, so a
+     pad's cursor and a thumb can reach every one. Every control keeps the 44px
+     target. */
+  .practice-panel {
+    width: min(30rem, 100%);
+  }
+  .practice-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+    gap: 0.35rem;
+  }
+  .practice-options--speeds {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .practice-option {
+    min-height: 44px;
+    padding: 0.45rem 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-cream);
+    background: rgba(12, 13, 10, 0.6);
+    border: 1px solid rgba(250, 250, 244, 0.3);
+    border-radius: var(--radius-inner);
+    cursor: pointer;
+  }
+  .practice-option--section {
+    text-align: left;
+  }
+  .practice-option.is-chosen {
+    color: var(--color-ink);
+    background: var(--color-yellow);
+    border-color: var(--color-yellow);
+  }
+  .practice-loop {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-cream);
+    cursor: pointer;
+  }
+  .practice-loop input {
+    width: 1.15rem;
+    height: 1.15rem;
+    accent-color: var(--color-yellow);
+  }
+
+  /* --- The measured audio calibration (a dialog over Options) ---
+     The instructions, a Tap target large enough to hit without looking, and the
+     reading. Every control keeps the 44px target the rest of the game promises. */
+  .calibration .band-btn {
+    min-height: 44px;
+  }
+  .calibration__tap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: clamp(6rem, 20vmin, 9rem);
+    padding: 1rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 6vmin, 2.2rem);
+    line-height: 1;
+    color: var(--color-ink);
+    background: var(--color-yellow);
+    border: 1px solid var(--color-yellow);
+    border-radius: var(--radius-inner);
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+  }
+  .calibration__tap:hover,
+  :root:not([data-game-input="pointer"]) .calibration__tap:focus-visible,
+  .calibration__tap[data-nav-focus] {
+    background: var(--color-cream);
+    border-color: var(--color-cream);
+  }
+  .calibration__reading {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: clamp(1.8rem, 7vmin, 2.6rem);
+    font-weight: 700;
+    text-align: center;
+    color: var(--color-yellow);
+  }
+  /* The Sound/Picture choice on the ready screen: the same segmented tile the
+     band screen uses, at a size a hand can hit. */
+  .calibration__modes {
+    display: flex;
+    gap: 0.4rem;
+  }
+  .calibration__modes .slot__option {
+    flex: 1 1 0;
+    min-height: 44px;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.7rem;
+  }
+  /* The picture measurement's track: a line the marker crosses. The marker is a
+     striped needle with a cream edge and a dark shadow, so it reads against the
+     dialog without relying on its colour. It moves by one style write from the
+     dialog's own loop; reduced motion does not stop it, because it is the
+     measurement rather than decoration. */
+  .calibration__track {
+    position: relative;
+    height: clamp(4rem, 14vmin, 6rem);
+    margin: 0.2rem 0;
+    overflow: hidden;
+    background: rgba(12, 13, 10, 0.5);
+    border: 1px solid rgba(250, 250, 244, 0.24);
+    border-radius: var(--radius-inner);
+  }
+  .calibration__line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    border-left: 2px dashed rgba(250, 250, 244, 0.75);
+    transform: translateX(-1px);
+  }
+  .calibration__marker {
+    position: absolute;
+    top: 10%;
+    bottom: 10%;
+    left: 0;
+    width: clamp(0.7rem, 2.6vmin, 1rem);
+    transform: translateX(-50%);
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--color-yellow) 0 4px,
+      var(--color-ink) 4px 8px
+    );
+    border: 2px solid var(--color-cream);
+    border-radius: var(--radius-pill);
+    box-shadow: 0 0 0 2px rgba(12, 13, 10, 0.9);
+    transition: none;
+  }
+
+  /* --- The playlists (a dialog over the jukebox) ---
+     Where the songs come from: one row a playlist, each saying what it gave us and
+     when, with the two things a reader can do about it. The dialog is the same one
+     the controller settings use, wider, because a URL wants the room. */
+  .config__panel--wide {
+    width: min(38rem, 100%);
+  }
+  .playlists {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .playlists__row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem 0.6rem 0.6rem;
+    background: rgba(12, 13, 10, 0.5);
+    border: 1px solid rgba(250, 250, 244, 0.16);
+    border-radius: var(--radius-inner);
+  }
+  /* A disabled playlist keeps its row and its URL; only its songs are out. */
+  .playlists__row.is-disabled .playlists__name {
+    color: rgba(250, 250, 244, 0.4);
+    text-decoration: line-through;
+  }
+  .playlists__head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .playlists__name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    color: var(--color-cream);
+  }
+  .playlists__count {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-yellow);
+  }
+  /* The URL is the identity of a playlist — it is what was added and what is
+     fetched — so it is shown in full, quietly, and wraps rather than truncating. */
+  .playlists__url {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: rgba(250, 250, 244, 0.6);
+  }
+  .playlists__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .playlists__state {
+    flex: 1 1 12rem;
+    min-width: 0;
+    font-size: 0.72rem;
+    color: rgba(250, 250, 244, 0.76);
+  }
+  .playlists__add {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  /* Nothing in the library: the way back, above the way in. */
+  .playlists__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  .playlists__empty .config__hint {
+    margin: 0;
+  }
+  .playlists__add-row {
+    display: flex;
+    gap: 0.4rem;
+  }
+  .playlists__add-row .jukebox__input {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  /* The visible drop target: a dashed invitation that turns yellow while a file
+     is over the dialog. The whole dialog accepts the drop, not only this box. */
+  .playlists__drop {
+    display: grid;
+    place-items: center;
+    min-height: 3rem;
+    padding: 0.5rem;
+    text-align: center;
+    border: 1px dashed rgba(250, 250, 244, 0.3);
+    border-radius: var(--radius-inner);
+    transition: border-color 0.12s var(--ease-brand), background 0.12s var(--ease-brand);
+  }
+  .playlists__drop.is-over {
+    border-color: var(--color-yellow);
+    background: rgba(255, 212, 0, 0.1);
+  }
+  .playlists__drop-note {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.62);
+  }
+  .playlists__drop.is-over .playlists__drop-note {
+    color: var(--color-yellow);
+  }
+  .playlists__import-row .band-btn {
+    flex: 1 1 auto;
+  }
+
+  /* --- Song chips: what a song offers, on its row and in the jukebox's slot --- */
+  .song-chip {
+    padding: 0.1rem 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.56rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.76);
+    border: 1px solid rgba(250, 250, 244, 0.28);
+    border-radius: var(--radius-pill);
+  }
+  /* Only the words' place — a song that can be sung — wears the accent. Every
+     instrument, and a song that can only be typed, stays in the default schema. */
+  .song-chip--vocals {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+
+  /* --- The results --- */
+  /* A page, read as a column: the island's full height, with the numbers and the
+     history kept to a width that can be read across rather than a spread. */
+  .screen--results .results {
+    width: 100%;
+    max-width: 72rem;
+    margin-inline: auto;
+  }
+  .results {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  /* The tag and the title, the way every other screen is headed. */
+  .results__titles {
+    min-width: 0;
+  }
+  /* The `//` tag sits on a dark panel here rather than on the stage, so it is said
+     at full strength: at the panel's size the usual two-thirds reads as a smudge. */
+  .results .comment.on-ink {
+    color: var(--color-cream);
+  }
+  .results__song {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-cream);
+  }
+  /* Who wrote it is quieter than the song: the title is what was played. */
+  .results__song-by {
+    color: rgba(250, 250, 244, 0.7);
+  }
+  /* What the band made of it, as one row of reads: the score first, then the three
+     that say how. Equal tiles, so nothing is a headline with a field of nothing
+     beside it — and the first is the one the eye should land on. */
+  .results__summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 0.5rem;
+    margin: 0;
+  }
+  .results__metric {
+    padding: 0.5rem 0.7rem 0.6rem;
+    border: 1px solid rgba(250, 250, 244, 0.22);
+    border-radius: var(--radius-inner);
+  }
+  .results__metric--total {
+    border-color: rgba(255, 212, 0, 0.5);
+  }
+  .results__metric-label {
+    display: block;
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.78);
+  }
+  .results__metric-value {
+    display: block;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    line-height: 1.15;
+    color: var(--color-cream);
+  }
+  /* The band's own score is the one that is not just a count. */
+  .results__metric--total .results__metric-value {
+    font-size: clamp(1.9rem, 4.5vmin, 2.8rem);
+    color: var(--color-yellow);
+  }
+  /* The run's rating: five stars and the average multiplier that earned them.
+     Gold is the same five lit in the brand's yellow, not a sixth star. */
+  .results__rating,
+  .results__player-rating {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .results__stars {
+    display: inline-flex;
+    gap: 0.08rem;
+    font-size: 1.05rem;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: rgba(250, 250, 244, 0.2);
+  }
+  .results__star {
+    color: rgba(250, 250, 244, 0.2);
+  }
+  .results__star.is-on {
+    color: var(--color-cream);
+  }
+  .results__stars.is-gold .results__star.is-on {
+    color: var(--color-yellow);
+    text-shadow: 0 0 0.6rem rgba(255, 212, 0, 0.55);
+  }
+  .results__stars--none {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.6);
+  }
+  .results__average {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.72);
+  }
+  .results__player-rating {
+    margin-top: 0.05rem;
+  }
+  .results__saved-stars {
+    flex: none;
+    font-size: 0.72rem;
+  }
+  /* How it sits against the song: one line under the row, at full strength. */
+  .results__best {
+    margin: 0.5rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-cream);
+  }
+  .results__heading {
+    margin: 0 0 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.78);
+  }
+  /* A heading and what it heads. The screen spaces its sections apart; the heading
+     spaces itself from its own list. */
+  .results__section {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  /* The cards are centred, so their heading is too: a label over a block that starts
+     three hundred pixels to its right reads as two things, not one. Only the
+     heading — a card's own contents are read left to right, as a box's are. */
+  .results__section--cards .results__heading {
+    text-align: center;
+  }
+  /* One card per player, drawn like their box on the band screen: a head, the score,
+     and the small print under a dashed rule. They are a read-out rather than places
+     in the band, so nothing in one is a control — and they are **centred**, at a
+     width that suits what is in them, because a handful of players stretched across
+     the panel is a field of nothing between two cards. */
+  .results__players {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .results__player {
+    flex: 0 1 17rem;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.55rem 0.65rem 0.6rem;
+    background: rgba(12, 13, 10, 0.5);
+    border: 1px solid rgba(250, 250, 244, 0.2);
+    border-radius: var(--radius-inner);
+  }
+  /* On a phone one card takes the row: half a row would ellipsise a name and a tag
+     that are both worth reading. */
+  @media (max-width: 40rem) {
+    .results__player {
+      flex-basis: 100%;
+    }
+  }
+  .results__player-head {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .results__player-who {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.9);
+  }
+  .results__player-who.is-vocals {
+    color: var(--color-accent);
+  }
+  /* What they were playing at, as a chip: their panel's tag, said again here. */
+  .results__tag {
+    flex: none;
+    padding: 0.1rem 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.56rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.9);
+    border: 1px solid rgba(250, 250, 244, 0.4);
+    border-radius: var(--radius-pill);
+  }
+  .results__player-score {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    line-height: 1;
+    color: var(--color-yellow);
+  }
+  /* Their own numbers, under the same dashed rule a box on the band screen keeps
+     for its levels: the same split, and it wraps rather than shrinking. */
+  .results__player-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem 0.35rem;
+    margin: 0.1rem 0 0;
+    padding-top: 0.35rem;
+    border-top: 1px dashed rgba(250, 250, 244, 0.3);
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.03em;
+    color: rgba(250, 250, 244, 0.85);
+  }
+  .results__dot {
+    color: rgba(250, 250, 244, 0.5);
+  }
+  /* A lost run is marked in the accent, which is the one "not the band's night"
+     colour the palette has; nothing is red on this stage. */
+  .results--failed .results__metric--total .results__metric-value,
+  .results--failed .results__best,
+  .results--failed .results__player-score {
+    color: var(--color-accent);
+  }
+  .results--failed .results__metric--total {
+    border-color: rgba(34, 224, 255, 0.45);
+  }
+  /* The song's own history, best first: a leaderboard, so rows — and rows kept
+     together, because a rank at one edge of the panel and its score at the other is
+     two things to read rather than one. */
+  .results__board-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.18rem;
+    width: min(30rem, 100%);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .results__saved {
+    display: flex;
+    align-items: baseline;
+    gap: 0.7rem;
+    padding: 0.15rem 0;
+    font-size: 0.8rem;
+  }
+  .results__saved-meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    column-gap: 0.7rem;
+    row-gap: 0.1rem;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .results__saved-rank,
+  .results__saved-when,
+  .results__saved-band,
+  .results__saved-lineup {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: rgba(250, 250, 244, 0.8);
+  }
+  .results__saved-rank {
+    width: 1.2rem;
+  }
+  .results__saved-when {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  /* What the band was: it is why one run's score is not the next one's. */
+  .results__saved-band {
+    flex: none;
+    color: rgba(250, 250, 244, 0.6);
+  }
+  /* Which lineup it was, under the date and the band size: quiet, because the
+     history is still the song's rather than that band's leaderboard. */
+  .results__saved-lineup {
+    grid-column: 1 / -1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: 0.65rem;
+    color: rgba(250, 250, 244, 0.55);
+  }
+  .results__saved-score {
+    flex: none;
+    min-width: 3.5rem;
+    font-family: var(--font-display);
+    text-align: right;
+    color: var(--color-yellow);
+  }
+  .results__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 0.3rem;
+  }
+
+  /* --- Preview controls (temporary; replaced by the setup screen) --- */
+  /* The corner every screen of the loop shares: the way into fullscreen (product),
+     and the dev panel when the flag is on (review scaffolding). **One container**, so
+     the two can never sit on top of each other — and the panel is closed until its
+     chip is pressed, so the corner is a single small chip by default. */
+  .stage-corner {
+    position: absolute;
+    /* Kept out of the status bar, the notch and the home indicator's corners: the
+       way into the whole screen has to be pressable, and in the installed app this
+       corner is under the system's own chrome. */
+    top: env(safe-area-inset-top, 0px);
+    right: calc(0.6rem + env(safe-area-inset-right, 0px));
+    /* Above the screens: the review surface must never be covered by the thing it is
+       reviewing, and the fullscreen button has to be reachable from all of them. */
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.3rem;
+  }
+
+  /* The way into the whole screen. Product, so it is quiet rather than marked: the
+     chip shape of the dev toggle, without the "this is not the game" of it. */
+  .stage-fullscreen {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.34rem 0.7rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-cream);
+    background: rgba(12, 13, 10, 0.8);
+    border: 1px solid rgba(250, 250, 244, 0.28);
+    border-radius: var(--radius-inner);
+    cursor: pointer;
+    border-top: 0px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+  .stage-fullscreen:hover,
+  :root:not([data-game-input="pointer"]) .stage-fullscreen:focus-visible,
+  .stage-fullscreen[data-nav-focus] {
+    color: var(--color-ink);
+    background: var(--color-yellow);
+    border-color: var(--color-yellow);
+  }
+  .band-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+  }
+  /* The transport and read-out stay visible: they are the performance test. */
+  .band-controls__row {    pointer-events: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.45rem 0.6rem;
+    max-width: min(46rem, calc(100vw - 1.2rem));
+    padding: 0.4rem 0.6rem;
+    background: rgba(12, 13, 10, 0.86);
+    border: 1px solid rgba(250, 250, 244, 0.24);
+    border-radius: var(--radius-brand);
+  }
+  .band-scrub {
+    width: clamp(5rem, 22vw, 15rem);
+    accent-color: var(--color-yellow);
+  }
+  .band-controls__stat {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.62);
+    white-space: nowrap;
+  }
+  /* Says out loud that the controls are review scaffolding, not the game. */
+  .band-controls__dev {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    background: var(--color-accent);
+    border-radius: var(--radius-pill);
+    padding: 0.15rem 0.5rem;
+  }
+  .band-controls__toggle {
+    pointer-events: auto;
+    padding: 0.34rem 0.7rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-cream);
+    background: rgba(12, 13, 10, 0.8);
+    border: 1px solid rgba(250, 250, 244, 0.28);
+    border-radius: var(--radius-inner);
+    cursor: pointer;
+  }
+  .band-controls__toggle[aria-expanded="true"],
+  .band-controls__toggle:hover {
+    color: var(--color-ink);
+    background: var(--color-yellow);
+    border-color: var(--color-yellow);
+  }
+  .band-controls__bar {
+    pointer-events: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem 1rem;
+    max-width: min(52rem, calc(100vw - 1.2rem));
+    padding: 0.5rem 0.85rem;
+    background: rgba(12, 13, 10, 0.86);
+    border: 1px solid rgba(250, 250, 244, 0.24);
+    border-radius: var(--radius-brand);
+  }
+  .band-step {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .band-step__label {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.6);
+  }
+  /* The volume sits in the preview bar with everything else: a label and a short
+     scrub, not the transport's long one. */
+  .band-step--volume .band-scrub {
+    width: clamp(4rem, 12vw, 8rem);
+  }
+  .band-step__option {
+    min-width: 1.6rem;
+    padding: 0.2rem 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--color-cream);
+    background: transparent;
+    border: 1px solid rgba(250, 250, 244, 0.24);
+    border-radius: var(--radius-inner);
+    cursor: pointer;
+    transition:
+      background-color 0.18s var(--ease-brand),
+      border-color 0.18s var(--ease-brand),
+      color 0.18s var(--ease-brand);
+  }
+  .band-step__option:hover {
+    border-color: var(--color-yellow);
+    color: var(--color-yellow);
+  }
+  .band-step__option.is-active {
+    background: var(--color-yellow);
+    border-color: var(--color-yellow);
+    color: var(--color-ink);
+  }
+  .band-step__option:disabled {
+    opacity: 0.4;
+    cursor: var(--cursor-not-allowed), not-allowed;
+  }
+  .band-controls__button {
+    padding: 0.32rem 0.7rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    background: var(--color-cream);
+    border: 1px solid var(--color-ink);
+    border-radius: var(--radius-inner);
+    cursor: pointer;
+  }
+  .band-controls__button:hover {
+    background: var(--color-yellow);
+  }
+}
+
+/* Outside the layer: keyframes are not a component style. */
+@keyframes band-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}

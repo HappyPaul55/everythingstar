@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      # setup-bun reads the Bun version from package.json's `packageManager`.
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run verify
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      # The browser build is pinned by @playwright/test in bun.lock; cache the
+      # download, not the system libraries. `--with-deps` installs those.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
+      - name: Install Chromium
+        run: bunx playwright install --with-deps chromium
+      # The specs start their own dev server (playwright.config.ts), so this job
+      # needs no separate build step.
+      - run: bun run test:e2e
+      # The offline half needs a production build and `astro preview`; that config
+      # builds inside its own webServer.
+      - run: bun run test:pwa
+      # The whole directory: both JUnit reports and, when a test fails, the traces
+      # and screenshots each config keeps in its own output directory.
+      - name: Upload the Playwright results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results/
+          if-no-files-found: ignore

@@ -1,0 +1,40 @@
+---
+/**
+ * The link entry: "Open in EverythingStar", "Add Playlist to EverythingStar" and
+ * "Add Song to EverythingStar" all land here.
+ *
+ * The page is the game-only shell, exactly like `/app`, so a link opens the game
+ * rather than a website with a game in it. The query is read by the island on the
+ * client (`src/lib/game/intent.ts`), which is what lets the same URL work from a
+ * browser, an installed PWA or the native app's WebView. Static hosting cannot
+ * vary by query, so the document itself is deliberately generic.
+ *
+ * `noindex`: a link is an action, not a page to find in a search.
+ */
+import { getEntry } from "astro:content";
+import GameLayout from "../layouts/GameLayout.astro";
+import GameApp from "../components/game/GameApp.tsx";
+import { localeFromPath, tFor } from "../i18n/astro";
+
+const site = (await getEntry("site", "main"))!.data;
+const locale = localeFromPath(Astro.url.pathname);
+const t = tFor(locale);
+---
+
+<GameLayout
+  title={t("seo.titleOpen", { name: site.name })}
+  heading={site.name}
+  locale={locale}
+>
+  <GameApp
+    client:load
+    locale={locale}
+    credits={{
+      author: site.author,
+      authorUrl: site.authorUrl,
+      repo: site.repo,
+      license: site.license,
+      licenseUrl: site.licenseUrl,
+    }}
+  />
+</GameLayout>

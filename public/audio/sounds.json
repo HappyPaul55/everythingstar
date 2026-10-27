@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "note": "What the game has, by type. A type is what the game plays and may have several files behind it. There are 24 types and 34 files; see AUDIO.md for what each is for and the brief for replacing a generated sting.",
+  "sounds": [
+    { "id": "background_1", "type": "background", "kind": "track", "file": "background_1.ogg", "credit": "HappyPaul55, made with Suno" },
+    { "id": "background_2", "type": "background", "kind": "track", "file": "background_2.ogg", "credit": "HappyPaul55, made with Suno" },
+    { "id": "background_3", "type": "background", "kind": "track", "file": "background_3.ogg", "credit": "HappyPaul55, made with Suno" },
+    { "id": "background_4", "type": "background", "kind": "track", "file": "background_4.ogg", "credit": "HappyPaul55, made with Suno" },
+
+    { "id": "click_1", "type": "click", "kind": "oneshot", "file": "click_1.ogg", "gainDb": 2.5, "credit": "Kenney UI Audio, CC0" },
+    { "id": "click_2", "type": "click", "kind": "oneshot", "file": "click_2.ogg", "gainDb": -2, "credit": "Kenney UI Audio, CC0" },
+    { "id": "click_3", "type": "click", "kind": "oneshot", "file": "click_3.ogg", "gainDb": 7.5, "credit": "Kenney UI Audio, CC0" },
+    { "id": "select_1", "type": "select", "kind": "oneshot", "file": "select_1.ogg", "gainDb": 0.5, "credit": "Kenney UI Audio, CC0" },
+    { "id": "select_2", "type": "select", "kind": "oneshot", "file": "select_2.ogg", "gainDb": -0.5, "credit": "Kenney UI Audio, CC0" },
+    { "id": "move_1", "type": "move", "kind": "oneshot", "file": "move_1.ogg", "gainDb": -5.5, "credit": "Kenney UI Audio, CC0" },
+    { "id": "move_2", "type": "move", "kind": "oneshot", "file": "move_2.ogg", "gainDb": -13.5, "credit": "Kenney UI Audio, CC0" },
+    { "id": "move_3", "type": "move", "kind": "oneshot", "file": "move_3.ogg", "gainDb": -7, "credit": "Kenney UI Audio, CC0" },
+    { "id": "back_1", "type": "back", "kind": "oneshot", "file": "back_1.ogg", "gainDb": -2, "credit": "Kenney UI Audio, CC0" },
+    { "id": "open_1", "type": "open", "kind": "oneshot", "file": "open_1.ogg", "gainDb": 6.5, "credit": "Kenney UI Audio, CC0" },
+    { "id": "refuse_1", "type": "refuse", "kind": "oneshot", "file": "refuse_1.ogg", "gainDb": 6.5, "credit": "Kenney UI Audio, CC0" },
+    { "id": "screen_1", "type": "screen", "kind": "oneshot", "file": "screen_1.ogg", "gainDb": 5, "credit": "Kenney UI Audio, CC0" },
+
+    { "id": "hype_guitar_1", "type": "hype_guitar", "kind": "oneshot", "file": "hype-guitar.ogg", "gainDb": -12, "credit": "Fontaine12, freesound.org/s/163070, CC0" },
+    { "id": "hype_bass_1", "type": "hype_bass", "kind": "oneshot", "file": "hype-bass.ogg", "gainDb": -10, "credit": "Fontaine12, freesound.org/s/163070, CC0" },
+    { "id": "hype_drums_1", "type": "hype_drums", "kind": "oneshot", "file": "hype-drums.ogg", "gainDb": -8, "credit": "BuddhistIsTheWaterfallTheHueGo, freesound.org/s/786070, CC0" },
+    { "id": "hype_vocals_1", "type": "hype_vocals", "kind": "oneshot", "file": "hype-vocals.ogg", "gainDb": -6.5, "credit": "susychristiansen, freesound.org/s/149034, CC0" },
+    { "id": "win_1", "type": "win", "kind": "oneshot", "file": "win.ogg", "gainDb": 0, "credit": "Generated for EverythingStar (CC0)" },
+    { "id": "fail_1", "type": "fail", "kind": "oneshot", "file": "fail.ogg", "gainDb": 1, "credit": "Generated for EverythingStar (CC0)" },
+    { "id": "best_1", "type": "best", "kind": "oneshot", "file": "best.ogg", "gainDb": 1, "credit": "Generated for EverythingStar (CC0)" },
+    { "id": "tick_1", "type": "tick", "kind": "oneshot", "file": "tick_1.ogg", "gainDb": -3, "credit": "Kenney UI Audio, CC0" },
+
+    { "id": "miss_1", "type": "miss", "kind": "oneshot", "file": "miss.ogg", "gainDb": 0, "credit": "Generated for EverythingStar (CC0)" },
+    { "id": "error_1", "type": "error", "kind": "oneshot", "file": "error_1.ogg", "gainDb": -6.5, "credit": "Pixabay Content License — pixabay.com/service/license-summary" },
+    { "id": "sparkle_1", "type": "sparkle", "kind": "oneshot", "file": "sparkle.ogg", "gainDb": 2, "credit": "Generated for EverythingStar (CC0)" },
+    { "id": "meter_activate_1", "type": "meter_activate", "kind": "oneshot", "file": "meter_activate.ogg", "gainDb": 6.5, "credit": "Generated for EverythingStar (CC0)" },
+
+    { "id": "type_key_1", "type": "type_key", "kind": "oneshot", "file": "type_key_1.ogg", "gainDb": 2, "credit": "Kenney UI Audio, CC0" },
+    { "id": "type_key_2", "type": "type_key", "kind": "oneshot", "file": "type_key_2.ogg", "gainDb": 3, "credit": "Kenney UI Audio, CC0" },
+    { "id": "type_key_3", "type": "type_key", "kind": "oneshot", "file": "type_key_3.ogg", "gainDb": -3.5, "credit": "Kenney UI Audio, CC0" },
+    { "id": "type_word_1", "type": "type_word", "kind": "oneshot", "file": "type_word_1.ogg", "gainDb": 6, "credit": "Kenney UI Audio, CC0" },
+    { "id": "type_miss_1", "type": "type_miss", "kind": "oneshot", "file": "type_miss.ogg", "gainDb": 0, "credit": "Generated for EverythingStar (CC0)" },
+
+    { "id": "crowd_1", "type": "crowd", "kind": "loop", "file": "crowd.ogg", "gainDb": 0, "credit": "stephan, pdsounds.org, public domain" }
+  ]
+}

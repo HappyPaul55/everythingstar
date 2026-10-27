@@ -1,0 +1,34 @@
+---
+import { localeFromPath, tFor } from "../../i18n/astro";
+
+/**
+ * The tag label as a breadcrumb trail: lowercase, graffiti-marker, in the old
+ * `// play` style.
+ */
+interface Crumb {
+  name: string;
+  path: string;
+}
+
+interface Props {
+  items: Crumb[];
+}
+
+const { items } = Astro.props;
+const t = tFor(localeFromPath(Astro.url.pathname));
+---
+
+<nav class="comment breadcrumbs" aria-label={t("nav.breadcrumb")}>
+  <span class="slash" aria-hidden="true">//</span>
+  <ol class="breadcrumbs__list">
+    {
+      items.map((crumb) => (
+        <li class="breadcrumbs__item">
+          <a class="breadcrumbs__link" href={crumb.path}>
+            {crumb.name}
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+</nav>
