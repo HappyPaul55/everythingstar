@@ -544,8 +544,8 @@ only gate that can see the regression, and static documents belong in
   a Workers Builds branch preview requires (`wrangler preview`); assets and
   compatibility stay at the top level. A provider is its own project.
 - `scripts/generate-icons.mjs`, `scripts/fetch-fonts.mjs`, `scripts/check-budget.ts`,
-  `scripts/og-card.html` — icon set, self-hosted fonts, the dist/audio size caps,
-  and the social-card source layout.
+  `scripts/og-card.html`, `scripts/render-cards.ts` — icon set, self-hosted fonts,
+  the dist/audio size caps, and the social cards' source layout and renderer.
 - `.github/workflows/ci.yml` — CI installs with a frozen lockfile and runs
   `bun run verify`.
 
@@ -2406,8 +2406,12 @@ only gate that can see the regression, and static documents belong in
 - **Icons are generated** with the `favicons` package (`bun run icons`) from
   `public/icons/brand-mark.svg`; do not hand-edit the PNG set.
 - **`public/og-image.png` is a designed asset.** Its source is
-  `scripts/og-card.html`, rendered at 1200×630 in a browser with the self-hosted
-  fonts; re-render it (do not build it) if the branding changes.
+  `scripts/og-card.html`, rendered in a browser with the self-hosted fonts at
+  **1200×630** for Open Graph and at **1280×640** for the GitHub repository social
+  preview (`.github/social-preview.png`, which GitHub only takes by hand from the
+  settings). `bun run cards` renders both from the one layout; re-render it (do not
+  build it) if the branding changes, and bump `OG_IMAGE_VERSION` when the picture
+  a visitor sees actually changed.
 - **This repo has no server, and must not grow one.** `wrangler.jsonc` is
   assets-only: no `main`, no Worker script, no `/api/*` and no bindings.
   Everything the game reads at runtime is fetched by the browser from a URL it
