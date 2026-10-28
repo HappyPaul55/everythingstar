@@ -117,6 +117,38 @@ export const en = {
     "Your browser installs from its own menu — look for Install or Add to Home Screen.",
   "screen.installDismissed": "No problem — EverythingStar is still in your browser.",
   "screen.installFailed": "The install prompt did not open. Use your browser's menu instead.",
+
+  // A player's profile: the four local records as one file
+  "profile.title": "Your profile",
+  "profile.hint":
+    "Your settings, band, scores and first-run hints live in this browser, with no account. A profile is those four records as one file you can carry to another browser.",
+  "profile.notIncluded":
+    "The library, downloads and audio are not in a profile — they stay where they are, in this browser.",
+  "profile.export": "Export profile",
+  "profile.exported": "Saved {name}.",
+  "profile.import": "Import profile",
+  "profile.confirmLabel": "Replace this browser's profile?",
+  "profile.confirm": "Replace this browser's settings, band, scores and hints?",
+  "profile.confirmHint":
+    "The four records this browser holds are overwritten, and the page reloads. The library, downloads and audio are untouched.",
+  "profile.replace": "Replace",
+  "profile.cancel": "Cancel",
+  "profile.problem.tooLarge":
+    "That file is over 1 MB, so it is not a profile. Nothing was changed.",
+  "profile.problem.notJson":
+    "That file is not JSON, so it is not a profile. Nothing was changed.",
+  "profile.problem.notObject": "That file is not a profile. Nothing was changed.",
+  "profile.problem.wrongFormat":
+    "That is not an EverythingStar profile. Nothing was changed.",
+  "profile.problem.wrongVersion":
+    "That profile was made by a different version of the game. Nothing was changed.",
+  "profile.problem.missingSettings":
+    "That profile has no settings. Nothing was changed.",
+  "profile.problem.missingBand": "That profile has no band. Nothing was changed.",
+  "profile.problem.missingBoard":
+    "That profile has no score board. Nothing was changed.",
+  "profile.problem.readFailed":
+    "That file could not be read. Nothing was changed.",
   "screen.audioLag": "Audio lag",
   "screen.audioLagHint":
     "How far behind the notes you hear the song — for a TV, a soundbar or headphones that add a delay of their own. Nudge it until the two land together.",
@@ -547,6 +579,19 @@ export const en = {
   "screen.savedTop": "your last {count} on this song",
   "screen.savedBand": "band of {count}",
   "screen.lost": "run over",
+
+  // The brag card: a finished run as a poster
+  "brag.action": "Brag card",
+  "brag.title": "Brag card",
+  "brag.lede":
+    "This run as a poster you can keep or post. It carries the song, the score and the stars — not the song's artwork.",
+  "brag.previewAlt": "The brag card for {title}",
+  "brag.download": "Download",
+  "brag.share": "Share",
+  "brag.copy": "Copy text",
+  "brag.copied": "Copied. The card is still here to download.",
+  "brag.shared": "Shared.",
+  "brag.copyFailed": "This browser would not copy. The card can still be downloaded.",
   "screen.singer": "Singer {n}",
   "screen.typist": "Typist {n}",
 

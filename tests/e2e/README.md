@@ -23,6 +23,7 @@ things that need a page.
 | `a11y.spec.ts` | 5 | axe scans of the paper pages and the game's screens, pause, Practice and results |
 | `arcade.spec.ts` | 2 | the attract demo's machine run; the homepage's same-origin, silent iframe window |
 | `band.spec.ts` | 2 | a phone's one-box-a-row band and its missing second row, against the desk's four |
+| `brag-card.spec.ts` | 1 | a kept run's card as a Blob image and the SVG the browser really downloads |
 | `bundle.spec.ts` | 2 | the **dev** module graph (no translator is fetched while browsing); a lazy dialog is still native |
 | `comfort.spec.ts` | 2 | the Screen Wake Lock asked for on a run, released on a pause and re-asked on a resume; a miss reaching `navigator.vibrate` and the pad actuator of the seat holding one |
 | `import.spec.ts` | 2 | a copy into OPFS that survives a reload; the directory input's file list |
@@ -38,6 +39,7 @@ things that need a page.
 | `play-frame.spec.ts` | 2 | the header and the stage sharing the first viewport, at two sizes |
 | `play-style.spec.ts` | 1 | the CSS layer order, read from computed styles (dev **and** the built preview) |
 | `preload.spec.ts` | 2 | the band's Play button waiting for a stem that is still arriving, then starting without the load page; a ready band skipping it |
+| `profile.spec.ts` | 1 | a profile file through the input, the confirmation and the reload — and IndexedDB unchanged |
 | `seo.spec.ts` | 1 | the head's canonical, Open Graph and JSON-LD wiring |
 | `sng.spec.ts` | 1 | one package fetched once for the preview and the band |
 | `stage-entrance.spec.ts` | 1 | the room arriving before the highways, in two beats |
@@ -49,7 +51,7 @@ things that need a page.
 `pwa.spec.ts` and `play-style.spec.ts` also run under `playwright.pwa.config.ts`
 (`bun run test:pwa`) against a production build: the first installs the worker and
 reloads offline, the second proves the built CSS kept its layer order. The dev
-suite is 50 tests in 25 files.
+suite is 52 tests in 27 files.
 
 ## What moved out, and why
 

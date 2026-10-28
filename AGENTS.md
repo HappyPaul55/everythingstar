@@ -325,7 +325,17 @@ only gate that can see the regression, and static documents belong in
   best combo, hits, misses, a line per player, the lineup key and the base/stars it
   was rated against), what counts as a best, and the browser storage behind it. The
   storage key is versioned with the scoring model, so an old three-point board is not
-  compared with 50-point runs. Pure except `loadBoard`/`saveRun`.
+  compared with 50-point runs. Pure except `loadBoard`/`saveRun`/`replaceBoard`, and
+  `BOARD_LIMIT` is the one number saying how many runs it keeps.
+- `src/lib/game/profile.ts` — **a player's profile**, pure and tested: the versioned
+  envelope (`format: "everythingstar-profile"`, version 1, `exportedAt`) around the
+  **four local records** — settings, band, board and first-run hints — and nothing
+  else. `buildProfile` copies the live records; `readProfile` refuses a file over
+  1 MB before parsing, then checks the envelope and hands each record to its own pure
+  parser (`parseSettings`, `parsePlan`, `parseBoard`, `parseOnboarding`), capped to
+  `BOARD_LIMIT`, so an import is held to the same tolerance as a store read. It
+  **deliberately carries no library, downloads or audio**: those are reached through
+  a URL, not owned by a player, so an import leaves them untouched.
 - `src/lib/game/meter.ts` — the **meter's arithmetic**, pure and shared by both judging
   engines: `fillMeter`/`missMeter`/`drainMeter`, so a band cannot read two meters that
   fill or drain differently.
@@ -346,7 +356,9 @@ only gate that can see the regression, and static documents belong in
   `PauseMenu` (resume, restart, leave — plus a **quick panel** for the note speed,
   the audio lag and the guide vocal when somebody is singing, and **Practice this
   section**, which seeds `PracticeDialog` with the stretch under the playhead),
-  `Results`. The **countdown** is not a component: it is the stage's
+  `Results`, and `BragCardDialog` (the poster of a kept run, over the results — lazy,
+  like the dialogs opened by one press). The **countdown** is not a component: it is
+  the stage's
   entrance. They read what they
   need from context (the run board, the song, the clock) and take callbacks for
   everything else.
@@ -619,12 +631,17 @@ only gate that can see the regression, and static documents belong in
   tiny module) out of the reader's chunk, so the package's `MAGIC` cannot leak back
   into the first download. `parseSource` itself
   stays synchronous and pure; the laziness lives in the caller, not in the parser.
-  `PlaylistsDialog`, `DownloadsDialog`, `CalibrationDialog`, `IntentDialog` and
+  `PlaylistsDialog`, `DownloadsDialog`, `CalibrationDialog`, `IntentDialog`,
+  `BragCardDialog` and
   `BandControls` are
   `React.lazy` with a
   `Suspense` fallback of nothing, because each is opened by one press (the jukebox's
-  toolbar, Options' Calibrate, a `/open` link, `?dev=1`) and a dialog arriving a moment
-  later is invisible while a whole-screen spinner is not. A lazy dialog still mounts as
+  toolbar, Options' Calibrate, a `/open` link, a kept run's Brag card, `?dev=1`) and a
+  dialog arriving a moment
+  later is invisible while a whole-screen spinner is not. **The profile envelope is
+  fetched the same way**, with `await import("…/profile")` in Options' two handlers,
+  because importing or exporting is a once-a-session press rather than page code. A
+  lazy dialog still mounts as
   a native `<dialog>` with `useModal`, and its opener keeps `aria-haspopup="dialog"`, so
   Escape and focus return are unchanged. **The initial `/play` graph is the number that
   matters** — 546.4 KiB raw / 177.2 KiB gzipped across 21 files — and
@@ -1817,6 +1834,16 @@ only gate that can see the regression, and static documents belong in
   per song), the **settings** (`settings.ts`, this browser — how the game behaves) and
   the **first-run hints** (`onboarding.ts`, per player seat — which seats have already
   seen the highway key labels).
+  **Those four are also a profile.** `profile.ts` exports them as one versioned JSON
+  file and imports one back, and it deliberately carries **nothing else**: the
+  library, the offline downloads and the audio are other people's files reached
+  through a URL, not records a player owns, so a profile is small and an import
+  leaves them exactly where they are. Options has the two rows; import validates the
+  envelope and each record through that record's own parser, asks **Replace this
+  browser's settings, band, scores and hints?** before it writes, and then reloads —
+  the session reads every one of the four on mount, so the reload is what makes them
+  all the import's rather than a mix. A malformed file says why and changes nothing,
+  and nothing but the Replace press writes.
   A setting is a *behaviour*, never a piece of the game: the audio lag, the picture
   lag, the master fader and the music/ambience/sfx family levels under it, whether a
   song's own backdrop plays, how fast the notes
@@ -2150,6 +2177,24 @@ only gate that can see the regression, and static documents belong in
   are **raised** — the stage is read at a glance from across a room, a results panel
   is read at a desk, and two-thirds opacity that works on the first reads as a smudge
   on the second.
+- **A kept run has a brag card, and it is a poster rather than a cover.**
+  `src/lib/game/bragCard.ts` is pure and tested: a `BragCard` (the game's name, the
+  song, the score, the stars and gold, the accuracy, the best combo, the band size and
+  the date) becomes a complete 1200×630 SVG. Every value is **XML-escaped** for text
+  and attributes alike, and the same card is the same document — the date is formatted
+  in UTC. It **does not fetch or embed song art**: that is somebody else's file at a
+  URL this repo does not own, a canvas would need CORS on that host, and this is a
+  poster of the run rather than the song's cover; the song's `accent` is one
+  restrained mark, and only when it is a hex colour. The dialog
+  (`screens/BragCardDialog.tsx`, **lazy**) fetches the self-hosted display and mono
+  fonts, base64s them into a `@font-face` block and rebuilds the card; a failed fetch
+  falls back to a system stack, so an SVG with no fonts is still valid. The preview
+  is an `<img>` over a Blob URL — **never `dangerouslySetInnerHTML`** — Download saves
+  the SVG, Share is offered only where `navigator.canShare({ files })` allows it, and
+  Copy text is the fallback; every object URL is revoked and an aborted share is not
+  an error. The button is on the results **actions** only when the run is one the
+  board kept: `save`, not lost, a non-null verdict and at least one run — never
+  Listen, the attract demo, a lost run or a stage that judged nothing.
 - **A lost run is a verdict, not a mid-song fail mode.** `lostRun(hits, judged)` is the
   rule: at least ten judged notes/words and fewer than half hit. `Results` computes it
   from the published runs, shows the existing "Run over" state and **does not save** the

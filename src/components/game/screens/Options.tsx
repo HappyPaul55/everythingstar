@@ -1,8 +1,13 @@
-import { useState, lazy, Suspense, type ReactNode } from "react";
+import { useState, lazy, Suspense, useRef, type ChangeEvent, type ReactNode } from "react";
 import { useT } from "../../../i18n/react";
 import type { MessageKey, Translate } from "../../../i18n";
 import { isMelodyKind, patchSlot, type BandPlan, type BandSlot, type PlayerKind } from "../../../lib/game/band/types";
+import { savePlan } from "../../../lib/game/band/store";
 import type { Controller } from "../../../lib/game/controls/layout";
+import { loadOnboarding, saveOnboarding } from "../../../lib/game/onboarding";
+import type { Profile, ProfileProblem } from "../../../lib/game/profile";
+import { loadBoard, replaceBoard } from "../../../lib/game/scores";
+import { saveSettings } from "../../../lib/game/settings";
 import {
   BACKDROP_DIM_MAX,
   BACKDROP_DIM_STEP,
@@ -85,8 +90,109 @@ export function Options({ settings, onSettings, plan, onPlan, onBack }: Props) {
   const lag = settings.audioLagMs;
   const pictureLag = settings.visualLagMs;
 
+  /** The chosen file input, hidden behind the Import button. */
+  const filePicker = useRef<HTMLInputElement | null>(null);
+  /** A profile that passed validation and is waiting for the Replace press. */
+  const [pending, setPending] = useState<Profile | null>(null);
+  /** What the last import or export said, in one line under the row. */
+  const [message, setMessage] = useState<
+    | { kind: "exported"; name: string }
+    | { kind: "problem"; problem: ProfileProblem }
+    | null
+  >(null);
+
   const setSlot = (index: number, patch: Partial<BandSlot>) =>
     onPlan(patchSlot(plan, index, patch));
+
+  /*
+   * Export is the four records and nothing else: the settings and the band as this
+   * session holds them, and the board and hints as they are stored. The library,
+   * downloads and audio are not records a profile owns — see `profile.ts` — so they
+   * are not read here at all.
+   *
+   * The profile module is fetched on the press: importing or exporting is a once-a-
+   * session action, and its envelope and parsers are not part of the first download.
+   */
+  const exportProfile = async () => {
+    const { buildProfile, profileFilename } = await import(
+      "../../../lib/game/profile"
+    );
+    const profile = buildProfile({
+      settings,
+      plan,
+      board: loadBoard(),
+      onboarding: loadOnboarding(),
+      now: Date.now(),
+    });
+    const name = profileFilename(profile.exportedAt);
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(profile, null, 2)], { type: "application/json" }),
+    );
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = name;
+    anchor.rel = "noopener";
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    // A revoke in the same tick can cancel the save in some browsers.
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setMessage({ kind: "exported", name });
+  };
+
+  /*
+   * Reading the file is local and quick, so there is no busy state: the answer is
+   * either a confirmation or the one reason it is not a profile. **Nothing is
+   * written until Replace**, which is what makes a malformed file harmless.
+   */
+  const importProfile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    // Clear the input so choosing the same file twice still fires a change.
+    event.target.value = "";
+    if (!file) return;
+    const { PROFILE_LIMIT_BYTES, readProfile } = await import(
+      "../../../lib/game/profile"
+    );
+    // Refuse an oversized file before reading it into memory. `readProfile` has the
+    // same cap for text handed to it, but a file that is really a library should
+    // never become a string in this tab just to be rejected.
+    if (file.size > PROFILE_LIMIT_BYTES) {
+      setPending(null);
+      setMessage({ kind: "problem", problem: "tooLarge" });
+      return;
+    }
+    let raw: string;
+    try {
+      raw = await file.text();
+    } catch {
+      setPending(null);
+      setMessage({ kind: "problem", problem: "readFailed" });
+      return;
+    }
+    const result = readProfile(raw);
+    if (!result.ok) {
+      setPending(null);
+      setMessage({ kind: "problem", problem: result.problem });
+      return;
+    }
+    setMessage(null);
+    setPending(result.profile);
+  };
+
+  /*
+   * The four records are written through their own save functions — never by
+   * writing a key from this page — and then the page reloads. The session reads the
+   * settings, band and board on mount, so a reload is the one way to make every one
+   * of them the imported record's rather than a mix of the old and the new.
+   */
+  const replaceProfile = () => {
+    if (!pending) return;
+    saveSettings(pending.settings);
+    savePlan(pending.band);
+    replaceBoard(pending.board);
+    saveOnboarding(pending.onboarding);
+    window.location.reload();
+  };
 
   return (
     <div className="screen screen--options">
@@ -490,6 +596,81 @@ export function Options({ settings, onSettings, plan, onPlan, onBack }: Props) {
               ) : null}
             </OptionRow>
           )}
+
+          {/* The four local records as one file: settings, band, board and hints.
+              A profile deliberately does not carry the library, downloads or audio,
+              and the hint says so — the file is a player's own record, not a copy of
+              the game. Import asks before it replaces anything. */}
+          <section className="option option--profile">
+            <div className="option__text">
+              <h3 className="option__name">{t("profile.title")}</h3>
+              <p className="option__hint">{t("profile.hint")}</p>
+              <p className="option__hint">{t("profile.notIncluded")}</p>
+            </div>
+            <div className="option__control option__control--profile">
+              <button
+                type="button"
+                className="band-btn"
+                data-sound="select"
+                onClick={() => void exportProfile()}
+              >
+                {t("profile.export")}
+              </button>
+              <button
+                type="button"
+                className="band-btn"
+                data-sound="select"
+                onClick={() => filePicker.current?.click()}
+              >
+                {t("profile.import")}
+              </button>
+              <input
+                ref={filePicker}
+                className="profile__file"
+                type="file"
+                accept="application/json,.json"
+                hidden
+                onChange={(event) => void importProfile(event)}
+              />
+            </div>
+
+            {message ? (
+              <p className="option__hint option__hint--wide" role="status" aria-live="polite">
+                {message.kind === "exported"
+                  ? t("profile.exported", { name: message.name })
+                  : t(`profile.problem.${message.problem}` as MessageKey)}
+              </p>
+            ) : null}
+
+            {pending ? (
+              <div
+                className="profile-confirm"
+                role="group"
+                aria-label={t("profile.confirmLabel")}
+              >
+                <p className="profile-confirm__ask">{t("profile.confirm")}</p>
+                <p className="option__hint">{t("profile.confirmHint")}</p>
+                <div className="config__actions">
+                  <button
+                    type="button"
+                    className="band-btn band-btn--primary"
+                    data-sound="select"
+                    onClick={replaceProfile}
+                  >
+                    {t("profile.replace")}
+                  </button>
+                  <button
+                    type="button"
+                    className="band-btn"
+                    data-sound="back"
+                    onClick={() => setPending(null)}
+                  >
+                    {t("profile.cancel")}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </section>
         </div>
       </div>
 
