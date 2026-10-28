@@ -2595,6 +2595,13 @@ only gate that can see the regression, and static documents belong in
   tests without asserting the build identity, and says which commit owns production
   now. That is why there is no concurrency group: serialising the records would
   cancel the queued ones, and a merge with no record is worse than a second job.
+- **The live site is checked when it is not deploying.**
+  `.github/workflows/production-check.yml` runs `scripts/smoke.ts` daily and on demand
+  against production, expecting the version `main` points at (`scripts/version.ts` with
+  the branch head as its commit, so the format has one home). A deploy-time check only
+  sees the moment of the deploy; this is what notices a header edited in the dashboard,
+  an outage, or a deploy from outside the pipeline. It reads the repository and nothing
+  else, and it gates nothing.
 - **The build names itself.** `bun run version` prints `v<package.json
   version>+<7-char sha>`, which is both the welcome screen's build label and the
   service worker's shell cache name. `astro.config.mjs` and `scripts/build-sw.ts`

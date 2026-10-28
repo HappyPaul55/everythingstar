@@ -1618,6 +1618,10 @@ is what lets a provider live in its own project.
 - **Rolling back** is Cloudflare's: Workers & Pages → the worker → Deployments →
   Version history → roll back to the previous version. Then run
   `gh workflow run deploy.yml` so the record matches what is live.
+- **Production is checked on a schedule, not only when it deploys.** The same smoke
+  test runs daily, and on demand, against the live origin, expecting the build `main`
+  points at — so a header edited in the dashboard, an outage or a deploy from outside
+  the pipeline is noticed by the next morning rather than by a player.
 - Do not add a `main`, a Worker script or any bindings to `wrangler.jsonc` for
   game features. This repo is the client; a service it needs is a separate
   project, reached through the Playlists feature.
