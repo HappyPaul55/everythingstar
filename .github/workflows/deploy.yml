@@ -36,7 +36,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
       # No `bun install`: neither script imports a dependency.
       - name: Wait for CI and the Cloudflare build

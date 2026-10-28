@@ -9,7 +9,7 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       # setup-bun reads the Bun version from package.json's `packageManager`.
       # The scripts run Astro on Bun's own runtime (`bun --bun astro …`), so the
       # runner image's Node is never the version Astro checks itself against.
@@ -20,13 +20,13 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       # The browser build is pinned by @playwright/test in bun.lock; cache the
       # download, not the system libraries. `--with-deps` installs those.
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
@@ -42,7 +42,7 @@ jobs:
       # and screenshots each config keeps in its own output directory.
       - name: Upload the Playwright results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-results
           path: test-results/
