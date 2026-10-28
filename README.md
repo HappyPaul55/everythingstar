@@ -1634,8 +1634,9 @@ A release is a checkpoint, not a build. To cut one:
 
 1. `bun run version:bump patch` (or `minor`, `major`) on a `release/vX.Y.Z` branch.
 2. Open a PR titled `chore(release): vX.Y.Z` and merge it.
-3. Tag the merge commit — `git tag -a vX.Y.Z -m "EverythingStar vX.Y.Z" <sha>` — and
-   push the tag.
+3. Wait for that commit's deployment to be green — the **Deploy** workflow — then tag
+   the merge commit — `git tag -a vX.Y.Z -m "EverythingStar vX.Y.Z" <sha>` — and push
+   the tag.
 
 The tag must equal `package.json`'s version, and it must be on `main`; the `Release`
 workflow refuses anything else and otherwise publishes a GitHub Release with generated
