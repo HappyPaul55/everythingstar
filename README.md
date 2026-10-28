@@ -87,6 +87,11 @@ inventory are in [`tests/e2e/README.md`](tests/e2e/README.md).
 - **Hosting a library.** Serve three documents from a static host with CORS; the wire
   contract is [Playlist API](docs/developers/playlist-api.md), and
   `bun run playlist:check <url>` holds a document to the game's own reader.
+- **Download a copy.** Every release attaches three archives — a standalone `game`, a
+  standalone `arcade` and the whole `website` — from the
+  [releases page](https://github.com/HappyPaul55/everythingstar/releases). The
+  standalone folders address everything from an origin's root, so serve one from a
+  web root rather than opening it from disk.
 - **The social card** is generated from `scripts/og-card.html` with `bun run cards`.
 
 ## Contributing and security

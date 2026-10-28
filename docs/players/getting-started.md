@@ -58,6 +58,15 @@ EverythingStar does not need installing. If you would like it to open like an ap
 - On a browser that offers no prompt at all, the Options row says to use its menu.
 - The installed game opens at its own address, without the website around it, and its shell is kept for offline use. The songs themselves still need downloading (see [Downloads](songs.md#downloads)).
 
+## Download a copy
+
+Every [release](https://github.com/HappyPaul55/everythingstar/releases) also carries the
+game as a folder: a standalone `game` (the stage on its own) and `arcade` (the attract
+loop), each as a zip and a tar.gz. They are for putting the game on a web server of your
+own, so serve one from a domain's root — opening it from the file system is a page with
+no JavaScript, because the build addresses everything from `/`. Downloading songs for
+offline play is still the installed game's job.
+
 ## No account, and nothing sent
 
 The game keeps four small records in this browser: your settings, the band, your scores and the first-run hints. They are yours, on this device, with no login.

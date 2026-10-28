@@ -83,6 +83,15 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   `scripts/check-pwa.ts` checks the output.
 - `src/lib/pwa/register.ts` + `src/components/pwa/ServiceWorker.astro` — the one
   registration: production, https/localhost, never inside the native WebView.
+- `src/lib/release/bundles.ts` + `scripts/release-assets.ts` + `scripts/check-release.ts`
+  — **the release archives**, and the plan they all read: one `dist/` becomes `game`,
+  `arcade` and `website`, each as a zip and a tar.gz in `release/`. `game` and `arcade`
+  promote a built game-only page to `index.html`, carry the game's own directories, a
+  manifest rewired to `/` and a `BUILD.txt`, and no website at all; `website` is `dist/`
+  untouched. The plan is pure and unit-tested, the builder is copying and compressing,
+  and the gate holds an archive to its plan and to what its page names — a missing
+  `_astro` chunk is a download that draws and never hydrates. `bun run verify` runs both,
+  and `.github/workflows/release.yml` attaches the six files to the GitHub Release.
 - `src/components/game/pwa/install.ts` + `useInstall.ts` — the install prompt captured
   by the inline head listener (Chromium fires it once, early) and adopted at session
   mount; the Options row offers it, iOS gets instructions, and the native shell gets no
@@ -480,7 +489,8 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   a Workers Builds branch preview requires (`wrangler preview`); assets and
   compatibility stay at the top level. A provider is its own project.
 - `scripts/generate-icons.mjs`, `scripts/fetch-fonts.mjs`, `scripts/check-budget.ts`,
-  `scripts/og-card.html`, `scripts/render-cards.ts` — icon set, self-hosted fonts,
-  the dist/audio size caps, and the social cards' source layout and renderer.
+  `scripts/og-card.html`, `scripts/render-cards.ts`, `scripts/check-docs.ts` — icon set,
+  self-hosted fonts, the dist/audio size caps, the social cards' source layout and
+  renderer, and the documentation gate.
 - `.github/workflows/ci.yml` — CI installs with a frozen lockfile and runs
   `bun run verify`.

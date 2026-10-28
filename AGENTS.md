@@ -94,6 +94,8 @@ bun run version          # v<package.json>+<sha>
 bun run import --from <dir> --to <dir>     # a folder of charts into a library
 bun run playlist:check <url>               # a playlist against the game's own reader
 bun run check:docs       # the built docs pages, the sitemap and the offline shell
+bun run release:assets   # game, arcade and website archives into release/
+bun run check:release    # every archive holds its plan, and both formats agree
 ```
 
 ## Deployment
@@ -102,8 +104,10 @@ Cloudflare static assets via Workers Builds (`bun run build` → `bunx wrangler 
 configured by `wrangler.jsonc`; `dist/` and nothing else. GitHub records the deployment
 (`.github/workflows/deploy.yml`), watches the live site daily
 (`production-check.yml`), and refuses a release tag that disagrees with `package.json` or
-is not on `main`. `main` is PR-only, actions are pinned to commit shas, and the full
-contract is [Deployment and releases](docs/developers/deployment.md).
+is not on `main` — a tag builds that commit and attaches the six archives (`game`,
+`arcade` and `website`, each zip and tar.gz) to the GitHub Release. `main` is PR-only,
+actions are pinned to commit shas, and the full contract is
+[Deployment and releases](docs/developers/deployment.md).
 
 ## Working notes
 

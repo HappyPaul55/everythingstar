@@ -26,6 +26,8 @@ bun run knip             # dead-code check (knip)
 bun run budget           # dist/, audio and initial-JS size caps
 bun run check:pwa        # manifest and worker gate (scripts/check-pwa.ts)
 bun run check:docs       # the built documentation, the sitemap and the offline shell
+bun run release:assets   # game, arcade and website archives into release/
+bun run check:release    # every archive holds its plan, and both formats agree
 bun run verify           # all of the above that CI runs, in order
 bun run version          # the build's version: v<package.json>+<7-char sha>
 bun run version:bump     # bump package.json and print the release steps
@@ -37,8 +39,8 @@ bun run cards            # render the social cards from og-card.html
 ```
 
 Verify every change with `bun run verify`: lint, knip, `astro check`, the tests'
-typecheck, the unit tests, the build, the PWA gate, the docs gate and the size budget,
-in that order. CI runs the same command.
+typecheck, the unit tests, the build, the PWA gate, the docs gate, the size budget and the
+release archives, in that order. CI runs the same command.
 
 Every script that calls Astro says `bun --bun astro …`: without `--bun` Bun hands the
 bin to the machine's Node through its shebang, and Astro then refuses to run on a Node
@@ -57,6 +59,10 @@ out of `astro check`, and the test config includes them with the runner's types.
 - **`budget`** — `dist/_astro` JavaScript, the **initial `/play` graph** raw and
   gzipped, `dist/` as a whole and `public/audio`, and a walk of the initial graph that
   fails if a source-translator marker has leaked into it.
+- **`release:assets` + `check:release`** — one `dist/` into the `game`, `arcade` and
+  `website` archives (zip and tar.gz) and back again: each archive holds its plan, both
+  formats agree, and every root-absolute URL its entry page names is inside it. See
+  [Deployment and releases](deployment.md#the-release-archives).
 
 The budget was measured on 2026-10-28: 644 KiB of `_astro` JS, an initial graph of
 560 KiB raw / 182 KiB gzipped, 11.2 MiB in `dist/` before the docs and 8.8 MiB of

@@ -28,6 +28,8 @@ bun run build            # static build into dist/, then dist/sw.js
 bun run check:pwa        # the manifest, the worker and every game-only page
 bun run check:docs       # the built documentation, the sitemap and the offline shell
 bun run budget           # dist/, audio and initial-JS size caps
+bun run release:assets   # game, arcade and website archives into release/
+bun run check:release    # every archive holds its plan, and both formats agree
 ```
 
 Run the whole thing before opening a pull request. The browser tests are separate,

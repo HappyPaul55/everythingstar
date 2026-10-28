@@ -88,9 +88,44 @@ A release is a **checkpoint, not a build**:
    `git tag -a vX.Y.Z -m "EverythingStar vX.Y.Z" <sha>` — and push the tag.
 
 The tag must equal `package.json`'s version and be on `main`;
-`.github/workflows/release.yml` refuses anything else and otherwise publishes a GitHub
-Release with generated notes. It runs no build and attaches nothing. Tags cannot be
-moved or deleted, and a published release is immutable.
+`.github/workflows/release.yml` refuses anything else and otherwise **builds that
+commit**, runs `bun run release:assets` and publishes a GitHub Release with generated
+notes and the six archives attached. It builds because a tag has no other way to get the
+artefacts, and the commit is already `main`'s, where `verify` built and checked the same
+archives. Tags cannot be moved or deleted, and a published release is immutable.
+
+## The release archives
+
+One build is three views of `dist/`, never three builds. `src/lib/release/bundles.ts` is
+the plan — pure, unit-tested — and both the builder (`scripts/release-assets.ts`) and the
+gate (`scripts/check-release.ts`) read it.
+
+| Archive | What it is | Carrier |
+| --- | --- | --- |
+| `game.zip` / `game.tar.gz` | `/embed`, the native app's game-only page, promoted to `index.html` | the game's own files, a manifest, `BUILD.txt` |
+| `arcade.zip` / `arcade.tar.gz` | `/arcade`, the attract entry, promoted to `index.html` | the same, for a kiosk or a wall display |
+| `website.zip` / `website.tar.gz` | the whole site, `dist/` untouched | everything, including the worker |
+
+Both game archives are **standalone folders**: the game's own directories, a page of
+their own at the root, a manifest rewired to `id`/`start_url`/`scope` `/` and a
+`BUILD.txt`, and none of the website around it. They are deliberately **served at an
+origin's root** — the build addresses everything from `/`, so a subfolder or `file://`
+is a page with no JavaScript. They carry **no service worker** on purpose: the site's
+worker precaches `app.html`/`play.html` and falls back to `/app.html` offline, so in a
+folder that has neither it is a worker that answers 503. The manifest does ship, so the
+folder is still installable, and both game entries stay `noindex`: `/play` is the page a
+search should land on.
+
+`check:release`'s real question is **reachability** — every root-absolute URL the entry
+page names must be in the archive, and every manifest icon with it — because a missing
+`_astro` chunk draws a page that never hydrates.
+
+The archive step is deterministic: sorted entries, the commit's timestamp on every file,
+`zip -X` and a bare gzip header, so the same `dist/` is the same bytes twice. The
+**build** is not byte-reproducible — Astro stamps per-build ids into the pages and the
+worker names the moment it was built — so a rebuild of the same commit has the same file
+names and byte-identical chunks, not the same page bytes. `release/` is ignored by Git;
+the GitHub Release is its home.
 
 ## The rules that keep it that way
 

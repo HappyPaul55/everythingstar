@@ -1,18 +1,22 @@
-# A release is a checkpoint, not a build.
+# A release is a checkpoint that carries the build's own output.
 #
 # A `v*` tag is cut by hand on a commit that has already passed CI on protected
-# `main`, so this workflow publishes a GitHub Release and builds nothing. The
-# repository is the source and a static site has no binary to publish, which is
-# why no artifacts and no source archive are attached.
+# `main`, so this workflow does not repeat the gates. It does build, because a tag
+# has no other way to get the artifacts: the Release attaches **three views of one
+# `dist/`** — `game`, `arcade` and `website`, each as a zip and a tar.gz — and they
+# only exist once the site is built. The tagged commit is `main`'s, where
+# `bun run verify` already built and checked the same archives, so the build here
+# is a rebuild of a commit that was already verified rather than a new gate.
+#
+# The archive step is deterministic (sorted entries, the commit's timestamp, no
+# extra attributes), so the same `dist/` produces the same bytes. The build is not:
+# Astro stamps per-build ids into the pages and the worker names its build time, so
+# a rebuild of the same commit has the same file names and chunks, not the same bytes.
 #
 # The tag must equal `package.json`'s version, so the version the game shows,
 # the tag and the release cannot disagree — `package.json` is the one place the
 # version is written. A tag whose commit is not on `main` is refused, so a stray
 # branch cannot invent a release.
-#
-# `bun run verify` is deliberately not repeated here: the tagged commit is on
-# `main`, where those checks are already required, so re-running them would add
-# ten minutes to every release for no new information.
 name: Release
 
 on:
@@ -29,7 +33,7 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # The ancestry question is asked of the API rather than of the local clone,
@@ -55,11 +59,32 @@ jobs:
               exit 1
               ;;
           esac
+      # setup-bun reads the Bun version from package.json's `packageManager`, and
+      # the build scripts run Astro on Bun's own runtime (`bun --bun astro …`).
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
+      # `dist/`, then `dist/sw.js`, then the three archives in `release/`.
+      - run: bun run build
+      - run: bun run release:assets
+      # The same gate CI runs: each archive holds its plan, its page names nothing
+      # it has not got, and the zip and the tar.gz agree.
+      - run: bun run check:release
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
+            release/game.zip \
+            release/game.tar.gz \
+            release/arcade.zip \
+            release/arcade.tar.gz \
+            release/website.zip \
+            release/website.tar.gz \
             --title "EverythingStar $GITHUB_REF_NAME" \
             --generate-notes \
             --verify-tag \
