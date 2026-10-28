@@ -2597,11 +2597,14 @@ only gate that can see the regression, and static documents belong in
   cancel the queued ones, and a merge with no record is worse than a second job.
 - **The live site is checked when it is not deploying.**
   `.github/workflows/production-check.yml` runs `scripts/smoke.ts` daily and on demand
-  against production, expecting the version `main` points at (`scripts/version.ts` with
-  the branch head as its commit, so the format has one home). A deploy-time check only
-  sees the moment of the deploy; this is what notices a header edited in the dashboard,
-  an outage, or a deploy from outside the pipeline. It reads the repository and nothing
-  else, and it gates nothing.
+  against production, then asks `smoke.ts --live` what build it is serving and whether
+  that commit is on `main` (the compare API: `identical` or `behind` is on it, `ahead`
+  or `diverged` is not). It deliberately does **not** expect the head — a deploy in
+  flight is not a fault, and Cloudflare can take as long as it likes — which is why the
+  identity question is asked of the commit graph rather than of the version string. A
+  deploy-time check only sees the moment of the deploy; this is what notices a header
+  edited in the dashboard, an outage, or a build promoted from a branch. It reads the
+  repository and nothing else, and it gates nothing.
 - **The build names itself.** `bun run version` prints `v<package.json
   version>+<7-char sha>`, which is both the welcome screen's build label and the
   service worker's shell cache name. `astro.config.mjs` and `scripts/build-sw.ts`

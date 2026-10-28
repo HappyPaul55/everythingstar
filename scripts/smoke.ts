@@ -12,9 +12,15 @@
  * `src/` or `node_modules` — so it can run on a bare runner with Bun installed.
  *
  *   bun scripts/smoke.ts [--base <url>] [--expect <version>]
+ *   bun scripts/smoke.ts --live
  *
  * `--expect` is the `v<version>+<sha>` the site must serve. When it is omitted
  * the build-identity check is skipped; everything else still runs.
+ *
+ * `--live` answers one question and exits: what build is the origin serving? It is
+ * what a caller with a different question about the identity asks — the scheduled
+ * production check wants to know that the build is *on `main`*, not that it is the
+ * head, because a deploy in flight is not a fault.
  */
 // An empty export makes this a module, which is what allows the top-level
 // `await` below; the script itself deliberately imports nothing at all.
@@ -25,9 +31,13 @@ const REQUEST_TIMEOUT_MS = 15_000;
 const IDENTITY_RETRY_MS = 5_000;
 const IDENTITY_DEADLINE_MS = 90_000;
 
+/** The `v<version>+<sha>` a service worker body names, if it names one. */
+const BUILD_ID = /v\d+\.\d+\.\d+\+[0-9A-Za-z._-]+/;
+
 interface Options {
   base: string;
   expect: string | null;
+  live: boolean;
 }
 
 interface Probe {
@@ -46,19 +56,28 @@ interface Check {
 
 function usage(message: string): never {
   console.error(message);
-  console.error("usage: bun scripts/smoke.ts [--base <url>] [--expect <version>]");
+  console.error(
+    "usage: bun scripts/smoke.ts [--base <url>] [--expect <version>] | --live",
+  );
   process.exit(2);
 }
 
 function parseOptions(argv: string[]): Options {
   let base = DEFAULT_BASE;
   let expect: string | null = null;
+  let live = false;
 
   for (let index = 0; index < argv.length; index += 1) {
     const flag = argv[index] ?? "";
     if (flag === "--help" || flag === "-h") {
-      console.log("usage: bun scripts/smoke.ts [--base <url>] [--expect <version>]");
+      console.log(
+        "usage: bun scripts/smoke.ts [--base <url>] [--expect <version>] | --live",
+      );
       process.exit(0);
+    }
+    if (flag === "--live") {
+      live = true;
+      continue;
     }
     if (flag !== "--base" && flag !== "--expect") {
       usage(`Unknown argument "${flag}".`);
@@ -80,7 +99,7 @@ function parseOptions(argv: string[]): Options {
   if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
     usage(`--base must be http or https, not ${parsed.protocol}`);
   }
-  return { base: parsed.toString().replace(/\/+$/, ""), expect };
+  return { base: parsed.toString().replace(/\/+$/, ""), expect, live };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -304,6 +323,22 @@ function checksFor(probe: Probe): Check[] {
 }
 
 const options = parseOptions(process.argv.slice(2));
+
+if (options.live) {
+  const response = await fetch(`${options.base}/sw.js`, {
+    redirect: "follow",
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+  const body = response.ok ? await response.text() : "";
+  const version = BUILD_ID.exec(body);
+  if (!version) {
+    console.error(`${options.base}/sw.js (${response.status}) names no build identity`);
+    process.exit(1);
+  }
+  console.log(version[0]);
+  process.exit(0);
+}
+
 const probe: Probe = {
   base: options.base,
   expect: options.expect,
