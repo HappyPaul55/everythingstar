@@ -276,6 +276,9 @@ test("Listen leaves the board alone: no run, no score, no best", async ({
   // Nobody played, so there are no cards, and the screen says nothing about a best.
   await expect(page.getByText("who played what", { exact: true })).toBeHidden();
   await expect(page.locator(".results__best")).toHaveText("");
+  // Nobody played, so there is no run to post: a brag card is for a run the board
+  // kept, and Listen keeps nothing.
+  await expect(page.getByRole("button", { name: "Brag card" })).toHaveCount(0);
 
   // Back in the jukebox the song's history is still empty — the Listen run was
   // never written down.

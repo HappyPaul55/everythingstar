@@ -518,6 +518,19 @@ What is built in each area, and the boundaries that are deliberate rather than g
   words a minute and key accuracy — from the meaningful keys it stamped, and the
   card adds it to the same stats line as their words and combo. It is a read-out:
   no note is judged by it, and a seek or a new run starts a fresh one.
+- **A kept run has a brag card.** The results' **Brag card** button opens a dialog
+  over the screen with a 1200×630 poster of the run — the game's name, the song and
+  artist, the score, the stars (gold included), the accuracy, the best combo, how
+  many were on stage and the date — which **Downloads** as an SVG, **Shares** as a
+  file where the browser's share sheet takes files, and **Copies** as text. The card
+  is drawn by `src/lib/game/bragCard.ts`, pure and tested: every value is
+  XML-escaped, and the SVG is the same document for the same run. It is
+  **a poster, not a cover** — song art is somebody else's file at a URL this repo
+  does not own, so no art is fetched or embedded (a canvas would need CORS on a host
+  the game does not control). The dialog is lazy, because it is opened by one press;
+  the preview is an `<img>` over an object URL rather than injected markup; and the
+  button only appears for a run the board actually kept — never for Listen, the
+  attract demo, a lost run or a stage that judged nothing.
 
 **Dev tools** — the `Dev` chip, the jumpers, and the control over who takes a
 keyboard: all marked `dev`, all behind `?dev=1` (and absent without it), and kept
@@ -612,7 +625,11 @@ fallback, not a stop an ordinary run makes.
   master cannot silence them, and the graph is closed when the run ends or the dialog
   goes. Picture mode uses the same rules on the marker's crossings, plays no sound, and
   keeps its one animation frame alive only while it is listening. A browser that refuses
-  Web Audio says so and leaves the stepper.
+  Web Audio says so and leaves the stepper. At the bottom of the page is **your
+  profile** — see "Libraries, scores and the band" below: **Export profile** saves
+  the four local records as one JSON file, and **Import profile** reads one, asks
+  before it replaces anything, and reloads so the settings, band, board and hints all
+  come from the new record.
 - **Credits** — what the game is made of and by whom, as a list you scroll. The music and
   the cues are **read from the sound manifest's own credits** rather than written out
   again, so the two cannot drift. Every shipped file now carries a credit — the four
@@ -869,6 +886,22 @@ is a later addition to the same shape, not a different design. Every run also
 publishes its own totals to a publish-only board (`RunBoard`) that the results screen
 reads — that is a read-out, never an input, so no player's judging can be affected by
 another's.
+
+There are **four local records**, and they are kept apart: the **settings**
+(`settings.ts`, how the game behaves), the **band** (`band/store.ts`, per seat), the
+**board** (`scores.ts`, per song) and the **first-run hints** (`onboarding.ts`, per
+seat). **Your profile** in Options is those four, and only those four, as one
+versioned JSON file (`src/lib/game/profile.ts`, `format: "everythingstar-profile"`,
+version 1): it carries no account, and deliberately **no library, downloads or
+audio** — those are other people's files reached through a URL, not records a player
+owns, so importing a profile leaves them exactly where they are. Import validates the
+envelope and then reads each record through its own pure parser, so a file cannot put
+a value on the stage that a stored one could not; a malformed file says why and
+changes nothing, the board is capped at the same 50 the board keeps, and the whole
+file is refused over 1 MB before it is parsed. Nothing is written until **Replace**,
+which writes all four through their own save functions and reloads the page — the
+session reads each record on mount, so a reload is the one way to make them all the
+import's rather than a mix.
 
 ## The stage
 

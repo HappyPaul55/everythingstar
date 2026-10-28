@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import type { MessageKey } from "../../../i18n";
 import { useT } from "../../../i18n/react";
 import { lineupPlayers, type BandSetup } from "../../../lib/game/band/types";
@@ -29,6 +29,19 @@ import {
   type RunEntry,
 } from "../band/RunBoard";
 import { kindTone } from "./playerBits";
+import type { BragRun } from "./BragCardDialog";
+
+/**
+ * The brag card is opened by one press on a finished run, so its chunk — the SVG
+ * builder and the fonts it inlines — is fetched then rather than with the results.
+ * The fallback is nothing: a dialog arriving a moment later is invisible, while a
+ * whole-screen spinner is not.
+ */
+const BragCardDialog = lazy(() =>
+  import("./BragCardDialog").then((module) => ({
+    default: module.BragCardDialog,
+  })),
+);
 
 /**
  * The end of a run: what the band made of the song, who made what of it, and
@@ -122,11 +135,50 @@ export function Results({
   // session flag, so the results screen cannot disagree with the numbers over it.
   const failed = lostRun(hits, judged);
 
+  /** Whether the brag card is over the screen. */
+  const [bragOpen, setBragOpen] = useState(false);
+
   const [verdict, setVerdict] = useState<{
     best: number | null;
     newBest: boolean;
   } | null>(null);
   const recorded = useRef(false);
+
+  // The run's own moment for the card's date, kept still across re-renders.
+  const playedAt = useRef(Date.now()).current;
+  /*
+   * A card is only for a run the board actually kept: the demo's machine score is
+   * nobody's, Listen published no run, a lost run is a verdict and a stage that
+   * judged nothing has no performance to post. `verdict` is the screen's own answer
+   * to "was this recorded", so the button cannot appear over a run that is not.
+   */
+  const canBrag = save && !failed && verdict !== null && runs.length > 0;
+  const brag = useMemo<BragRun>(
+    () => ({
+      title: song.title,
+      artist: song.artist.name,
+      score,
+      stars: rating.stars,
+      gold: rating.gold,
+      accuracy,
+      bestCombo,
+      players: runs.length,
+      at: playedAt,
+      accent: song.accent,
+    }),
+    [
+      song.title,
+      song.artist.name,
+      song.accent,
+      score,
+      rating.stars,
+      rating.gold,
+      accuracy,
+      bestCombo,
+      runs.length,
+      playedAt,
+    ],
+  );
 
   // Record the run, once. The guard matters: a re-render must not record it twice.
   //
@@ -364,9 +416,30 @@ export function Results({
             <button type="button" className="band-btn" data-sound="back" onClick={onMenu}>
               {t("screen.changeSong")}
             </button>
+            {/* Only for a run the board kept: see `canBrag`. The card is a dialog,
+                so it says so and takes the game's open cue. */}
+            {canBrag ? (
+              <button
+                type="button"
+                className="band-btn"
+                aria-haspopup="dialog"
+                data-sound="open"
+                onClick={() => setBragOpen(true)}
+              >
+                {t("brag.action")}
+              </button>
+            ) : null}
           </div>
         </section>
       </div>
+
+      {/* The brag card, over the results. It is a native dialog with a focus trap
+          and the opener back on close, exactly like the game's other modals. */}
+      {bragOpen && canBrag ? (
+        <Suspense fallback={null}>
+          <BragCardDialog run={brag} onClose={() => setBragOpen(false)} />
+        </Suspense>
+      ) : null}
     </div>
   );
 }
