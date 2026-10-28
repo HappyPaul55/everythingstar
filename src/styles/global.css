@@ -412,6 +412,16 @@
     display: inline-flex;
     align-items: center;
   }
+  .breadcrumbs__home {
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    color: inherit;
+    text-decoration: none;
+  }
+  .breadcrumbs__home:hover .slash {
+    color: var(--color-ink);
+  }
   .breadcrumbs__item {
     display: inline-flex;
     align-items: center;

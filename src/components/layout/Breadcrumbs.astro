@@ -1,9 +1,15 @@
 ---
 import { localeFromPath, tFor } from "../../i18n/astro";
+import { localePath } from "../../i18n/paths";
 
 /**
- * The tag label as a breadcrumb trail: lowercase, graffiti-marker, in the old
- * `// play` style.
+ * The trail above a paper page: the `//` home mark, then the ancestors of the
+ * page.
+ *
+ * The wordmark already goes home, and so does the mark; the page's own name is its
+ * `h1`, so neither is repeated here. What is left is the path that got you here —
+ * `Documentation / Players` on a documentation page, and nothing but the mark on a
+ * notice or the hub, which have no ancestors.
  */
 interface Crumb {
   name: string;
@@ -11,17 +17,25 @@ interface Crumb {
 }
 
 interface Props {
+  /** The page's ancestors, outermost first. Not home, not this page. */
   items: Crumb[];
 }
 
 const { items } = Astro.props;
-const t = tFor(localeFromPath(Astro.url.pathname));
+const locale = localeFromPath(Astro.url.pathname);
+const t = tFor(locale);
 ---
 
 <nav class="comment breadcrumbs" aria-label={t("nav.breadcrumb")}>
   <ol class="breadcrumbs__list">
-    <li class="breadcrumbs__mark" aria-hidden="true">
-      <span class="slash">//</span>
+    <li class="breadcrumbs__mark">
+      <a
+        class="breadcrumbs__home"
+        href={localePath(locale, "/")}
+        aria-label={t("nav.home")}
+      >
+        <span class="slash" aria-hidden="true">//</span>
+      </a>
     </li>
     {
       items.map((crumb) => (

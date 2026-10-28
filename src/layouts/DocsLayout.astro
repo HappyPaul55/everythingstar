@@ -72,7 +72,7 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
       {section ? <DocsSidebar section={section} current={current} /> : null}
 
       <article class={wide ? "docs__article docs__article--wide" : "docs__article"}>
-        <Breadcrumbs items={crumbs} />
+        <Breadcrumbs items={crumbs.slice(1, -1)} />
         <h1 class="docs__title">{title}</h1>
         <div class="doc">
           <slot />
