@@ -8,8 +8,9 @@ import { localePath } from "../../i18n/paths";
  *
  * The wordmark already goes home, and so does the mark; the page's own name is its
  * `h1`, so neither is repeated here. What is left is the path that got you here —
- * `Documentation / Players` on a documentation page, and nothing but the mark on a
- * notice or the hub, which have no ancestors.
+ * `Documentation / Players` on a documentation page. A page with no ancestors (the
+ * hub, a notice) has no trail at all, so nothing is drawn: a lone `//` is a control
+ * with no answer to the question a breadcrumb asks.
  */
 interface Crumb {
   name: string;
@@ -26,25 +27,27 @@ const locale = localeFromPath(Astro.url.pathname);
 const t = tFor(locale);
 ---
 
-<nav class="comment breadcrumbs" aria-label={t("nav.breadcrumb")}>
-  <ol class="breadcrumbs__list">
-    <li class="breadcrumbs__mark">
-      <a
-        class="breadcrumbs__home"
-        href={localePath(locale, "/")}
-        aria-label={t("nav.home")}
-      >
-        <span class="slash" aria-hidden="true">//</span>
-      </a>
-    </li>
-    {
-      items.map((crumb) => (
-        <li class="breadcrumbs__item">
-          <a class="breadcrumbs__link" href={crumb.path}>
-            {crumb.name}
+{
+  items.length > 0 ? (
+    <nav class="comment breadcrumbs" aria-label={t("nav.breadcrumb")}>
+      <ol class="breadcrumbs__list">
+        <li class="breadcrumbs__mark">
+          <a
+            class="breadcrumbs__home"
+            href={localePath(locale, "/")}
+            aria-label={t("nav.home")}
+          >
+            <span class="slash" aria-hidden="true">//</span>
           </a>
         </li>
-      ))
-    }
-  </ol>
-</nav>
+        {items.map((crumb) => (
+          <li class="breadcrumbs__item">
+            <a class="breadcrumbs__link" href={crumb.path}>
+              {crumb.name}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </nav>
+  ) : null
+}
