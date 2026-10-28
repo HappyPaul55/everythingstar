@@ -1226,7 +1226,9 @@ bun run test:pwa         # installs the worker against a build, then reloads off
 bun run knip             # dead-code check (knip)
 bun run budget           # dist/, audio and initial-JS size caps (scripts/check-budget.ts)
 bun run check:pwa        # manifest and worker build gate (scripts/check-pwa.ts)
-bun run verify           # lint, knip, check, test types, tests, build, check:pwa, budget
+bun run release:assets   # game, arcade and website archives into release/ (zip + tar.gz)
+bun run check:release    # the archives hold their plan, and both formats agree
+bun run verify           # lint, knip, check, test types, tests, build, check:pwa, budget, release assets
 bun run version          # the build's version: v<package.json>+<7-char sha>
 bun run version:bump     # bump package.json and print the release steps
 bun run import           # convert a folder of charts into the three documents
@@ -1237,8 +1239,9 @@ bun run cards            # render the social cards (og-image, GitHub preview) fr
 ```
 
 Verify every change with `bun run verify`: it runs lint, knip, `astro check`,
-the tests' typecheck, the unit tests, the build, the PWA gate and the size budget,
-in that order, and CI runs the same command. Every script that calls Astro says
+the tests' typecheck, the unit tests, the build, the PWA gate, the size budget, the
+release archives and their check, in that order, and CI runs the same command.
+Every script that calls Astro says
 `bun --bun astro …`: without `--bun` Bun hands the bin to the machine's Node
 through its shebang, and Astro then refuses to run on a Node below its own floor.
 Lint is **oxlint**: one fast binary, one small rules file, and no formatter — this
@@ -1636,7 +1639,7 @@ worker's shell cache, so **the live site can be asked what build it is** — the
 workflow reads it out of `/sw.js` and fails when production is not serving the commit
 that was just merged.
 
-A release is a checkpoint, not a build. To cut one:
+To cut a release:
 
 1. `bun run version:bump patch` (or `minor`, `major`) on a `release/vX.Y.Z` branch.
 2. Open a PR titled `chore(release): vX.Y.Z` and merge it.
@@ -1645,8 +1648,51 @@ A release is a checkpoint, not a build. To cut one:
    the tag.
 
 The tag must equal `package.json`'s version, and it must be on `main`; the `Release`
-workflow refuses anything else and otherwise publishes a GitHub Release with generated
-notes. Tags cannot be moved or deleted, and a published release is immutable.
+workflow refuses anything else. It builds the tagged commit, runs the same archive
+commands as `verify`, and publishes a GitHub Release with generated notes and the six
+archives below attached. A release is a checkpoint that now carries the build's own
+output: there is no binary here, but a game somebody can download is worth attaching.
+Tags cannot be moved or deleted, and a published release is immutable.
+
+### Release assets
+
+`bun run release:assets` turns one `dist/` into three folders, each as a `.zip` and a
+`.tar.gz` in `release/` (gitignored; the GitHub Release is where they live):
+
+| archive | entry | holds |
+| --- | --- | --- |
+| `game.zip` | `/embed` promoted to `index.html` | the game: `_astro`, `audio`, `cursors`, `fonts`, `icons`, `images` |
+| `arcade.zip` | `/arcade` promoted to `index.html` | the same files, and the attract entry is the front door |
+| `website.zip` | `dist/index.html` | the deploy, exactly as Cloudflare receives it |
+
+**A standalone folder is served at an origin's root.** The build addresses everything
+from `/` (`/_astro/…`, `/audio/sounds.json`, `/images/background_1.jpg`, the fonts and
+the cursors inside the inlined CSS), so unzip it into a directory, make that directory
+the origin's root, and open `/`. A subfolder or `file://` loads a page with no
+JavaScript. Each archive says so in its own `BUILD.txt`, with the version it is.
+
+The two standalone bundles differ in **one file** — `src/lib/release/bundles.ts` is
+one plan with an entry argument — and both are:
+
+- **the game only**: no marketing pages, no privacy page, no sitemap, no worker and no
+  deploy files. The site's `sw.js` precaches `app.html`/`play.html` and falls back to
+  `/app.html` offline, so in a folder that has neither it would be a worker that
+  answers 503; offline play stays the website's;
+
+- **still installable**: the manifest ships, rewired to `id`/`start_url`/`scope` `/`
+  and a `/` shortcut, so Add to Home Screen opens the game rather than a missing
+  `/app` page. The icons are the site's;
+
+- **`noindex`**: both entries are the game's own, and the game is not a page a search
+  should land on — `/play` is. A clone served from one of these archives stays out of
+  the index for the same reason.
+
+`scripts/check-release.ts` is the gate: each archive's listing must equal the plan,
+the zip and the tar.gz must agree, both must be intact, the folder must be under its
+size cap, and — the check a listing cannot answer alone — **the entry page may not
+name a file the archive does not hold**, the manifest's icons must be there, and its
+`start_url` must be `/`. A missing `_astro` chunk is a page that draws and never
+hydrates, which is exactly what a download would ship.
 
 ## Contributing and security
 

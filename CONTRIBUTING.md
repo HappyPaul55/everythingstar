@@ -63,7 +63,10 @@ bun run check            # astro check (the app's type gate)
 bun run typecheck:tests  # tsc over src/**/*.test.ts
 bun test                 # unit tests
 bun run build            # static build into dist/
+bun run check:pwa        # the manifest and the worker
 bun run budget           # dist/ and public/audio size caps, and the lazy split
+bun run release:assets   # game, arcade and website archives into release/
+bun run check:release    # every archive holds its plan, and both formats agree
 ```
 
 Run the whole thing before opening a pull request. The browser tests are separate,
