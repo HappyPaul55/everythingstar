@@ -1,0 +1,23 @@
+# Two spaces, LF, UTF-8, a final newline.
+#
+# The repository has no formatter and no format check on purpose — a change
+# matches the file it is editing — so this is the only place a formatting rule is
+# written down. An editor that reads this file does the right thing without
+# anybody arguing about it in review.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# A Markdown line ending in two spaces is a hard break, and the docs use them.
+[*.md]
+trim_trailing_whitespace = false
+
+# A lockfile is written by a tool, not by a person.
+[bun.lock]
+insert_final_newline = false
