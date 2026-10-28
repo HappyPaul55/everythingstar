@@ -10,8 +10,14 @@
  *
  * `players=1&sound=0&demo=1&chrome=0` is the home window: one player, the frame
  * clock rather than a mixer and the song's audio, no idle, and no fullscreen corner.
- * The whole screen is a link into the game; the label below it is the visible and
- * accessible one, so a play plaque never sits over the hit line.
+ *
+ * **The whole frame is a link into the game.** The iframe itself is decoration: it
+ * is `aria-hidden` and out of the tab order, and it takes no pointer events, so the
+ * picture inside cannot trap a press or a screen reader's cursor. The anchor laid
+ * over it is the real control — focusable, named "Play EverythingStar", and wearing
+ * the ink-and-yellow outline on hover and on focus — while the caption link below
+ * stays the visible one. A play plaque over the picture would cover the hit line the
+ * demo exists to show; an outline around the frame says the same thing without it.
  */
 import { localeFromPath, tFor } from "../../i18n/astro";
 import { localePath } from "../../i18n/paths";
@@ -35,10 +41,9 @@ const windowUrl = `${localePath(locale, "/arcade")}?players=1&sound=0&demo=1&chr
       aria-hidden="true"
     ></iframe>
     <a
-      class="absolute inset-0 z-10 rounded-brand"
+      class="stage-window__link absolute inset-0 z-10 rounded-brand"
       href={play}
-      tabindex="-1"
-      aria-hidden="true"
+      aria-label={t("home.stagePlay")}
     ></a>
   </div>
   <div class="mt-4 flex items-baseline justify-between gap-3">
@@ -56,3 +61,32 @@ const windowUrl = `${localePath(locale, "/arcade")}?players=1&sound=0&demo=1&chr
     </a>
   </div>
 </div>
+
+<style>
+  /*
+   * The frame's link says it is pressable without covering the song.
+   *
+   * An outline is drawn outside the box, so neither the hover nor the focus ring
+   * moves the frame or covers the picture: the colour is what changes. The ink
+   * casing is always there (transparent) so the ring can appear in one paint, and
+   * the yellow is the house focus colour on the dark hero. The site's own
+   * `:focus-visible` rule is overridden here only to keep the ring outside the
+   * frame, which is the thing being linked.
+   */
+  .stage-window__link {
+    outline: 3px solid transparent;
+    outline-offset: 4px;
+    transition: outline-color 120ms ease;
+  }
+
+  .stage-window__link:hover,
+  .stage-window__link:focus-visible {
+    outline-color: var(--color-yellow);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stage-window__link {
+      transition: none;
+    }
+  }
+</style>

@@ -53,7 +53,11 @@ Routes: `/` (landing), `/play` (the public game page, in the site shell), `/app`
   machine run, the results, then another song), and any real input returns to the
   welcome. **The homepage embeds the same entry** in a phone-shaped iframe with
   `players=1&sound=0&demo=1&chrome=0`, so the marketing page still ships no
-  JavaScript and the hero is one silent player. That window is a **same-origin
+  JavaScript and the hero is one silent player. **The whole frame is a link to
+  `/play`**: the iframe is decoration — `aria-hidden`, out of the tab order and
+  taking no pointer events — and the anchor laid over it is the real control, named
+  and focusable, outlined in yellow on hover and focus so no plaque sits over the hit
+  line; the caption link below it stays. That window is a **same-origin
   iframe**, so `public/_headers` keeps `frame-ancestors 'self'` — do not tighten it
   back to `'none'`. The demo's decisions are pure in
   `src/lib/game/attract.ts`; `useAttract` only owns the idle, the timers and the
@@ -216,7 +220,9 @@ only gate that can see the regression, and static documents belong in
   the "E" + star brand tile; `public/icons/brand-mark.svg` is the icon source.
 - `src/components/home/{HomePage,StageWindow}.astro` — the landing page and its
   phone-shaped live attract window (an iframe of `/arcade`, linked to `/play`; the
-  old static hero SVG is gone).
+  old static hero SVG is gone). The iframe is decorative and the anchor over it is
+  the frame's one real link, so the window is keyboard-reachable without a plaque on
+  the picture.
 - `src/components/game/GameApp.tsx` — **the game island's shell**, and the loop
   around the run: it draws the room, the provider tower, the stage, the pages, the
   corner and focus. Its root (`.band`) is the persistent fullscreen target and must

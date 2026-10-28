@@ -21,7 +21,7 @@ things that need a page.
 | spec | tests | what only a browser can see |
 | --- | --- | --- |
 | `a11y.spec.ts` | 5 | axe scans of the paper pages and the game's screens, pause, Practice and results |
-| `arcade.spec.ts` | 2 | the attract demo's machine run; the homepage's same-origin, silent iframe window |
+| `arcade.spec.ts` | 2 | the attract demo's machine run; the homepage's same-origin, silent iframe window and the frame link a keyboard can follow |
 | `band.spec.ts` | 2 | a phone's one-box-a-row band and its missing second row, against the desk's four |
 | `brag-card.spec.ts` | 1 | a kept run's card as a Blob image and the SVG the browser really downloads |
 | `bundle.spec.ts` | 2 | the **dev** module graph (no translator is fetched while browsing); a lazy dialog is still native |

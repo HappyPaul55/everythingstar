@@ -32,7 +32,11 @@ What works today:
   goes round again. Any input gives the welcome back. The same attract loop is the
   homepage's phone-shaped live window — one player and silent there, a band and sound
   in the full arcade. The window is a same-origin iframe, so `public/_headers` keeps
-  `frame-ancestors 'self'` rather than `'none'`.
+  `frame-ancestors 'self'` rather than `'none'`. The whole frame is a **link to
+  `/play`**: the iframe is decoration (hidden from assistive tech, out of the tab
+  order, taking no pointer events) and the anchor laid over it is the control — named
+  "Play EverythingStar", keyboard-focusable, and outlined on hover and focus so the
+  picture keeps its hit line, with the caption link below it kept.
 - **The three ways to play.** Falling-note **instrument** lanes for guitar, bass, keys
   and drums (chords, hopos, sustains, whammy, judged per player); **Typing** with
   TypeStar's forgiving rules; **Vocals** into a microphone, judged on how much of each
@@ -1422,7 +1426,8 @@ layout**) and the traps worth knowing. Read it before a structural change.
 - `src/lib/seo.ts` — the metadata rules, pure and tested: a page path as a canonical
   path, its absolute URL, and `Page — Brand` titles.
 - `src/components/home/` — `HomePage.astro` and `StageWindow.astro`, the phone-shaped
-  live attract window that replaces the old static hero art.
+  live attract window that replaces the old static hero art. Its iframe is decorative;
+  the anchor over the whole frame is the link to `/play`.
 - `src/components/game/GameApp.tsx` — **the game island's shell**: it renders the
   provider tower and the screen registry around the run, and its root (`.band`) is the
   persistent fullscreen target. `useGameSession` owns the screen, the chosen song and
