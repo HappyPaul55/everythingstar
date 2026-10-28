@@ -305,6 +305,27 @@ export function listOffline(): OfflineEntry[] {
   return readEntries().sort((a, b) => b.downloadedAt - a.downloadedAt);
 }
 
+/**
+ * A stamp later than every record already kept.
+ *
+ * `listOffline` sorts by `downloadedAt` and promises "newest first", but two songs
+ * can finish inside the same millisecond — a short song, a fast disk, a stubbed
+ * fetch — and a tie leaves the order to whatever the store hands back. The stamp
+ * therefore follows the clock where the clock has moved past the newest record, and
+ * steps one millisecond past it where it has not: the record's own time, made
+ * strictly increasing, so the dialog's order is decided rather than incidental.
+ */
+export function nextDownloadedAt(
+  entries: readonly { downloadedAt: number }[],
+  at: number,
+): number {
+  const newest = entries.reduce(
+    (max, entry) => Math.max(max, entry.downloadedAt),
+    0,
+  );
+  return at > newest ? at : newest + 1;
+}
+
 function findOffline(id: string): OfflineEntry | null {
   return readEntries().find((entry) => entry.song.id === id) ?? null;
 }
@@ -745,12 +766,17 @@ export async function downloadSong(
   }
 
   async function finish(entry: OfflineEntry): Promise<OfflineEntry> {
+    let stamped = entry;
     try {
       await serialiseRecord(() => {
         const entries = readEntries().filter(
           (existing) => existing.song.id !== entry.song.id,
         );
-        entries.push(entry);
+        stamped = {
+          ...entry,
+          downloadedAt: nextDownloadedAt(entries, entry.downloadedAt),
+        };
+        entries.push(stamped);
         writeEntries(entries);
       });
     } catch (error) {
@@ -758,7 +784,7 @@ export async function downloadSong(
     }
     // The library is a merge that does not know it gained a song: tell it.
     announceRecords();
-    return entry;
+    return stamped;
   }
 }
 
