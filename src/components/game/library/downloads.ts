@@ -17,17 +17,16 @@
  * action; an interrupted or over-quota download removes everything it wrote.
  */
 
+import {
+  MAX_DOCUMENT_BYTES,
+  MAX_PACKAGE_BYTES,
+} from "../../../lib/game/fetchLimits";
 import type { Song } from "../../../lib/game/song";
 import type { SourceSongDoc } from "../../../lib/game/source";
 import { fetchableUrl } from "../../../lib/game/url";
 import { OFFLINE_CACHE } from "../../../lib/pwa/cache";
 import { isSngUrl } from "./sngUrl";
-import {
-  MAX_DOCUMENT_BYTES,
-  MAX_PACKAGE_BYTES,
-  fetchResponse,
-  responseFailure,
-} from "./store";
+import { fetchResponse, responseFailure } from "./store";
 
 /**
  * The Cache Storage bucket the service worker reads.

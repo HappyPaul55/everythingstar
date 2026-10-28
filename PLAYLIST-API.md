@@ -62,8 +62,9 @@ document is the detail behind those four requests, plus a complete worked exampl
 7. [What the game requests, and when](#7-what-the-game-requests-and-when)
 8. [A complete worked example](#8-a-complete-worked-example)
 9. [Building a YouTube karaoke resolver](#9-building-a-youtube-karaoke-resolver)
-10. [Acceptance checklist](#10-acceptance-checklist)
-11. [Appendix: accepted values](#11-appendix-accepted-values)
+10. [Check yours](#10-check-yours)
+11. [Acceptance checklist](#11-acceptance-checklist)
+12. [Appendix: accepted values](#12-appendix-accepted-values)
 
 ---
 
@@ -124,6 +125,10 @@ refused as a whole. Unknown fields are ignored, which is how this contract can g
 
 A capability document may omit `songs` entirely, but sending `"songs": []` is clearer and
 keeps every document the same shape. A search answer should always include `songs`.
+
+The machine-readable shape is [`docs/playlist.schema.json`](docs/playlist.schema.json)
+(JSON Schema draft 2020-12). It is **advisory** — the reader is authoritative, and
+[§10](#10-check-yours) has the command that holds a document to it.
 
 ### 2.2 A catalogue
 
@@ -1451,9 +1456,38 @@ Keep the base URL stable. If you version the service, put the version in the pat
 
 ---
 
-## 10. Acceptance checklist
+## 10. Check yours
+
+The game's reader is the authority, and it is a command away:
+
+```bash
+bun run playlist:check https://example.com/playlist.json
+```
+
+It reads the document with the **same** `readPlaylist` the jukebox and the band use,
+holds the address to the game's URL policy, and bounds the body at the same 8 MB with the
+same 30-second idle deadline. It prints the playlist's name, the songs it would list and
+**every problem the reader found**, and exits `1` if there is one or if the document is not
+a playlist at all. `--json` prints the same record (`ok`, `url`, `name`, `songs`,
+`onDemand`, `problems`) for a build step.
+
+`docs/playlist.schema.json` is the advisory shape for an editor: JSON Schema draft
+2020-12, with a description on every field, so a typo is caught while it is typed. It is
+deliberately not stricter than the contract.
+
+**This schema is advisory; the reader is authoritative.** It cannot know which relative
+path resolves, whether the same `id` is listed twice, or whether an offer's charts really
+exist — the checker can, and it reports them in the reader's own words.
+
+---
+
+## 11. Acceptance checklist
 
 Run through this before handing the service to a player.
+
+**The document**
+
+- [ ] `bun run playlist:check <base URL>` says `Result: ok`.
 
 **The capability**
 
@@ -1547,7 +1581,7 @@ Run through this before handing the service to a player.
 
 ---
 
-## 11. Appendix: accepted values
+## 12. Appendix: accepted values
 
 **Song roles** (parts and stems):
 
