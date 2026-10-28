@@ -14,13 +14,20 @@ import {
 function song(
   title: string,
   artist = "Static Bloom",
-  over: { instruments?: InstrumentKind[]; voice?: SongVoice | null } = {},
+  over: {
+    instruments?: InstrumentKind[];
+    voice?: SongVoice | null;
+    album?: string | null;
+  } = {},
 ): Song {
   return {
     id: title.toLowerCase().replace(/\W+/g, "-"),
     title,
     artist: { id: "a", name: artist, art: null },
-    album: null,
+    album:
+      over.album === undefined || over.album === null
+        ? null
+        : { id: "al", name: over.album, year: null, art: null },
     art: null,
     accent: null,
     durationMs: 180_000,
@@ -105,6 +112,48 @@ describe("matches", () => {
     expect(matches(found, "static")).toBe(false);
   });
 
+  test("an accent is not a difference", () => {
+    expect(matches(song("Café"), "cafe")).toBe(true);
+    expect(matches(song("Cafe"), "café")).toBe(true);
+    expect(matches(song("Static Bloom", "Zürich"), "zurich")).toBe(true);
+  });
+
+  test("the album is part of what a song is", () => {
+    const found = song("Neon Hearts", "Velvet Hours", { album: "Midnight Drive" });
+    expect(matches(found, "midnight")).toBe(true);
+    expect(matches(found, "MIDNIGHT")).toBe(true);
+    expect(matches(song("Neon Hearts", "Velvet Hours"), "midnight")).toBe(false);
+  });
+
+  test("a run of whitespace is one space", () => {
+    expect(matches(song("Neon   Hearts"), "neon hearts")).toBe(true);
+    expect(matches(song("Neon Hearts"), "  neon   hearts  ")).toBe(true);
+  });
+
+  test("one typo is forgiven on a long enough word", () => {
+    const found = song("Neon Hearts", "Velvet Hours");
+    // A substitution, an insertion, a deletion and a swapped pair: each is one slip.
+    expect(matches(found, "heartz")).toBe(true);
+    expect(matches(found, "neonn")).toBe(true);
+    expect(matches(found, "velvt")).toBe(true);
+    expect(matches(found, "enon")).toBe(true);
+  });
+
+  test("a short query is never guessed at", () => {
+    // "nen" is one insertion away from "neon", but three characters is too little
+    // to know the player meant it.
+    expect(matches(song("Neon"), "nen")).toBe(false);
+  });
+
+  test("two edits away is still nothing", () => {
+    expect(matches(song("Anthem"), "antxam")).toBe(false);
+  });
+
+  test("a phrase is searched exactly, without typo tolerance", () => {
+    expect(matches(song("Neon Hearts"), "neon heartz")).toBe(false);
+    expect(matches(song("Neon Hearts"), "neon hearts")).toBe(true);
+  });
+
   test("an empty search matches everything", () => {
     expect(matches(song("Anything"), "")).toBe(true);
     expect(matches(song("Anything"), "   ")).toBe(true);
@@ -141,6 +190,15 @@ describe("searchSongs", () => {
   test("the keep set is not a second list: it only rescues what is there", () => {
     const groups = groupSongs([song("Alpha")]);
     expect(searchSongs(groups, "timber", new Set(["not-in-the-library"]))).toEqual([]);
+  });
+
+  test("an on-demand answer survives a long query no local field matches", () => {
+    // The resolver knows the song by a name this library's summary does not carry.
+    // Fuzzy matching must not narrow what it may answer with.
+    const groups = groupSongs([song("Alpha"), song("Cover of the Century")]);
+    const keep = new Set(["cover-of-the-century"]);
+    const found = searchSongs(groups, "timbr", keep);
+    expect(found.map((group) => group.letter)).toEqual(["C"]);
   });
 });
 

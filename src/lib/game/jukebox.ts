@@ -69,13 +69,94 @@ export function groupSongs(songs: readonly Song[]): SongGroup[] {
   });
 }
 
-/** What a search matches: the song's title, or its artist. */
+/**
+ * How a search compares text: **one normalisation for the query and the fields**,
+ * so `Café` and `cafe` are the same word. NFD splits an accented letter into its
+ * letter and its mark, the marks are dropped, case goes, and runs of whitespace
+ * become one space — so a title written with a double space still matches a query
+ * typed with one.
+ */
+function normaliseSearch(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\p{M}]/gu, "")
+    .replace(/\s+/gu, " ")
+    .trim();
+}
+
+/**
+ * Whether two words are one edit apart: a substitution, an insertion, a deletion,
+ * or a swap of two neighbours. A transposition counts as one edit because that is
+ * how a hand types — `neon` for `enon` is one slip, not two. Anything further is
+ * not a typo this search forgives.
+ */
+function withinOneEdit(a: string, b: string): boolean {
+  const left = Array.from(a);
+  const right = Array.from(b);
+  if (Math.abs(left.length - right.length) > 1) return false;
+
+  if (left.length === right.length) {
+    let first = -1;
+    for (let at = 0; at < left.length; at += 1) {
+      if (left[at] !== right[at]) {
+        first = at;
+        break;
+      }
+    }
+    if (first < 0) return true;
+    // A swapped pair: both neighbours are there, the other way round.
+    if (
+      left[first + 1] === right[first] &&
+      left[first] === right[first + 1]
+    ) {
+      return sameFrom(left, right, first + 2);
+    }
+    return sameFrom(left, right, first + 1);
+  }
+
+  const longer = left.length > right.length ? left : right;
+  const shorter = left.length > right.length ? right : left;
+  let at = 0;
+  while (at < shorter.length && longer[at] === shorter[at]) at += 1;
+  for (let index = at; index < shorter.length; index += 1) {
+    if (longer[index + 1] !== shorter[index]) return false;
+  }
+  return true;
+}
+
+/** Whether the two arrays agree from `from` onwards. */
+function sameFrom(
+  left: readonly string[],
+  right: readonly string[],
+  from: number,
+): boolean {
+  for (let at = from; at < left.length; at += 1) {
+    if (left[at] !== right[at]) return false;
+  }
+  return true;
+}
+
+/**
+ * What a search matches: the song's **title, artist or album**.
+ *
+ * A field containing the query is the ordinary search. When none does, a single
+ * typo is forgiven against any word of those fields — but only for a query of at
+ * least four characters with no spaces, because `ant` is too short for a guess to
+ * be worth anything and a multi-word query is a phrase to find rather than a word
+ * to misspell. The result is still a yes or no: the matched songs keep their
+ * order, their A–Z groups and their slot codes, so nothing is ranked.
+ */
 export function matches(song: Song, query: string): boolean {
-  const needle = query.trim().toLowerCase();
+  const needle = normaliseSearch(query);
   if (!needle) return true;
-  return (
-    song.title.toLowerCase().includes(needle) ||
-    song.artist.name.toLowerCase().includes(needle)
+  const fields = [song.title, song.artist.name, song.album?.name ?? ""]
+    .map(normaliseSearch)
+    .filter(Boolean);
+  if (fields.some((field) => field.includes(needle))) return true;
+  if (Array.from(needle).length < 4 || needle.includes(" ")) return false;
+  return fields.some((field) =>
+    field.split(" ").some((word) => withinOneEdit(word, needle)),
   );
 }
 

@@ -405,8 +405,11 @@ only gate that can see the regression, and static documents belong in
   `DEFAULT_BACKDROP`, and the plan for the room's drifting lights.
 - `src/lib/game/jukebox.ts` — the jukebox's own maths, pure and tested: which
   letter a title files under, what a song's slot is called (`A·03`), and what a
-  search matches. A few hundred songs is a list you navigate, and this is what
-  makes it navigable.
+  search matches — **title, artist or album**, through one accent-folding
+  normalisation, with **one typo** forgiven against a word of those fields when a
+  four-character, single-word query matches nothing exactly. The result is still a
+  yes or no, so the groups, the order and the slot codes never move. A few hundred
+  songs is a list you navigate, and this is what makes it navigable.
 - `src/lib/game/jukeboxWindow.ts` — the jukebox's **window**, pure and tested: the
   mounted item range, the spacer heights that stand in for the rows outside it,
   a letter's offset, and the row step focus follows. `useJukeboxList` measures one
@@ -1679,6 +1682,16 @@ only gate that can see the regression, and static documents belong in
   breaks); a line opens up to a second early and its last word stays typeable up to
   a second into the gap after it; and a line's words open together, so a fast player
   is never blocked mid-line.
+- **A typist's report is a read-out, not a rule.** `TypingState` stamps
+  `firstKeyMs`/`lastKeyMs` on every **meaningful** key — a correct character, a typo
+  or a skip — and never on Backspace, an ignored key or a key before the word opens.
+  `typingReport(state)` turns that into `{ wpm, accuracy, keys, wrong, spanMs }`:
+  five characters to a word over the first-to-last-key span, with a **one-second
+  floor** so a burst of keys cannot read as thousands of words a minute (or divide
+  by zero), and `null` when no meaningful key landed. `useTyping` publishes it on
+  its `RunEntry` as `typing`, so only a typist's results card carries it, and a
+  seek or a new run starts from `emptyTyping` with both stamps null. Nothing reads
+  it back into judging.
 - **A typist's feedback rides on the words**, in whichever view is up, so the
   melody still shows one view. `TypeWord` draws the characters from `typedChars`:
   done, the caret, and the rest. **A pitched song with no singer is lyrics view**, not a
@@ -2106,7 +2119,9 @@ only gate that can see the regression, and static documents belong in
   **which seat it is** — a run is a seat's, and the runs report in the order their
   effects happen to run, so the results screen sorts them back into band order
   rather than showing the singers first — and **what its counts are of**, since a
-  highway counts notes and a typist counts words.
+  highway counts notes and a typist counts words. A typist's entry may also carry
+  their **`typing` report** (words a minute, key accuracy), which is the same kind
+  of read-out and is never read back either.
 - **The results screen hands the song to one card per player.** The band's own
   numbers sit above it as **one row of reads** — the band score first and at full
   size, then the notes hit **of what was judged**, the accuracy and the best combo,
@@ -2114,7 +2129,9 @@ only gate that can see the regression, and static documents belong in
   best line under them. Above that row is the run's **star rating** and the average
   multiplier that earned it. Then a card each, drawn like their box on the band
   screen: a head, the score, the player's own stars and average, and their notes,
-  accuracy and combo under the same dashed rule a box keeps for its levels. Star
+  accuracy and combo under the same dashed rule a box keeps for its levels — plus,
+  for a typist who landed a key, **words a minute and key accuracy** from their
+  run's own `typing` report, appended to that same stats line. Star
   rating is `starRating(score, baseScore, hits, judged, total)`: the score over what
   the song pays at ×1 (`baseScore`, published on every run), with the table's
   thresholds (0.65 / 0.9 / 2.0 / 2.8). Gold needs every note the part **has**

@@ -10,6 +10,7 @@ import {
   typedCharIndices,
   typedChars,
   typingConfigFor,
+  typingReport,
   wordDeadlineMs,
   wordOpenMs,
   type TypingConfig,
@@ -402,5 +403,127 @@ describe("a key arrives between frames", () => {
     expect(typo.results[0]).toBe("pending");
     expect(typo.results[1]).toBe("pending");
     expect(typo.errorKeys).toBe(1);
+  });
+});
+
+describe("the typing report", () => {
+  /** A word with a long enough window to type over seconds without a miss. */
+  const SLOW: TypingConfig = {
+    words: [{ text: "cafe", start: 0, end: 3000, line: 0, hero: false }],
+    lines: [{ start: 0, end: 3000 }],
+    level: "normal",
+  };
+
+  test("the span starts on the first meaningful key and ends on the last", () => {
+    const config = wordConfig("cafe", "normal");
+    let state = emptyTyping(config);
+    expect(state.firstKeyMs).toBeNull();
+    expect(state.lastKeyMs).toBeNull();
+
+    state = applyTypingKey(state, config, "c", 100);
+    expect(state.firstKeyMs).toBe(100);
+    expect(state.lastKeyMs).toBe(100);
+
+    state = applyTypingKey(state, config, "a", 250);
+    expect(state.firstKeyMs).toBe(100);
+    expect(state.lastKeyMs).toBe(250);
+  });
+
+  test("a typo and a skip are meaningful keys, and are stamped", () => {
+    const typo = applyTypingKey(emptyTyping(CONFIG), CONFIG, "z", 1900);
+    expect(typo.lastKeyMs).toBe(1900);
+    // "r" skips to "roof": the skip is the player's key, not an ignored one.
+    const skipped = applyTypingKey(emptyTyping(CONFIG), CONFIG, "r", 1900);
+    expect(skipped.lastKeyMs).toBe(1900);
+  });
+
+  test("an ignored key, a Backspace and a key before the word opens stamp nothing", () => {
+    const config = wordConfig("cafe", "normal");
+    const empty = emptyTyping(config);
+    // A full stop means nothing at normal, so the key is ignored — the same state.
+    expect(applyTypingKey(empty, config, ".", 5)).toBe(empty);
+
+    // Backspace changes what is typed, not when the player typed it.
+    const typed = applyTypingKey(empty, config, "c", 100);
+    const undone = applyTypingKey(typed, config, "Backspace", 200);
+    expect(undone.firstKeyMs).toBe(100);
+    expect(undone.lastKeyMs).toBe(100);
+
+    // A key arriving before the line opens is not a keystroke of this run.
+    const late: TypingConfig = {
+      words: [{ text: "cafe", start: 2000, end: 3000, line: 0, hero: false }],
+      lines: [{ start: 2000, end: 3000 }],
+      level: "normal",
+    };
+    expect(applyTypingKey(emptyTyping(late), late, "c", 999)).toEqual(emptyTyping(late));
+  });
+
+  test("a new run starts clean", () => {
+    const typed = type(emptyTyping(SLOW), SLOW, "cafe", 1000);
+    expect(typed.firstKeyMs).not.toBeNull();
+    const fresh = emptyTyping(SLOW);
+    expect(fresh.firstKeyMs).toBeNull();
+    expect(fresh.lastKeyMs).toBeNull();
+    expect(typingReport(fresh)).toBeNull();
+  });
+
+  test("no meaningful key has no report", () => {
+    expect(typingReport(emptyTyping(CONFIG))).toBeNull();
+    const ignored = applyTypingKey(emptyTyping(CONFIG), CONFIG, ".", 1900);
+    expect(typingReport(ignored)).toBeNull();
+  });
+
+  test("the rate is five characters to a word over the key span", () => {
+    const base = emptyTyping(SLOW);
+    const report = typingReport({
+      ...base,
+      firstKeyMs: 0,
+      lastKeyMs: 60_000,
+      correctKeys: 50,
+      errorKeys: 10,
+    });
+    expect(report).toEqual({
+      wpm: 12,
+      accuracy: 83,
+      keys: 60,
+      wrong: 10,
+      spanMs: 60_000,
+    });
+  });
+
+  test("a run typed over two seconds reads its own rate", () => {
+    let state = applyTypingKey(emptyTyping(SLOW), SLOW, "c", 1000);
+    state = applyTypingKey(state, SLOW, "a", 1400);
+    state = applyTypingKey(state, SLOW, "f", 1800);
+    state = applyTypingKey(state, SLOW, "e", 2200);
+    const report = typingReport(state);
+    // Four keys over 1.2 seconds: 0.8 words in 0.02 minutes, so 40 WPM.
+    expect(report).toMatchObject({ keys: 4, wrong: 0, spanMs: 1200, wpm: 40, accuracy: 100 });
+  });
+
+  test("the span floor keeps a burst from reading as a thousand words a minute", () => {
+    const report = typingReport({
+      ...emptyTyping(SLOW),
+      firstKeyMs: 0,
+      lastKeyMs: 100,
+      correctKeys: 5,
+      errorKeys: 0,
+    });
+    // Five characters in a tenth of a second would be 600 WPM; over the floor it is 60.
+    expect(report?.spanMs).toBe(1000);
+    expect(report?.wpm).toBe(60);
+    expect(report?.accuracy).toBe(100);
+  });
+
+  test("accuracy is a whole percent", () => {
+    const report = typingReport({
+      ...emptyTyping(SLOW),
+      firstKeyMs: 0,
+      lastKeyMs: 60_000,
+      correctKeys: 2,
+      errorKeys: 1,
+    });
+    expect(report?.accuracy).toBe(67);
+    expect(report?.wrong).toBe(1);
   });
 });
