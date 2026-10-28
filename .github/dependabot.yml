@@ -32,5 +32,6 @@ updates:
     open-pull-requests-limit: 5
     labels: [dependencies, ci]
     groups:
-      actions:
-        patterns: ["*"]
+      minor-and-patch:
+        applies-to: version-updates
+        update-types: [minor, patch]

@@ -2605,6 +2605,14 @@ only gate that can see the regression, and static documents belong in
   only. A check renamed in `ci.yml` must be renamed in the ruleset too. `refs/tags/v*`
   is immutable, and so is a published release. Rollback is Cloudflare's version
   history, followed by `gh workflow run deploy.yml` to record and re-verify.
+- **Actions are pinned to commit shas, and the repository requires it.** Every
+  `uses:` in `.github/workflows/` is a sha with the version in a comment
+  (`actions/checkout@<sha> # v5`); `sha_pinning_required` refuses an unpinned one at
+  push, and `.github/dependabot.yml` keeps the pins current — weekly, with minor and
+  patch bumps grouped and a major on its own. The actionlint job lints the workflows
+  from a pinned container tag, because an unpinned action to lint the actions would
+  defeat the rule it enforces. A new action is added the same way, or the push is
+  refused.
 - The intended domain is `https://everythingstar.happypaul55.com`; keep
   `astro.config.mjs` (`site`), `src/content/site/settings.json` (`url`) and
   `public/robots.txt` in step if it changes.
