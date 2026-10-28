@@ -9,27 +9,16 @@
  *
  * Run by `bun run build`; `bun run check:pwa` then checks what this wrote.
  */
-import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { readSounds, soundsToWarm } from "../src/lib/game/audio/sounds";
 import { PAGE_FILES, precacheUrls } from "../src/lib/pwa/precache";
 import { basename } from "../src/lib/game/text";
+import { readVersion } from "./version";
 
 const ROOT = process.cwd();
 const DIST = join(ROOT, "dist");
 const SW = join(DIST, "sw.js");
-
-function buildVersion(): string {
-  try {
-    return execFileSync("git", ["describe", "--tags", "--always"], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    }).trim();
-  } catch {
-    return "dev";
-  }
-}
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -89,7 +78,7 @@ const astro = existsSync(join(DIST, "_astro"))
   : [];
 const precache = precacheUrls({ pages, audio, late: lateBeds(), assets: astro });
 
-const version = buildVersion();
+const version = readVersion();
 const builtAt = new Date().toISOString();
 
 const result = await Bun.build({

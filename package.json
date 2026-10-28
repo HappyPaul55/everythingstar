@@ -19,6 +19,8 @@
     "budget": "bun scripts/check-budget.ts",
     "check:pwa": "bun scripts/check-pwa.ts",
     "verify": "bun run lint && bun run knip && bun run check && bun run typecheck:tests && bun test && bun run build && bun run check:pwa && bun run budget",
+    "version": "bun scripts/version.ts",
+    "version:bump": "bun scripts/bump-version.ts",
     "import": "bun scripts/import/index.ts",
     "playlist:check": "bun scripts/check-playlist.ts",
     "icons": "bun scripts/generate-icons.mjs",
