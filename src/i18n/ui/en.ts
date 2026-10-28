@@ -251,7 +251,7 @@ export const en = {
   // The jukebox
   "screen.songsTitle": "Pick a song",
   "screen.searchLabel": "find a song",
-  "screen.searchPlaceholder": "a title or an artist",
+  "screen.searchPlaceholder": "a title, an artist or an album",
   "screen.noMatches": "Nothing by that name.",
   "screen.jukeboxIndex": "Jump to a letter",
   "screen.nowPlaying": "now playing",

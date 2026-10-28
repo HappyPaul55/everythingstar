@@ -405,8 +405,11 @@ only gate that can see the regression, and static documents belong in
   `DEFAULT_BACKDROP`, and the plan for the room's drifting lights.
 - `src/lib/game/jukebox.ts` — the jukebox's own maths, pure and tested: which
   letter a title files under, what a song's slot is called (`A·03`), and what a
-  search matches. A few hundred songs is a list you navigate, and this is what
-  makes it navigable.
+  search matches — **title, artist or album**, through one accent-folding
+  normalisation, with **one typo** forgiven against a word of those fields when a
+  four-character, single-word query matches nothing exactly. The result is still a
+  yes or no, so the groups, the order and the slot codes never move. A few hundred
+  songs is a list you navigate, and this is what makes it navigable.
 - `src/lib/game/jukeboxWindow.ts` — the jukebox's **window**, pure and tested: the
   mounted item range, the spacer heights that stand in for the rows outside it,
   a letter's offset, and the row step focus follows. `useJukeboxList` measures one

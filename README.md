@@ -613,8 +613,9 @@ fallback, not a stop an ordinary run makes.
   beds included, as the author's own Suno generations — and a file that arrived without
   one would be *said* rather than hidden.
 - **Songs** (the jukebox) — the library in one column, filed under their letter,
-  with an A–Z index down the side, a search over titles and artists, and the chosen
-  song in a **now playing** panel. A list you navigate, not a grid you
+  with an A–Z index down the side, a search over **titles, artists and albums** —
+  accents folded, so `Café` finds `cafe`, and one typo forgiven on a long single
+  word — and the chosen song in a **now playing** panel. A list you navigate, not a grid you
   browse: up/down and Tab move the selection from row to row (the arrows belong to
   the list, not the page), and Enter (or a pad's A) takes the next step — the same
   as **Next: your band**. The list is **windowed**: only the rows around the
@@ -1472,8 +1473,9 @@ layout**) and the traps worth knowing. Read it before a structural change.
   alignment (`stemSync.ts`) that puts them back on the reference stem's clock at a
   pause and a start.
 - `src/lib/game/jukebox.ts` — how a list of songs becomes an indexed one: the
-  letter a title files under, a song's slot code, and what a search matches. Pure
-  and tested.
+  letter a title files under, a song's slot code, and what a search matches — a
+  song's title, artist or album, accent-folded, with one typo forgiven on a long
+  single word. Pure and tested.
 - `src/lib/game/jukeboxWindow.ts` — the jukebox's window: the mounted item range,
   the spacer heights that keep the scrollbar and every letter's offset honest, and
   the row step focus follows. Pure and tested.
