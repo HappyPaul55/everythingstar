@@ -10,6 +10,7 @@ import {
   downloadState,
   formatBytes,
   listOffline,
+  nextDownloadedAt,
   mergeOfflineSongs,
   planPlaylistDownload,
   removeDownload,
@@ -253,6 +254,26 @@ describe("formatBytes", () => {
     expect(formatBytes(512)).toBe("1 KB");
     expect(formatBytes(3.4 * 1024 * 1024)).toBe("3.4 MB");
     expect(formatBytes(23.6 * 1024 * 1024)).toBe("24 MB");
+  });
+});
+
+describe("nextDownloadedAt", () => {
+  test("keeps a clock that has moved past the newest record", () => {
+    expect(nextDownloadedAt([{ downloadedAt: 1_000 }], 1_200)).toBe(1_200);
+  });
+
+  test("steps past a record written in the same millisecond", () => {
+    expect(nextDownloadedAt([{ downloadedAt: 1_000 }], 1_000)).toBe(1_001);
+  });
+
+  test("steps past the newest record even when the clock is behind it", () => {
+    expect(
+      nextDownloadedAt([{ downloadedAt: 900 }, { downloadedAt: 1_400 }], 1_000),
+    ).toBe(1_401);
+  });
+
+  test("keeps the clock when nothing is saved yet", () => {
+    expect(nextDownloadedAt([], 1_700_000_000_000)).toBe(1_700_000_000_000);
   });
 });
 
