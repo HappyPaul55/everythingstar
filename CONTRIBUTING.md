@@ -187,6 +187,21 @@ The pull request template asks for these; keep it short enough to answer honestl
 Do not commit generated output (`dist/`, `.astro/`, `test-results/`) or anything under
 `node_modules/`.
 
+## Releases
+
+The version is `package.json`'s and nothing else's. To cut one:
+
+1. On a `release/vX.Y.Z` branch, run `bun run version:bump patch` (or `minor`,
+   `major`); it edits `package.json` and prints the rest.
+2. Open a PR titled `chore(release): vX.Y.Z` and merge it like any other change —
+   `main` takes pull requests only, with `verify` and `e2e` green.
+3. Tag the merge commit `vX.Y.Z` and push the tag. The `Release` workflow refuses a
+   tag that disagrees with `package.json` or that is not on `main`, and otherwise
+   publishes the generated release notes.
+
+Tags cannot be moved or deleted, and a published release is immutable: a mistake is
+fixed by the next patch, not by rewriting the old one.
+
 ## Reporting
 
 - **A bug or a feature request**: use the issue templates. Include the browser and

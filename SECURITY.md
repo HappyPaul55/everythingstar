@@ -11,8 +11,10 @@ reporting carefully.
 
 ## Supported versions
 
-The repository has no tagged releases. The deployed site follows `main`, and `main`
-is the only supported version. A fix lands there; there is nothing to backport.
+The latest `v*` release and `main` are supported. The deployed site follows `main`,
+so a fix lands there; an older tag records what shipped and is not patched. A
+security fix is made on `main`, published in the next tag, and named in its release
+notes.
 
 ## Reporting a vulnerability
 

@@ -102,6 +102,8 @@ bun run knip             # dead-code check (knip)
 bun run budget           # dist/ and public/audio size caps
 bun run check:pwa        # manifest and worker build gate (scripts/check-pwa.ts)
 bun run verify           # lint, knip, check, test types, tests, build, check:pwa, budget
+bun run version          # the build's version: v<package.json>+<7-char sha>
+bun run version:bump     # bump package.json and print the release steps
 bun run import           # convert a folder of charts into the three documents
 bun run playlist:check   # hold a playlist URL to the game's own reader
 bun run icons            # regenerate public/icons from public/icons/brand-mark.svg
@@ -2579,6 +2581,30 @@ only gate that can see the regression, and static documents belong in
   client-everythingstar-happypaul55-com`, `assets.directory: ./dist`, **no
   `main`**). The deploy uploads `dist/` only; there is no Worker script and no API
   to keep in step.
+- **Cloudflare deploys; GitHub records and verifies.** Workers Builds builds `main`
+  on every push and posts a `Workers Builds:` check run, but never a GitHub
+  Deployment — so `.github/workflows/deploy.yml` supplies one: the job declares the
+  `production` environment (which is what creates the entry), waits for `verify`,
+  `e2e` and the Cloudflare run on that exact SHA (`scripts/wait-for-deploy.ts`), then
+  smokes the live origin (`scripts/smoke.ts`) and fails the deployment when the site
+  is not right. The job can sit "in progress" for 10–15 minutes; that is the wait,
+  not a hang.
+- **The build names itself.** `bun run version` prints `v<package.json
+  version>+<7-char sha>`, which is both the welcome screen's build label and the
+  service worker's shell cache name. `astro.config.mjs` and `scripts/build-sw.ts`
+  both read it from `scripts/version.ts`; never reintroduce a second `git describe`,
+  because a CI clone has no tags.
+- **A release is a checkpoint, not a build.** Bump with `bun run version:bump
+  patch|minor|major` on a `release/…` branch, merge it, then tag the merge commit
+  `vX.Y.Z`. `.github/workflows/release.yml` refuses a tag that disagrees with
+  `package.json` or that is not on `main`, then publishes a GitHub Release with
+  generated notes; it runs no build and attaches nothing.
+- **`main` is PR-only.** A ruleset requires `verify` and `e2e`, resolved
+  conversations and a squash merge, and refuses direct pushes, force-pushes and
+  deletions — including from the maintainer, whose bypass covers pull-request merges
+  only. A check renamed in `ci.yml` must be renamed in the ruleset too. `refs/tags/v*`
+  is immutable, and so is a published release. Rollback is Cloudflare's version
+  history, followed by `gh workflow run deploy.yml` to record and re-verify.
 - The intended domain is `https://everythingstar.happypaul55.com`; keep
   `astro.config.mjs` (`site`), `src/content/site/settings.json` (`url`) and
   `public/robots.txt` in step if it changes.
