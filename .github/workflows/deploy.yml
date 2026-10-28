@@ -1,0 +1,48 @@
+# The production deployment record, and the proof behind it.
+#
+# Cloudflare Workers Builds is the deployer: a push to `main` starts its build,
+# and this workflow never runs one. Workers Builds posts a check run but never a
+# GitHub Deployment, so production used to change with no record of it and no
+# check on the result. This job supplies both: the `environment` below is what
+# creates the deployment entry, and the smoke test fails the deployment when the
+# live site is not serving the version this commit produced.
+#
+# It can sit "in progress" for 10–15 minutes, because it waits for CI (`verify`
+# and the browser suite) as well as the Cloudflare build before it asks the live
+# site anything. The `production` environment is created on the first run.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: read
+  deployments: write
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment:
+      name: production
+      url: https://everythingstar.happypaul55.com
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+      # No `bun install`: neither script imports a dependency.
+      - name: Wait for CI and the Cloudflare build
+        run: bun scripts/wait-for-deploy.ts
+      - name: The version this commit must serve
+        id: version
+        run: echo "expect=$(bun scripts/version.ts)" >> "$GITHUB_OUTPUT"
+      - name: Smoke-test production
+        run: bun scripts/smoke.ts --base https://everythingstar.happypaul55.com --expect "${{ steps.version.outputs.expect }}"
