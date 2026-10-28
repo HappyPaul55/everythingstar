@@ -41,6 +41,16 @@ interface Props {
   starUntilMs?: number;
 }
 
+/**
+ * When the **device** last buzzed, shared by every seat's hook on this page.
+ *
+ * A ref would be one per seat, which is the opposite of what the gap is for: two
+ * panels missing on one frame would each see an empty history and buzz together.
+ * The motor is one between the whole band, so its clock is one too. A pad's rumble
+ * is that pad's own hardware and does not pass through here.
+ */
+const deviceBuzz = { at: null as number | null };
+
 export function useHaptics({ enabled, seat, misses, starUntilMs = 0 }: Props) {
   const { plan } = useStageControls();
   // Which pad this seat is holding, if it is holding one. A seat on keys, MIDI, the
@@ -48,8 +58,6 @@ export function useHaptics({ enabled, seat, misses, starUntilMs = 0 }: Props) {
   const controller = plan.seats.find((entry) => entry.seat === seat)?.controller;
   const padIndex = controller?.on === "pad" ? controller.index : null;
 
-  /** When the device last buzzed, across every seat in this page. */
-  const lastBuzz = useRef<number | null>(null);
   /** What this seat's run looked like at the last look, for the rewind rule. */
   const seen = useRef({ misses, starUntilMs });
 
@@ -74,8 +82,8 @@ export function useHaptics({ enabled, seat, misses, starUntilMs = 0 }: Props) {
     // is the cue worth feeling.
     const cue = spent ? STAR_CUE : MISS_CUE;
     const now = performance.now();
-    if (hapticAllowed(lastBuzz.current, now, HAPTIC_GAP_MS)) {
-      lastBuzz.current = now;
+    if (hapticAllowed(deviceBuzz.at, now, HAPTIC_GAP_MS)) {
+      deviceBuzz.at = now;
       buzz(cue);
     }
     if (padIndex !== null) rumble(padIndex, cue);
