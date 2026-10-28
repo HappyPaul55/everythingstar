@@ -68,8 +68,8 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
   breadcrumbs={crumbs}
 >
   <main id="main" tabindex="-1" class="spray-paper docs">
-    <Container class="docs__wrap">
-      <DocsSidebar section={section} current={current} />
+    <Container class={section ? "docs__wrap" : "docs__wrap docs__wrap--plain"}>
+      {section ? <DocsSidebar section={section} current={current} /> : null}
 
       <article class={wide ? "docs__article docs__article--wide" : "docs__article"}>
         <Breadcrumbs items={crumbs} />
