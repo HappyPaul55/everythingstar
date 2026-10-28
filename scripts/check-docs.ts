@@ -94,7 +94,10 @@ for (const page of built) {
     `${page.path} has its own canonical`,
     html.includes(`<link rel="canonical" href="${SITE}${page.path}">`),
   );
-  check(`${page.path} has a breadcrumb trail`, html.includes("comment breadcrumbs"));
+  // A page with no ancestors (the hub, a notice) has no trail to draw.
+  if (page.id !== "README" && !page.id.startsWith("other/")) {
+    check(`${page.path} has a breadcrumb trail`, html.includes("comment breadcrumbs"));
+  }
   check(`${page.path} ships no island`, !html.includes("astro-island"));
   check(`${page.path} carries no component URL`, !html.includes("component-url="));
   check(`${page.path} is in the sitemap`, sitemapPaths.has(page.path));
