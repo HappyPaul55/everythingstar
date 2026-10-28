@@ -1,0 +1,66 @@
+# A release is a checkpoint, not a build.
+#
+# A `v*` tag is cut by hand on a commit that has already passed CI on protected
+# `main`, so this workflow publishes a GitHub Release and builds nothing. The
+# repository is the source and a static site has no binary to publish, which is
+# why no artifacts and no source archive are attached.
+#
+# The tag must equal `package.json`'s version, so the version the game shows,
+# the tag and the release cannot disagree — `package.json` is the one place the
+# version is written. A tag whose commit is not on `main` is refused, so a stray
+# branch cannot invent a release.
+#
+# `bun run verify` is deliberately not repeated here: the tagged commit is on
+# `main`, where those checks are already required, so re-running them would add
+# ten minutes to every release for no new information.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      # The ancestry question is asked of the API rather than of the local clone,
+      # because a tag checkout is shallow and `merge-base` would answer from a
+      # history that is not all there. `main...<sha>`: "identical" is the tag on
+      # main, "behind" is main since moved past it, "ahead" or "diverged" is a
+      # commit main has never had.
+      - name: The tag is the version, and it is on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(jq -r .version package.json)"
+          if [ "$tag" != "$pkg" ]; then
+            echo "tag v$tag does not match package.json $pkg" >&2
+            exit 1
+          fi
+          status="$(gh api "repos/$GITHUB_REPOSITORY/compare/main...$GITHUB_SHA" --jq .status)"
+          case "$status" in
+            identical | behind) ;;
+            *)
+              echo "tag commit $GITHUB_SHA is not on main (compare: $status)" >&2
+              exit 1
+              ;;
+          esac
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "EverythingStar $GITHUB_REF_NAME" \
+            --generate-notes \
+            --verify-tag \
+            --latest
