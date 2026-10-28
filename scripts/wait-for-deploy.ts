@@ -13,12 +13,16 @@
  * and exits 1 after thirty minutes if a run never appeared at all — usually the
  * Cloudflare GitHub App is no longer connected to the repository.
  *
- * Environment: `GITHUB_REPOSITORY`, `GITHUB_SHA`, `GITHUB_TOKEN`.
- * No dependencies: `fetch` and `Bun.sleep`.
+ * **A commit that is no longer the head of `main` is superseded**, and waiting is
+ * pointless: Cloudflare coalesces a burst of merges into the build that matters, so
+ * the older commit may never get a `Workers Builds:` check at all. It exits 0 at
+ * once with `superseded=true` on `GITHUB_OUTPUT`, and the workflow records the
+ * deployment without asserting its build identity — production is a later merge.
+ *
+ * Environment: `GITHUB_REPOSITORY`, `GITHUB_SHA`, `GITHUB_TOKEN`, and optionally
+ * `GITHUB_OUTPUT`. No dependencies: `fetch`, `Bun.sleep` and `node:fs`.
  */
-// An empty export makes this a module, which is what allows the top-level
-// `await` below; the script itself imports nothing at all.
-export {};
+import { appendFileSync } from "node:fs";
 
 const API = "https://api.github.com";
 const POLL_MS = 15_000;
@@ -60,6 +64,36 @@ if (!repository || !sha || !token) {
 }
 
 const shortSha = sha.slice(0, 7);
+
+/** Where `main` points right now: the one commit whose deployment can be verified. */
+async function headOfMain(): Promise<string> {
+  const response = await fetch(`${API}/repos/${repository}/commits/main`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+  if (!response.ok) {
+    throw new ApiError(
+      response.status,
+      `GET commits/main answered ${response.status} ${response.statusText}`,
+    );
+  }
+  const body = (await response.json()) as { sha?: unknown };
+  if (typeof body.sha !== "string" || body.sha === "") {
+    throw new Error("commits/main answered without a sha");
+  }
+  return body.sha;
+}
+
+/** Hand the workflow its verdict, so the smoke test knows what it may assert. */
+function reportSuperseded(superseded: boolean): void {
+  const output = process.env.GITHUB_OUTPUT;
+  if (!output) return;
+  appendFileSync(output, `superseded=${superseded}\n`);
+}
 
 async function fetchCheckRuns(): Promise<CheckRun[]> {
   const url = `${API}/repos/${repository}/commits/${sha}/check-runs?per_page=100`;
@@ -130,7 +164,9 @@ let lastError: string | null = null;
 
 while (true) {
   let runs: CheckRun[];
+  let head: string;
   try {
+    head = await headOfMain();
     runs = await fetchCheckRuns();
     lastError = null;
   } catch (error) {
@@ -149,6 +185,15 @@ while (true) {
     }
     await Bun.sleep(POLL_MS);
     continue;
+  }
+
+  // A newer merge owns production now, and Cloudflare may never build this commit
+  // at all. Recording it and moving on is the honest answer; waiting is not.
+  if (head !== sha) {
+    console.log(`superseded  main is on ${head.slice(0, 7)}; this run is for ${shortSha}`);
+    console.log("Production has moved on, so this deployment's build identity is not asserted.");
+    reportSuperseded(true);
+    process.exit(0);
   }
 
   const latest = latestByName(runs);
@@ -178,6 +223,7 @@ while (true) {
   if (done) {
     for (const run of watched) console.log(`ok    ${run.name} — ${run.conclusion}`);
     console.log(`All checks green on ${shortSha}.`);
+    reportSuperseded(false);
     break;
   }
 
