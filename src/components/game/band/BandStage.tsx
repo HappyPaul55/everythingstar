@@ -42,6 +42,8 @@ interface Props {
   backdropDim: number;
   /** Whether a hit marker is also a control: a tap plays the note above it. */
   tap: boolean;
+  /** Whether a miss and a spent star power are felt. Feedback, never judging. */
+  haptics: boolean;
   /** The song's video when it is also the music, rather than a muted backdrop. */
   youtube?: {
     videoId: string;
@@ -65,6 +67,7 @@ export function BandStage({
   visualLagMs,
   backdropDim,
   tap,
+  haptics,
   youtube,
   practice,
   children,
@@ -128,6 +131,7 @@ export function BandStage({
           track={track}
           listenOnly={listenOnly}
           visualLagMs={visualLagMs}
+          haptics={haptics}
         />
       ) : null}
       {lanes ? (
@@ -143,6 +147,7 @@ export function BandStage({
           noteSpeed={noteSpeed}
           visualLagMs={visualLagMs}
           tap={tap}
+          haptics={haptics}
         />
       ) : null}
       {children ? <div className="band__overlay">{children}</div> : null}

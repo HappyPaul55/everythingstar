@@ -24,6 +24,7 @@ things that need a page.
 | `arcade.spec.ts` | 2 | the attract demo's machine run; the homepage's same-origin, silent iframe window |
 | `band.spec.ts` | 2 | a phone's one-box-a-row band and its missing second row, against the desk's four |
 | `bundle.spec.ts` | 2 | the **dev** module graph (no translator is fetched while browsing); a lazy dialog is still native |
+| `comfort.spec.ts` | 2 | the Screen Wake Lock asked for on a run, released on a pause and re-asked on a resume; a miss reaching `navigator.vibrate` and the pad actuator of the seat holding one |
 | `import.spec.ts` | 2 | a copy into OPFS that survives a reload; the directory input's file list |
 | `intent.spec.ts` | 4 | `?playlist=` / `?song=` read from the address, confirmed, added, and stripped |
 | `jukebox-window.spec.ts` | 1 | a 2,000-song list windowed in the DOM |
@@ -48,7 +49,7 @@ things that need a page.
 `pwa.spec.ts` and `play-style.spec.ts` also run under `playwright.pwa.config.ts`
 (`bun run test:pwa`) against a production build: the first installs the worker and
 reloads offline, the second proves the built CSS kept its layer order. The dev
-suite is 48 tests in 24 files.
+suite is 50 tests in 25 files.
 
 ## What moved out, and why
 

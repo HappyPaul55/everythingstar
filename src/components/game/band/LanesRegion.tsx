@@ -32,6 +32,8 @@ interface Props {
   visualLagMs: number;
   /** Whether a hit marker is also a control: a tap plays the note above it. */
   tap: boolean;
+  /** Whether each panel's misses and star power are felt. Feedback only. */
+  haptics: boolean;
 }
 
 export function LanesRegion({
@@ -46,6 +48,7 @@ export function LanesRegion({
   noteSpeed,
   visualLagMs,
   tap,
+  haptics,
 }: Props) {
   const t = useT();
 
@@ -85,6 +88,7 @@ export function LanesRegion({
               noteSpeed={noteSpeed}
               visualLagMs={visualLagMs}
               tap={tap}
+              haptics={haptics}
               bare={bare}
             />
           ))}
