@@ -19,8 +19,10 @@ const t = tFor(localeFromPath(Astro.url.pathname));
 ---
 
 <nav class="comment breadcrumbs" aria-label={t("nav.breadcrumb")}>
-  <span class="slash" aria-hidden="true">//</span>
   <ol class="breadcrumbs__list">
+    <li class="breadcrumbs__mark" aria-hidden="true">
+      <span class="slash">//</span>
+    </li>
     {
       items.map((crumb) => (
         <li class="breadcrumbs__item">

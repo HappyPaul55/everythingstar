@@ -396,11 +396,21 @@
   }
 
   /* Breadcrumbs: the graffiti comment label as links. */
-  .breadcrumbs__list {
+  /* `.legal ol` and `.doc ol` style prose lists as grids, which would turn the
+     trail into one crumb a row (and put the `//` above it). The trail is a list of
+     links, so it states its own layout one specificity above them. */
+  .breadcrumbs .breadcrumbs__list {
     display: inline-flex;
     align-items: center;
     flex-wrap: wrap;
     gap: 0.25rem 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .breadcrumbs__mark {
+    display: inline-flex;
+    align-items: center;
   }
   .breadcrumbs__item {
     display: inline-flex;
@@ -624,34 +634,6 @@
   .docs-side__label:hover {
     color: var(--color-ink);
   }
-  .docs-switch {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-  }
-  .docs-switch a {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    text-decoration: none;
-    padding: 0.3rem 0.45rem;
-    border: 1px solid rgba(12, 13, 10, 0.2);
-    border-radius: var(--radius-inner);
-    color: var(--color-ink-soft);
-    transition:
-      background-color 0.2s var(--ease-brand),
-      color 0.2s var(--ease-brand);
-  }
-  .docs-switch a:hover {
-    background: var(--color-paper-2);
-    color: var(--color-ink);
-  }
-  .docs-switch a[aria-current="page"] {
-    background: var(--color-ink);
-    border-color: var(--color-ink);
-    color: var(--color-cream);
-  }
   .docs-side__group {
     margin-top: 1.4rem;
     margin-bottom: 0.35rem;
@@ -850,16 +832,15 @@
     color: var(--color-ink-soft);
   }
 
-  /* On a phone the sidebar is the four sections and the way back to the hub;
-     the section's page list is left to the pager and the hub rather than pushing
-     the article a screen down. */
+  /* On a phone the trail, the pager and the hub are the navigation; a list of
+     ten pages above the article would push the page itself below the fold. */
   @media (max-width: 55.99rem) {
-    .docs-side__pages {
+    .docs-side {
       display: none;
     }
   }
   @media (min-width: 56rem) {
-    .docs__wrap {
+    .docs__wrap:not(.docs__wrap--plain) {
       grid-template-columns: 15rem minmax(0, 1fr);
     }
     .docs-side {
@@ -872,7 +853,7 @@
     }
   }
   @media (min-width: 75rem) {
-    .docs__wrap {
+    .docs__wrap:not(.docs__wrap--plain) {
       grid-template-columns: 15rem minmax(0, 1fr) 12rem;
     }
     .docs__toc {
@@ -880,6 +861,13 @@
       position: sticky;
       top: 1.25rem;
     }
+  }
+  /* The hub has no section list beside it and no page contents of its own: one
+     column, centred, with the room the cards need. */
+  .docs__wrap--plain .docs__article {
+    width: 100%;
+    max-width: 64rem;
+    margin-inline: auto;
   }
   @media print {
     .docs-side,

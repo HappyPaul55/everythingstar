@@ -17,18 +17,8 @@ if (!hub) throw new Error("Missing the documentation hub (docs/README.md).");
 
 const locale = localeFromPath(Astro.url.pathname);
 const t = tFor(locale);
-const { Content, headings: bodyHeadings } = await render(hub);
+const { Content } = await render(hub);
 const groups = docGroups(await getCollection("docs"));
-// The section cards are headings the Markdown did not write, so the page's own
-// contents would otherwise stop at the introduction.
-const headings = [
-  ...bodyHeadings,
-  ...groups.map((group) => ({
-    depth: 2 as const,
-    slug: group.section,
-    text: t(SECTION_LABELS[group.section]),
-  })),
-];
 
 const crumbs = [
   { name: t("nav.home"), path: localePath(locale, "/") },
@@ -43,7 +33,6 @@ const title = hub.data.title;
   path={localePath(locale, "/docs")}
   crumbs={crumbs}
   updated={hub.data.updated}
-  headings={headings}
   wide
 >
   <Content />
