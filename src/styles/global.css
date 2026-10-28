@@ -822,6 +822,12 @@
     padding: 0;
     list-style: none;
   }
+  /* The hub's cards are a list of links, not prose bullets: `.doc ul` would
+     otherwise put a disc beside each card. */
+  .doc .docs-hub__list {
+    padding: 0;
+    list-style: none;
+  }
   .docs-hub__link {
     display: grid;
     gap: 0.1rem;
