@@ -7,8 +7,8 @@
 #
 # The tag must equal `package.json`'s version, so the version the game shows,
 # the tag and the release cannot disagree — `package.json` is the one place the
-# version is written. A tag that is not an ancestor of `main` is refused, so a
-# stray branch cannot invent a release.
+# version is written. A tag whose commit is not on `main` is refused, so a stray
+# branch cannot invent a release.
 #
 # `bun run verify` is deliberately not repeated here: the tagged commit is on
 # `main`, where those checks are already required, so re-running them would add
@@ -32,9 +32,14 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
+      # The ancestry question is asked of the API rather than of the local clone,
+      # because a tag checkout is shallow and `merge-base` would answer from a
+      # history that is not all there. `main...<sha>`: "identical" is the tag on
+      # main, "behind" is main since moved past it, "ahead" or "diverged" is a
+      # commit main has never had.
       - name: The tag is the version, and it is on main
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           tag="${GITHUB_REF_NAME#v}"
           pkg="$(jq -r .version package.json)"
@@ -42,11 +47,14 @@ jobs:
             echo "tag v$tag does not match package.json $pkg" >&2
             exit 1
           fi
-          git fetch --depth=1 origin main
-          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
-            echo "tag is not on main" >&2
-            exit 1
-          fi
+          status="$(gh api "repos/$GITHUB_REPOSITORY/compare/main...$GITHUB_SHA" --jq .status)"
+          case "$status" in
+            identical | behind) ;;
+            *)
+              echo "tag commit $GITHUB_SHA is not on main (compare: $status)" >&2
+              exit 1
+              ;;
+          esac
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
