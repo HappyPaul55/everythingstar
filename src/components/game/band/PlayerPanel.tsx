@@ -14,6 +14,7 @@ import { ScoreRail } from "./ScoreRail";
 import { useSong } from "./SongContext";
 import { useStageControls } from "./StageControls";
 import { useLaneRun } from "./useLaneRun";
+import { useHaptics } from "./useHaptics";
 
 /**
  * One instrument panel: the score (left), the note highway (centre) and the info
@@ -35,11 +36,13 @@ interface Props {
   visualLagMs: number;
   /** Whether tapping a hit marker plays the note above it. */
   tap: boolean;
+  /** Whether this panel's misses and spent star power are felt. Feedback only. */
+  haptics: boolean;
   /** A lone player on an empty stage: no panel frame, just its parts. */
   bare?: boolean;
 }
 
-export function PlayerPanel({ player, width, height, view, noteStyle, noteSpeed, visualLagMs, tap, bare = false }: Props) {
+export function PlayerPanel({ player, width, height, view, noteStyle, noteSpeed, visualLagMs, tap, haptics, bare = false }: Props) {
   const t = useT();
   const { track, seed } = useSong();
   const { play } = useAudio();
@@ -108,6 +111,16 @@ export function PlayerPanel({ player, width, height, view, noteStyle, noteSpeed,
     if (run.misses > misses.current) play("miss");
     misses.current = run.misses;
   }, [run.misses, play]);
+
+  // The same two moments, felt rather than heard: a miss is a short tap and a spent
+  // meter is the longer pattern. A seat the machine is covering has no hands, so it
+  // gets neither — and the gap between device buzzes is shared across the band.
+  useHaptics({
+    enabled: haptics && !auto,
+    seat: player.seat,
+    misses: run.misses,
+    starUntilMs: run.starUntilMs,
+  });
 
   // A hero note landing is its own small event: a sparkle for the note. A chord
   // with two hero notes rises by two at once, so it is one gesture and one cue; a

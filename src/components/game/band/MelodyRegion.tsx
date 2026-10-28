@@ -21,6 +21,7 @@ import { useSong } from "./SongContext";
 import { useStageControls } from "./StageControls";
 import { useSinging } from "./useSinging";
 import { useTyping } from "./useTyping";
+import { useHaptics } from "./useHaptics";
 
 /**
  * The full-width melody region, always at the top of the stage.
@@ -45,6 +46,8 @@ interface Props {
   visualLagMs: number;
   /** Render the song's words as a read-along when the band chose Listen. */
   listenOnly?: boolean;
+  /** Whether a singer's or typist's misses are felt. Feedback only. */
+  haptics: boolean;
 }
 
 export function MelodyRegion({
@@ -53,6 +56,7 @@ export function MelodyRegion({
   track,
   visualLagMs,
   listenOnly = false,
+  haptics,
 }: Props) {
   const t = useT();
   const { seed } = useSong();
@@ -217,6 +221,7 @@ export function MelodyRegion({
                 score={singer.score}
                 combo={singer.combo}
                 auto={!singer.live}
+                haptics={haptics}
               />
             ))
           : null}
@@ -235,6 +240,7 @@ export function MelodyRegion({
             score={typist.score}
             combo={typist.combo}
             auto={typist.auto}
+            haptics={haptics}
           />
         ))}
       </div>
@@ -271,6 +277,7 @@ interface ScoreProps {
   score: number;
   combo: number;
   auto: boolean;
+  haptics: boolean;
 }
 
 function PartScore({
@@ -286,6 +293,7 @@ function PartScore({
   score,
   combo,
   auto,
+  haptics,
 }: ScoreProps) {
   const t = useT();
   const label = t(role === "sing" ? "band.sing" : "band.type");
@@ -297,6 +305,10 @@ function PartScore({
     spans,
     onOut: () => play("error"),
   });
+  // And the same miss, felt. The words have no meter to spend, so there is no
+  // star pattern here — only what a missed word is worth in the hand. A typist or
+  // singer the machine is covering is not somebody's hand to buzz.
+  useHaptics({ enabled: haptics && !auto, seat, misses });
   return (
     <div
       className={`melody-score is-part-${part}`}

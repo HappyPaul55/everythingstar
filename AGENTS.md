@@ -288,10 +288,22 @@ only gate that can see the regression, and static documents belong in
   (`noteSpeed`), how far the backdrop
   is dimmed (`backdropDim`), whether the room's drifting lights are drawn (`flares`),
   whether the song's guide vocal stays under a singer (`guideVocal`), whether the
-  room's crowd plays while a run is paused (`crowd`) and whether a hit marker is also
-  a control (`tap`), with the shape, the clamping
+  room's crowd plays while a run is paused (`crowd`), whether a hit marker is also
+  a control (`tap`), whether a miss and a spent star power are felt (`haptics`) and
+  whether a run holds the display on (`keepAwake`), with the shape, the clamping
   and the stepping pure. Pure except `loadSettings`/`saveSettings`; one local record
   beside the band, the board and the first-run hints.
+- `src/lib/game/haptics.ts` + `src/components/game/band/useHaptics.ts` — **the buzz**:
+  the miss and star cues (a device pattern and a pad rumble each), the shared minimum
+  gap between device buzzes (`hapticAllowed`), and the per-seat hook that watches a
+  run's miss and star counts. The pad is the seat's own, found through the control
+  plan; a machine seat is passed `enabled: false` because it has no hands. Pure rules
+  and unit-tested, and **never read into judging**.
+- `src/lib/game/wakeLock.ts` + `src/components/game/band/useWakeLock.ts` — **the screen
+  kept on**: the pure table (`shouldHoldWakeLock`: the countdown and the run, never a
+  hidden document, a switched-off setting or the native shell) and the one sentinel
+  the island asks `navigator.wakeLock` for, released on a pause and re-asked on a
+  resume. Pure rules and unit-tested.
 - `src/lib/game/onboarding.ts` + `src/components/game/band/useFirstRunHint.ts` — **the
   first-run highway hints**, per player seat: which seats have already been shown the
   key labels, so Player 3 still gets them when Players 1 and 2 have played. Pure except
@@ -530,6 +542,7 @@ only gate that can see the regression, and static documents belong in
   (the singers' runs, from the trail or the simulator), `StageDirector` (the clock
   per screen), `RunBoard` (the published totals), `SongContext`, `useScrollTrack`,
   `useLaneRun` (a player's judging, off the clock), `useTyping` (the typists'),
+  `useHaptics` (one seat's buzz and rumble), `useWakeLock` (the display a run holds),
   `useElementSize`, `useFullscreen` and the temporary `BandControls`. `PlayerPanel`
   is instrument-agnostic — the instrument is data — and owns its lane's run.
 - `src/styles/band.css` — the band stage styling (regions, player panel, rails,
@@ -1797,8 +1810,9 @@ only gate that can see the regression, and static documents belong in
   travel, how far the
   backdrop is dimmed, whether the room's lights drift, how the highways are drawn,
   what a note's face looks like, whether the song's guide vocal stays under a singer,
-  whether the room's crowd plays while a run is paused, and
-  whether a hit marker is a control. **The audio lag has two ways in and one value**:
+  whether the room's crowd plays while a run is paused, whether a hit marker is a
+  control, and whether a miss and a spent star power are felt (`haptics`) or a run
+  holds the display on (`keepAwake`). **The audio lag has two ways in and one value**:
   the stepper and the measured calibration (`calibration.ts` + `CalibrationDialog`)
   both write `audioLagMs`. The dialog schedules its own fixed-level clicks on a
   separate audio graph — so a muted master cannot make it silent — and closes that
@@ -1849,6 +1863,23 @@ only gate that can see the regression, and static documents belong in
   got), **`data-unreadable`** (local stems the browser would not hand over) and the
   elements' own errors — so "the song names no audio", "half the stems could not be read"
   and "the stems are there and silent" are three different sentences rather than one.
+- **Haptics and the wake lock are feedback and comfort, never rules.** A miss and a
+  spent star power are read from the run's **published** counts (`run.misses`,
+  `run.starUntilMs`, or a singer's or typist's own misses) exactly as the sound cues
+  are, and nothing is written back: `haptics.ts` could be deleted and every note would
+  be judged, scored and timed the same. The device's buzzer is one between every seat,
+  so `hapticAllowed` is the minimum gap that keeps two players' misses from stacking
+  into one rattle; a pad's rumble is that seat's own hardware and is not gated. A seat
+  the machine covers is passed `enabled: false`, because it has no hands. A browser
+  with no `navigator.vibrate`, a pad with no actuator and an iOS device that will not
+  vibrate are all silence, and all of it is caught: haptics can never be the reason a
+  run stops. **The wake lock is asked for once, in `GameApp`**, because the run is
+  what it follows rather than a screen: `shouldHoldWakeLock` is true only for
+  `countdown` and `playing`, and never when the setting is off, the document hidden or
+  the shell native. **The native WebView is skipped on purpose** — the app's boot
+  already holds the display awake for those screens, so a second request is a second
+  thing to keep in step. Every refusal is caught and none is retried in a loop; a new
+  screen or a return to a visible tab is a new question.
 - **Choosing a song and choosing a band are two screens, in that order.** A
   jukebox picker wants the room a few hundred titles need (a scroller, an A–Z
   index, a search) and a band wants the room a slot per player needs; making one

@@ -7,6 +7,7 @@ import { BandStage } from "./band/BandStage";
 import { SongAudio } from "./band/SongAudio";
 import { StageDirector } from "./band/StageDirector";
 import { StageFullscreen } from "./band/StageFullscreen";
+import { useWakeLock } from "./band/useWakeLock";
 import { useAttract } from "./attract/useAttract";
 import { GamepadNav } from "./ui/GamepadNav";
 import { ScreenFocus } from "./ui/ScreenFocus";
@@ -105,6 +106,19 @@ function GameApp({ credits, attract = false }: Props) {
     onStop: stopAttract,
   });
 
+  // The display, for the part of the loop that is a song. The rule is
+  // `wakeLock.ts` and the asking is the hook; it is mounted here rather than in a
+  // screen because the run is what it follows. Inside the native shell the app's
+  // own boot already keeps the screen awake, so the hook is told not to ask.
+  const native =
+    typeof document !== "undefined" &&
+    document.documentElement.dataset.native !== undefined;
+  useWakeLock({
+    enabled: session.settings.keepAwake,
+    screen: session.screen,
+    native,
+  });
+
   return (
     <div className="band" ref={session.bandRef}>
       {/* The room the menus sit in: the game's own artwork. A run paints the song's
@@ -178,6 +192,7 @@ function GameApp({ credits, attract = false }: Props) {
             visualLagMs={session.settings.visualLagMs}
             backdropDim={session.settings.backdropDim}
             tap={session.settings.tap}
+            haptics={session.settings.haptics}
             youtube={session.youtubeAudio}
             practice={session.practice}
           >

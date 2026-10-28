@@ -158,6 +158,26 @@ export interface Settings {
    * markers and the keyboard or gamepad as the only way in.
    */
   tap: boolean;
+  /**
+   * Whether a miss and a spent star power are **felt** — a short buzz on the device,
+   * and a stronger pattern on the gamepad that seat is holding where the pad can
+   * rumble (`haptics.ts`). It is feedback beside the run, never a judging rule: it
+   * changes no note, no score and no cue.
+   *
+   * A browser without `navigator.vibrate`, a pad with no actuator and an iOS
+   * device that will not vibrate are all simply silent. Off is silence everywhere.
+   */
+  haptics: boolean;
+  /**
+   * Whether the game **holds the screen on** while a run is moving — the browser's
+   * Screen Wake Lock, asked for on the countdown and the run and let go on the pause,
+   * the results and every page (`wakeLock.ts`).
+   *
+   * The installed app's own boot keeps the display awake, so the hook is skipped
+   * inside the native shell. A browser without the API, or one saving battery, is
+   * simply a screen that sleeps as it always did.
+   */
+  keepAwake: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -191,6 +211,13 @@ export const DEFAULT_SETTINGS: Settings = {
   // changes nothing about the keys or a gamepad. A player who would rather the pads
   // stayed decorative turns it off in Options.
   tap: true,
+  // A buzz is feedback a player can feel without looking away, and a device or pad
+  // that cannot do it says nothing. On by default, and quiet on every device that
+  // will not.
+  haptics: true,
+  // A four-minute song is longer than a phone's default sleep. On by default; the
+  // native shell skips it because its own boot already keeps the display awake.
+  keepAwake: true,
 };
 
 /**
@@ -349,6 +376,14 @@ export function parseSettings(raw: string | null): Settings {
       crowd:
         typeof value.crowd === "boolean" ? value.crowd : DEFAULT_SETTINGS.crowd,
       tap: typeof value.tap === "boolean" ? value.tap : DEFAULT_SETTINGS.tap,
+      haptics:
+        typeof value.haptics === "boolean"
+          ? value.haptics
+          : DEFAULT_SETTINGS.haptics,
+      keepAwake:
+        typeof value.keepAwake === "boolean"
+          ? value.keepAwake
+          : DEFAULT_SETTINGS.keepAwake,
     };
   } catch {
     return defaults();

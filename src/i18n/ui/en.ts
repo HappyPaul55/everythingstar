@@ -214,6 +214,16 @@ export const en = {
     "Tap a hit marker to play the note above it. A tap counts as a strum, so hammer-ons and pull-offs need no thought, and two fingers on a chord only have to land within a moment of each other. It is the way to play on a phone; the pads stay decorative when it is off, and keys and gamepads work either way.",
   "screen.tapOn": "On",
   "screen.tapOff": "Off",
+  "screen.haptics": "Haptics",
+  "screen.hapticsHint":
+    "A short buzz when a note is missed, and a stronger pattern when star power is spent. It reaches the gamepad in that player's hands where the pad can rumble. A device or browser without haptics simply stays quiet, and nothing about the judging changes.",
+  "screen.hapticsOn": "On",
+  "screen.hapticsOff": "Off",
+  "screen.keepAwake": "Keep screen awake",
+  "screen.keepAwakeHint":
+    "Holds the display on while a run is moving, and lets it go on a pause or the results. A browser without the screen wake lock, or one saving battery, simply lets the screen sleep as it always did.",
+  "screen.keepAwakeOn": "On",
+  "screen.keepAwakeOff": "Off",
   "screen.players": "Player setup",
   "screen.playersHint":
     "What each of them plays with. Controls can be learned here or from the gear on the band screen, and are remembered. Add players on the band screen.",

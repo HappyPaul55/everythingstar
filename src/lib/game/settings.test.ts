@@ -49,6 +49,8 @@ describe("parseSettings", () => {
       flares: true,
       crowd: true,
       tap: true,
+      haptics: true,
+      keepAwake: true,
     });
   });
 
@@ -67,6 +69,8 @@ describe("parseSettings", () => {
       flares: true,
       crowd: true,
       tap: true,
+      haptics: true,
+      keepAwake: true,
     });
     expect(parseSettings('{"video":false}')).toEqual({
       audioLagMs: 0,
@@ -82,6 +86,8 @@ describe("parseSettings", () => {
       flares: true,
       crowd: true,
       tap: true,
+      haptics: true,
+      keepAwake: true,
     });
   });
 
@@ -150,6 +156,29 @@ describe("parseSettings", () => {
     expect(parseSettings('{"tap":false}').tap).toBe(false);
     // A stored non-boolean is not a setting: the pads stay playable.
     expect(parseSettings('{"tap":"off"}').tap).toBe(true);
+  });
+
+  test("haptics is on unless it was turned off", () => {
+    expect(DEFAULT_SETTINGS.haptics).toBe(true);
+    expect(parseSettings(null).haptics).toBe(true);
+    expect(parseSettings('{"haptics":false}').haptics).toBe(false);
+    // A stored non-boolean is not a setting: the game keeps its buzz.
+    expect(parseSettings('{"haptics":"off"}').haptics).toBe(true);
+    expect(parseSettings('{"haptics":0}').haptics).toBe(true);
+  });
+
+  test("keeping the screen awake is on unless it was turned off", () => {
+    expect(DEFAULT_SETTINGS.keepAwake).toBe(true);
+    expect(parseSettings(null).keepAwake).toBe(true);
+    expect(parseSettings('{"keepAwake":false}').keepAwake).toBe(false);
+    // A stored non-boolean is not a setting: a run still holds the display.
+    expect(parseSettings('{"keepAwake":"no"}').keepAwake).toBe(true);
+    expect(parseSettings('{"keepAwake":1}').keepAwake).toBe(true);
+  });
+
+  test("the two new comforts survive a round trip with the rest", () => {
+    const settings = { ...DEFAULT_SETTINGS, haptics: false, keepAwake: false };
+    expect(parseSettings(JSON.stringify(settings))).toEqual(settings);
   });
 
   test("the lag is held to steps inside the limit", () => {

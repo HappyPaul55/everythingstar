@@ -582,8 +582,13 @@ fallback, not a stop an ordinary run makes.
   **drifting lights** (on or off), the **note view** (whether the necks are drawn flat
   or tilted into perspective — see below), the **note style** (bars, gems or arrows —
   a skin for the notes, drawing only, see below), whether the **guide vocal** stays
-  under a singer, whether the **crowd** plays while a run is paused, and **player
-  setup** — one row per
+  under a singer, whether the **crowd** plays while a run is paused, whether a miss and
+  a spent star power are **felt** — a short buzz on the device and a stronger pattern
+  on the pad that seat is holding, feedback only and never a judging rule — whether
+  the game **keeps the screen awake** while a run is moving (the Screen Wake Lock,
+  asked for on the countdown and the run and let go on the pause and the results; the
+  installed app skips it because its own boot already holds the display on), and
+  **player setup** — one row per
   seat, with
   the same controller dialog and learn flow the band screen's gears open (including a
   MIDI keyboard or kit), so a mapping
@@ -1374,7 +1379,8 @@ layout**) and the traps worth knowing. Read it before a structural change.
 - `src/components/game/screens/` — the screens themselves: `Welcome`, `Menu` (the board:
   Quick Play, Options, Credits), `Options` (audio lag, picture lag and their measured
   calibrations, the master volume with music/ambience/sound-effect faders, guide vocal,
-  pause crowd, note speed, backdrop, backdrop dim, drifting lights, tap style, note view,
+  pause crowd, note speed, backdrop, backdrop dim, drifting lights, tap style, haptics,
+  keep screen awake, note view,
   note style, player setup), `CalibrationDialog` (the eight-click Sound measurement and
   the twelve-crossing Picture measurement over Options)
   and `Credits`, `Songs`
@@ -1386,10 +1392,20 @@ layout**) and the traps worth knowing. Read it before a structural change.
   calls: the audio lag, the visual (picture) lag, the master volume and its
   music/ambience/sfx family levels, whether a song's own backdrop plays, the note speed
   (drawing only), the backdrop dim, the drifting lights, the note view, the note style,
-  whether the guide vocal stays under a singer, whether the crowd plays while paused and
-  whether a hit marker is a control. The settings are their own
+  whether the guide vocal stays under a singer, whether the crowd plays while paused,
+  whether a hit marker is a control, whether haptics are felt and whether the screen is
+  kept awake through a run. The settings are their own
   local record, beside the band (`band/store.ts`), the board (`scores.ts`) and the
   first-run hints (`onboarding.ts`).
+- `src/lib/game/haptics.ts` + `src/components/game/band/useHaptics.ts` — **the buzz**,
+  pure rules and their one caller: the miss and star-power cues (a device pattern and
+  a pad rumble each), the shared minimum gap between device buzzes, and the per-seat
+  hook that watches a run's miss and star counts. It reads the run's published numbers
+  and never writes one, so haptics cannot change a note.
+- `src/lib/game/wakeLock.ts` + `src/components/game/band/useWakeLock.ts` — **the screen
+  kept on**: the pure rule (a run and its countdown, never a hidden document, a
+  switched-off setting or the native shell) and the one sentinel the island asks
+  `navigator.wakeLock` for, released on the pause and re-asked on a resume.
 - `src/lib/game/calibration.ts` — **the measured calibration**, pure and tested:
   the eight-tap run, its half-second beats and lead-in, the ±200 ms window a tap must
   sit inside to count, the median, and the point below which a run is not trusted. It
