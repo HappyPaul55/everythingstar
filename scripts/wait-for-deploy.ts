@@ -32,6 +32,7 @@ interface CheckRun {
   status: string;
   conclusion: string | null;
   html_url: string;
+  details_url: string;
   started_at: string | null;
 }
 
@@ -100,6 +101,26 @@ function describe(run: CheckRun): string {
   return `${run.name} (${run.status})`;
 }
 
+/**
+ * The production build, not a branch preview.
+ *
+ * One commit can carry more than one `Workers Builds:` run — a preview build for a
+ * branch and the production build for `main` — and the name cannot tell them apart.
+ * The details URL can, and it matters in both directions: a failed preview must not
+ * fail the production record, and a passing preview must not stand in for a
+ * production build that failed. A re-run leaves more than one attempt, so the latest
+ * start is the one that counts.
+ */
+function productionWorkers(runs: CheckRun[]): CheckRun | null {
+  const builds = runs.filter((run) => run.name.startsWith(WORKERS_PREFIX));
+  if (builds.length === 0) return null;
+  const production = builds.filter((run) => run.details_url.includes("/production/builds/"));
+  const pool = production.length > 0 ? production : builds;
+  return pool.reduce((latest, run) =>
+    (run.started_at ?? "") >= (latest.started_at ?? "") ? run : latest,
+  );
+}
+
 function isGreen(run: CheckRun): boolean {
   return run.status === "completed" && run.conclusion === "success";
 }
@@ -136,8 +157,8 @@ while (true) {
     const run = latest.get(name);
     if (run) required.set(name, run);
   }
-  const workers = [...latest.values()].filter((run) => run.name.startsWith(WORKERS_PREFIX));
-  const watched = [...required.values(), ...workers];
+  const workers = productionWorkers(runs);
+  const watched = [...required.values(), ...(workers ? [workers] : [])];
 
   const failed = watched.filter(
     (run) => run.status === "completed" && run.conclusion !== "success",
@@ -152,7 +173,7 @@ while (true) {
   }
 
   const missing = REQUIRED.filter((name) => !latest.has(name));
-  const workersMissing = workers.length === 0;
+  const workersMissing = workers === null;
   const done = missing.length === 0 && !workersMissing && watched.every(isGreen);
   if (done) {
     for (const run of watched) console.log(`ok    ${run.name} — ${run.conclusion}`);
