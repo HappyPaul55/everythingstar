@@ -324,6 +324,50 @@ export function Options({ settings, onSettings, plan, onPlan, onBack }: Props) {
             ]}
           />
 
+          {/* What a miss and a spent star power are felt with. Feedback beside the
+              run, never a judging rule: a device or pad without haptics is quiet
+              rather than broken, and the score is the same either way. */}
+          <ToggleOption
+            name={t("screen.haptics")}
+            hints={[t("screen.hapticsHint")]}
+            choices={[
+              {
+                key: "on",
+                label: t("screen.hapticsOn"),
+                active: settings.haptics,
+                onSelect: () => onSettings({ haptics: true }),
+              },
+              {
+                key: "off",
+                label: t("screen.hapticsOff"),
+                active: !settings.haptics,
+                onSelect: () => onSettings({ haptics: false }),
+              },
+            ]}
+          />
+
+          {/* The display while a run is moving. The pause and the results let go
+              of it, and the native shell skips it because its boot already holds
+              the screen on. */}
+          <ToggleOption
+            name={t("screen.keepAwake")}
+            hints={[t("screen.keepAwakeHint")]}
+            choices={[
+              {
+                key: "on",
+                label: t("screen.keepAwakeOn"),
+                active: settings.keepAwake,
+                onSelect: () => onSettings({ keepAwake: true }),
+              },
+              {
+                key: "off",
+                label: t("screen.keepAwakeOff"),
+                active: !settings.keepAwake,
+                onSelect: () => onSettings({ keepAwake: false }),
+              },
+            ]}
+          />
+
           {/* How the necks are drawn. A *view*, not a rule: judging, columns and
               difficulty are the same either way, so this only changes the look — and
               the tilted neck shows more of the song before it arrives. */}
