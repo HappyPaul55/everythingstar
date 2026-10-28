@@ -41,7 +41,7 @@ const t = tFor(localeFromPath(Astro.url.pathname));
   <main id="main" tabindex="-1" class="spray-paper py-[clamp(3rem,8vw,5.5rem)]">
     <Container>
       <article class="legal">
-        <Breadcrumbs items={crumbs} />
+        <Breadcrumbs items={crumbs.slice(1, -1)} />
         <h1 class="mt-4 font-display text-[clamp(2rem,6vw,3.25rem)] leading-[1.03]">
           {title}
         </h1>
