@@ -2632,8 +2632,11 @@ only gate that can see the regression, and static documents belong in
   `website`, each as a zip and a tar.gz — to a GitHub Release with generated notes.
   It builds because a tag has no other way to get the artifacts, and the commit is
   already `main`'s, where `verify` (which builds and checks the same archives) ran.
-  The archives are reproducible: sorted entries, the commit's timestamp on every file,
-  `zip -X` and a bare gzip header, so the same checkout is the same bytes.
+  The archive step is deterministic: sorted entries, the commit's timestamp on every
+  file, `zip -X` and a bare gzip header, so the same `dist/` is the same bytes twice.
+  The build is not byte-reproducible — Astro stamps per-build ids into the pages and
+  the worker names the moment it was built — so a rebuild of the same commit has the
+  same file names and byte-identical chunks, not the same page bytes.
 - **The release archives are three views of one `dist/`, never three builds.**
   `src/lib/release/bundles.ts` is the plan (pure, unit-tested) and both the builder
   and the gate read it. A standalone archive is **served at an origin's root**,

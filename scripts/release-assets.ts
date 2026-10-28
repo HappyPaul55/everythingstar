@@ -9,11 +9,16 @@
  * `planBundle` in `src/lib/release/bundles.ts` — the same plan the checker reads —
  * so this file is only copying, compressing and reporting.
  *
- * **The archives are reproducible**: entries are written in sorted order, every
+ * **The archive step is deterministic**: entries are written in sorted order, every
  * file's timestamp is the source commit's (or `SOURCE_DATE_EPOCH`), the zip keeps
  * no extra attributes (`-X`) and the gzip header carries no name or time (`-n`'s
- * effect, by compressing the tar ourselves). The same checkout therefore produces
- * the same bytes twice, which is what lets a size or a checksum mean something.
+ * effect, by compressing the tar ourselves). Two runs over the same `dist/` are the
+ * same bytes, which is what lets a size or a checksum mean something.
+ *
+ * The **build** is not byte-reproducible, and this is worth knowing before a checksum
+ * is compared across machines: Astro stamps per-build ids into the pages and the
+ * worker names the moment it was built, so a rebuild of the same commit has the same
+ * file names and byte-identical chunks, but not the same page bytes.
  *
  * Both archivers are the system's (`zip`, `tar`): they are on every runner and on
  * the developer machines this repo is built on, and a hand-written zip writer is a
@@ -146,7 +151,7 @@ function stage(plan: BundlePlan, version: string): string {
   return dir;
 }
 
-/** Stamp every staged file with the source time, so a rebuild is the same bytes. */
+/** Stamp every staged file with the source time, so the same `dist/` zips the same way. */
 function stamp(dir: string, epoch: number): void {
   for (const file of walk(dir)) {
     utimesSync(join(dir, file), epoch, epoch);

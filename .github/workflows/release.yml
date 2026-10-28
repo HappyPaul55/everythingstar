@@ -8,8 +8,10 @@
 # `bun run verify` already built and checked the same archives, so the build here
 # is a rebuild of a commit that was already verified rather than a new gate.
 #
-# The archives are reproducible (sorted entries, the commit's timestamp, no extra
-# attributes), so rebuilding the same commit gives the same bytes.
+# The archive step is deterministic (sorted entries, the commit's timestamp, no
+# extra attributes), so the same `dist/` produces the same bytes. The build is not:
+# Astro stamps per-build ids into the pages and the worker names its build time, so
+# a rebuild of the same commit has the same file names and chunks, not the same bytes.
 #
 # The tag must equal `package.json`'s version, so the version the game shows,
 # the tag and the release cannot disagree — `package.json` is the one place the
