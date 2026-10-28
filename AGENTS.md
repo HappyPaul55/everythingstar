@@ -651,7 +651,7 @@ only gate that can see the regression, and static documents belong in
   lazy dialog still mounts as
   a native `<dialog>` with `useModal`, and its opener keeps `aria-haspopup="dialog"`, so
   Escape and focus return are unchanged. **The initial `/play` graph is the number that
-  matters** — 546.4 KiB raw / 177.2 KiB gzipped across 21 files — and
+  matters** — 560 KiB raw / 182 KiB gzipped across 26 files — and
   `scripts/check-budget.ts` gates the initial raw and gzipped sizes directly, and fails
   if a translator marker appears in it. Do not lazy-load the main screens: a flash on every navigation costs more than
   the bytes it saves.

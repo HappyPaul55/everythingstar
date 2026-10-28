@@ -321,6 +321,7 @@ export const en = {
   "screen.playlistSaveCancel": "Cancel saving this playlist",
   "screen.playlistOfflineSkipped":
     "{count} songs in this playlist can't be saved here, and are left out.",
+  "screen.playlistSaveFailed": "{title} could not be saved offline.",
   "screen.downloadsLead":
     "Songs saved on this device. They play without a connection.",
   "screen.downloadsEmpty":

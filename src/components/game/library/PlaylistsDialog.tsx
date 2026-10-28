@@ -334,6 +334,13 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
               const listed = songsBySource.get(row.url) ?? [];
               const plan = planPlaylistDownload(listed);
               const queue = offline.queue?.source === row.url ? offline.queue : null;
+              // The last failure is remembered after a queue ends, so the row can
+              // say which song did not make it rather than leaving it to the
+              // Downloads list to be noticed by its absence.
+              const failedSong =
+                !queue && offline.error
+                  ? (listed.find((song) => song.id === offline.error?.songId) ?? null)
+                  : null;
               const saveable =
                 offline.supported &&
                 !row.disabled &&
@@ -459,6 +466,11 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
                       {t("screen.playlistOfflineSkipped", {
                         count: plan.skipped.length,
                       })}
+                    </p>
+                  ) : null}
+                  {failedSong ? (
+                    <p className="config__hint is-warn" role="status">
+                      {t("screen.playlistSaveFailed", { title: failedSong.title })}
                     </p>
                   ) : null}
                   {row.problems.length > 0 ? (

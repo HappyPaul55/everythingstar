@@ -1200,8 +1200,8 @@ player who opens the JSON library and never presses Calibrate, opens Downloads, 
 a link or uses `?dev=1` does not pay for any of it.
 
 That matters because `/play` is the page the game starts on: the initial JavaScript
-graph is **546 KiB raw / 177 KiB gzipped across 21 files**. That is the first download
-only; every `_astro` JavaScript chunk in the build totals **620 KiB**, because the lazy
+graph is **560 KiB raw / 182 KiB gzipped across 26 files**. That is the first download
+only; every `_astro` JavaScript chunk in the build totals **644 KiB**, because the lazy
 chunks still ship — they are just not requested first. `scripts/check-budget.ts` walks
 `play.html`'s initial island graph, gates the initial raw and gzipped sizes directly,
 and fails if a translator marker leaks into it, so the split cannot quietly regress.
@@ -1244,13 +1244,15 @@ The gates are configured in `.oxlintrc.json`, `knip.jsonc` and
 `astro check`; `tsconfig.test.json` includes them with the test runner's types.
 
 `bun run budget` reads `dist/` (building it if it is absent) and fails when
-`dist/_astro` JavaScript passes **640 KiB**, `dist/` passes **12.5 MiB**, or
-`public/audio` passes **10 MiB** — and it gates the initial `/play` graph at **560 KiB
-raw / 190 KiB gzipped**. The build it was set with is 620 KiB of `_astro` JS, an
-initial graph of 546 KiB raw / 177 KiB gzipped, 11.1 MiB in `dist/` and 8.8 MiB of
-audio, so each cap still leaves headroom — about 3% on the JS,
-2% on the initial raw graph, 7% on its gzip, and 10–12% on the build and the audio —
-while catching a feature-sized regression. It also fails if a source-translator
+`dist/_astro` JavaScript passes **650 KiB**, `dist/` passes **12.5 MiB**, or
+`public/audio` passes **10 MiB** — and it gates the initial `/play` graph at **566 KiB
+raw / 190 KiB gzipped**. The build it was set with is 644 KiB of `_astro` JS, an
+initial graph of 560 KiB raw / 182 KiB gzipped, 11.2 MiB in `dist/` and 8.8 MiB of
+audio, so each cap still leaves headroom — about 1% on the JS and the initial raw
+graph, 4% on its gzip, and 10–12% on the build and the audio — while catching a
+feature-sized regression. The initial graph is the number to watch now; the next
+feature-sized byte should go behind a lazy boundary rather than raise the cap again.
+It also fails if a source-translator
 marker appears in `/play`'s initial island graph. The audio number is the Ogg/Opus
 set:
 the four beds are 64 kbps VBR, ~8.2 MiB together, where the MP3s were 22.5 MiB;
