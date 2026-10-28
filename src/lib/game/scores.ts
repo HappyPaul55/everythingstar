@@ -94,7 +94,7 @@ export function lineupKey(players: readonly LineupPlayer[]): string {
 }
 
 /** How many runs the board keeps. Enough to be a history, small enough not to grow. */
-const SCORE_LIMIT = 50;
+export const BOARD_LIMIT = 50;
 
 /** How many a results screen shows for one song. */
 const BEST_LIMIT = 5;
@@ -143,7 +143,7 @@ function isSavedRun(value: unknown): value is SavedRun {
 export function boardWithRun(
   board: SavedRun[],
   run: SavedRun,
-  limit = SCORE_LIMIT,
+  limit = BOARD_LIMIT,
 ): SavedRun[] {
   return [run, ...board].slice(0, Math.max(1, limit));
 }
@@ -252,4 +252,24 @@ export function saveRun(run: SavedRun): SavedRun[] {
     // A full or blocked store is not worth losing the run over.
   }
   return board;
+}
+
+/**
+ * Replace this browser's whole board — what importing a profile does.
+ *
+ * It is the same tolerance as reading one: the board is put through `parseBoard`
+ * before it is written, so an entry that is not a run is dropped rather than
+ * becoming a row no screen can read, and the same `BOARD_LIMIT` caps what is kept.
+ * A blocked store leaves the board as it was and returns what would have been kept,
+ * which is a change not remembered rather than a failed import of the other three
+ * records.
+ */
+export function replaceBoard(board: readonly SavedRun[]): SavedRun[] {
+  const kept = parseBoard(JSON.stringify(board)).slice(0, BOARD_LIMIT);
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(kept));
+  } catch {
+    // The import still replaced the settings, band and hints.
+  }
+  return kept;
 }

@@ -1,9 +1,12 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import {
   bestFor,
   boardWithRun,
+  BOARD_LIMIT,
   lineupKey,
+  loadBoard,
   parseBoard,
+  replaceBoard,
   shouldSaveRun,
   topFor,
   type SavedRun,
@@ -241,5 +244,82 @@ describe("shouldSaveRun", () => {
   test("a lost run is a verdict, not a score", () => {
     expect(shouldSaveRun({ ...summary, failed: true })).toBe(false);
     expect(shouldSaveRun({ runs: 3, failed: true, judged: 200, score: 50 })).toBe(false);
+  });
+});
+
+/**
+ * The two storage calls, against a store this test owns.
+ *
+ * `bun test` has no browser, so the module's `window.localStorage` is given one for
+ * the length of a test — the same two calls the module makes, and nothing else. It
+ * is removed afterwards so no other test inherits a board.
+ */
+function withStore(): Map<string, string> {
+  const store = new Map<string, string>();
+  Object.defineProperty(globalThis, "window", {
+    configurable: true,
+    writable: true,
+    value: {
+      localStorage: {
+        getItem: (key: string) => store.get(key) ?? null,
+        setItem: (key: string, value: string) => {
+          store.set(key, value);
+        },
+      },
+    },
+  });
+  return store;
+}
+
+afterEach(() => {
+  Reflect.deleteProperty(globalThis, "window");
+});
+
+describe("replaceBoard", () => {
+  test("writes a whole board and reads it back", () => {
+    withStore();
+    const board = [run(), run({ score: 50 })];
+    expect(replaceBoard(board)).toEqual(board);
+    expect(loadBoard()).toEqual(board);
+  });
+
+  test("caps a board at what the board keeps", () => {
+    withStore();
+    const board = Array.from({ length: BOARD_LIMIT + 10 }, (_, index) =>
+      run({ score: BOARD_LIMIT + 10 - index }),
+    );
+    expect(replaceBoard(board)).toHaveLength(BOARD_LIMIT);
+    expect(loadBoard()).toHaveLength(BOARD_LIMIT);
+  });
+
+  test("drops what is not a run rather than writing it down", () => {
+    withStore();
+    const board = [run(), { song: "x" }, null] as unknown as SavedRun[];
+    expect(replaceBoard(board)).toHaveLength(1);
+    expect(loadBoard()).toHaveLength(1);
+  });
+
+  test("an empty board clears the history", () => {
+    withStore();
+    replaceBoard([run()]);
+    expect(replaceBoard([])).toEqual([]);
+    expect(loadBoard()).toEqual([]);
+  });
+
+  test("a blocked store is a change not remembered, not a throw", () => {
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      writable: true,
+      value: {
+        localStorage: {
+          getItem: () => null,
+          setItem: () => {
+            throw new Error("blocked");
+          },
+        },
+      },
+    });
+    expect(replaceBoard([run()])).toHaveLength(1);
+    expect(loadBoard()).toEqual([]);
   });
 });
