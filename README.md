@@ -12,6 +12,8 @@ separate project, not a missing mode. The honest list is below.
 
 [![Licence: AGPL-3.0](https://img.shields.io/badge/licence-AGPL--3.0-yellow)](./LICENSE)
 ![Astro 7 + React 19](https://img.shields.io/badge/Astro%207%20%2B%20React%2019-static%20site-ff5d01)
+[![CI](https://github.com/HappyPaul55/everythingstar/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/HappyPaul55/everythingstar/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/HappyPaul55/everythingstar?label=release&color=yellow)](https://github.com/HappyPaul55/everythingstar/releases)
 
 **[Play it at everythingstar.happypaul55.com](https://everythingstar.happypaul55.com)** —
 free, no account, no cookies, no trackers, nothing to install. Install it from the
@@ -1225,6 +1227,8 @@ bun run knip             # dead-code check (knip)
 bun run budget           # dist/, audio and initial-JS size caps (scripts/check-budget.ts)
 bun run check:pwa        # manifest and worker build gate (scripts/check-pwa.ts)
 bun run verify           # lint, knip, check, test types, tests, build, check:pwa, budget
+bun run version          # the build's version: v<package.json>+<7-char sha>
+bun run version:bump     # bump package.json and print the release steps
 bun run import           # convert a folder of charts into the three documents
 bun run playlist:check   # hold a playlist URL to the game's own reader
 bun run icons            # regenerate public/icons from public/icons/brand-mark.svg
@@ -1604,9 +1608,38 @@ is what lets a provider live in its own project.
   re-signing an upload — add the new fingerprint to the same array and redeploy, then
   confirm `https://everythingstar.happypaul55.com/open` opens the app on a device. The
   `everythingstar://` scheme works with any signing certificate.
+- **A merge to `main` is recorded as a deployment.** Workers Builds deploys it and
+  posts a check run; `.github/workflows/deploy.yml` waits for that and for CI, then
+  smoke-tests the live site and fails the deployment when it is wrong. The record
+  lives under the repository's **Deployments**, in the `production` environment.
+- **`main` takes pull requests only**, with `verify` and `e2e` green. A ruleset
+  enforces it, and a direct push is refused even for the maintainer. A required check
+  renamed in `ci.yml` must be renamed in the ruleset too, or merges block.
+- **Rolling back** is Cloudflare's: Workers & Pages → the worker → Deployments →
+  Version history → roll back to the previous version. Then run
+  `gh workflow run deploy.yml` so the record matches what is live.
 - Do not add a `main`, a Worker script or any bindings to `wrangler.jsonc` for
   game features. This repo is the client; a service it needs is a separate
   project, reached through the Playlists feature.
+
+### Versions and releases
+
+The version lives in `package.json`, and every build stamps it with the commit it
+came from: `v1.0.0+abc1234`. The welcome screen shows it, and it names the service
+worker's shell cache, so **the live site can be asked what build it is** — the deploy
+workflow reads it out of `/sw.js` and fails when production is not serving the commit
+that was just merged.
+
+A release is a checkpoint, not a build. To cut one:
+
+1. `bun run version:bump patch` (or `minor`, `major`) on a `release/vX.Y.Z` branch.
+2. Open a PR titled `chore(release): vX.Y.Z` and merge it.
+3. Tag the merge commit — `git tag -a vX.Y.Z -m "EverythingStar vX.Y.Z" <sha>` — and
+   push the tag.
+
+The tag must equal `package.json`'s version, and it must be on `main`; the `Release`
+workflow refuses anything else and otherwise publishes a GitHub Release with generated
+notes. Tags cannot be moved or deleted, and a published release is immutable.
 
 ## Contributing and security
 
