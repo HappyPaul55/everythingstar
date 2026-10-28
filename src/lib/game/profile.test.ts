@@ -158,6 +158,13 @@ describe("readProfile", () => {
     expect(
       readProfile(JSON.stringify({ ...base, settings: {}, band: {} })),
     ).toEqual({ ok: false, problem: "missingBoard" });
+    // A plan without slots is not a plan the parser should be left to repair into
+    // the first band: that would replace a real band with a default.
+    expect(
+      readProfile(
+        JSON.stringify({ ...base, settings: {}, band: { slots: "nope" }, board: [] }),
+      ),
+    ).toEqual({ ok: false, problem: "missingBand" });
   });
 
   test("a file that is not an object, or not JSON, says which", () => {

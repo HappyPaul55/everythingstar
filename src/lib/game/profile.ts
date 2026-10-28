@@ -142,8 +142,14 @@ export function readProfile(raw: string): ProfileResult {
     return { ok: false, problem: "wrongVersion" };
   }
   if (!isRecord(parsed.settings)) return { ok: false, problem: "missingSettings" };
-  if (!isRecord(parsed.band)) return { ok: false, problem: "missingBand" };
   if (!Array.isArray(parsed.board)) return { ok: false, problem: "missingBoard" };
+  // A band is a plan of **slots**, not merely an object: `parsePlan` is tolerant
+  // enough to turn anything else into the first band, which would quietly replace
+  // the player's band with a default on a file that is actually broken. An empty
+  // array is a real empty band (Listen); anything but an array is not a plan.
+  if (!isRecord(parsed.band) || !Array.isArray(parsed.band.slots)) {
+    return { ok: false, problem: "missingBand" };
+  }
 
   const exportedAt =
     typeof parsed.exportedAt === "number" && Number.isFinite(parsed.exportedAt)

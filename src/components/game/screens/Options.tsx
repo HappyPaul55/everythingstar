@@ -150,6 +150,17 @@ export function Options({ settings, onSettings, plan, onPlan, onBack }: Props) {
     // Clear the input so choosing the same file twice still fires a change.
     event.target.value = "";
     if (!file) return;
+    const { PROFILE_LIMIT_BYTES, readProfile } = await import(
+      "../../../lib/game/profile"
+    );
+    // Refuse an oversized file before reading it into memory. `readProfile` has the
+    // same cap for text handed to it, but a file that is really a library should
+    // never become a string in this tab just to be rejected.
+    if (file.size > PROFILE_LIMIT_BYTES) {
+      setPending(null);
+      setMessage({ kind: "problem", problem: "tooLarge" });
+      return;
+    }
     let raw: string;
     try {
       raw = await file.text();
@@ -158,7 +169,6 @@ export function Options({ settings, onSettings, plan, onPlan, onBack }: Props) {
       setMessage({ kind: "problem", problem: "readFailed" });
       return;
     }
-    const { readProfile } = await import("../../../lib/game/profile");
     const result = readProfile(raw);
     if (!result.ok) {
       setPending(null);
