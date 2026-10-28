@@ -4,6 +4,8 @@ import {
   IDLE_TIMEOUT_MS,
   MAX_DOCUMENT_BYTES,
   MAX_PACKAGE_BYTES,
+} from "../../../lib/game/fetchLimits";
+import {
   cachedJson,
   coalesce,
   fetchBounded,

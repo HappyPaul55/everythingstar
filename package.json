@@ -20,6 +20,7 @@
     "check:pwa": "bun scripts/check-pwa.ts",
     "verify": "bun run lint && bun run knip && bun run check && bun run typecheck:tests && bun test && bun run build && bun run check:pwa && bun run budget",
     "import": "bun scripts/import/index.ts",
+    "playlist:check": "bun scripts/check-playlist.ts",
     "icons": "bun scripts/generate-icons.mjs",
     "fonts": "bun scripts/fetch-fonts.mjs",
     "cards": "bun scripts/render-cards.ts"

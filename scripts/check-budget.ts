@@ -17,13 +17,13 @@
  *   which took them from 22.5 MiB to 8.2 MiB; they are still most of a much smaller
  *   upload, and the part most likely to arrive in megabytes at a time.
  *
- * The numbers were measured on 2026-10-26, after the attract entry landed:
- * `dist/_astro` JS 607 KiB, `dist/` 11.2 MiB, `public/audio` 8.8 MiB and the
- * **initial `/play` graph** 534 KiB raw / 174 KiB gzipped across 21 files; the
+ * The numbers were measured on 2026-10-28, after the pause's quick panel landed:
+ * `dist/_astro` JS 620 KiB, `dist/` 11.1 MiB, `public/audio` 8.8 MiB and the
+ * **initial `/play` graph** 546.4 KiB raw / 177.2 KiB gzipped across 21 files; the
  * parser chunk and the dialog chunks are not
  * part of it. Each limit leaves room for normal work without leaving room for a new
- * feature to arrive unnoticed: about 5% on the JS, 5% on the initial raw graph,
- * 8% on its gzip, and 10–12% on the whole build and the audio (enough for a replaced
+ * feature to arrive unnoticed: about 3% on the JS, 2% on the initial raw graph,
+ * 7% on its gzip, and 10–12% on the whole build and the audio (enough for a replaced
  * sting, not another four-minute bed).
  *
  * The script will not measure a build it cannot find: `dist/_astro`, `dist/`,

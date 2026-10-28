@@ -90,6 +90,60 @@ test("plays the fixture song through the whole loop, pausing and resuming", asyn
   expect(leaked, "unexpected external requests").toEqual([]);
 });
 
+test("the pause's quick panel changes the note speed and practises from here", async ({
+  context,
+  page,
+}) => {
+  const leaked = await installFixtures(context);
+  await disableFullscreen(page);
+  await enterGame(page);
+
+  await openBand(page, SONG_TITLE);
+  await startRun(page);
+  await waitForPlaying(page);
+
+  await page.keyboard.press("Escape");
+  const pause = page.getByRole("dialog", { name: "Paused" });
+  await expect(pause).toBeVisible();
+
+  // The note speed is the same stepper the Options page uses: one press is one
+  // tenth, and the read-out is the setting's own words.
+  const speed = pause.getByRole("group", { name: "Note speed" });
+  await expect(speed.locator("output")).toHaveText("1.0×");
+  await speed.getByRole("button", { name: "Faster" }).click();
+  await expect(speed.locator("output")).toHaveText("1.1×");
+
+  // This band is one guitar, so there is no singer and no guide vocal row.
+  await expect(pause.getByRole("group", { name: "Guide vocal" })).toHaveCount(0);
+
+  // Practise from here: the fixture has one stretch, so that is preselected, at
+  // the record's speed and without a loop. The dialog gives its opener back.
+  const here = pause.getByRole("button", { name: "Practice this section" });
+  await here.click();
+  const dialog = page.getByRole("dialog", { name: "Practice a stretch" });
+  await expect(dialog.getByRole("radio", { name: "Whole song" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  await expect(dialog.getByRole("radio", { name: "100%" })).toHaveAttribute(
+    "aria-checked",
+    "true",
+  );
+  await expect(dialog.getByRole("checkbox", { name: "Loop this stretch" })).not.toBeChecked();
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(here).toBeFocused();
+
+  // A phone is the shape the panel has to stay compact for: the quick rows must
+  // not push Resume out of the pause the player is already looking at.
+  await page.setViewportSize({ width: 375, height: 720 });
+  await expect(pause.getByRole("button", { name: "Resume" })).toBeInViewport();
+
+  await pause.getByRole("button", { name: "Resume" }).click();
+  await expect(pause).toBeHidden();
+
+  expect(leaked, "unexpected external requests").toEqual([]);
+});
+
 test("practises a stretch at 80%, loops it, and leaves no score behind", async ({
   context,
   page,

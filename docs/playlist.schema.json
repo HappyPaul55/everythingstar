@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://everythingstar.happypaul55.com/schemas/playlist.schema.json",
+  "title": "EverythingStar playlist",
+  "description": "A playlist document: the index a jukebox lists and a band is offered from. ADVISORY ONLY — the game's reader (src/lib/game/playlist.ts) is authoritative, and it is deliberately more tolerant than this schema: an unknown field is ignored, a broken song is skipped and named, and only a document with the wrong schemaVersion is refused whole. Use `bun run playlist:check <url>` to hold a document to that same reader. The wire contract is PLAYLIST-API.md.",
+  "type": "object",
+  "required": ["schemaVersion"],
+  "properties": {
+    "schemaVersion": {
+      "const": 1,
+      "description": "Exactly 1. A string \"1\" is not a version; a document with any other version is refused as a whole."
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The name shown in the Playlists dialog."
+    },
+    "description": {
+      "type": "string",
+      "description": "A sentence about the playlist. Read but not yet shown on screen."
+    },
+    "ondemand": {
+      "description": "Makes the document a search endpoint: it lists no songs by default and is asked again with the words in a query parameter. `true` uses ?q=…; an object names another parameter. A value that is neither leaves the document a catalogue.",
+      "oneOf": [
+        { "const": true },
+        {
+          "type": "object",
+          "properties": {
+            "param": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_.-]+$",
+              "default": "q",
+              "description": "The query-string parameter the source reads. A name that cannot be a parameter falls back to q and is reported as a problem."
+            }
+          }
+        }
+      ]
+    },
+    "onDemand": {
+      "description": "The spelling the reader also accepts. Use `ondemand` in a new document.",
+      "deprecated": true,
+      "oneOf": [
+        { "const": true },
+        {
+          "type": "object",
+          "properties": {
+            "param": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+$", "default": "q" }
+          }
+        }
+      ]
+    },
+    "songs": {
+      "type": "array",
+      "description": "The entries. Required for a catalogue; a capability may omit it, though \"songs\": [] is clearer.",
+      "items": { "$ref": "#/$defs/song" }
+    }
+  },
+  "anyOf": [
+    { "required": ["songs"] },
+    { "required": ["ondemand"] },
+    { "required": ["onDemand"] }
+  ],
+  "additionalProperties": true,
+  "$defs": {
+    "song": {
+      "type": "object",
+      "description": "One song's summary: enough to draw a row, chip it and offer it to a band, plus where its own document lives. The song document is the truth where the two disagree.",
+      "required": ["id", "title", "song", "artist", "offer"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The song's key. Must be stable across edits and unique across every playlist: the library, the score board and the offline record are keyed by it."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Shown in the jukebox and filed under its first letter."
+        },
+        "song": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Where the song document lives, or a .sng package. Absolute, or relative to this playlist's own URL."
+        },
+        "artist": {
+          "description": "A bare name, or an object. The object is preferred: an id keeps two artists with one name apart, and art gives the fallback cover something to show.",
+          "oneOf": [
+            { "type": "string", "minLength": 1 },
+            {
+              "type": "object",
+              "required": ["name"],
+              "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "name": { "type": "string", "minLength": 1 },
+                "art": { "type": "string", "description": "Resolved against this playlist's URL." }
+              }
+            }
+          ]
+        },
+        "album": {
+          "type": "object",
+          "required": ["name"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "name": { "type": "string", "minLength": 1 },
+            "year": { "type": "number" },
+            "art": { "type": "string", "description": "Resolved against this playlist's URL." }
+          }
+        },
+        "art": {
+          "type": "string",
+          "description": "The cover. Falls back to the album's, then the artist's, then the song's initials. Resolved against this playlist's URL."
+        },
+        "accent": {
+          "type": "string",
+          "description": "A CSS colour for the fallback cover tile, e.g. #3fae5a."
+        },
+        "durationMs": {
+          "type": "number",
+          "minimum": 0,
+          "description": "The song's length in milliseconds. 0 is accepted and shown as 0:00, but the list and the run's clock need the real value."
+        },
+        "previewStartMs": {
+          "type": "number",
+          "minimum": 0,
+          "default": 0,
+          "description": "Where the jukebox's preview starts when the song has no preview clip of its own."
+        },
+        "offer": {
+          "type": "object",
+          "description": "What a band can choose before the song document is fetched. It must agree with the song's own parts.",
+          "properties": {
+            "instruments": {
+              "type": "array",
+              "description": "One entry per part, with the levels its charts carry. Lead and rhythm guitar are separate seats, so list both when the song says both. Do not put vocals here: the voice is its own field and a vocals entry is reported and skipped.",
+              "items": {
+                "type": "object",
+                "required": ["role", "difficulties"],
+                "properties": {
+                  "role": {
+                    "enum": ["guitar", "bass", "drums", "keys", "dance", "lead_guitar", "rhythm_guitar"],
+                    "description": "The part. A plain `guitar` is the fallback for a song with one guitar part."
+                  },
+                  "difficulties": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": { "enum": ["easy", "normal", "hard", "expert"] },
+                    "description": "The levels this part's charts carry. An instrument with none is skipped with a problem, so leave it out instead."
+                  }
+                }
+              }
+            },
+            "voice": {
+              "description": "The words, or null/absent for an instrumental. `vocals` means the words carry pitch and are sung; `lyrics` means they carry none and are typed or read.",
+              "oneOf": [
+                { "type": "null" },
+                {
+                  "type": "object",
+                  "required": ["chartType"],
+                  "properties": {
+                    "chartType": { "enum": ["vocals", "lyrics"] },
+                    "parts": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 3,
+                      "default": 1,
+                      "description": "1 is a solo, 2 a duet, 3 a trio — the song's own fact, never a count of players. A fourth harmony is shared across the three."
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "video": {
+          "description": "A backdrop of the song's own. Omit it rather than send a video that cannot be embedded: the game falls back to the song's art, then its own artwork.",
+          "oneOf": [
+            {
+              "type": "object",
+              "required": ["kind", "id"],
+              "properties": {
+                "kind": { "const": "youtube" },
+                "id": { "type": "string", "minLength": 1, "description": "The YouTube video id, not a URL." }
+              }
+            },
+            {
+              "type": "object",
+              "required": ["kind", "url"],
+              "properties": {
+                "kind": { "const": "video" },
+                "url": { "type": "string", "minLength": 1, "description": "A direct video file. Resolved against this playlist's URL." }
+              }
+            }
+          ]
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

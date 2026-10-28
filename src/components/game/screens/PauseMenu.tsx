@@ -1,14 +1,42 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useT } from "../../../i18n/react";
-import type { PracticePlan, PracticeSection } from "../../../lib/game/practice";
+import {
+  isMelodyKind,
+  type BandSetup,
+} from "../../../lib/game/band/types";
+import {
+  sectionAt,
+  type PracticePlan,
+  type PracticeSection,
+} from "../../../lib/game/practice";
+import {
+  LAG_LIMIT_MS,
+  NOTE_SPEED_MAX,
+  NOTE_SPEED_MIN,
+  NOTE_SPEED_STEP,
+  formatLag,
+  formatNoteSpeed,
+  snapNoteSpeed,
+  stepLag,
+  type Settings,
+} from "../../../lib/game/settings";
 import type { Song } from "../../../lib/game/song";
+import { useClock } from "../band/StageClock";
 import { NativeDialog } from "../ui/NativeDialog";
+import { StepButton } from "../ui/StepButton";
 import { PracticeDialog } from "./PracticeDialog";
 
 /**
  * The pause: resume where you were, start the song again, practise a stretch, or
  * leave the stage. Escape opens it too (see the island), which is the key a
  * player will reach for.
+ *
+ * Two things that usually mean a page away are here, because they are about the
+ * run in front of you rather than about the game: how fast the notes come and how
+ * late the sound is, plus the song's guide vocal when somebody is singing. They
+ * write the same settings Options does — there is no second store and no second
+ * rule — and "Practice this section" opens the same dialog as Practice, seeded
+ * with the stretch the playhead is in.
  *
  * Practice is a **dialog over the pause**, not a screen. It hands its plan to the
  * session, which dispatches the stage entrance: the pause overlay goes away and the
@@ -27,7 +55,14 @@ interface Props {
   onStartPractice: (plan: PracticePlan) => void;
   /** Leave practice and put the run back at the top at the record's speed. */
   onStopPractice: () => void;
+  settings: Settings;
+  onSettings: (patch: Partial<Settings>) => void;
+  /** Who is on stage, so the guide vocal is offered only when somebody sings. */
+  setup: BandSetup;
 }
+
+/** Which way the practice dialog was opened: the pause's own button, or "here". */
+type Choosing = "open" | "section" | null;
 
 export function PauseMenu({
   song,
@@ -39,9 +74,46 @@ export function PauseMenu({
   durationMs,
   onStartPractice,
   onStopPractice,
+  settings,
+  onSettings,
+  setup,
 }: Props) {
   const t = useT();
-  const [choosing, setChoosing] = useState(false);
+  const clock = useClock();
+  const [choosing, setChoosing] = useState<Choosing>(null);
+  /** The plan "Practice this section" seeded, read once at the press. */
+  const [seed, setSeed] = useState<PracticePlan | null>(null);
+  const speedLabel = useId();
+  const lagLabel = useId();
+  const vocalLabel = useId();
+
+  // A singer is a words player who is not typing. The song's pitch decides that
+  // when the band is built, so a lyrics-only song never reports one.
+  const singer = setup.players.some(
+    (player) => isMelodyKind(player.kind) && player.wordsMode !== "type",
+  );
+  const slowest = settings.noteSpeed <= NOTE_SPEED_MIN;
+  const fastest = settings.noteSpeed >= NOTE_SPEED_MAX;
+  const earliest = settings.audioLagMs <= -LAG_LIMIT_MS;
+  const latest = settings.audioLagMs >= LAG_LIMIT_MS;
+
+  /**
+   * Practise the stretch the song is in **now**, at the record's speed and without
+   * a loop: the plan a player wants on the first press. The playhead is read at the
+   * press rather than rendered, so the pause never re-renders on a frame, and a
+   * moment before the first section falls back to the first choice rather than
+   * offering nothing.
+   */
+  const practiceHere = () => {
+    const section = sectionAt(sections, clock.timeRef.current) ?? sections[0] ?? null;
+    setSeed(
+      section
+        ? { startMs: section.startMs, endMs: section.endMs, speed: 1, loop: false }
+        : null,
+    );
+    setChoosing("section");
+  };
+
   return (
     <>
       <NativeDialog
@@ -55,15 +127,111 @@ export function PauseMenu({
       >
         <h2 className="screen__title">{t("screen.paused")}</h2>
         <p className="screen__lede">{song.title}</p>
+        <div className="quick" role="group" aria-label={t("pause.quick")}>
+          <div className="quick__row">
+            <span className="quick__name" id={speedLabel}>
+              {t("pause.noteSpeed")}
+            </span>
+            <div className="quick__control" role="group" aria-labelledby={speedLabel}>
+              <StepButton
+                direction={-1}
+                label={t("pause.speedSlower")}
+                blocked={slowest}
+                onStep={() =>
+                  onSettings({
+                    noteSpeed: snapNoteSpeed(settings.noteSpeed - NOTE_SPEED_STEP),
+                  })
+                }
+              />
+              <output className="quick__value" aria-live="polite" aria-atomic="true">
+                {formatNoteSpeed(settings.noteSpeed)}
+              </output>
+              <StepButton
+                direction={1}
+                label={t("pause.speedFaster")}
+                blocked={fastest}
+                onStep={() =>
+                  onSettings({
+                    noteSpeed: snapNoteSpeed(settings.noteSpeed + NOTE_SPEED_STEP),
+                  })
+                }
+              />
+            </div>
+          </div>
+          <div className="quick__row">
+            <span className="quick__name" id={lagLabel}>
+              {t("pause.audioLag")}
+            </span>
+            <div className="quick__control" role="group" aria-labelledby={lagLabel}>
+              <StepButton
+                direction={-1}
+                label={t("screen.lagEarlier")}
+                blocked={earliest}
+                onStep={() =>
+                  onSettings({ audioLagMs: stepLag(settings.audioLagMs, -1) })
+                }
+              />
+              <output className="quick__value" aria-live="polite" aria-atomic="true">
+                {formatLag(settings.audioLagMs)}
+              </output>
+              <StepButton
+                direction={1}
+                label={t("screen.lagLater")}
+                blocked={latest}
+                onStep={() => onSettings({ audioLagMs: stepLag(settings.audioLagMs, 1) })}
+              />
+            </div>
+          </div>
+          {/* The song's own voice under a singer: karaoke when off, and the only
+              way to hear a part drop out on a miss when on. The same setting
+              Options writes, offered here because it is about the run. */}
+          {singer ? (
+            <div className="quick__row">
+              <span className="quick__name" id={vocalLabel}>
+                {t("pause.guideVocal")}
+              </span>
+              <div className="quick__control" role="group" aria-labelledby={vocalLabel}>
+                <button
+                  type="button"
+                  className={settings.guideVocal ? "slot__option is-active" : "slot__option"}
+                  aria-pressed={settings.guideVocal}
+                  data-sound="select"
+                  onClick={() => onSettings({ guideVocal: true })}
+                >
+                  {t("screen.guideVocalOn")}
+                </button>
+                <button
+                  type="button"
+                  className={settings.guideVocal ? "slot__option" : "slot__option is-active"}
+                  aria-pressed={!settings.guideVocal}
+                  data-sound="select"
+                  onClick={() => onSettings({ guideVocal: false })}
+                >
+                  {t("screen.guideVocalOff")}
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
         <div className="screen__practice">
           <button
             type="button"
             className="band-btn"
             aria-haspopup="dialog"
-            onClick={() => setChoosing(true)}
+            onClick={() => setChoosing("open")}
           >
             {t("practice.open")}
           </button>
+          {sections.length > 0 ? (
+            <button
+              type="button"
+              className="band-btn"
+              aria-haspopup="dialog"
+              onClick={practiceHere}
+            >
+              {t("pause.practiceHere")}
+            </button>
+          ) : null}
           {practice ? (
             <button type="button" className="band-btn" onClick={onStopPractice}>
               {t("practice.stop")}
@@ -93,10 +261,10 @@ export function PauseMenu({
       {choosing ? (
         <PracticeDialog
           sections={sections}
-          initial={practice}
+          initial={choosing === "section" ? seed : practice}
           durationMs={durationMs}
           onStart={onStartPractice}
-          onClose={() => setChoosing(false)}
+          onClose={() => setChoosing(null)}
         />
       ) : null}
     </>

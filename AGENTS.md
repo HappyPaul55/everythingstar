@@ -98,6 +98,8 @@ bun run knip             # dead-code check (knip)
 bun run budget           # dist/ and public/audio size caps
 bun run check:pwa        # manifest and worker build gate (scripts/check-pwa.ts)
 bun run verify           # lint, knip, check, test types, tests, build, check:pwa, budget
+bun run import           # convert a folder of charts into the three documents
+bun run playlist:check   # hold a playlist URL to the game's own reader
 bun run icons            # regenerate public/icons from public/icons/brand-mark.svg
 bun run fonts            # re-download the self-hosted fonts
 ```
@@ -135,8 +137,16 @@ only gate that can see the regression, and static documents belong in
 - `PLAYLIST-API.md` — **the wire contract** another team implements a library or an
   on-demand provider against: the playlist, song and chart documents, the `?q=` search
   request and answer, URL resolution, CORS, timing, a complete worked example, a
-  YouTube-resolver section and an acceptance checklist. Keep it in step with
-  `playlist.ts` and `source.ts`; they are the readers it documents.
+  YouTube-resolver section, a "Check yours" command and an acceptance checklist. Keep it
+  in step with `playlist.ts` and `source.ts`; they are the readers it documents.
+- `docs/playlist.schema.json` + `scripts/check-playlist.ts` — **a provider's checker**,
+  written against the game's own reader rather than beside it: the schema is the advisory
+  shape for an editor (draft 2020-12) and says so, while `bun run playlist:check <url>`
+  puts a document through `readPlaylist` and the game's own URL policy and body cap
+  (`fetchLimits.ts`, shared with the library's bounded fetch) and exits 1 on any problem
+  the reader named. The pure report is `src/lib/game/playlistCheck.ts`; the schema can
+  never be authoritative, because only the reader knows what resolves and what is listed
+  twice.
 - `DEEPLINKS.md` — **the link contract**: `Open in EverythingStar`, `Add Playlist…` and
   `Add Song…`, the confirmation rule, URL and payload limits, the Android App Link and
   `everythingstar://` routes, the cold/warm hand-off into the WebView, and the
@@ -253,8 +263,9 @@ only gate that can see the regression, and static documents belong in
   cursor**: `ScreenFocus` announces a screen and puts focus on its starting control,
   `GamepadNav` turns D-pad/stick/A/B/Start into that same focus, `nav.ts` owns the
   screen roots and focusable query, `modalStack.ts` is the order of open dialogs (so
-  the top one is the one a pad is on), and `NativeDialog`/`useModal` give every overlay
-  a native dialog, a focus trap and its opener back. `ui/focus.ts` is the pure
+  the top one is the one a pad is on, `NativeDialog`/`useModal` give every overlay
+  a native dialog, a focus trap and its opener back, and `StepButton` is the one
+  stepper both Options and the pause's quick panel draw. `ui/focus.ts` is the pure
   spatial geometry; `src/lib/game/controls/uiPad.ts` is the pad's UI mapping.
 - `src/lib/game/screens.ts` — **the screen machine**: the screens, the events that
   move between them, `screenAfter`, `wantsCharts`, `opensRun` and `backEventFor`.
@@ -320,7 +331,10 @@ only gate that can see the regression, and static documents belong in
   per player, each with its own controller settings behind a gear), `SlotSettings`
   (one player's device and their learned mapping), `playerBits` (the two things a
   player is drawn with, shared by the band screen and `Options`), `Loading`,
-  `PauseMenu`, `Results`. The **countdown** is not a component: it is the stage's
+  `PauseMenu` (resume, restart, leave — plus a **quick panel** for the note speed,
+  the audio lag and the guide vocal when somebody is singing, and **Practice this
+  section**, which seeds `PracticeDialog` with the stretch under the playhead),
+  `Results`. The **countdown** is not a component: it is the stage's
   entrance. They read what they
   need from context (the run board, the song, the clock) and take callbacks for
   everything else.
@@ -597,7 +611,7 @@ only gate that can see the regression, and static documents belong in
   later is invisible while a whole-screen spinner is not. A lazy dialog still mounts as
   a native `<dialog>` with `useModal`, and its opener keeps `aria-haspopup="dialog"`, so
   Escape and focus return are unchanged. **The initial `/play` graph is the number that
-  matters** — 542.0 KiB raw / 176.0 KiB gzipped across 21 files — and
+  matters** — 546.4 KiB raw / 177.2 KiB gzipped across 21 files — and
   `scripts/check-budget.ts` gates the initial raw and gzipped sizes directly, and fails
   if a translator marker appears in it. Do not lazy-load the main screens: a flash on every navigation costs more than
   the bytes it saves.
@@ -1712,6 +1726,19 @@ only gate that can see the regression, and static documents belong in
   the plan, and Stop practice clears it and starts again from the top at the
   record's speed. A lost run is a **results verdict** (`lostRun`), not a mid-song
   fail mode, so practice is not a shield from one.
+- **The pause carries the run's own settings, and nothing else.** `PauseMenu` has a
+  compact quick panel: the **note speed**, the **audio lag** and the **guide vocal**
+  when the band has a singer. They are the same values, the same pure steppers
+  (`snapNoteSpeed`, `stepLag`, `formatNoteSpeed`, `formatLag`) and the same session
+  `changeSettings` that Options writes — a third **surface**, never a second store,
+  so the two screens cannot disagree and a change lands on the run in front of the
+  player. The guide vocal row exists only when `setup` has a words player who is not
+  typing, because there is nothing to hold under a typist. **Practice this section**
+  reads `useClock().timeRef.current` at the press, takes `sectionAt(session
+  .practiceSections, time)` (falling back to the first section) and opens the same
+  `PracticeDialog` seeded with `{ startMs, endMs, speed: 1, loop: false }`; the
+  existing Practice button stays. It is a seeded dialog, not a second practice path:
+  every press still goes through `startPractice` and the one `practice` event.
 
 - **The band layout is a pure function — keep it that way.** All region and panel
   geometry lives in `src/lib/game/band/layout.ts` and is unit-tested; components

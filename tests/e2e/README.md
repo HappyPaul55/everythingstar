@@ -29,7 +29,7 @@ things that need a page.
 | `jukebox-window.spec.ts` | 1 | a 2,000-song list windowed in the DOM |
 | `keyboard.spec.ts` | 1 | a `keydown`'s own timestamp projected onto the song clock; a chord |
 | `keys-view.spec.ts` | 2 | the words riding the pitch roll's own translated layer, and a lyrics-only song with no roll |
-| `loop.spec.ts` | 7 | the screen machine end to end, the practice loop, Listen, the search field's Escape, jukebox focus, a breakpoint, portrait rails |
+| `loop.spec.ts` | 8 | the screen machine end to end, the pause's quick panel, the practice loop, Listen, the search field's Escape, jukebox focus, a breakpoint, portrait rails |
 | `menu.spec.ts` | 2 | the menu's two branches, Escape as back, both calibration dialogs |
 | `midi.spec.ts` | 3 | Web MIDI as an event route, learning a mapping, a refusal that changes nothing |
 | `note-style.spec.ts` | 1 | the setting reaching the highway's drawing |
@@ -48,7 +48,7 @@ things that need a page.
 `pwa.spec.ts` and `play-style.spec.ts` also run under `playwright.pwa.config.ts`
 (`bun run test:pwa`) against a production build: the first installs the worker and
 reloads offline, the second proves the built CSS kept its layer order. The dev
-suite is 47 tests in 24 files.
+suite is 48 tests in 24 files.
 
 ## What moved out, and why
 

@@ -2500,6 +2500,60 @@
   .screen--paused .screen__practice .band-btn {
     min-height: 44px;
   }
+  /* The pause's quick settings: how fast the notes come, how late the sound is, and
+     the guide vocal when somebody is singing. They are the settings that are about
+     the run in front of you, so they sit beside the answers rather than a page
+     away — one compact stack, a row per setting, at the pause's own width. */
+  .quick {
+    display: flex;
+    flex-direction: column;
+    width: min(24rem, 100%);
+    padding: 0.4rem 0.65rem;
+    background: rgba(12, 13, 10, 0.55);
+    border: 1px solid rgba(250, 250, 244, 0.12);
+    border-radius: var(--radius-brand);
+    text-align: left;
+  }
+  .quick__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.25rem 0;
+  }
+  .quick__row + .quick__row {
+    border-top: 1px dashed rgba(250, 250, 244, 0.14);
+  }
+  .quick__name {
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.72);
+  }
+  .quick__control {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+  .quick__value {
+    min-width: 3.9rem;
+    font-family: var(--font-mono);
+    font-size: 0.74rem;
+    text-align: center;
+    color: var(--color-cream);
+  }
+  /* The steppers keep the 44px target here, where a pause is often a thumb. */
+  .quick .option__step {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+  .quick .slot__option {
+    min-height: 44px;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.62rem;
+  }
   .screen__spinner {
     width: 2.2rem;
     height: 2.2rem;

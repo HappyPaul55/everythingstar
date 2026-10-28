@@ -7,6 +7,7 @@ import {
   BACKDROP_DIM_MAX,
   BACKDROP_DIM_STEP,
   formatLag,
+  formatNoteSpeed,
   HIGHWAY_VIEWS,
   LAG_LIMIT_MS,
   NOTE_SPEED_MAX,
@@ -20,6 +21,7 @@ import {
   type NoteStyle,
   type Settings,
 } from "../../../lib/game/settings";
+import { StepButton } from "../ui/StepButton";
 import { GearButton, kindLabel, kindTone } from "./playerBits";
 import { SlotSettings } from "./SlotSettings";
 import { ScreenBackButton } from "./ScreenBackButton";
@@ -362,7 +364,7 @@ export function Options({ settings, onSettings, plan, onPlan, onBack }: Props) {
             max={NOTE_SPEED_MAX}
             step={NOTE_SPEED_STEP}
             value={settings.noteSpeed}
-            format={formatSpeed}
+            format={formatNoteSpeed}
             onChange={(speed) => onSettings({ noteSpeed: snapNoteSpeed(speed) })}
           />
 
@@ -548,7 +550,7 @@ function LagOption({
   return (
     <OptionRow name={name} hints={hints}>
       <div className="option__control option__control--lag" role="group" aria-label={name}>
-        <LagStep
+        <StepButton
           direction={-1}
           blocked={earliest}
           label={t("screen.lagEarlier")}
@@ -558,7 +560,7 @@ function LagOption({
         <output className="option__value" aria-live="polite" aria-atomic="true">
           {format(value)}
         </output>
-        <LagStep
+        <StepButton
           direction={1}
           blocked={latest}
           label={t("screen.lagLater")}
@@ -576,37 +578,6 @@ function LagOption({
         </button>
       </div>
     </OptionRow>
-  );
-}
-
-/** One direction of a lag stepper. At the limit it refuses rather than vanishes. */
-function LagStep({
-  direction,
-  blocked,
-  label,
-  defaultFocus = false,
-  onStep,
-}: {
-  direction: -1 | 1;
-  blocked: boolean;
-  label: string;
-  defaultFocus?: boolean;
-  onStep: (direction: -1 | 1) => void;
-}) {
-  return (
-    <button
-      type="button"
-      className="option__step"
-      aria-label={label}
-      aria-disabled={blocked}
-      data-nav-default={defaultFocus ? "true" : undefined}
-      data-sound={blocked ? "refuse" : "select"}
-      onClick={() => {
-        if (!blocked) onStep(direction);
-      }}
-    >
-      {direction === -1 ? "−" : "+"}
-    </button>
   );
 }
 
@@ -697,11 +668,6 @@ function RangeOption({
 /** A percentage as it reads, `80%`. */
 function formatPercent(value: number): string {
   return `${value}%`;
-}
-
-/** A note speed as it reads: one decimal and a multiplier sign, `1.0×`. */
-function formatSpeed(speed: number): string {
-  return `${speed.toFixed(1)}×`;
 }
 
 /** What a seat holds, in the words of the screen. */
