@@ -1,0 +1,58 @@
+# A release is a checkpoint, not a build.
+#
+# A `v*` tag is cut by hand on a commit that has already passed CI on protected
+# `main`, so this workflow publishes a GitHub Release and builds nothing. The
+# repository is the source and a static site has no binary to publish, which is
+# why no artifacts and no source archive are attached.
+#
+# The tag must equal `package.json`'s version, so the version the game shows,
+# the tag and the release cannot disagree — `package.json` is the one place the
+# version is written. A tag that is not an ancestor of `main` is refused, so a
+# stray branch cannot invent a release.
+#
+# `bun run verify` is deliberately not repeated here: the tagged commit is on
+# `main`, where those checks are already required, so re-running them would add
+# ten minutes to every release for no new information.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: The tag is the version, and it is on main
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(jq -r .version package.json)"
+          if [ "$tag" != "$pkg" ]; then
+            echo "tag v$tag does not match package.json $pkg" >&2
+            exit 1
+          fi
+          git fetch --depth=1 origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "tag is not on main" >&2
+            exit 1
+          fi
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "EverythingStar $GITHUB_REF_NAME" \
+            --generate-notes \
+            --verify-tag \
+            --latest
