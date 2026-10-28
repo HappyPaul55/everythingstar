@@ -6,6 +6,7 @@ import { SongCover } from "./SongCover";
 import {
   formatBytes,
   type OfflineEntry,
+  type OfflineQueueState,
   type OfflineStorageInfo,
 } from "./downloads";
 
@@ -26,8 +27,10 @@ interface Props {
   storage: OfflineStorageInfo | null;
   /** A download, removal or clear is running; the others wait for it. */
   busy: boolean;
-  /** The song being downloaded, if a download is the job in flight. */
+  /** The song being downloaded, if a single download is the job in flight. */
   busyId: string | null;
+  /** The playlist queue in flight, if the job is a whole playlist. */
+  queue: OfflineQueueState | null;
   onRemove: (id: string) => void;
   onClear: () => void;
   onCancel: () => void;
@@ -47,6 +50,7 @@ export function DownloadsDialog({
   storage,
   busy,
   busyId,
+  queue,
   onRemove,
   onClear,
   onCancel,
@@ -95,7 +99,15 @@ export function DownloadsDialog({
       )}
 
       <div className="downloads__footer">
-        {busyId !== null ? (
+        {queue ? (
+          <p className="downloads__queue" role="status">
+            {t("screen.downloadQueue", {
+              done: queue.done,
+              total: queue.total,
+            })}
+          </p>
+        ) : null}
+        {busyId !== null || queue !== null ? (
           <button
             type="button"
             className="band-btn downloads__cancel"

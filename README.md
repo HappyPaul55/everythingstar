@@ -251,7 +251,9 @@ acceptance checklist. A playlist row's **Copy link** produces the canonical addr
   leaves the jukebox and can be **cancelled**; a song found through an on-demand search
   is still listed after a reload because the offline records are merged into the library
   last. YouTube-backed songs and songs already in a local folder are refused rather than
-  half-saved.
+  half-saved. A whole **playlist** can be saved from the Playlists dialog with **Save
+  playlist offline**: a cancellable queue over the same per-song records, which stops on
+  a full device and leaves the songs it already kept.
 - **The stage**: a song's charts are fetched for the band that is playing and judged per
   player; words can be sung into a microphone (YIN, judged on how much of each note's
   own span was held in tune) or typed (TypeStar's forgiving rules), with the choice
@@ -856,7 +858,13 @@ fallback), while stems and art are cache-first — a saved audio file is a pinne
 A download is a single **page-wide job**: it keeps running when the player walks from the
 jukebox to the band, a screen that mounts mid-download sees it already in progress, and
 the Downloads dialog offers **Cancel**. It is also all or nothing: a cancelled, failed or
-over-quota attempt deletes what it wrote. A song is about 23 MB, the manager shows the
+over-quota attempt deletes what it wrote. **A whole playlist can be saved the same way**:
+each enabled catalogue row in the Playlists dialog offers **Save playlist offline**, which
+walks the playlist through that same downloader one song at a time and shows *Saving 3 of
+12…*. Completed songs stay if a later one fails; an ordinary failure is counted and the
+queue carries on, while a **quota** failure stops the rest. A saved playlist is therefore a
+set of the ordinary per-song records rather than a second manifest, and removing one song
+takes only its files. Local folders, pinned songs and on-demand playlists offer no button. A song is about 23 MB, the manager shows the
 device's storage use and the app/game/WebView versions, and removal or **Clear all
 downloads** is exact. A downloaded on-demand song is still listed after a reload, too:
 its summary lives only in the offline record, so the library merges those records in

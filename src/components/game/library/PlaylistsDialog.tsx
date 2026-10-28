@@ -1,7 +1,15 @@
-import { useCallback, useEffect, useRef, useState, type InputHTMLAttributes } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type InputHTMLAttributes,
+} from "react";
 import { useT } from "../../../i18n/react";
 import type { Translate } from "../../../i18n";
 import { shareUrl, type IntentKind } from "../../../lib/game/intent";
+import type { Song } from "../../../lib/game/song";
 import { shortDate } from "../../../lib/game/when";
 import { fetchableUrl, hostOf, MAX_URL_CHARS, mixedContentBlocked } from "../../../lib/game/url";
 import { filesFromDrop } from "./drop";
@@ -16,23 +24,27 @@ import {
 } from "./importGuard";
 import { IMPORT_ACCEPT } from "./localImport";
 import { canForget, type FolderRow, type Library, type PlaylistRow } from "./useLibrary";
+import { planPlaylistDownload } from "./downloads";
+import type { OfflineController } from "./useOffline";
 import { NativeDialog } from "../ui/NativeDialog";
 
 /**
  * The playlists: where the songs come from, and the one place to say so.
  *
  * A playlist is a URL and nothing else — the built-in one included — so this is a
- * list of them, what each one gave us, and the two things a reader can do about it:
- * **refresh** one (or all of them) when they know it has changed, and **forget** one
- * they are done with. Nothing is fetched behind their back, which is why Refresh is
- * a button rather than a thing that happens on load.
+ * list of them, what each one gave us, and the things a reader can do about it:
+ * **refresh** one (or all of them) when they know it has changed, **forget** one
+ * they are done with, and **save** a catalogue for offline play. Nothing is fetched
+ * behind their back, which is why Refresh is a button rather than a thing that
+ * happens on load, and why saving a playlist is a press of its own.
  */
 interface Props {
   library: Library;
+  offline: OfflineController;
   onClose: () => void;
 }
 
-export function PlaylistsDialog({ library, onClose }: Props) {
+export function PlaylistsDialog({ library, offline, onClose }: Props) {
   const t = useT();
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState<"files" | "folder" | "drop" | null>(null);
@@ -56,6 +68,19 @@ export function PlaylistsDialog({ library, onClose }: Props) {
   const insecure = host !== null && mixedContentBlocked(typed, window.location.protocol);
   const addable = fetchableUrl(typed) !== null;
   const importable = supportsImports();
+
+  // One playlist's songs, by the URL that listed them: the same `from` a song's
+  // offline record is deduplicated by. Grouped once, because the dialog redraws on
+  // every download tick and a filter per row would walk the whole library per tick.
+  const songsBySource = useMemo(() => {
+    const grouped = new Map<string, Song[]>();
+    for (const song of library.songs) {
+      const listed = grouped.get(song.from);
+      if (listed) listed.push(song);
+      else grouped.set(song.from, [song]);
+    }
+    return grouped;
+  }, [library.songs]);
 
   /** Let go of the dialog, if `epoch` is still the attempt holding it. */
   const finish = useCallback((epoch: number) => {
@@ -302,94 +327,149 @@ export function PlaylistsDialog({ library, onClose }: Props) {
           </div>
         ) : (
           <ul className="playlists">
-            {library.playlists.map((row) => (
-              <li
-                className={row.disabled ? "playlists__row is-disabled" : "playlists__row"}
-                key={row.url}
-              >
-                <div className="playlists__head">
-                  <span className="playlists__name">
-                    {row.builtIn
-                      ? t("screen.playlistDefaultName")
-                      : row.name ?? fileName(row.url)}
-                  </span>
-                  {row.disabled ? null : row.onDemand ? (
-                    <span className="playlists__count">
-                      {t("screen.playlistOnDemand")}
+            {library.playlists.map((row) => {
+              // What saving this row would do, worked out before anybody presses:
+              // a catalogue can say how many songs it would keep, and a row that is
+              // off, a capability or already on this device simply offers nothing.
+              const listed = songsBySource.get(row.url) ?? [];
+              const plan = planPlaylistDownload(listed);
+              const queue = offline.queue?.source === row.url ? offline.queue : null;
+              const saveable =
+                offline.supported &&
+                !row.disabled &&
+                row.onDemand === null &&
+                plan.songs.length > 0;
+              return (
+                <li
+                  className={row.disabled ? "playlists__row is-disabled" : "playlists__row"}
+                  key={row.url}
+                >
+                  <div className="playlists__head">
+                    <span className="playlists__name">
+                      {row.builtIn
+                        ? t("screen.playlistDefaultName")
+                        : row.name ?? fileName(row.url)}
                     </span>
-                  ) : (
-                    <span className="playlists__count">
-                      {row.count === 1
-                        ? t("screen.playlistOneSong")
-                        : t("screen.playlistSongs", { count: row.count })}
-                    </span>
-                  )}
-                </div>
-                <p className="playlists__url">{row.url}</p>
-                {row.onDemand && !row.disabled ? (
-                  <p className="config__hint">{t("screen.playlistOnDemandHint")}</p>
-                ) : null}
-                <div className="playlists__foot">
-                  <span className="playlists__state">{state(t, row)}</span>
-                  <button
-                    type="button"
-                    className="band-btn"
-                    title={t("screen.playlistCopyLink")}
-                    onClick={() => copyLink("playlist", row.url)}
-                    data-sound="select"
-                  >
-                    {copied === row.url
-                      ? t("screen.playlistCopied")
-                      : t("screen.playlistCopyLink")}
-                  </button>
-                  {row.disabled ? (
+                    {row.disabled ? null : row.onDemand ? (
+                      <span className="playlists__count">
+                        {t("screen.playlistOnDemand")}
+                      </span>
+                    ) : (
+                      <span className="playlists__count">
+                        {row.count === 1
+                          ? t("screen.playlistOneSong")
+                          : t("screen.playlistSongs", { count: row.count })}
+                      </span>
+                    )}
+                  </div>
+                  <p className="playlists__url">{row.url}</p>
+                  {row.onDemand && !row.disabled ? (
+                    <p className="config__hint">{t("screen.playlistOnDemandHint")}</p>
+                  ) : null}
+                  <div className="playlists__foot">
+                    <span className="playlists__state">{state(t, row)}</span>
                     <button
                       type="button"
-                      className="band-btn band-btn--primary"
-                      onClick={() => library.setEnabled(row.url, true)}
+                      className="band-btn"
+                      title={t("screen.playlistCopyLink")}
+                      onClick={() => copyLink("playlist", row.url)}
                       data-sound="select"
                     >
-                      {t("screen.playlistEnable")}
+                      {copied === row.url
+                        ? t("screen.playlistCopied")
+                        : t("screen.playlistCopyLink")}
                     </button>
-                  ) : (
-                    <>
+                    {row.disabled ? (
                       <button
                         type="button"
-                        className="band-btn"
-                        onClick={() => library.refresh(row.url)}
+                        className="band-btn band-btn--primary"
+                        onClick={() => library.setEnabled(row.url, true)}
+                        data-sound="select"
                       >
-                        {t("screen.playlistRefresh")}
+                        {t("screen.playlistEnable")}
                       </button>
-                      {row.builtIn ? (
+                    ) : (
+                      <>
                         <button
                           type="button"
                           className="band-btn"
-                          onClick={() => library.setEnabled(row.url, false)}
-                          data-sound="back"
+                          onClick={() => library.refresh(row.url)}
                         >
-                          {t("screen.playlistDisable")}
+                          {t("screen.playlistRefresh")}
                         </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className="band-btn"
-                          onClick={() => library.remove(row.url)}
-                          data-sound="back"
-                        >
-                          {t("screen.playlistRemove")}
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
-                {row.problems.length > 0 ? (
-                  <p className="config__hint is-warn">
-                    {t("screen.playlistProblems", { count: row.problems.length })}:{" "}
-                    {row.problems.slice(0, 3).join("; ")}
-                  </p>
-                ) : null}
-              </li>
-            ))}
+                        {saveable ? (
+                          queue ? (
+                            <button
+                              type="button"
+                              className="band-btn"
+                              aria-label={t("screen.playlistSaveCancel")}
+                              onClick={() => offline.cancel()}
+                              data-sound="back"
+                            >
+                              {t("screen.downloadCancel")}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="band-btn"
+                              disabled={offline.busy}
+                              onClick={() => offline.downloadPlaylist(listed, row.url)}
+                              data-sound="select"
+                            >
+                              {plan.songs.length === 1
+                                ? t("screen.playlistSaveOfflineOne")
+                                : t("screen.playlistSaveOffline", {
+                                    count: plan.songs.length,
+                                  })}
+                            </button>
+                          )
+                        ) : null}
+                        {row.builtIn ? (
+                          <button
+                            type="button"
+                            className="band-btn"
+                            onClick={() => library.setEnabled(row.url, false)}
+                            data-sound="back"
+                          >
+                            {t("screen.playlistDisable")}
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="band-btn"
+                            onClick={() => library.remove(row.url)}
+                            data-sound="back"
+                          >
+                            {t("screen.playlistRemove")}
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  {queue ? (
+                    <p className="config__hint" role="status">
+                      {t("screen.downloadQueue", {
+                        done: queue.done,
+                        total: queue.total,
+                      })}
+                    </p>
+                  ) : null}
+                  {saveable && plan.skipped.length > 0 ? (
+                    <p className="config__hint">
+                      {t("screen.playlistOfflineSkipped", {
+                        count: plan.skipped.length,
+                      })}
+                    </p>
+                  ) : null}
+                  {row.problems.length > 0 ? (
+                    <p className="config__hint is-warn">
+                      {t("screen.playlistProblems", { count: row.problems.length })}:{" "}
+                      {row.problems.slice(0, 3).join("; ")}
+                    </p>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         )}
 

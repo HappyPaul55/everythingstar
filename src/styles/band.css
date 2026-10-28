@@ -4040,6 +4040,12 @@
     font-size: 0.6rem;
     color: rgba(250, 250, 244, 0.62);
   }
+  .downloads__queue {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--color-cream);
+  }
   .downloads__note {
     margin: 0;
     font-size: 0.62rem;

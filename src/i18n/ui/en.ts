@@ -315,6 +315,12 @@ export const en = {
   "screen.downloadRetry": "Retry",
   "screen.downloadCancel": "Cancel download",
   "screen.downloadRemove": "Remove",
+  "screen.downloadQueue": "Saving {done} of {total}…",
+  "screen.playlistSaveOffline": "Save {count} songs offline",
+  "screen.playlistSaveOfflineOne": "Save this song offline",
+  "screen.playlistSaveCancel": "Cancel saving this playlist",
+  "screen.playlistOfflineSkipped":
+    "{count} songs in this playlist can't be saved here, and are left out.",
   "screen.downloadsLead":
     "Songs saved on this device. They play without a connection.",
   "screen.downloadsEmpty":
