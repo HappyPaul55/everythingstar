@@ -1,4 +1,8 @@
 {
+  // Checked by an editor, not by a build: wrangler is not a dependency of this
+  // repo (Cloudflare supplies its own at deploy time), so the schema is the
+  // published one, pinned to the major that deploys.
+  "$schema": "https://unpkg.com/wrangler@4/config-schema.json",
   // Must match the connected Cloudflare Worker name, which Workers Builds
   // supplies as the CI worker name; a mismatch is overridden at deploy time and
   // logged as a warning.

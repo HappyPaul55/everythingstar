@@ -2,8 +2,22 @@
   "name": "client-everythingstar-happypaul55-com",
   "type": "module",
   "version": "1.0.0",
+  "description": "A free browser rhythm game: instruments, lyric typing and karaoke on one stage, with no account needed.",
+  "license": "AGPL-3.0-only",
+  "author": "HappyPaul55 (https://www.happypaul55.com)",
+  "homepage": "https://everythingstar.happypaul55.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HappyPaul55/everythingstar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/HappyPaul55/everythingstar/issues"
+  },
   "private": true,
   "packageManager": "bun@1.4.2",
+  "engines": {
+    "bun": ">=1.4.2"
+  },
   "scripts": {
     "dev": "bun --bun astro dev",
     "start": "bun --bun astro dev",
