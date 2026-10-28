@@ -187,6 +187,18 @@ The pull request template asks for these; keep it short enough to answer honestl
 Do not commit generated output (`dist/`, `.astro/`, `test-results/`) or anything under
 `node_modules/`.
 
+## Dependencies and actions
+
+`.github/dependabot.yml` keeps both current, once a week. `bun` updates arrive as one
+grouped pull request for minor and patch bumps, and a major on its own — an Astro or
+React major is read before it is merged, not swept in with five others. Action updates
+are grouped the same way.
+
+An action is pinned to a commit sha with its version beside it in a comment
+(`actions/checkout@<sha> # v5`), and the repository requires that pinning: an unpinned
+action is refused at push. A new action is added the same way — resolve the tag to its
+sha, put the version in the comment — and Dependabot keeps it current from there.
+
 ## Releases
 
 The version is `package.json`'s and nothing else's. To cut one:
@@ -195,9 +207,10 @@ The version is `package.json`'s and nothing else's. To cut one:
    `major`); it edits `package.json` and prints the rest.
 2. Open a PR titled `chore(release): vX.Y.Z` and merge it like any other change —
    `main` takes pull requests only, with `verify` and `e2e` green.
-3. Tag the merge commit `vX.Y.Z` and push the tag. The `Release` workflow refuses a
-   tag that disagrees with `package.json` or that is not on `main`, and otherwise
-   publishes the generated release notes.
+3. Wait for that merge's deployment to be green — `gh run list --workflow deploy.yml`
+   — then tag the merge commit `vX.Y.Z` and push the tag. The `Release` workflow
+   refuses a tag that disagrees with `package.json` or that is not on `main`, and
+   otherwise publishes the generated release notes.
 
 Tags cannot be moved or deleted, and a published release is immutable: a mistake is
 fixed by the next patch, not by rewriting the old one.

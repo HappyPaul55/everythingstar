@@ -1,0 +1,36 @@
+# Dependencies and actions, kept current once a week.
+#
+# `bun` updates arrive as one grouped pull request for minor and patch bumps, and a
+# major comes on its own: an Astro or React major is read before it is merged, not
+# swept in with five others. Action updates are grouped the same way, because they
+# are pinned to commit shas (the repository requires that) and Dependabot is what
+# keeps those pins from aging silently.
+#
+# Nothing here auto-merges: a grouped bump still has to pass `verify` and the browser
+# suite by hand, which is the only thing between a fresh release and `main`.
+version: 2
+updates:
+  - package-ecosystem: bun
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: Europe/London
+    open-pull-requests-limit: 5
+    labels: [dependencies]
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: [dependencies, ci]
+    groups:
+      actions:
+        patterns: ["*"]
