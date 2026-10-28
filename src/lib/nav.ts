@@ -16,6 +16,7 @@ export interface NavItem {
 export function siteNav(locale: Locale, t: Translate): NavItem[] {
   return [
     { href: localePath(locale, "/play"), label: t("nav.play") },
+    { href: localePath(locale, "/docs"), label: t("nav.docs") },
     { href: localePath(locale, "/privacy"), label: t("nav.privacy") },
   ];
 }

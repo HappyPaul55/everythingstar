@@ -15,6 +15,7 @@ export const en = {
   "nav.menu": "Menu",
   "nav.home": "Home",
   "nav.play": "Play",
+  "nav.docs": "Docs",
   "nav.privacy": "Privacy",
   "nav.breadcrumb": "Breadcrumb",
   "footer.pages": "Pages",
@@ -733,6 +734,37 @@ export const en = {
   "seo.requiresJs": "Requires JavaScript",
   "seo.sitemap": "Sitemap",
   "privacy.updated": "Last updated {date}",
+
+  // Documentation. The documents themselves are English Markdown in `docs/`;
+  // these keys are the chrome around them, so a second locale can translate the
+  // frame before the content is translated.
+  "docs.title": "Documentation",
+  "docs.sections": "Sections",
+  "docs.section.players": "Players",
+  "docs.section.charters": "Charters",
+  "docs.section.developers": "Developers",
+  "docs.section.other": "Other",
+  "docs.nav": "Documentation pages",
+  "docs.hub": "All documentation",
+  "docs.lede":
+    "How to play, how to make a chart, how the game is built, and the notices that come with it.",
+  "docs.onThisPage": "On this page",
+  "docs.updated": "Last updated {date}",
+  "docs.edit": "Edit this page on GitHub",
+  "docs.previous": "Previous",
+  "docs.next": "Next",
+  "docs.readSection": "Read the {section} documentation",
+  "docs.pages": "{count} pages",
+  "docs.playersLede":
+    "Play the game: songs and playlists, instruments, typing, singing, controllers, a phone, practice and the options that make it comfortable.",
+  "docs.chartersLede":
+    "Make songs: what a chart is, the formats the game reads, the files a song folder needs, the audio behind it, and how to publish a library.",
+  "docs.developersLede":
+    "Build the game: the loop and the stage, where every module lives, the chart readers, the mixer, the installed shell, the gates, deployment and how to contribute.",
+  "docs.otherLede":
+    "The notices that come with the game: privacy, terms of use, copyright, credits and an accessibility statement.",
+  "docs.about": "About this section",
+  "docs.all": "Everything, in one place",
 } as const;
 
 export type MessageKey = keyof typeof en;

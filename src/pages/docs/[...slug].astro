@@ -1,0 +1,53 @@
+---
+import { getCollection, render } from "astro:content";
+import DocsLayout from "../../layouts/DocsLayout.astro";
+import { localeFromPath, tFor } from "../../i18n/astro";
+import { localePath } from "../../i18n/paths";
+import { docHref, docSectionOf } from "../../lib/docs/paths";
+import { SECTION_LABELS } from "../../lib/docs/sections";
+
+/**
+ * One documentation page: a document under `players/`, `charters/` or
+ * `developers/`, filed under `/docs/<section>/<name>`.
+ *
+ * The notices under `other/` are deliberately not here — they keep site-root
+ * URLs and are built by `src/pages/[...legal].astro`.
+ */
+export async function getStaticPaths() {
+  const entries = await getCollection("docs");
+  return entries
+    .filter((entry) => {
+      const section = docSectionOf(entry.id);
+      return section !== null && section !== "other";
+    })
+    .map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const section = docSectionOf(entry.id);
+if (!section) throw new Error(`Documentation page without a section: ${entry.id}`);
+
+const locale = localeFromPath(Astro.url.pathname);
+const t = tFor(locale);
+const { Content, headings } = await render(entry);
+
+const crumbs = [
+  { name: t("nav.home"), path: localePath(locale, "/") },
+  { name: t("docs.title"), path: localePath(locale, "/docs") },
+  { name: t(SECTION_LABELS[section]), path: `${localePath(locale, "/docs")}#${section}` },
+  { name: entry.data.title, path: docHref(entry.id) },
+];
+---
+
+<DocsLayout
+  title={entry.data.title}
+  description={entry.data.description}
+  path={localePath(locale, `/docs/${entry.id}`)}
+  crumbs={crumbs}
+  section={section}
+  current={entry.id}
+  headings={headings}
+  updated={entry.data.updated}
+>
+  <Content />
+</DocsLayout>

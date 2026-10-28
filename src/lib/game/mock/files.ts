@@ -187,7 +187,7 @@ function songDocument(song: MockSong, track: Track): unknown {
       // `audioControl` a real song would use — miss, and your stem drops out — but
       // there are no files to name, because the game would fetch them and a fixture
       // that 404s on every run is a fixture that lies about what a song is. A real
-      // song brings its own stems (see `AUDIO.md`); this is the shape without them.
+      // song brings its own stems (see `docs/developers/audio.md`); this is the shape without them.
       stems: [],
       mixPresets: {},
     },

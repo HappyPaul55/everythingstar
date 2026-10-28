@@ -54,6 +54,13 @@ const PAGES: ExpectedPage[] = [
     status: 200,
   },
   {
+    path: "/docs",
+    canonical: `${SITE}/docs`,
+    titleHas: ["Documentation", "EverythingStar"],
+    indexable: true,
+    status: 200,
+  },
+  {
     path: "/privacy",
     canonical: `${SITE}/privacy`,
     titleHas: ["Privacy Policy", "EverythingStar"],
@@ -246,9 +253,10 @@ test("every page has one coherent set of head metadata", async ({ request }) => 
       expect(types, expected.path).not.toContain("WebPage");
     }
 
-    // The privacy page is the one with a trail, and its items are real URLs.
+    // The notices and the docs are the pages with a trail, and its items are
+    // real URLs.
     const crumbs = entities.find((entity) => entity["@type"] === "BreadcrumbList");
-    if (expected.path === "/privacy") {
+    if (expected.path === "/privacy" || expected.path === "/docs") {
       expect(crumbs, expected.path).toBeDefined();
       expect(crumbs!.itemListElement?.length, expected.path).toBeGreaterThan(0);
       for (const item of crumbs!.itemListElement ?? []) {

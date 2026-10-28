@@ -7,7 +7,7 @@ import { ScreenBackButton } from "./ScreenBackButton";
  * Credits: what the game is made of, and by whom.
  *
  * The list is **read where it can be** rather than written out again. The sound
- * manifest carries a `credit` per file (`AUDIO.md` is where the rule lives), so the
+ * manifest carries a `credit` per file (`docs/developers/audio.md` is where the rule lives), so the
  * music and the cues are gathered from it here — one line per licence, with how many
  * files sit under it — and a file with no credit is *said* rather than hidden, because
  * an unrecorded licence is a gap and a credits page is the place it shows.

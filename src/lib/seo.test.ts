@@ -32,10 +32,13 @@ function frontmatter(markdown: string): Record<string, string> {
 }
 
 const privacy = frontmatter(
-  await Bun.file(new URL("../content/legal/privacy.md", import.meta.url)).text(),
+  await Bun.file(new URL("../../docs/other/privacy.md", import.meta.url)).text(),
+);
+const docsHub = frontmatter(
+  await Bun.file(new URL("../../docs/README.md", import.meta.url)).text(),
 );
 
-/** The four pages' metadata, assembled exactly as their pages assemble it. */
+/** The pages' metadata, assembled exactly as their pages assemble it. */
 const PAGES = [
   {
     name: "home",
@@ -46,6 +49,11 @@ const PAGES = [
     name: "play",
     title: t("seo.titlePlay", { name: SITE.name }),
     description: t("seo.descriptionPlay"),
+  },
+  {
+    name: "docs",
+    title: pageTitle(docsHub.title ?? "", SITE.name),
+    description: docsHub.description ?? "",
   },
   {
     name: "privacy",
@@ -114,7 +122,7 @@ describe("pageTitle", () => {
   });
 });
 
-describe("the four pages' metadata", () => {
+describe("the pages' metadata", () => {
   test("every title is unique, names the game and fits a result", () => {
     const titles = PAGES.map((page) => page.title);
     expect(new Set(titles).size).toBe(titles.length);

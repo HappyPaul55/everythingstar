@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://everythingstar.happypaul55.com/schemas/playlist.schema.json",
   "title": "EverythingStar playlist",
-  "description": "A playlist document: the index a jukebox lists and a band is offered from. ADVISORY ONLY — the game's reader (src/lib/game/playlist.ts) is authoritative, and it is deliberately more tolerant than this schema: an unknown field is ignored, a broken song is skipped and named, and only a document with the wrong schemaVersion is refused whole. Use `bun run playlist:check <url>` to hold a document to that same reader. The wire contract is PLAYLIST-API.md.",
+  "description": "A playlist document: the index a jukebox lists and a band is offered from. ADVISORY ONLY — the game's reader (src/lib/game/playlist.ts) is authoritative, and it is deliberately more tolerant than this schema: an unknown field is ignored, a broken song is skipped and named, and only a document with the wrong schemaVersion is refused whole. Use `bun run playlist:check <url>` to hold a document to that same reader. The wire contract is developers/playlist-api.md in this documentation.",
   "type": "object",
   "required": ["schemaVersion"],
   "properties": {

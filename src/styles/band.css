@@ -3197,7 +3197,7 @@
   }
   /* The same look, for the buttons that stay pressable on purpose: a refused action
      has to be pressable for the press to be what says "not like that" — see
-     `refuse` in AUDIO.md. */
+     `refuse` in docs/developers/audio.md. */
   .band-btn[aria-disabled="true"] {
     opacity: 0.4;
     cursor: var(--cursor-not-allowed), not-allowed;

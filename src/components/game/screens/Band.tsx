@@ -552,7 +552,7 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
             type="button"
             className="band-btn band-btn--primary band-btn--big band-actions__play"
             /* Not `disabled`: a disabled button fires nothing, and the *press* is what
-               has to say "not like that" — see `refuse` in AUDIO.md. While the
+               has to say "not like that" — see `refuse` in docs/developers/audio.md. While the
                loader waits, the press is ignored; once its grace passes, the same
                button is the way out and says so. */
             aria-disabled={nothingPlays || waiting}

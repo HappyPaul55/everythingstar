@@ -399,7 +399,8 @@
   .breadcrumbs__list {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.5rem;
   }
   .breadcrumbs__item {
     display: inline-flex;
@@ -421,55 +422,466 @@
     color: var(--color-yellow);
   }
 
-  /* Rendered markdown (privacy notice) --------------------------- */
-  .legal {
+  /* Rendered Markdown (notices and documentation) --------------- */
+  .legal,
+  .doc {
     max-width: 46rem;
   }
-  .legal > * + * {
+  .legal > * + *,
+  .doc > * + * {
     margin-top: 1rem;
   }
-  .legal h2 {
+  .legal h2,
+  .doc h2 {
     margin-top: 2.25rem;
     font-family: var(--font-display);
     font-size: 1.5rem;
     line-height: 1.15;
   }
-  .legal h3 {
+  .legal h3,
+  .doc h3 {
     margin-top: 1.75rem;
     font-family: var(--font-display);
     font-size: 1.22rem;
   }
+  .doc h2 {
+    /* The article's own sections are read at a desk, so they are the sans
+       face with the house's yellow rule rather than the marker. The marker is
+       kept for the page title and the notices, where it is a label. */
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 1.4rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 2px solid var(--color-yellow);
+  }
+  .doc h3 {
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 1.12rem;
+  }
+  .doc h4 {
+    margin-top: 1.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
   .legal p,
-  .legal li {
+  .legal li,
+  .doc p,
+  .doc li {
     color: var(--color-ink-soft);
     line-height: 1.65;
   }
   .legal ul,
-  .legal ol {
+  .legal ol,
+  .doc ul,
+  .doc ol {
     padding-left: 1.35rem;
     display: grid;
     gap: 0.35rem;
   }
-  .legal ul {
+  .legal ul,
+  .doc ul {
     list-style: disc;
   }
-  .legal ol {
+  .legal ol,
+  .doc ol {
     list-style: decimal;
   }
-  .legal strong {
+  .doc li > ul,
+  .doc li > ol {
+    margin-top: 0.35rem;
+  }
+  .legal strong,
+  .doc strong {
     color: var(--color-ink);
   }
-  .legal a {
+  .legal a,
+  .doc a {
     color: var(--color-ink);
     border-bottom: 2px solid var(--color-yellow);
   }
-  .legal code {
+  .legal code,
+  .doc code {
     font-family: var(--font-mono);
     font-size: 0.88em;
     background: var(--color-paper-2);
     padding: 0.1rem 0.35rem;
     border-radius: var(--radius-inner);
     overflow-wrap: anywhere;
+  }
+  .doc pre,
+  .legal pre {
+    overflow-x: auto;
+    padding: 0.9rem 1rem;
+    border: 1px solid rgba(12, 13, 10, 0.14);
+    border-radius: var(--radius-brand);
+    background: var(--color-cream);
+    font-size: 0.82rem;
+    line-height: 1.55;
+  }
+  .doc pre code,
+  .legal pre code {
+    background: none;
+    padding: 0;
+    font-size: 1em;
+    overflow-wrap: normal;
+  }
+  .doc blockquote,
+  .legal blockquote {
+    border-left: 4px solid var(--color-yellow);
+    background: var(--color-cream);
+    border-radius: var(--radius-inner);
+    padding: 0.7rem 1rem;
+    color: var(--color-ink-soft);
+  }
+  .doc blockquote > :last-child,
+  .legal blockquote > :last-child {
+    margin-bottom: 0;
+  }
+  .doc table,
+  .legal table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+  .doc th,
+  .doc td,
+  .legal th,
+  .legal td {
+    padding: 0.4rem 0.6rem;
+    border-bottom: 1px solid rgba(12, 13, 10, 0.14);
+    text-align: left;
+    vertical-align: top;
+  }
+  .doc th,
+  .legal th {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    font-weight: 400;
+  }
+  .doc td:first-child,
+  .legal td:first-child {
+    color: var(--color-ink);
+  }
+  .doc td code,
+  .legal td code {
+    overflow-wrap: normal;
+  }
+  .doc img,
+  .legal img {
+    width: 100%;
+    height: auto;
+    border: 1px solid rgba(12, 13, 10, 0.16);
+    border-radius: var(--radius-brand);
+  }
+  .doc hr,
+  .legal hr {
+    border: 0;
+    border-top: 1px solid rgba(12, 13, 10, 0.16);
+  }
+  .doc kbd,
+  .legal kbd {
+    font-family: var(--font-mono);
+    font-size: 0.78em;
+    padding: 0.1rem 0.35rem;
+    border: 1px solid rgba(12, 13, 10, 0.3);
+    border-bottom-width: 2px;
+    border-radius: var(--radius-inner);
+    background: var(--color-cream);
+    color: var(--color-ink);
+    white-space: nowrap;
+  }
+
+  /* Documentation ------------------------------------------------ */
+  .docs {
+    padding-block: clamp(2.25rem, 5vw, 3.5rem) clamp(3rem, 7vw, 5rem);
+  }
+  .docs__wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+    align-items: start;
+  }
+  .docs-side {
+    min-width: 0;
+  }
+  .docs-side__label {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    text-decoration: none;
+    margin-bottom: 0.6rem;
+  }
+  .docs-side__label:hover {
+    color: var(--color-ink);
+  }
+  .docs-switch {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  .docs-switch a {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-decoration: none;
+    padding: 0.3rem 0.45rem;
+    border: 1px solid rgba(12, 13, 10, 0.2);
+    border-radius: var(--radius-inner);
+    color: var(--color-ink-soft);
+    transition:
+      background-color 0.2s var(--ease-brand),
+      color 0.2s var(--ease-brand);
+  }
+  .docs-switch a:hover {
+    background: var(--color-paper-2);
+    color: var(--color-ink);
+  }
+  .docs-switch a[aria-current="page"] {
+    background: var(--color-ink);
+    border-color: var(--color-ink);
+    color: var(--color-cream);
+  }
+  .docs-side__group {
+    margin-top: 1.4rem;
+    margin-bottom: 0.35rem;
+    font-family: var(--font-display);
+    font-size: 1.02rem;
+  }
+  .docs-side__list {
+    display: grid;
+    gap: 0.1rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .docs-side__list a {
+    display: block;
+    padding: 0.28rem 0.5rem;
+    border-left: 2px solid transparent;
+    border-radius: var(--radius-inner);
+    font-size: 0.86rem;
+    line-height: 1.35;
+    color: var(--color-ink-soft);
+    text-decoration: none;
+  }
+  .docs-side__list a:hover {
+    color: var(--color-ink);
+    background: var(--color-paper-2);
+  }
+  .docs-side__list a[aria-current="page"] {
+    background: var(--color-paper-2);
+    border-left-color: var(--color-yellow);
+    color: var(--color-ink);
+    font-weight: 600;
+  }
+  .docs__article {
+    min-width: 0;
+  }
+  .docs__article--wide .doc {
+    max-width: 64rem;
+  }
+  /* The hub's section titles are labels, not article sections: the marker face
+     and no yellow rule, whichever heading style `.doc` gives its own. */
+  .doc .docs-hub__title {
+    margin-top: 0;
+    padding: 0;
+    border: 0;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 400;
+  }
+  .doc .docs-hub__lede {
+    margin-top: 0.35rem;
+  }
+  .docs__title {
+    margin-top: 0.75rem;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.02;
+  }
+  .doc {
+    margin-top: 1.5rem;
+  }
+  .docs__foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0.5rem 1.5rem;
+    margin-top: 2.5rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid rgba(12, 13, 10, 0.14);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.03em;
+    color: var(--color-muted);
+  }
+  .docs__edit {
+    color: var(--color-ink-soft);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-yellow);
+  }
+  .docs__edit:hover {
+    color: var(--color-ink);
+  }
+  .docs__pager {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.25rem;
+  }
+  .docs__pager-link {
+    display: grid;
+    gap: 0.15rem;
+    max-width: 48%;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid rgba(12, 13, 10, 0.16);
+    border-radius: var(--radius-inner);
+    text-decoration: none;
+    color: var(--color-ink);
+    transition: background-color 0.2s var(--ease-brand);
+  }
+  .docs__pager-link:hover {
+    background: var(--color-paper-2);
+  }
+  .docs__pager-link--next {
+    text-align: right;
+    margin-left: auto;
+  }
+  .docs__pager-label {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+  .docs__pager-title {
+    font-size: 0.88rem;
+    line-height: 1.3;
+  }
+  .docs__toc {
+    display: none;
+  }
+  .docs__toc ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.2rem;
+  }
+  .docs__toc a {
+    display: block;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: var(--color-ink-soft);
+    text-decoration: none;
+  }
+  .docs__toc a:hover {
+    color: var(--color-ink);
+  }
+  .docs__toc-sub {
+    padding-left: 0.6rem;
+  }
+
+  /* The hub's four sections, each a list of its pages. */
+  .docs-hub {
+    display: grid;
+    gap: 2rem;
+    margin-top: 2.5rem;
+  }
+  .docs-hub__section {
+    padding-top: 1rem;
+    border-top: 2px solid var(--color-ink);
+    scroll-margin-top: 1rem;
+  }
+  .docs-hub__title {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    line-height: 1.1;
+  }
+  .docs-hub__lede {
+    margin-top: 0.35rem;
+    max-width: 46rem;
+    color: var(--color-ink-soft);
+    font-size: 0.95rem;
+  }
+  .docs-hub__list {
+    display: grid;
+    gap: 0.35rem;
+    margin-top: 0.9rem;
+    padding: 0;
+    list-style: none;
+  }
+  .docs-hub__link {
+    display: grid;
+    gap: 0.1rem;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid rgba(12, 13, 10, 0.14);
+    border-radius: var(--radius-inner);
+    text-decoration: none;
+    color: var(--color-ink);
+    transition: background-color 0.2s var(--ease-brand);
+  }
+  .docs-hub__link:hover {
+    background: var(--color-paper-2);
+  }
+  .docs-hub__name {
+    font-weight: 600;
+  }
+  .docs-hub__description {
+    font-size: 0.86rem;
+    line-height: 1.45;
+    color: var(--color-ink-soft);
+  }
+
+  /* On a phone the sidebar is the four sections and the way back to the hub;
+     the section's page list is left to the pager and the hub rather than pushing
+     the article a screen down. */
+  @media (max-width: 55.99rem) {
+    .docs-side__pages {
+      display: none;
+    }
+  }
+  @media (min-width: 56rem) {
+    .docs__wrap {
+      grid-template-columns: 15rem minmax(0, 1fr);
+    }
+    .docs-side {
+      position: sticky;
+      top: 1.25rem;
+    }
+    .docs-hub {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 2.5rem 3rem;
+    }
+  }
+  @media (min-width: 75rem) {
+    .docs__wrap {
+      grid-template-columns: 15rem minmax(0, 1fr) 12rem;
+    }
+    .docs__toc {
+      display: block;
+      position: sticky;
+      top: 1.25rem;
+    }
+  }
+  @media print {
+    .docs-side,
+    .docs__toc,
+    .docs__foot,
+    .docs__pager {
+      display: none;
+    }
   }
 }
 
