@@ -17,14 +17,14 @@
  *   which took them from 22.5 MiB to 8.2 MiB; they are still most of a much smaller
  *   upload, and the part most likely to arrive in megabytes at a time.
  *
- * The numbers were measured on 2026-10-28, after the brag card and the profile
- * export/import landed: `dist/_astro` JS 641 KiB, `dist/` 11.2 MiB, `public/audio`
- * 8.8 MiB and the **initial `/play` graph** 558 KiB raw / 181 KiB gzipped across 26
- * files; the parser chunk, the brag card and the profile module are not part of it.
+ * The numbers were measured on 2026-10-28, after the playlist-offline queue landed:
+ * `dist/_astro` JS 644 KiB, `dist/` 11.2 MiB, `public/audio` 8.8 MiB and the
+ * **initial `/play` graph** 560 KiB raw / 182 KiB gzipped across 26 files; the parser
+ * chunk, the brag card, the profile module and the queue's own UI are not part of it.
  * Each limit leaves room for normal work without leaving room for a new feature to
- * arrive unnoticed: about 3% on the JS, 1–2% on the initial raw graph, 5% on its
- * gzip, and 10–12% on the whole build and the audio (enough for a replaced sting,
- * not another four-minute bed). The whole-payload number counts the lazy chunks,
+ * arrive unnoticed: about 1% on the JS and the initial raw graph, 4% on its gzip,
+ * and 10–12% on the whole build and the audio (enough for a replaced sting, not
+ * another four-minute bed). The whole-payload number counts the lazy chunks,
  * which is why it moved when two features were added behind a press; the initial
  * graph moved by the rows themselves, and is the number to watch.
  *

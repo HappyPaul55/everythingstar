@@ -588,7 +588,11 @@ export function Songs({
 
       {lists ? (
         <Suspense fallback={null}>
-          <PlaylistsDialog library={library} onClose={() => setLists(false)} />
+          <PlaylistsDialog
+            library={library}
+            offline={offline}
+            onClose={() => setLists(false)}
+          />
         </Suspense>
       ) : null}
 
@@ -599,6 +603,7 @@ export function Songs({
             storage={offline.storage}
             busy={offline.busy}
             busyId={offline.busyId}
+            queue={offline.queue}
             onRemove={offline.remove}
             onClear={offline.clear}
             onCancel={offline.cancel}

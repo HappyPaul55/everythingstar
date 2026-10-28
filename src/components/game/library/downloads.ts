@@ -15,6 +15,11 @@
  * Nothing here is required for online play. A browser with no worker, a song
  * already on this device, or a YouTube-backed song simply has no download
  * action; an interrupted or over-quota download removes everything it wrote.
+ *
+ * A **playlist** is saved through the same code: `startPlaylistDownload` takes the
+ * one job slot and runs `downloadSong` over its plan a song at a time, so a saved
+ * playlist is a set of ordinary per-song records rather than a second kind of
+ * download with its own manifest to keep in step.
  */
 
 import {
@@ -90,6 +95,24 @@ export interface OfflineFailureInfo {
 }
 
 /**
+ * A whole playlist being saved, one song at a time.
+ *
+ * `done` counts the songs the queue has **begun**, including the one in flight, so
+ * `Saving {done} of {total}…` says where it is rather than how much is behind it.
+ * `total` is what the plan is attempting; a skipped song was never in it.
+ */
+export interface OfflineQueueState {
+  /** The playlist being saved, so the row that started it can say so. */
+  source: string;
+  done: number;
+  total: number;
+  /** Songs that failed; each one left nothing behind, and the rest still ran. */
+  failed: number;
+  /** Songs the plan left alone, already offline or nothing a browser can keep. */
+  skipped: number;
+}
+
+/**
  * The one job the downloader is running for the whole page.
  *
  * It lives outside the hook on purpose: the jukebox unmounts when the player walks
@@ -102,17 +125,20 @@ export interface OfflineJobState {
   /** The song being saved, when a download is running. */
   busyId: string | null;
   progress: OfflineProgress | null;
+  /** The playlist queue in flight, when a whole playlist is being saved. */
+  queue: OfflineQueueState | null;
   error: OfflineFailureInfo | null;
 }
 
-type JobKind = "download" | "remove" | "clear";
+type JobKind = "download" | "playlist" | "remove" | "clear";
 
 interface Job {
   kind: JobKind;
-  /** The song's id, or "" for a clear. */
+  /** The song's id, "" for a clear and "" until the queue reaches its first song. */
   id: string;
   controller: AbortController | null;
   progress: OfflineProgress | null;
+  queue: OfflineQueueState | null;
   promise: Promise<void> | null;
 }
 
@@ -129,10 +155,15 @@ const recordListeners = new Set<() => void>();
  * here all along subscribed to.
  */
 export function downloadState(): OfflineJobState {
+  // A playlist queue is a song download that happens to know what comes next, so
+  // its current song is the `busyId` the now-playing slot already watches.
+  const saving =
+    job?.kind === "download" || job?.kind === "playlist" ? job : null;
   return {
     busy: job !== null,
-    busyId: job?.kind === "download" ? job.id : null,
+    busyId: saving && saving.id !== "" ? saving.id : null,
     progress: job?.progress ?? null,
+    queue: job?.kind === "playlist" ? job.queue : null,
     error: lastError,
   };
 }
@@ -322,6 +353,39 @@ export function canDownload(
   if (!offlineSupported()) return { ok: false, reason: "unsupported" };
   if (isLocalUrl(song.doc)) return { ok: false, reason: "local" };
   return { ok: true };
+}
+
+/**
+ * What saving a whole playlist would attempt, before anything is fetched.
+ *
+ * Pure and cheap enough for the Playlists dialog to run while it draws a row: the
+ * button can say how many songs it would save, and how many it would leave alone,
+ * without starting a job or asking any host for anything.
+ *
+ * A **YouTube-backed** song is attempted here rather than skipped. The playlist
+ * summary cannot know where a song's audio comes from — that is in its document — so
+ * the download itself refuses it, per song, and the queue counts it like any other
+ * failure. A **local folder** song is skipped because it is already on this device,
+ * and a browser with no worker skips every song. An **on-demand** playlist never
+ * reaches this: its songs are answers to a search rather than a catalogue, so the
+ * dialog offers it no button at all.
+ */
+export interface PlaylistPlan {
+  /** The songs the queue will ask `downloadSong` for, in playlist order. */
+  songs: Song[];
+  /** The songs it will not attempt, and why. */
+  skipped: Array<{ song: Song; reason: OfflineFailure }>;
+}
+
+export function planPlaylistDownload(songs: readonly Song[]): PlaylistPlan {
+  const attempt: Song[] = [];
+  const skipped: Array<{ song: Song; reason: OfflineFailure }> = [];
+  for (const song of songs) {
+    const allowed = canDownload(song);
+    if (allowed.ok) attempt.push(song);
+    else skipped.push({ song, reason: allowed.reason });
+  }
+  return { songs: attempt, skipped };
 }
 
 /**
@@ -751,6 +815,7 @@ export function startDownload(song: Song): boolean {
     id: song.id,
     controller,
     progress: { done: 0, total: 2, phase: "documents" },
+    queue: null,
     promise: null,
   };
   job = next;
@@ -785,9 +850,104 @@ export function startDownload(song: Song): boolean {
   return true;
 }
 
-/** Stop the download in flight, if there is one. */
+/**
+ * Start saving a whole playlist, unless something already is.
+ *
+ * The queue is the **same** downloader as one song, run one at a time: each step
+ * calls `downloadSong` for the next song and records it exactly as the now-playing
+ * slot's button would. A saved playlist is therefore a set of ordinary per-song
+ * records, not a second manifest — the Downloads dialog lists every song it keeps,
+ * a cancelled queue leaves the finished ones behind, and a later removal of one song
+ * takes only that song's files.
+ *
+ * Failures are counted, not fatal: the rest of the playlist still runs. A **quota**
+ * failure is the exception, because a full device makes every later song fail too,
+ * so the queue stops instead of walking the rest of a list that cannot land. Cancel
+ * aborts the song in flight — `downloadSong` removes that attempt's partial files —
+ * and keeps the songs already completed.
+ */
+export function startPlaylistDownload(
+  songs: readonly Song[],
+  source: string,
+): boolean {
+  if (job) return false;
+
+  const plan = planPlaylistDownload(songs);
+  // Nothing this browser may attempt is not a job: a row that offers no button
+  // reaches this with an empty plan, and a press must not leave a job spinning.
+  if (plan.songs.length === 0) return false;
+
+  const controller = new AbortController();
+  const queue: OfflineQueueState = {
+    source,
+    done: 0,
+    total: plan.songs.length,
+    failed: 0,
+    skipped: plan.skipped.length,
+  };
+  const next: Job = {
+    kind: "playlist",
+    id: "",
+    controller,
+    progress: null,
+    queue,
+    promise: null,
+  };
+  job = next;
+  lastError = null;
+  announceJob();
+
+  const update = (change: Partial<OfflineQueueState>) => {
+    if (job !== next) return;
+    Object.assign(queue, change);
+    // A copy per step, so a reader that held the last one is not handed the next
+    // step's numbers through the same object.
+    next.queue = { ...queue };
+    announceJob();
+  };
+
+  next.promise = (async () => {
+    try {
+      for (const song of plan.songs) {
+        // A cancel between two songs has no request to abort, so it is read here.
+        if (controller.signal.aborted) break;
+
+        next.id = song.id;
+        next.progress = { done: 0, total: 2, phase: "documents" };
+        update({ done: queue.done + 1 });
+
+        try {
+          await downloadSong(song, {
+            signal: controller.signal,
+            onProgress: (progress) => {
+              if (job !== next) return;
+              next.progress = progress;
+              announceJob();
+            },
+          });
+        } catch (reason) {
+          const failure = reason instanceof OfflineError ? reason.reason : "failed";
+          // The press that cancels is a choice, not a song that failed: the song in
+          // flight rolled its own partial files back and the finished ones stay.
+          if (failure === "cancelled" || controller.signal.aborted) break;
+          lastError = { songId: song.id, reason: failure };
+          update({ failed: queue.failed + 1 });
+          if (failure === "quota") break;
+        }
+      }
+    } finally {
+      if (job === next) {
+        job = null;
+        announceJob();
+      }
+    }
+  })();
+  return true;
+}
+
+/** Stop the download or the playlist queue in flight, if there is one. */
 export function cancelDownload(): void {
-  if (job?.kind !== "download") return;
+  if (job?.kind !== "download" && job?.kind !== "playlist") return;
   job.controller?.abort();
 }
 
@@ -799,6 +959,7 @@ export function removeDownload(id: string): boolean {
     id,
     controller: null,
     progress: null,
+    queue: null,
     promise: null,
   };
   job = next;
@@ -828,6 +989,7 @@ export function clearDownloads(): boolean {
     id: "",
     controller: null,
     progress: null,
+    queue: null,
     promise: null,
   };
   job = next;

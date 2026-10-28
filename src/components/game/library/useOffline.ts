@@ -7,6 +7,9 @@
  * writes, which is what lets a screen that mounts mid-download see it already in
  * progress rather than start a second one.
  *
+ * One song and a whole playlist share the same slot, so the view is one shape: a
+ * single song's `progress` or a queue's `done of total`, whichever is running.
+ *
  * A change to the record is announced too, so the **library** — which merges
  * songs from sources it did not write — can list a song the downloader saved.
  */
@@ -22,12 +25,14 @@ import {
   offlineSupported,
   removeDownload,
   startDownload,
+  startPlaylistDownload,
   subscribeDownloads,
   subscribeOffline,
   type OfflineEntry,
   type OfflineFailureInfo,
   type OfflineJobState,
   type OfflineProgress,
+  type OfflineQueueState,
   type OfflineStorageInfo,
 } from "./downloads";
 
@@ -43,9 +48,18 @@ export interface OfflineController {
   /** The song currently being saved, if any. */
   busyId: string | null;
   progress: OfflineProgress | null;
+  /** A whole playlist being saved, or null when no queue is running. */
+  queue: OfflineQueueState | null;
   /** The last failure, tied to the song it belonged to. */
   error: OfflineErrorInfo | null;
   download: (song: Song) => void;
+  /**
+   * Save a playlist, song after song, in the same page-wide job slot.
+   *
+   * The dialog filters the library to one playlist's songs and passes the row's
+   * URL, so a running queue can say which row it belongs to.
+   */
+  downloadPlaylist: (songs: readonly Song[], source: string) => void;
   remove: (id: string) => void;
   clear: () => void;
   /** Stop the download in flight; the jukebox's Cancel button. */
@@ -97,6 +111,10 @@ export function useOffline(): OfflineController {
     startDownload(song);
   }, []);
 
+  const downloadPlaylist = useCallback((songs: readonly Song[], source: string) => {
+    startPlaylistDownload(songs, source);
+  }, []);
+
   const remove = useCallback((id: string) => {
     removeDownload(id);
   }, []);
@@ -116,8 +134,10 @@ export function useOffline(): OfflineController {
     busy: job.busy,
     busyId: job.busyId,
     progress: job.progress,
+    queue: job.queue,
     error: job.error,
     download,
+    downloadPlaylist,
     remove,
     clear,
     cancel,

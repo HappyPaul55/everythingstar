@@ -32,7 +32,11 @@ What works today:
   goes round again. Any input gives the welcome back. The same attract loop is the
   homepage's phone-shaped live window — one player and silent there, a band and sound
   in the full arcade. The window is a same-origin iframe, so `public/_headers` keeps
-  `frame-ancestors 'self'` rather than `'none'`.
+  `frame-ancestors 'self'` rather than `'none'`. The whole frame is a **link to
+  `/play`**: the iframe is decoration (hidden from assistive tech, out of the tab
+  order, taking no pointer events) and the anchor laid over it is the control — named
+  "Play EverythingStar", keyboard-focusable, and outlined on hover and focus so the
+  picture keeps its hit line, with the caption link below it kept.
 - **The three ways to play.** Falling-note **instrument** lanes for guitar, bass, keys
   and drums (chords, hopos, sustains, whammy, judged per player); **Typing** with
   TypeStar's forgiving rules; **Vocals** into a microphone, judged on how much of each
@@ -251,7 +255,9 @@ acceptance checklist. A playlist row's **Copy link** produces the canonical addr
   leaves the jukebox and can be **cancelled**; a song found through an on-demand search
   is still listed after a reload because the offline records are merged into the library
   last. YouTube-backed songs and songs already in a local folder are refused rather than
-  half-saved.
+  half-saved. A whole **playlist** can be saved from the Playlists dialog with **Save
+  playlist offline**: a cancellable queue over the same per-song records, which stops on
+  a full device and leaves the songs it already kept.
 - **The stage**: a song's charts are fetched for the band that is playing and judged per
   player; words can be sung into a microphone (YIN, judged on how much of each note's
   own span was held in tune) or typed (TypeStar's forgiving rules), with the choice
@@ -856,7 +862,13 @@ fallback), while stems and art are cache-first — a saved audio file is a pinne
 A download is a single **page-wide job**: it keeps running when the player walks from the
 jukebox to the band, a screen that mounts mid-download sees it already in progress, and
 the Downloads dialog offers **Cancel**. It is also all or nothing: a cancelled, failed or
-over-quota attempt deletes what it wrote. A song is about 23 MB, the manager shows the
+over-quota attempt deletes what it wrote. **A whole playlist can be saved the same way**:
+each enabled catalogue row in the Playlists dialog offers **Save playlist offline**, which
+walks the playlist through that same downloader one song at a time and shows *Saving 3 of
+12…*. Completed songs stay if a later one fails; an ordinary failure is counted and the
+queue carries on, while a **quota** failure stops the rest. A saved playlist is therefore a
+set of the ordinary per-song records rather than a second manifest, and removing one song
+takes only its files. Local folders, pinned songs and on-demand playlists offer no button. A song is about 23 MB, the manager shows the
 device's storage use and the app/game/WebView versions, and removal or **Clear all
 downloads** is exact. A downloaded on-demand song is still listed after a reload, too:
 its summary lives only in the offline record, so the library merges those records in
@@ -1188,8 +1200,8 @@ player who opens the JSON library and never presses Calibrate, opens Downloads, 
 a link or uses `?dev=1` does not pay for any of it.
 
 That matters because `/play` is the page the game starts on: the initial JavaScript
-graph is **546 KiB raw / 177 KiB gzipped across 21 files**. That is the first download
-only; every `_astro` JavaScript chunk in the build totals **620 KiB**, because the lazy
+graph is **560 KiB raw / 182 KiB gzipped across 26 files**. That is the first download
+only; every `_astro` JavaScript chunk in the build totals **644 KiB**, because the lazy
 chunks still ship — they are just not requested first. `scripts/check-budget.ts` walks
 `play.html`'s initial island graph, gates the initial raw and gzipped sizes directly,
 and fails if a translator marker leaks into it, so the split cannot quietly regress.
@@ -1232,13 +1244,15 @@ The gates are configured in `.oxlintrc.json`, `knip.jsonc` and
 `astro check`; `tsconfig.test.json` includes them with the test runner's types.
 
 `bun run budget` reads `dist/` (building it if it is absent) and fails when
-`dist/_astro` JavaScript passes **640 KiB**, `dist/` passes **12.5 MiB**, or
-`public/audio` passes **10 MiB** — and it gates the initial `/play` graph at **560 KiB
-raw / 190 KiB gzipped**. The build it was set with is 620 KiB of `_astro` JS, an
-initial graph of 546 KiB raw / 177 KiB gzipped, 11.1 MiB in `dist/` and 8.8 MiB of
-audio, so each cap still leaves headroom — about 3% on the JS,
-2% on the initial raw graph, 7% on its gzip, and 10–12% on the build and the audio —
-while catching a feature-sized regression. It also fails if a source-translator
+`dist/_astro` JavaScript passes **650 KiB**, `dist/` passes **12.5 MiB**, or
+`public/audio` passes **10 MiB** — and it gates the initial `/play` graph at **566 KiB
+raw / 190 KiB gzipped**. The build it was set with is 644 KiB of `_astro` JS, an
+initial graph of 560 KiB raw / 182 KiB gzipped, 11.2 MiB in `dist/` and 8.8 MiB of
+audio, so each cap still leaves headroom — about 1% on the JS and the initial raw
+graph, 4% on its gzip, and 10–12% on the build and the audio — while catching a
+feature-sized regression. The initial graph is the number to watch now; the next
+feature-sized byte should go behind a lazy boundary rather than raise the cap again.
+It also fails if a source-translator
 marker appears in `/play`'s initial island graph. The audio number is the Ogg/Opus
 set:
 the four beds are 64 kbps VBR, ~8.2 MiB together, where the MP3s were 22.5 MiB;
@@ -1414,7 +1428,8 @@ layout**) and the traps worth knowing. Read it before a structural change.
 - `src/lib/seo.ts` — the metadata rules, pure and tested: a page path as a canonical
   path, its absolute URL, and `Page — Brand` titles.
 - `src/components/home/` — `HomePage.astro` and `StageWindow.astro`, the phone-shaped
-  live attract window that replaces the old static hero art.
+  live attract window that replaces the old static hero art. Its iframe is decorative;
+  the anchor over the whole frame is the link to `/play`.
 - `src/components/game/GameApp.tsx` — **the game island's shell**: it renders the
   provider tower and the screen registry around the run, and its root (`.band`) is the
   persistent fullscreen target. `useGameSession` owns the screen, the chosen song and

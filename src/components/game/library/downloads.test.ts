@@ -11,9 +11,12 @@ import {
   formatBytes,
   listOffline,
   mergeOfflineSongs,
+  planPlaylistDownload,
   removeDownload,
   startDownload,
+  startPlaylistDownload,
   subscribeDownloads,
+  type OfflineQueueState,
 } from "./downloads";
 
 const DOC = "https://songs.example/song.json";
@@ -425,6 +428,95 @@ async function until(check: () => boolean): Promise<void> {
   throw new Error("the expected state never arrived");
 }
 
+/* ------------------------------------------------- a playlist of songs */
+
+/**
+ * Three healthy songs whose documents and files are their own.
+ *
+ * A queue is only worth testing with independent files: a chart shared by two
+ * songs would let the good one's success hide the failing one's rollback.
+ */
+function playlistSongs(): Song[] {
+  return ["alpha", "beta", "gamma"].map((id) =>
+    song({
+      id,
+      title: id,
+      doc: `https://songs.example/${id}.json`,
+    }),
+  );
+}
+
+/** What a song document for `id` looks like on the wire. */
+function wireDocument(id: string): unknown {
+  const parsed = doc({
+    id,
+    title: id,
+    audio: {
+      source: "stems",
+      stems: [
+        {
+          id: "guitar",
+          name: "Guitar",
+          url: `https://songs.example/${id}-guitar.ogg`,
+          instrument: "guitar",
+          defaultGainDb: 0,
+          offsetMs: 0,
+        },
+      ],
+      mixPresets: [],
+      preview: `https://songs.example/${id}-preview.ogg`,
+    },
+    parts: [
+      {
+        id: "guitar",
+        role: "guitar",
+        label: null,
+        controllerTypes: [],
+        audioControl: null,
+        charts: [
+          {
+            id: `${id}-expert`,
+            chartType: "lanes",
+            role: "lead",
+            difficulty: "expert",
+            url: `https://songs.example/${id}-expert.json`,
+            columns: 5,
+            bpm: 120,
+            offsetMs: 0,
+          },
+        ],
+      },
+    ],
+  });
+  return {
+    ...parsed,
+    schemaVersion: 1,
+    parts: parsed.parts.map((part) => ({
+      ...part,
+      charts: part.charts.map((chart) => ({ ...chart, laneCount: chart.columns })),
+    })),
+  };
+}
+
+/** A host that answers for every song in `playlistSongs`, with an optional fault. */
+function playlistHost(
+  options: { fail?: (url: string) => boolean } = {},
+): (url: string) => Response {
+  const documents = new Map(
+    playlistSongs().map((entry) => [entry.doc, wireDocument(entry.id)]),
+  );
+  return (url) => {
+    if (options.fail?.(url)) return new Response("nope", { status: 500 });
+    if (url === FROM) return jsonResponse({ schemaVersion: 1, songs: [] });
+    const body = documents.get(url);
+    if (body) return jsonResponse(body);
+    if (url.endsWith(".ogg")) return audioResponse();
+    if (url.endsWith(".jpg") || url.endsWith(".png")) return new Response("art");
+    if (url.endsWith(".json")) return jsonResponse({});
+    return new Response("", { status: 404 });
+  };
+}
+
 beforeEach(() => {
   installEnvironment();
 });
@@ -769,5 +861,154 @@ describe("the one download, page-wide", () => {
     expect(downloadState().busy).toBe(false);
     expect(cache.entries.size).toBe(0);
     expect(listOffline()).toEqual([]);
+  });
+});
+
+describe("planPlaylistDownload", () => {
+  test("a local folder is skipped, a YouTube-backed song is attempted, and nothing is fetched", () => {
+    const folder = song({
+      id: "local-song",
+      doc: "folder://local/song.json",
+      from: "folder://local/song.json",
+    });
+    // The playlist summary does not say where a song's audio comes from, so a
+    // video-backed song is planned like any other and refused by its own document.
+    const video = song({ id: "video-song", doc: "https://songs.example/video.json" });
+
+    const plan = planPlaylistDownload([song(), folder, video]);
+
+    expect(plan.songs.map((entry) => entry.id)).toEqual(["test-song", "video-song"]);
+    expect(plan.skipped).toEqual([{ song: folder, reason: "local" }]);
+    // Planning is arithmetic: no host was asked and no cache was opened.
+    expect(calls).toEqual([]);
+  });
+
+  test("a browser with no worker skips every song", () => {
+    (
+      globalThis as unknown as {
+        navigator: { serviceWorker: { controller: unknown } };
+      }
+    ).navigator.serviceWorker.controller = null;
+
+    const plan = planPlaylistDownload([song()]);
+
+    expect(plan.songs).toEqual([]);
+    expect(plan.skipped.map((entry) => entry.reason)).toEqual(["unsupported"]);
+  });
+});
+
+describe("saving a playlist offline", () => {
+  test("a failure is counted and the songs already saved stay", async () => {
+    const { cache } = installEnvironment();
+    stubFetch(
+      playlistHost({
+        fail: (url) => url === "https://songs.example/beta-expert.json",
+      }),
+    );
+
+    const seen: Array<{ queue: OfflineQueueState; busyId: string | null }> = [];
+    const unsubscribe = subscribeDownloads(() => {
+      const state = downloadState();
+      if (state.queue) seen.push({ queue: { ...state.queue }, busyId: state.busyId });
+    });
+
+    expect(startPlaylistDownload(playlistSongs(), FROM)).toBe(true);
+    // The one slot is taken: a song and a second playlist are both refused.
+    expect(startDownload(song())).toBe(false);
+    expect(startPlaylistDownload(playlistSongs(), FROM)).toBe(false);
+
+    await settle();
+    unsubscribe();
+
+    // Newest first, as the Downloads dialog lists them.
+    expect(listOffline().map((entry) => entry.song.id)).toEqual(["gamma", "alpha"]);
+    // Beta's document went with its failure; alpha's files and the shared
+    // playlist stay, because the queue is a set of ordinary per-song records.
+    expect(cache.entries.has("https://songs.example/beta.json")).toBe(false);
+    expect(cache.entries.has("https://songs.example/alpha-guitar.ogg")).toBe(true);
+    expect(cache.entries.has(FROM)).toBe(true);
+
+    expect(
+      seen.some((state) => state.queue.done === 2 && state.busyId === "beta"),
+    ).toBe(true);
+    expect(seen[seen.length - 1]?.queue).toMatchObject({
+      source: FROM,
+      done: 3,
+      total: 3,
+      failed: 1,
+      skipped: 0,
+    });
+    expect(downloadState().queue).toBeNull();
+    expect(downloadState().error).toMatchObject({ songId: "beta", reason: "failed" });
+  });
+
+  test("cancel keeps the finished songs and abandons the one in flight", async () => {
+    const { cache } = installEnvironment();
+    const host = playlistHost();
+    stubFetch((url, init) => {
+      // Alpha is whole; beta's document never arrives, as a stalled host would.
+      if (url === "https://songs.example/beta.json") {
+        return new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener(
+            "abort",
+            () => reject(new DOMException("aborted", "AbortError")),
+            { once: true },
+          );
+        });
+      }
+      return host(url);
+    });
+
+    expect(startPlaylistDownload(playlistSongs().slice(0, 2), FROM)).toBe(true);
+    await until(() =>
+      calls.some((call) => call.url === "https://songs.example/beta.json"),
+    );
+    cancelDownload();
+    await settle();
+
+    expect(listOffline().map((entry) => entry.song.id)).toEqual(["alpha"]);
+    expect(cache.entries.has("https://songs.example/alpha-guitar.ogg")).toBe(true);
+    expect(cache.entries.has("https://songs.example/beta-guitar.ogg")).toBe(false);
+  });
+
+  test("a quota failure stops the queue instead of walking the rest", async () => {
+    const { cache } = installEnvironment();
+    stubFetch(playlistHost());
+    cache.beforePut = (url) => {
+      if (url === "https://songs.example/beta.json") {
+        throw new DOMException("full", "QuotaExceededError");
+      }
+    };
+
+    const seen: OfflineQueueState[] = [];
+    const unsubscribe = subscribeDownloads(() => {
+      const queue = downloadState().queue;
+      if (queue) seen.push({ ...queue });
+    });
+    expect(startPlaylistDownload(playlistSongs(), FROM)).toBe(true);
+    await settle();
+    unsubscribe();
+
+    expect(listOffline().map((entry) => entry.song.id)).toEqual(["alpha"]);
+    // Gamma was never attempted: a full device cannot keep it either.
+    expect(
+      calls.some((call) => call.url === "https://songs.example/gamma.json"),
+    ).toBe(false);
+    expect(seen[seen.length - 1]).toMatchObject({ done: 2, total: 3, failed: 1 });
+    expect(downloadState().error).toMatchObject({ songId: "beta", reason: "quota" });
+  });
+
+  test("a playlist with nothing this browser can keep starts no job", () => {
+    installEnvironment();
+    stubFetch(playlistHost());
+    const local = song({
+      id: "only-local",
+      doc: "folder://local/song.json",
+      from: "folder://local/song.json",
+    });
+
+    expect(startPlaylistDownload([local], "folder://local")).toBe(false);
+    expect(downloadState().busy).toBe(false);
+    expect(calls).toEqual([]);
   });
 });

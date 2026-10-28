@@ -53,7 +53,11 @@ Routes: `/` (landing), `/play` (the public game page, in the site shell), `/app`
   machine run, the results, then another song), and any real input returns to the
   welcome. **The homepage embeds the same entry** in a phone-shaped iframe with
   `players=1&sound=0&demo=1&chrome=0`, so the marketing page still ships no
-  JavaScript and the hero is one silent player. That window is a **same-origin
+  JavaScript and the hero is one silent player. **The whole frame is a link to
+  `/play`**: the iframe is decoration — `aria-hidden`, out of the tab order and
+  taking no pointer events — and the anchor laid over it is the real control, named
+  and focusable, outlined in yellow on hover and focus so no plaque sits over the hit
+  line; the caption link below it stays. That window is a **same-origin
   iframe**, so `public/_headers` keeps `frame-ancestors 'self'` — do not tighten it
   back to `'none'`. The demo's decisions are pure in
   `src/lib/game/attract.ts`; `useAttract` only owns the idle, the timers and the
@@ -216,7 +220,9 @@ only gate that can see the regression, and static documents belong in
   the "E" + star brand tile; `public/icons/brand-mark.svg` is the icon source.
 - `src/components/home/{HomePage,StageWindow}.astro` — the landing page and its
   phone-shaped live attract window (an iframe of `/arcade`, linked to `/play`; the
-  old static hero SVG is gone).
+  old static hero SVG is gone). The iframe is decorative and the anchor over it is
+  the frame's one real link, so the window is keyboard-reachable without a plaque on
+  the picture.
 - `src/components/game/GameApp.tsx` — **the game island's shell**, and the loop
   around the run: it draws the room, the provider tower, the stage, the pages, the
   corner and focus. Its root (`.band`) is the persistent fullscreen target and must
@@ -380,9 +386,10 @@ only gate that can see the regression, and static documents belong in
   `folder.ts` (reading a folder off this machine, and **importing files into OPFS**),
   `localImport.ts` (the pure root/path/cap arithmetic an import is built from),
   `drop.ts` (a dropped folder walked with `webkitGetAsEntry`), `sng.ts` (fetching a
-  package and making its members object URLs), `downloads.ts` (the offline manifest and
-  Cache Storage writes), `useOffline` (the list, the one in-flight download and storage
-  numbers), `DownloadAction` and `DownloadsDialog`, `SongCover` and `PlaylistsDialog`.
+  package and making its members object URLs), `downloads.ts` (the Cache Storage writes,
+  one song or a whole playlist's queue in the one job), `useOffline` (the list, the job
+  in flight and the storage numbers), `DownloadAction` and `DownloadsDialog`,
+  `SongCover` and `PlaylistsDialog`.
 - `src/lib/game/url.ts` — **what the game will fetch**, pure and tested: an absolute
   `http:`/`https:` URL with a host, the host to show for it, and whether an https page
   would block it as mixed content. `store.ts` is where the policy is enforced, with the
@@ -644,7 +651,7 @@ only gate that can see the regression, and static documents belong in
   lazy dialog still mounts as
   a native `<dialog>` with `useModal`, and its opener keeps `aria-haspopup="dialog"`, so
   Escape and focus return are unchanged. **The initial `/play` graph is the number that
-  matters** — 546.4 KiB raw / 177.2 KiB gzipped across 21 files — and
+  matters** — 560 KiB raw / 182 KiB gzipped across 26 files — and
   `scripts/check-budget.ts` gates the initial raw and gzipped sizes directly, and fails
   if a translator marker appears in it. Do not lazy-load the main screens: a flash on every navigation costs more than
   the bytes it saves.
@@ -968,6 +975,26 @@ only gate that can see the regression, and static documents belong in
   offline fallback); stems/art are cache-first. A download is all-or-nothing: a failure
   or a `QuotaExceededError` deletes everything the attempt wrote. YouTube-backed and
   local folder songs are refused rather than half-saved.
+- **A whole playlist is saved through the same downloader, not a second one.**
+  `startPlaylistDownload` (`library/downloads.ts`) takes the **one** page-wide job slot
+  and runs `downloadSong` over the plan one song at a time, so a saved playlist is a
+  set of ordinary per-song records — the Downloads dialog lists every song, removing
+  one takes only its files, and there is no playlist manifest to keep in step.
+  `planPlaylistDownload` is the pure pre-flight the Playlists dialog runs while it
+  draws: it returns the songs it would attempt and the ones it skips with a reason
+  (`local` is already offline, `unsupported` is a browser with no worker), without a
+  fetch. A song whose document turns out to be **YouTube-backed** is planned like any
+  other and fails on its own step, because the playlist summary does not carry the
+  audio source. The queue is `{ source, done, total, failed, skipped }`, told through
+  `OfflineJobState`, with `busyId` following the song in flight so the now-playing
+  slot's progress still works; `done` counts the songs the queue has **begun**, so
+  `Saving 3 of 12…` is where it is. An **ordinary** failure is counted and the queue
+  carries on; the songs already completed stay, and each failed attempt is rolled back
+  by `downloadSong` itself. A **quota** failure stops the rest of the queue, since
+  every later song would hit the same wall. `cancelDownload` aborts a queue as well as
+  a single song. Nothing is offered for a **local folder** (already on the device), a
+  **pinned song** (a source, not a catalogue) or an **on-demand** playlist (its songs
+  are answers to a search) — those rows simply have no button.
 - **The installed game's shell is generated, never hand-written.** `bun run build`
   runs `scripts/build-sw.ts` after Astro: it reads the built pages, takes every
   `_astro` chunk **including the lazy ones** (`precache.ts` is pure and tested), and

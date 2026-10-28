@@ -79,4 +79,17 @@ test("the homepage shows the live window and links it to the game", async ({
     { timeout: 25_000 },
   );
   expect(audioRequests).toEqual([]);
+
+  // The whole frame is a real link and the iframe under it is decoration: the
+  // anchor is named, takes focus, and a keypress really goes to the game. That is
+  // the browser-only half — the static document says the same thing, but only a
+  // page can be focused and followed.
+  await expect(window).toHaveAttribute("aria-hidden", "true");
+  await expect(window).toHaveAttribute("tabindex", "-1");
+  const frameLink = page.getByRole("link", { name: "Play EverythingStar" }).first();
+  await expect(frameLink).toHaveAttribute("href", "/play");
+  await frameLink.focus();
+  await expect(frameLink).toBeFocused();
+  await page.keyboard.press("Enter");
+  await page.waitForURL(/\/play$/);
 });
