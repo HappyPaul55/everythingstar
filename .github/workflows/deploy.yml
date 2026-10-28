@@ -10,6 +10,15 @@
 # It can sit "in progress" for 10–15 minutes, because it waits for CI (`verify`
 # and the browser suite) as well as the Cloudflare build before it asks the live
 # site anything. The `production` environment is created on the first run.
+#
+# A burst of merges is the case that shapes it. Only the newest commit is the head
+# of `main`, and Cloudflare coalesces a burst into the build that matters — so an
+# older commit may never get a `Workers Builds:` check at all. Such a run is
+# **recorded, not verified**: it finishes as soon as it sees `main` has moved on,
+# runs the smoke test without asserting the build identity (production is somebody
+# else's commit now), and says which one. The newest run asserts everything.
+# There is deliberately no concurrency group: serialising the records would cancel
+# the queued ones, and a merge with no record is worse than a second job.
 name: Deploy
 
 on:
@@ -21,10 +30,6 @@ permissions:
   contents: read
   checks: read
   deployments: write
-
-concurrency:
-  group: deploy-production
-  cancel-in-progress: false
 
 jobs:
   production:
@@ -40,9 +45,17 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
       # No `bun install`: neither script imports a dependency.
       - name: Wait for CI and the Cloudflare build
+        id: wait
         run: bun scripts/wait-for-deploy.ts
       - name: The version this commit must serve
         id: version
         run: echo "expect=$(bun scripts/version.ts)" >> "$GITHUB_OUTPUT"
       - name: Smoke-test production
-        run: bun scripts/smoke.ts --base https://everythingstar.happypaul55.com --expect "${{ steps.version.outputs.expect }}"
+        # A superseded commit cannot assert the build identity: production is the
+        # merge that came after it. Everything else is still checked.
+        run: |
+          if [ "${{ steps.wait.outputs.superseded }}" = "true" ]; then
+            bun scripts/smoke.ts --base https://everythingstar.happypaul55.com
+          else
+            bun scripts/smoke.ts --base https://everythingstar.happypaul55.com --expect "${{ steps.version.outputs.expect }}"
+          fi

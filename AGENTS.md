@@ -2588,7 +2588,13 @@ only gate that can see the regression, and static documents belong in
   `e2e` and the Cloudflare run on that exact SHA (`scripts/wait-for-deploy.ts`), then
   smokes the live origin (`scripts/smoke.ts`) and fails the deployment when the site
   is not right. The job can sit "in progress" for 10–15 minutes; that is the wait,
-  not a hang.
+  not a hang. **A burst of merges is the case that shapes it**: only the newest commit
+  is the head of `main`, and Cloudflare coalesces the burst into the build that
+  matters, so an older commit may never get a `Workers Builds:` check at all. Such a
+  run is **recorded, not verified** — it exits as soon as `main` has moved on, smoke
+  tests without asserting the build identity, and says which commit owns production
+  now. That is why there is no concurrency group: serialising the records would
+  cancel the queued ones, and a merge with no record is worse than a second job.
 - **The build names itself.** `bun run version` prints `v<package.json
   version>+<7-char sha>`, which is both the welcome screen's build label and the
   service worker's shell cache name. `astro.config.mjs` and `scripts/build-sw.ts`
