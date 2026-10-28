@@ -101,7 +101,9 @@ bun run test:pwa         # installs the worker against a build, reloads with no 
 bun run knip             # dead-code check (knip)
 bun run budget           # dist/ and public/audio size caps
 bun run check:pwa        # manifest and worker build gate (scripts/check-pwa.ts)
-bun run verify           # lint, knip, check, test types, tests, build, check:pwa, budget
+bun run release:assets   # game, arcade and website archives into release/ (zip + tar.gz)
+bun run check:release    # every archive holds its plan, and both formats agree
+bun run verify           # lint, knip, check, test types, tests, build, check:pwa, budget, release
 bun run version          # the build's version: v<package.json>+<7-char sha>
 bun run version:bump     # bump package.json and print the release steps
 bun run import           # convert a folder of charts into the three documents
@@ -121,7 +123,9 @@ before a bin, so one would recurse into itself. Verify every change with
 **oxlint** (fast, one config, no formatter) with its rules in `.oxlintrc.json`;
 knip's entries are in `knip.jsonc`, and the tests' typecheck in
 `tsconfig.test.json` (so `tsconfig.json` keeps its test exclusion). The size caps
-live in `scripts/check-budget.ts`; the PWA gate is `scripts/check-pwa.ts`.
+live in `scripts/check-budget.ts`; the PWA gate is `scripts/check-pwa.ts`, and the
+release archives are `scripts/release-assets.ts` with their gate
+`scripts/check-release.ts` (the plan itself is `src/lib/release/bundles.ts`).
 `bun run test:e2e` starts the dev server and drives the
 island's screens in headless Chromium; its specs in `tests/e2e/` route every
 external document to a fixture, and `tests/e2e/loop.spec.ts` is the guard for the
@@ -198,6 +202,16 @@ only gate that can see the regression, and static documents belong in
   `scripts/check-pwa.ts` checks the output.
 - `src/lib/pwa/register.ts` + `src/components/pwa/ServiceWorker.astro` — the one
   registration: production, https/localhost, never inside the native WebView.
+- `src/lib/release/bundles.ts` + `scripts/release-assets.ts` + `scripts/check-release.ts`
+  — **the release archives**, and the plan they all read: one `dist/` becomes
+  `game`, `arcade` and `website`, as a zip and a tar.gz in `release/`. `game` and
+  `arcade` promote a built game-only page to `index.html`, carry the game's own
+  directories, a manifest rewired to `/` and a `BUILD.txt`, and no website at all;
+  `website` is `dist/` untouched. The plan is pure and unit-tested, the builder is
+  copying and compressing, and the gate holds an archive to its plan and to what its
+  page names — a missing `_astro` chunk is a download that draws and never hydrates.
+  `bun run verify` runs both, and `.github/workflows/release.yml` attaches the six
+  files to the GitHub Release.
 - `src/components/game/pwa/install.ts` + `useInstall.ts` — the install prompt captured
   by the inline head listener (Chromium fires it once, early) and adopted at session
   mount; the Options row offers it, iOS gets instructions, and the native shell gets no
@@ -2610,11 +2624,29 @@ only gate that can see the regression, and static documents belong in
   service worker's shell cache name. `astro.config.mjs` and `scripts/build-sw.ts`
   both read it from `scripts/version.ts`; never reintroduce a second `git describe`,
   because a CI clone has no tags.
-- **A release is a checkpoint, not a build.** Bump with `bun run version:bump
-  patch|minor|major` on a `release/…` branch, merge it, then tag the merge commit
-  `vX.Y.Z`. `.github/workflows/release.yml` refuses a tag that disagrees with
-  `package.json` or that is not on `main`, then publishes a GitHub Release with
-  generated notes; it runs no build and attaches nothing.
+- **A release is a checkpoint, and it carries the build's own output.** Bump with
+  `bun run version:bump patch|minor|major` on a `release/…` branch, merge it, then tag
+  the merge commit `vX.Y.Z`. `.github/workflows/release.yml` refuses a tag that
+  disagrees with `package.json` or that is not on `main`, then builds that commit,
+  runs `bun run release:assets` and attaches the six archives — `game`, `arcade` and
+  `website`, each as a zip and a tar.gz — to a GitHub Release with generated notes.
+  It builds because a tag has no other way to get the artifacts, and the commit is
+  already `main`'s, where `verify` (which builds and checks the same archives) ran.
+  The archives are reproducible: sorted entries, the commit's timestamp on every file,
+  `zip -X` and a bare gzip header, so the same checkout is the same bytes.
+- **The release archives are three views of one `dist/`, never three builds.**
+  `src/lib/release/bundles.ts` is the plan (pure, unit-tested) and both the builder
+  and the gate read it. A standalone archive is **served at an origin's root**,
+  because the build addresses everything from `/` — a subfolder or `file://` is a
+  page with no JavaScript. It carries **no service worker** on purpose: the site's
+  worker precaches `app.html`/`play.html` and falls back to `/app.html` offline, so
+  in a folder that has neither it is a worker that answers 503; the manifest does
+  ship, rewired to `id`/`start_url`/`scope` `/` and a `/` shortcut, so the folder is
+  still installable. Both game entries are `noindex`, as `/embed` and `/arcade` are:
+  `/play` is the page a search should land on. The gate's real question is
+  **reachability** — every root-absolute URL the entry page names must be in the
+  archive, and every manifest icon with it — because a missing `_astro` chunk draws a
+  page that never hydrates.
 - **`main` is PR-only.** A ruleset requires `verify` and `e2e`, resolved
   conversations and a squash merge, and refuses direct pushes, force-pushes and
   deletions — including from the maintainer, whose bypass covers pull-request merges
