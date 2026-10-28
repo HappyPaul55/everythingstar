@@ -478,7 +478,9 @@ What is built in each area, and the boundaries that are deliberate rather than g
 **The ways to play**
 
 - **Typing a pitched song is supported.** Each words player chooses singing or typing on
-  the band screen; both read the same melody view and keep independent scores.
+  the band screen; both read the same melody view and keep independent scores. A
+  typist's results card reports their **words a minute and key accuracy** from the run's
+  own keystrokes.
 - **Drums are the fourth instrument**, with a **kick column** read from the chart's
   kick pitch (column 5, mapped to a key, a pad button or a learned control) and
   **freestyle fills**: inside a fill an extra hit is not a mistake, pays a small fixed
@@ -512,6 +514,10 @@ What is built in each area, and the boundaries that are deliberate rather than g
 - **Hero notes are counted** and their landing plays `sparkle`; **star power** spends a
   full meter for eight seconds of double score; and the results total **counts up**
   with `tick`.
+- **A typist's card says how they typed.** Their run publishes a `typing` report —
+  words a minute and key accuracy — from the meaningful keys it stamped, and the
+  card adds it to the same stats line as their words and combo. It is a read-out:
+  no note is judged by it, and a seek or a new run starts a fresh one.
 
 **Dev tools** — the `Dev` chip, the jumpers, and the control over who takes a
 keyboard: all marked `dev`, all behind `?dev=1` (and absent without it), and kept
@@ -907,7 +913,10 @@ keep the regions readable:
   - Words players choose whether to **sing or type** when a song carries pitch.
     Typing rides on those same words: a typist's characters are marked as they
     land, the next one is the caret, and the word being typed is the one they are
-    on. Each typist keeps their own score, exactly as each singer does.
+    on. Each typist keeps their own score, exactly as each singer does. Their
+    results card also carries their **typing report** — words a minute (five
+    characters to a word, over the first-to-last-key span, floored at a second) and
+    key accuracy — read from the run's own keystrokes and never used in judging.
   - **Singing** is heard: the microphone is asked for when **Vocals** is selected
     (or at the band's Play if a singer was remembered), then it listens only while
     the stage is playing. Pitch is detected with YIN (decimated, buffer-reusing, on

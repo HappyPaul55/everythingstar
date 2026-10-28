@@ -7,6 +7,7 @@ import {
 } from "react";
 import type { Difficulty } from "../../../lib/game/track";
 import type { PlayerKind, WordsMode } from "../../../lib/game/band/types";
+import type { TypingReport } from "../../../lib/game/typing";
 import {
   createRunBoard,
   type RunBoardRegistry,
@@ -69,6 +70,13 @@ export interface RunEntry {
    * calling every count a note. Left out, it is notes.
    */
   unit?: "notes" | "words";
+  /**
+   * A typist's typing numbers — words a minute and key accuracy — for the results
+   * card. Absent for every other seat, and for a typist who never landed a
+   * meaningful key. A read-out like the rest of the entry, never read back into
+   * judging.
+   */
+  typing?: TypingReport;
 }
 
 /**

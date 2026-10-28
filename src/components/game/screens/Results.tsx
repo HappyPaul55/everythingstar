@@ -420,6 +420,18 @@ function PlayerCard({ run }: { run: RunEntry }) {
           ·
         </span>
         {run.bestCombo} {t("band.combo")}
+        {run.typing ? (
+          <>
+            <span className="results__dot" aria-hidden="true">
+              ·
+            </span>
+            {t("screen.typingWpm", { wpm: run.typing.wpm })}
+            <span className="results__dot" aria-hidden="true">
+              ·
+            </span>
+            {t("screen.typingAccuracy", { accuracy: run.typing.accuracy })}
+          </>
+        ) : null}
       </p>
     </li>
   );

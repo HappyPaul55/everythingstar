@@ -541,6 +541,8 @@ export const en = {
   "screen.countOf": "{hits}/{total} {unit}",
   "screen.notes": "notes",
   "screen.words": "words",
+  "screen.typingWpm": "{wpm} WPM",
+  "screen.typingAccuracy": "{accuracy}% key accuracy",
   "screen.whoPlayed": "who played what",
   "screen.savedTop": "your last {count} on this song",
   "screen.savedBand": "band of {count}",

@@ -6,6 +6,7 @@ import {
   applyTypingKey,
   emptyTyping,
   typingConfigFor,
+  typingReport,
   type TypingLevel,
   type TypingState,
 } from "../../../lib/game/typing";
@@ -158,6 +159,7 @@ export function useTyping({
         judged: counts.hits + counts.misses,
         heroHits: state.heroHits,
         unit: "words",
+        typing: typingReport(state) ?? undefined,
       };
       board.report(entry);
     });

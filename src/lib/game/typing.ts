@@ -76,6 +76,15 @@ export interface TypingState {
   bestCombo: number;
   /** How many hero words were hit. A read-out for their cue, never a judging rule. */
   heroHits: number;
+  /**
+   * When the first **meaningful** key landed, in song time: a correct character,
+   * a typo or a skip. An ignored key, a Backspace and a key before its word opens
+   * do not count. Null until one lands. A read-out for the results screen
+   * (`typingReport`), never a judging rule.
+   */
+  firstKeyMs: number | null;
+  /** When the last meaningful key landed. Null until there has been one. */
+  lastKeyMs: number | null;
   finished: boolean;
 }
 
@@ -106,6 +115,8 @@ export function emptyTyping(
     combo: 0,
     bestCombo: 0,
     heroHits: 0,
+    firstKeyMs: null,
+    lastKeyMs: null,
     finished: config.words.length === 0,
   };
 }
@@ -298,9 +309,12 @@ export function applyTypingKey(
   if (target.startsWith(typed)) {
     if (typed.length >= target.length) {
       const done = finishWord(current, config, current.pointer);
-      return { ...done, correctKeys: current.correctKeys + 1 };
+      return stampKey({ ...done, correctKeys: current.correctKeys + 1 }, timeMs);
     }
-    return { ...current, input: typed, correctKeys: current.correctKeys + 1 };
+    return stampKey(
+      { ...current, input: typed, correctKeys: current.correctKeys + 1 },
+      timeMs,
+    );
   }
 
   // Not this word. Does the key begin a later one? Then the player is skipping.
@@ -309,11 +323,67 @@ export function applyTypingKey(
     let next = current;
     for (let at = current.pointer; at < skipTo; at += 1) next = missed(next, at);
     next = finishWord(next, config, skipTo);
-    return { ...next, input: "", errorKeys: current.errorKeys + 1 };
+    return stampKey({ ...next, input: "", errorKeys: current.errorKeys + 1 }, timeMs);
   }
 
   // A plain typo: the word stands, and the player may try again.
-  return { ...current, input: "", errorKeys: current.errorKeys + 1 };
+  return stampKey({ ...current, input: "", errorKeys: current.errorKeys + 1 }, timeMs);
+}
+
+/**
+ * A state with a **meaningful** key's own moment on it: the first one starts the
+ * clock, and every one after it moves the end. Backspace, an ignored key and a key
+ * that arrives before its word opens never reach here, so the report measures
+ * typing rather than a correction, dead air or a stray press.
+ */
+function stampKey(state: TypingState, timeMs: number): TypingState {
+  return {
+    ...state,
+    firstKeyMs: state.firstKeyMs ?? timeMs,
+    lastKeyMs: timeMs,
+  };
+}
+
+/** The shortest span a typing rate is read over. */
+const REPORT_FLOOR_MS = 1000;
+
+/** What a typist's run came to, as the results card reads it. A read-out only. */
+export interface TypingReport {
+  /** Whole words a minute, five characters to a word. */
+  wpm: number;
+  /** Whole-percent share of meaningful keys that were right. */
+  accuracy: number;
+  /** Correct keys plus wrong ones: what the rate is read over. */
+  keys: number;
+  /** The wrong ones among `keys`. */
+  wrong: number;
+  /** The first-to-last-key span the rate was read over, already floored. */
+  spanMs: number;
+}
+
+/**
+ * A typist's own numbers: words a minute and key accuracy. Pure, and `null` when
+ * no meaningful key landed — a typist who never touched the keyboard has no rate
+ * to report, and a zero would read as a terrible one.
+ *
+ * The rate is the standard five characters to a word over the span from the first
+ * meaningful key to the last. **That span has a one-second floor**: a couple of
+ * keys can land milliseconds apart, and a rate read over that burst is thousands
+ * of words a minute — and a single key would divide by zero. One second is the
+ * shortest span a typing rate means anything over.
+ */
+export function typingReport(state: TypingState): TypingReport | null {
+  if (state.firstKeyMs === null || state.lastKeyMs === null) return null;
+  const keys = state.correctKeys + state.errorKeys;
+  if (keys === 0) return null;
+  const spanMs = Math.max(REPORT_FLOOR_MS, state.lastKeyMs - state.firstKeyMs);
+  return {
+    wpm: Math.round(keys / 5 / (spanMs / 60_000)),
+    accuracy: Math.round((state.correctKeys / keys) * 100),
+    keys,
+    wrong: state.errorKeys,
+    spanMs,
+  };
 }
 
 /** Where a mistyped key could skip to, or -1 if it begins nothing later. */
