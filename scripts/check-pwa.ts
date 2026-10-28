@@ -23,6 +23,7 @@
  */
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { docHref } from "../src/lib/docs/paths";
 
 const ROOT = process.cwd();
 const DIST = join(ROOT, "dist");
@@ -300,9 +301,17 @@ if (sitemap) {
     sitemap.matchAll(/<loc>([^<]+)<\/loc>/g),
     (match) => new URL(match[1]!).pathname,
   ).sort();
+  // The paper pages plus one URL per documentation file. The docs are read from
+  // the collection's own folder so a new page is not a checker edit, and the
+  // notices (`other/…`) resolve to their site-root URLs.
+  const docs = readdirSync(join(ROOT, "docs"), { recursive: true, encoding: "utf8" })
+    .map((file) => file.replace(/\\/g, "/"))
+    .filter((file) => file.endsWith(".md"))
+    .map((file) => docHref(file.slice(0, -".md".length)));
+  const expected = [...new Set(["/", "/play", ...docs])].sort();
   check(
     "the sitemap lists exactly the indexable pages",
-    paths.join(",") === "/,/play,/privacy",
+    paths.join(",") === expected.join(","),
     paths.join(", "),
   );
 }

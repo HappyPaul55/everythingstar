@@ -3,7 +3,7 @@ dist/
 
 # Audio as downloaded: a pack's masters, its duplicate formats and its alternates.
 # `public/` is deployed verbatim, so only what the game actually serves belongs in
-# it — see AUDIO.md for the ids, the formats and the folders that ship.
+# it — see docs/developers/audio.md for the ids, the formats and the folders that ship.
 audio-src/
 
 # wrangler local state

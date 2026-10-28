@@ -36,7 +36,7 @@ function describe(violations: Awaited<ReturnType<typeof seriousViolations>>): st
 }
 
 /**
- * The three paper pages, each loaded on its own.
+ * The paper pages, each loaded on its own.
  *
  * They are plain Astro, so there is no screen machine to walk: the document is
  * the whole page and the audit is of exactly what a search or a link lands on.
@@ -45,6 +45,12 @@ function describe(violations: Awaited<ReturnType<typeof seriousViolations>>): st
 const PAPER_PAGES = [
   { path: "/", status: 200, name: "the landing page" },
   { path: "/privacy", status: 200, name: "the privacy page" },
+  { path: "/docs", status: 200, name: "the documentation hub" },
+  {
+    path: "/docs/developers/architecture",
+    status: 200,
+    name: "a documentation page",
+  },
   { path: "/404", status: 404, name: "the not-found page" },
 ];
 

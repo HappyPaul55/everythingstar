@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "note": "What the game has, by type. A type is what the game plays and may have several files behind it. There are 24 types and 34 files; see AUDIO.md for what each is for and the brief for replacing a generated sting.",
+  "note": "What the game has, by type. A type is what the game plays and may have several files behind it. There are 24 types and 34 files; see docs/developers/audio.md for what each is for and the brief for replacing a generated sting.",
   "sounds": [
     { "id": "background_1", "type": "background", "kind": "track", "file": "background_1.ogg", "credit": "HappyPaul55, made with Suno" },
     { "id": "background_2", "type": "background", "kind": "track", "file": "background_2.ogg", "credit": "HappyPaul55, made with Suno" },

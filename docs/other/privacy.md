@@ -2,6 +2,7 @@
 title: Privacy Policy
 description: "How EverythingStar handles what it keeps: no accounts, no analytics, no advertising, and your settings, band and scores stay in this browser."
 updated: "2026-10-27"
+order: 1
 ---
 
 EverythingStar is a free browser game. You can play it without signing in, and

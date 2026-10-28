@@ -1,0 +1,71 @@
+---
+import { getCollection, getEntry, render } from "astro:content";
+import DocsLayout from "../../layouts/DocsLayout.astro";
+import { localeFromPath, tFor } from "../../i18n/astro";
+import { localePath } from "../../i18n/paths";
+import { docGroups } from "../../lib/docs/nav";
+import { docHref } from "../../lib/docs/paths";
+import { SECTION_LABELS, SECTION_LEDES } from "../../lib/docs/sections";
+
+/**
+ * The docs hub: `docs/README.md`'s own introduction, then every section as a
+ * list — the whole documentation on one page, which is what makes it findable
+ * without a client-side search.
+ */
+const hub = await getEntry("docs", "README");
+if (!hub) throw new Error("Missing the documentation hub (docs/README.md).");
+
+const locale = localeFromPath(Astro.url.pathname);
+const t = tFor(locale);
+const { Content, headings: bodyHeadings } = await render(hub);
+const groups = docGroups(await getCollection("docs"));
+// The section cards are headings the Markdown did not write, so the page's own
+// contents would otherwise stop at the introduction.
+const headings = [
+  ...bodyHeadings,
+  ...groups.map((group) => ({
+    depth: 2 as const,
+    slug: group.section,
+    text: t(SECTION_LABELS[group.section]),
+  })),
+];
+
+const crumbs = [
+  { name: t("nav.home"), path: localePath(locale, "/") },
+  { name: t("docs.title"), path: localePath(locale, "/docs") },
+];
+const title = hub.data.title;
+---
+
+<DocsLayout
+  title={title}
+  description={hub.data.description}
+  path={localePath(locale, "/docs")}
+  crumbs={crumbs}
+  updated={hub.data.updated}
+  headings={headings}
+  wide
+>
+  <Content />
+
+  <div class="docs-hub">
+    {
+      groups.map((group) => (
+        <section class="docs-hub__section" id={group.section}>
+          <h2 class="docs-hub__title">{t(SECTION_LABELS[group.section])}</h2>
+          <p class="docs-hub__lede">{t(SECTION_LEDES[group.section])}</p>
+          <ul class="docs-hub__list">
+            {group.docs.map((doc) => (
+              <li>
+                <a class="docs-hub__link" href={docHref(doc.id)}>
+                  <span class="docs-hub__name">{doc.data.title}</span>
+                  <span class="docs-hub__description">{doc.data.description}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+</DocsLayout>

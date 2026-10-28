@@ -1,7 +1,7 @@
 /**
  * The **sound manifest**: every sound the game can play, and where each one is.
  *
- * `AUDIO.md` is the list of what the game needs; this is the file that says what it
+ * `docs/developers/audio.md` is the list of what the game needs; this is the file that says what it
  * has. It lives beside the sounds themselves (`public/audio/sounds.json`) and is
  * **fetched like everything else**, so adding a sound is dropping a file next to it
  * and writing a line — no rebuild, no code.

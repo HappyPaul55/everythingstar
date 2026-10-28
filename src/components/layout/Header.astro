@@ -14,7 +14,7 @@ const { settings } = Astro.props;
 const locale = localeFromPath(Astro.url.pathname);
 const t = tFor(locale);
 
-// Play and Privacy; the pill for Play stands out from the plain links.
+// Play, Docs and Privacy; the pill for Play stands out from the plain links.
 const nav = siteNav(locale, t).filter((item) => item.href !== "/play");
 
 // `build.format: "file"` means Astro.url.pathname is /play.html at build time,
@@ -24,8 +24,14 @@ const normalizePath = (value: string) =>
     .replace(/index\.html$/, "")
     .replace(/\.html$/, "")
     .replace(/\/+$/, "") || "/";
-const isActive = (href: string) =>
-  normalizePath(Astro.url.pathname) === normalizePath(href);
+const isActive = (href: string) => {
+  const path = normalizePath(Astro.url.pathname);
+  const target = normalizePath(href);
+  // Docs is a section: every page under it keeps the header's Docs link lit, so
+  // a reader always knows which part of the site they are in.
+  if (target === "/docs") return path === "/docs" || path.startsWith("/docs/");
+  return path === target;
+};
 
 const current = (href: string) => (isActive(href) ? "page" : undefined);
 const playHref = localePath(locale, "/play");

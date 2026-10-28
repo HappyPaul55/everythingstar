@@ -1,0 +1,136 @@
+---
+import { getCollection, getEntry } from "astro:content";
+import BaseLayout from "./BaseLayout.astro";
+import Breadcrumbs from "../components/layout/Breadcrumbs.astro";
+import Container from "../components/ui/Container.astro";
+import DocsSidebar from "../components/docs/DocsSidebar.astro";
+import { localeFromPath, tFor } from "../i18n/astro";
+import { docNeighbours } from "../lib/docs/nav";
+import { readableDate } from "../lib/docs/date";
+import { type DocSection, docHref } from "../lib/docs/paths";
+import { pageTitle } from "../lib/seo";
+
+/**
+ * The frame every documentation page shares: the sidebar, the article, the
+ * page's own table of contents and the two links a reference page needs (when it
+ * was last true, and where to change it).
+ *
+ * The documents are Markdown and nothing here adds behaviour: the contents come
+ * from the heading list Astro already collects, the pager from the collection's
+ * order, and the edit link from the site's own repository URL. It is a paper
+ * page, so it wears the site's header and footer like the privacy notice does.
+ */
+interface Props {
+  title: string;
+  description: string;
+  path: string;
+  crumbs: { name: string; path: string }[];
+  section?: DocSection;
+  /** The collection id, which is also the file's path under `docs/`. */
+  current?: string;
+  headings?: { depth: number; slug: string; text: string }[];
+  updated?: string;
+  /** A page of links rather than prose: the hub gets the room it needs. */
+  wide?: boolean;
+}
+
+const {
+  title,
+  description,
+  path,
+  crumbs,
+  section,
+  current,
+  headings = [],
+  updated,
+  wide = false,
+} = Astro.props;
+
+const siteEntry = await getEntry("site", "main");
+if (!siteEntry) throw new Error("Missing site settings entry (site/main).");
+const site = siteEntry.data;
+
+const locale = localeFromPath(Astro.url.pathname);
+const t = tFor(locale);
+
+const entries = await getCollection("docs");
+const { previous, next } = current ? docNeighbours(entries, current) : { previous: null, next: null };
+
+const edit = current ? `${site.repo}/blob/main/docs/${current}.md` : null;
+
+const toc = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+---
+
+<BaseLayout
+  title={pageTitle(title, site.name)}
+  description={description}
+  path={path}
+  breadcrumbs={crumbs}
+>
+  <main id="main" tabindex="-1" class="spray-paper docs">
+    <Container class="docs__wrap">
+      <DocsSidebar section={section} current={current} />
+
+      <article class={wide ? "docs__article docs__article--wide" : "docs__article"}>
+        <Breadcrumbs items={crumbs} />
+        <h1 class="docs__title">{title}</h1>
+        <div class="doc">
+          <slot />
+        </div>
+
+        <footer class="docs__foot">
+          {
+            updated ? (
+              <span class="docs__updated">{t("docs.updated", { date: readableDate(updated) })}</span>
+            ) : null
+          }
+          {
+            edit ? (
+              <a class="docs__edit" href={edit} rel="noreferrer">
+                {t("docs.edit")} ↗
+              </a>
+            ) : null
+          }
+        </footer>
+
+        {
+          previous || next ? (
+            <nav class="docs__pager" aria-label={t("docs.nav")}>
+              {previous ? (
+                <a class="docs__pager-link" href={docHref(previous.id)}>
+                  <span class="docs__pager-label">{t("docs.previous")}</span>
+                  <span class="docs__pager-title">{previous.data.title}</span>
+                </a>
+              ) : (
+                <span />
+              )}
+              {next ? (
+                <a class="docs__pager-link docs__pager-link--next" href={docHref(next.id)}>
+                  <span class="docs__pager-label">{t("docs.next")}</span>
+                  <span class="docs__pager-title">{next.data.title}</span>
+                </a>
+              ) : (
+                <span />
+              )}
+            </nav>
+          ) : null
+        }
+      </article>
+
+      {
+        toc.length > 0 ? (
+          <nav class="docs__toc" aria-label={t("docs.onThisPage")}>
+            <p class="docs-side__label">{t("docs.onThisPage")}</p>
+            <ul>
+              {toc.map((heading) => (
+                <li class={heading.depth === 3 ? "docs__toc-sub" : undefined}>
+                  <a href={`#${heading.slug}`}>{heading.text}</a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ) : null
+      }
+    </Container>
+  </main>
+</BaseLayout>

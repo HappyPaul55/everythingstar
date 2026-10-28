@@ -1,0 +1,72 @@
+---
+import { getCollection } from "astro:content";
+import { localeFromPath, tFor } from "../../i18n/astro";
+import { localePath } from "../../i18n/paths";
+import { docGroups } from "../../lib/docs/nav";
+import { DOC_SECTIONS, type DocSection, docHref } from "../../lib/docs/paths";
+import { SECTION_LABELS } from "../../lib/docs/sections";
+
+/**
+ * The docs sidebar: the four sections, then the pages of the one being read.
+ *
+ * The documents come from the collection, so a new page is a new file and a
+ * line in the hub — never a link list here. It marks the current page with
+ * `aria-current`, and it is a normal document on a phone: the list stacks above
+ * the article rather than being hidden behind a button that would need script.
+ */
+interface Props {
+  section?: DocSection;
+  current?: string;
+}
+
+const { section, current } = Astro.props;
+const locale = localeFromPath(Astro.url.pathname);
+const t = tFor(locale);
+const groups = docGroups(await getCollection("docs"));
+
+/** A section opens on its first page; an empty one lands on the hub's card. */
+function sectionHref(wanted: DocSection): string {
+  const first = groups.find((group) => group.section === wanted)?.docs[0];
+  return first ? docHref(first.id) : `${localePath(locale, "/docs")}#${wanted}`;
+}
+
+const pages = section
+  ? (groups.find((group) => group.section === section)?.docs ?? [])
+  : [];
+---
+
+<aside class="docs-side">
+  <a class="docs-side__label" href={localePath(locale, "/docs")}>{t("docs.title")}</a>
+  <nav class="docs-switch" aria-label={t("docs.sections")}>
+    {
+      DOC_SECTIONS.map((wanted) => (
+        <a
+          href={sectionHref(wanted)}
+          aria-current={wanted === section ? "page" : undefined}
+        >
+          {t(SECTION_LABELS[wanted])}
+        </a>
+      ))
+    }
+  </nav>
+
+  {
+    pages.length > 0 && section ? (
+      <nav class="docs-side__pages" aria-label={t(SECTION_LABELS[section])}>
+        <p class="docs-side__group">{t(SECTION_LABELS[section])}</p>
+        <ul class="docs-side__list">
+          {pages.map((page) => (
+            <li>
+              <a
+                href={docHref(page.id)}
+                aria-current={page.id === current ? "page" : undefined}
+              >
+                {page.data.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    ) : null
+  }
+</aside>

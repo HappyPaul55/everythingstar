@@ -28,6 +28,13 @@
  * which is why it moved when two features were added behind a press; the initial
  * graph moved by the rows themselves, and is the number to watch.
  *
+ * The whole-build cap was raised to 16 MiB when the documentation landed: ~40
+ * prose pages, each carrying the inlined site CSS, plus the screenshots the guide
+ * reuses. That is content rather than code — it does not touch the initial graph
+ * or the audio — but it is still upload and first-visit weight, so the cap is a
+ * limit rather than a target. Every documentation page is plain HTML with no
+ * island, and `check-docs.ts` proves it.
+ *
  * The script will not measure a build it cannot find: `dist/_astro`, `dist/`,
  * `public/audio` and `play.html` are each required before any number is read, and
  * a `play.html` with no initial JS is a failure rather than a zero.
@@ -175,7 +182,7 @@ const checks: Check[] = [
   },
   { label: "initial /play raw", actual: initialRaw, limit: 566 * KIB },
   { label: "initial /play gzip", actual: initialGzip, limit: 190 * KIB },
-  { label: "dist/ total", actual: sizeOf(DIST), limit: 12.5 * MIB },
+  { label: "dist/ total", actual: sizeOf(DIST), limit: 16 * MIB },
   { label: "public/audio", actual: sizeOf(join(ROOT, "public", "audio")), limit: 10 * MIB },
 ];
 

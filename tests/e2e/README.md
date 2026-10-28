@@ -13,14 +13,15 @@ API (OPFS, gamepad, MIDI, service worker, media). If a build script, a `bun test
 another browser test already catches it, it belongs there instead.
 
 So: static HTML and build artifacts go to `scripts/check-pwa.ts` (which already
-reads `dist/`), a pure rule goes to `src/**/*.test.ts`, and this suite keeps the
+reads `dist/`) or `scripts/check-docs.ts` (the documentation's built pages, sitemap
+and offline shell), a pure rule goes to `src/**/*.test.ts`, and this suite keeps the
 things that need a page.
 
 ## What is here
 
 | spec | tests | what only a browser can see |
 | --- | --- | --- |
-| `a11y.spec.ts` | 5 | axe scans of the paper pages and the game's screens, pause, Practice and results |
+| `a11y.spec.ts` | 7 | axe scans of the paper pages (including the docs hub and a doc page) and the game's screens, pause, Practice and results |
 | `arcade.spec.ts` | 2 | the attract demo's machine run; the homepage's same-origin, silent iframe window and the frame link a keyboard can follow |
 | `band.spec.ts` | 2 | a phone's one-box-a-row band and its missing second row, against the desk's four |
 | `brag-card.spec.ts` | 1 | a kept run's card as a Blob image and the SVG the browser really downloads |
@@ -51,7 +52,7 @@ things that need a page.
 `pwa.spec.ts` and `play-style.spec.ts` also run under `playwright.pwa.config.ts`
 (`bun run test:pwa`) against a production build: the first installs the worker and
 reloads offline, the second proves the built CSS kept its layer order. The dev
-suite is 52 tests in 27 files.
+suite is 54 tests in 27 files.
 
 ## What moved out, and why
 

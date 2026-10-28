@@ -5,9 +5,10 @@ import { siteNav } from "./nav";
 const t = translator("en");
 
 describe("siteNav", () => {
-  test("links Play then Privacy for the default locale", () => {
+  test("links Play, Docs then Privacy for the default locale", () => {
     expect(siteNav("en", t)).toEqual([
       { href: "/play", label: "Play" },
+      { href: "/docs", label: "Docs" },
       { href: "/privacy", label: "Privacy" },
     ]);
   });

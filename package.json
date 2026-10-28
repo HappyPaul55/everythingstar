@@ -32,7 +32,8 @@
     "knip": "knip",
     "budget": "bun scripts/check-budget.ts",
     "check:pwa": "bun scripts/check-pwa.ts",
-    "verify": "bun run lint && bun run knip && bun run check && bun run typecheck:tests && bun test && bun run build && bun run check:pwa && bun run budget",
+    "check:docs": "bun scripts/check-docs.ts",
+    "verify": "bun run lint && bun run knip && bun run check && bun run typecheck:tests && bun test && bun run build && bun run check:pwa && bun run check:docs && bun run budget",
     "version": "bun scripts/version.ts",
     "version:bump": "bun scripts/bump-version.ts",
     "import": "bun scripts/import/index.ts",
@@ -52,6 +53,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
+    "@astrojs/markdown-satteri": "0.4.5",
     "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "1.64.1",
     "@types/bun": "1.4.4",
@@ -61,6 +63,7 @@
     "favicons": "^7.3.1",
     "knip": "^6.43.0",
     "oxlint": "1.89.0",
+    "satteri": "^0.10.5",
     "typescript": "^6.0.3"
   }
 }

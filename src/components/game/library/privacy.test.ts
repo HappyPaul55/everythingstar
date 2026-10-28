@@ -6,7 +6,7 @@ import { STORE_NAMES } from "./store";
  * store names are read back out of the notice rather than remembered twice.
  */
 const privacy = await Bun.file(
-  new URL("../../../content/legal/privacy.md", import.meta.url),
+  new URL("../../../../docs/other/privacy.md", import.meta.url),
 ).text();
 
 describe("the privacy notice", () => {

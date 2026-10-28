@@ -1,0 +1,144 @@
+/**
+ * The documentation gate, run after `bun run build`.
+ *
+ * The docs are Markdown in `docs/` read twice — by GitHub and by this site — so
+ * the things worth checking after a build are the ones the collection and the
+ * schema cannot see:
+ *
+ * - every document has a page at the URL the site promises it (`/docs/...`, or a
+ *   notice at the site root), and the hub is `/docs`;
+ * - each page is a **paper page**: the site's header and footer, the skip target,
+ *   a canonical of its own and a breadcrumb trail;
+ * - it ships **no island** — documentation is prose and the site's shell carries
+ *   no JavaScript, so a `component-url` here would be a page that hydrates;
+ * - every page is in the sitemap (all documentation is indexable);
+ * - the **installed game** does not carry the documentation. The offline shell
+ *   precaches the game's entries and its notice; a docs page in `sw.js` would be
+ *   documentation shipped with the game, which is the one thing it must not do.
+ *   `privacy.html` is the exception and is asserted the other way: the game's own
+ *   notice must still open offline.
+ *
+ * The source's own rules — frontmatter, a unique `order`, every relative link and
+ * image — are `src/lib/docs/content.test.ts`, which runs in `bun test`.
+ */
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { DOCS_ROOT, docHref } from "../src/lib/docs/paths";
+
+const ROOT = process.cwd();
+const DIST = join(ROOT, "dist");
+const SITE = "https://everythingstar.happypaul55.com";
+const failures: string[] = [];
+
+function check(label: string, ok: boolean, detail = ""): void {
+  if (ok) {
+    console.log(`  ✓ ${label}`);
+    return;
+  }
+  failures.push(detail ? `${label}: ${detail}` : label);
+  console.log(`  ✗ ${label}${detail ? ` — ${detail}` : ""}`);
+}
+
+function read(path: string): string | null {
+  try {
+    return readFileSync(path, "utf8");
+  } catch {
+    return null;
+  }
+}
+
+/** Every document in `docs/`, by id (`players/songs`), the hub included. */
+function docIds(): string[] {
+  return readdirSync(DOCS_ROOT, { recursive: true, encoding: "utf8" })
+    .map((file) => file.replace(/\\/g, "/"))
+    .filter((file) => file.endsWith(".md"))
+    .map((file) => file.slice(0, -".md".length))
+    .sort();
+}
+
+const ids = docIds();
+check("the documentation has documents", ids.length > 0, `${ids.length} found`);
+check("the hub exists (docs/README.md)", ids.includes("README"));
+
+const built = ids.map((id) => {
+  const path = docHref(id);
+  const file = join(DIST, path === "/" ? "index.html" : `${path}.html`);
+  return { id, path, file };
+});
+
+const sitemap = read(join(DIST, "sitemap-0.xml")) ?? "";
+const sitemapPaths = new Set(
+  Array.from(sitemap.matchAll(/<loc>([^<]+)<\/loc>/g), (match) => new URL(match[1]!).pathname),
+);
+
+const sw = read(join(DIST, "sw.js")) ?? "";
+
+/** The file a site path is built at. */
+function fileFor(path: string): string {
+  const clean = path.replace(/\/$/, "");
+  return join(DIST, clean === "" ? "index.html" : `${clean}.html`);
+}
+
+console.log("\ndocumentation pages");
+
+for (const page of built) {
+  const html = read(page.file);
+  check(`${page.path} is built`, html !== null);
+  if (!html) continue;
+
+  check(
+    `${page.path} is a paper page`,
+    html.includes('id="site-header"') && html.includes('id="main"') && html.includes("<footer"),
+  );
+  check(
+    `${page.path} has its own canonical`,
+    html.includes(`<link rel="canonical" href="${SITE}${page.path}">`),
+  );
+  check(`${page.path} has a breadcrumb trail`, html.includes("comment breadcrumbs"));
+  check(`${page.path} ships no island`, !html.includes("astro-island"));
+  check(`${page.path} carries no component URL`, !html.includes("component-url="));
+  check(`${page.path} is in the sitemap`, sitemapPaths.has(page.path));
+  // The notices are the only documentation the installed game carries: its own
+  // privacy notice must open with no network. Everything else is site-only.
+  if (!page.id.startsWith("other/")) {
+    check(
+      `${page.path} is not in the offline shell`,
+      !sw.includes(`"${page.path}.html"`) && !sw.includes(`"${page.path}"`),
+    );
+  }
+
+  // Every internal anchor in this page must land on an id the target page
+  // renders. A cross-page `#section` is the one link the Markdown check cannot
+  // see, because the slug is Astro's and only the built HTML has it.
+  for (const match of html.matchAll(/href="(\/[^"]*#[^"]+)"/g)) {
+    const target = match[1]!;
+    const [path = "", hash = ""] = target.split("#");
+    const targetHtml = read(fileFor(path || page.path));
+    check(
+      `${page.path} links ${target}`,
+      targetHtml !== null && targetHtml.includes(`id="${hash}"`),
+      targetHtml === null ? "the target page is not built" : `no id="${hash}" on that page`,
+    );
+  }
+}
+
+console.log("\nthe game's own notice");
+
+check(
+  "the privacy notice is still a page",
+  existsSync(join(DIST, "privacy.html")),
+  "dist/privacy.html is the notice the installed game opens offline",
+);
+check(
+  "the notice is still precached by the game",
+  sw.includes('"/privacy.html"'),
+  "an offline install must still have the privacy notice",
+);
+
+if (failures.length > 0) {
+  console.error(`\n${failures.length} documentation check(s) failed:`);
+  for (const failure of failures) console.error(`  - ${failure}`);
+  process.exit(1);
+}
+
+console.log(`\ndocumentation: ${built.length} pages, all built and none in the game shell.`);

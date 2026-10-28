@@ -1,0 +1,59 @@
+---
+import { getEntry } from "astro:content";
+import BaseLayout from "./BaseLayout.astro";
+import Breadcrumbs from "../components/layout/Breadcrumbs.astro";
+import Container from "../components/ui/Container.astro";
+import { localeFromPath, tFor } from "../i18n/astro";
+import { readableDate } from "../lib/docs/date";
+import { pageTitle } from "../lib/seo";
+
+/**
+ * A notice, as a page of its own: one column of prose, no sidebar and no
+ * pager.
+ *
+ * The notices are written in `docs/other/` with the documentation, because they
+ * are prose that changes with the product, but they are not documentation and
+ * they keep the site-root URLs they have always had (`/privacy`, `/credits`).
+ */
+interface Props {
+  title: string;
+  description: string;
+  path: string;
+  updated: string;
+  crumbs: { name: string; path: string }[];
+}
+
+const { title, description, path, updated, crumbs } = Astro.props;
+
+const siteEntry = await getEntry("site", "main");
+if (!siteEntry) throw new Error("Missing site settings entry (site/main).");
+const site = siteEntry.data;
+
+const t = tFor(localeFromPath(Astro.url.pathname));
+---
+
+<BaseLayout
+  title={pageTitle(title, site.name)}
+  description={description}
+  path={path}
+  breadcrumbs={crumbs}
+>
+  <main id="main" tabindex="-1" class="spray-paper py-[clamp(3rem,8vw,5.5rem)]">
+    <Container>
+      <article class="legal">
+        <Breadcrumbs items={crumbs} />
+        <h1 class="mt-4 font-display text-[clamp(2rem,6vw,3.25rem)] leading-[1.03]">
+          {title}
+        </h1>
+        <p
+          class="mt-3 font-mono text-[0.78rem] font-bold tracking-[0.08em] text-muted uppercase"
+        >
+          {t("privacy.updated", { date: readableDate(updated) })}
+        </p>
+        <div class="mt-8">
+          <slot />
+        </div>
+      </article>
+    </Container>
+  </main>
+</BaseLayout>

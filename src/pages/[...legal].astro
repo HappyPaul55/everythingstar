@@ -1,0 +1,49 @@
+---
+import { getCollection, render } from "astro:content";
+import LegalLayout from "../layouts/LegalLayout.astro";
+import { localeFromPath, tFor } from "../i18n/astro";
+import { localePath } from "../i18n/paths";
+import { docHref } from "../lib/docs/paths";
+
+/**
+ * The notices — privacy, terms, copyright, credits, accessibility — as pages at
+ * the site root.
+ *
+ * They are authored with the documentation (`docs/other/`) so there is one place
+ * for prose about the game, but they are not documentation: `/privacy` is in the
+ * footer, the installed game's offline shell and the Android app, and it must not
+ * move. Only entries under `other/` are built here, so this catch-all can never
+ * take a route the site's own pages own.
+ */
+export async function getStaticPaths() {
+  const entries = await getCollection("docs");
+  return entries
+    .filter((entry) => entry.id.startsWith("other/"))
+    .map((entry) => ({
+      params: { legal: entry.id.slice("other/".length) },
+      props: { entry },
+    }));
+}
+
+const { entry } = Astro.props;
+
+const locale = localeFromPath(Astro.url.pathname);
+const t = tFor(locale);
+const { Content } = await render(entry);
+const path = docHref(entry.id);
+
+const crumbs = [
+  { name: t("nav.home"), path: localePath(locale, "/") },
+  { name: entry.data.title, path },
+];
+---
+
+<LegalLayout
+  title={entry.data.title}
+  description={entry.data.description}
+  path={path}
+  updated={entry.data.updated}
+  crumbs={crumbs}
+>
+  <Content />
+</LegalLayout>
