@@ -482,6 +482,13 @@ export const en = {
   "screen.restart": "Start again",
   "screen.quit": "Leave the stage",
   "screen.pauseHint": "Escape or Start resumes.",
+  "pause.quick": "Quick settings",
+  "pause.noteSpeed": "Note speed",
+  "pause.speedSlower": "Slower",
+  "pause.speedFaster": "Faster",
+  "pause.audioLag": "Audio lag",
+  "pause.guideVocal": "Guide vocal",
+  "pause.practiceHere": "Practice this section",
 
   // The practice dialog over the pause, and its stage read-out
   "practice.label": "Practice",

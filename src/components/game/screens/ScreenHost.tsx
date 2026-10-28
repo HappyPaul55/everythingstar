@@ -154,6 +154,9 @@ const STAGE_OVERLAYS: Record<StageScreen, OverlayView | null> = {
         durationMs={session.track.durationMs}
         onStartPractice={session.startPractice}
         onStopPractice={session.stopPractice}
+        settings={session.settings}
+        onSettings={session.changeSettings}
+        setup={session.setup}
       />
     ) : null,
 };

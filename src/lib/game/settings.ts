@@ -299,6 +299,11 @@ export function formatLag(ms: number): string {
   return ms > 0 ? `+${ms} ms` : `${ms} ms`;
 }
 
+/** A note speed as it reads: one decimal and a multiplier sign, `1.0×`. */
+export function formatNoteSpeed(speed: number): string {
+  return `${speed.toFixed(1)}×`;
+}
+
 /** Read settings out of stored JSON. Anything unreadable is the default. */
 export function parseSettings(raw: string | null): Settings {
   if (!raw) return defaults();

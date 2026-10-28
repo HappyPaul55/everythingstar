@@ -1140,8 +1140,8 @@ player who opens the JSON library and never presses Calibrate, opens Downloads, 
 a link or uses `?dev=1` does not pay for any of it.
 
 That matters because `/play` is the page the game starts on: the initial JavaScript
-graph is **542 KiB raw / 176 KiB gzipped across 21 files**. That is the first download
-only; every `_astro` JavaScript chunk in the build totals **615 KiB**, because the lazy
+graph is **546 KiB raw / 177 KiB gzipped across 21 files**. That is the first download
+only; every `_astro` JavaScript chunk in the build totals **620 KiB**, because the lazy
 chunks still ship — they are just not requested first. `scripts/check-budget.ts` walks
 `play.html`'s initial island graph, gates the initial raw and gzipped sizes directly,
 and fails if a translator marker leaks into it, so the split cannot quietly regress.
@@ -1166,6 +1166,7 @@ bun run budget           # dist/, audio and initial-JS size caps (scripts/check-
 bun run check:pwa        # manifest and worker build gate (scripts/check-pwa.ts)
 bun run verify           # lint, knip, check, test types, tests, build, check:pwa, budget
 bun run import           # convert a folder of charts into the three documents
+bun run playlist:check   # hold a playlist URL to the game's own reader
 bun run icons            # regenerate public/icons from public/icons/brand-mark.svg
 bun run fonts            # re-download the self-hosted fonts from Google Fonts
 bun run cards            # render the social cards (og-image, GitHub preview) from og-card.html
@@ -1185,10 +1186,10 @@ The gates are configured in `.oxlintrc.json`, `knip.jsonc` and
 `bun run budget` reads `dist/` (building it if it is absent) and fails when
 `dist/_astro` JavaScript passes **640 KiB**, `dist/` passes **12.5 MiB**, or
 `public/audio` passes **10 MiB** — and it gates the initial `/play` graph at **560 KiB
-raw / 190 KiB gzipped**. The build it was set with is 615 KiB of `_astro` JS, an
-initial graph of 542 KiB raw / 176 KiB gzipped, 11.1 MiB in `dist/` and 8.8 MiB of
-audio, so each cap still leaves headroom — about 4% on the JS,
-3% on the initial raw graph, 7% on its gzip, and 10–12% on the build and the audio —
+raw / 190 KiB gzipped**. The build it was set with is 620 KiB of `_astro` JS, an
+initial graph of 546 KiB raw / 177 KiB gzipped, 11.1 MiB in `dist/` and 8.8 MiB of
+audio, so each cap still leaves headroom — about 3% on the JS,
+2% on the initial raw graph, 7% on its gzip, and 10–12% on the build and the audio —
 while catching a feature-sized regression. It also fails if a source-translator
 marker appears in `/play`'s initial island graph. The audio number is the Ogg/Opus
 set:
@@ -1271,6 +1272,15 @@ screen jumper. A song plays from the jukebox through the band screen; the band s
 is where a player finds their keys, and the stage's entrance is the band's own hype and
 slide. Escape or Start pauses.
 
+**The pause is where the run's own settings are.** Besides resume, start again and
+leave, it carries a compact **quick panel** — how fast the notes come, how late the
+sound is, and the song's **guide vocal** when somebody is singing — because those are
+comforts a player wants mid-song without a page in between. They are the Options
+settings, read and written through the same session, so the two can never disagree.
+**Practice this section** opens the practice dialog seeded with the stretch the
+playhead is in (at the record's speed, once through), while the plain Practice button
+still chooses the stretch and the speed from the top.
+
 **How the stage stays cheap.** Twelve minutes is roughly 7,000 notes across a band,
 so rendering them all and re-rendering every frame would not do:
 
@@ -1342,6 +1352,9 @@ layout**) and the traps worth knowing. Read it before a structural change.
 - [`PLAYLIST-API.md`](PLAYLIST-API.md) — the **wire contract** for a playlist library:
   the playlist, song and chart documents, the on-demand search request, a complete
   worked example, and an acceptance checklist for anyone implementing a provider.
+  `bun run playlist:check <url>` holds a document to the game's own reader, and
+  `docs/playlist.schema.json` is the advisory editor shape (the reader is
+  authoritative).
 - `src/content/site/settings.json` — name, tagline, description, url, author,
   repo and licence. The `file()` loader requires an **array** with `id: "main"`;
   the site reads `getEntry("site", "main")`.
@@ -1366,7 +1379,8 @@ layout**) and the traps worth knowing. Read it before a structural change.
   the twelve-crossing Picture measurement over Options)
   and `Credits`, `Songs`
   (the jukebox: search, A–Z index, now-playing slot) with `SongRow`, `Band` (a
-  slot per player), `Loading`, `PauseMenu` with `PracticeDialog`, and
+  slot per player), `Loading`, `PauseMenu` (with its quick panel and seeded
+  `PracticeDialog`), and
   `Results`.
 - `src/lib/game/settings.ts` — **the settings**, pure and tested except the two storage
   calls: the audio lag, the visual (picture) lag, the master volume and its
