@@ -1,20 +1,11 @@
 // @ts-check
-import { execFileSync } from "node:child_process";
 import { defineConfig } from "astro/config";
 import sitemap from "@astrojs/sitemap";
 import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
+import { readVersion } from "./scripts/version.ts";
 
-const buildVersion = (() => {
-  try {
-    return execFileSync("git", ["describe", "--tags", "--always"], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    }).trim();
-  } catch {
-    return "dev";
-  }
-})();
+const buildVersion = readVersion();
 
 export default defineConfig({
   site: "https://everythingstar.happypaul55.com",
