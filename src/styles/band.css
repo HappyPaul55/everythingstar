@@ -2712,6 +2712,22 @@
   .menu__nav {
     perspective: 1000px;
   }
+  /* A quiet tool beside the three doors: the charter is where charts are made,
+     not a fourth way to play. */
+  .menu__charter {
+    display: inline-block;
+    margin-top: clamp(0.7rem, 2vmin, 1.1rem);
+    color: rgba(250, 250, 244, 0.62);
+    font-family: var(--font-mono);
+    font-size: clamp(0.56rem, 1.2vmin, 0.68rem);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .menu__charter:hover,
+  .menu__charter:focus-visible {
+    color: var(--color-yellow);
+  }
   .menu {
     display: flex;
     flex-direction: column;

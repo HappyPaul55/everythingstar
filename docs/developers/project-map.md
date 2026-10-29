@@ -264,6 +264,9 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   entrance. They read what they
   need from context (the run board, the song, the clock) and take callbacks for
   everything else.
+- `src/pages/charter.astro` + `src/components/charter/**` — **the charter island**, a tool at `/charter` rather than a screen in the run loop. It opens a song and every chart it carries, draws up to eight 2D panes, adds and moves notes by pointer, records keyboard/gamepad/MIDI takes, and downloads a Clone Hero `.chart`. Its clock and `SongAudio` are its own; the band, judging, score board and mixer are not mounted. See [Charter](charter.md).
+- `src/lib/game/charter/**` — the charter's pure rules: `grid.ts` (BPM, subdivision, snapping, bar lines), `edit.ts` (the canonical note list and every edit, including copy/paste and cross-chart paste), `record.ts` (a take of the game's own actions into notes), and `exportChart.ts` (the whole set as a `.chart`). Unit-tested beside them.
+- `src/styles/charter.css` — the charter's own look, imported only by `/charter`; it keeps the stage's tokens and never reaches a marketing page or `/play`.
 - `src/lib/game/song.ts` — **the song**: what a library lists and a band is offered
   (title, artist, album, art, length, and what there is to play). Not a track — a
   song is *where a track comes from*. `songDifficulties`, `songHasPart` and

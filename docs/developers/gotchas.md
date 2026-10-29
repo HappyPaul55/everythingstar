@@ -19,6 +19,18 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   **controller** is what a player holds (their own keys, a gamepad, a MIDI kit, the
   microphone, or the machine); and a **layout** is what that controller's controls mean. Keep to
   these words in code, comments and conversation.
+- **The charter is an island, not a screen.** `/charter` is its own React root with
+  its own `StageClock` and `SongAudio`; the game's session, band, judging, score board
+  and mixer are not mounted there. Do not add it to the screen machine, and do not
+  grow `/play`'s initial graph with it. It is game-only and `noindex`, and the only
+  shared pieces are the pure rules and the stage's clock/audio components.
+- **A charter take is the game's actions, and an export is the game's chart.** The
+  recording path is `ActionEvent` → `takeNotes` → `normaliseChart`, the same actions a
+  run judges; the download is a Clone Hero `.chart` written from the same note list.
+  A song may carry more than eight charts: the **panes** show at most eight, the
+  chart list is the whole song, and only the active pane is the recording target.
+  There is no write-back to a remote chart and no persistence beyond the tab; the
+  download is the save.
 - **Our track format is the one shape every source normalises into.**
   `src/lib/game/track.ts` holds it: `Track` → `MelodyChart` + `LaneChart[]`, and every
   format the translators read — Guitar Hero / YARG and karaoke MIDI, Clone

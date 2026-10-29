@@ -295,6 +295,7 @@ saved.
   an old WebView cache, service worker or task can never hand the app a website page from
   `/play`, `/app` or `/open`. The APK bundles `embed.html`; `noindex` and not in the
   sitemap.
+- `/charter` — the **charter island**: game-only, `noindex`, not in the sitemap, and deliberately a separate React root from `/play`. It carries the chart editor (up to eight 2D panes, pointer editing, keyboard/gamepad/MIDI recording) and its own clock and `SongAudio`; the run's providers are not mounted. See [Charter](charter.md).
 - `/open` — the **link entry**: the same game-only page, read by the intent parser. A bare
   `/open` opens the game; `?playlist=…` and `?song=…` ask to add one. `noindex` and
   excluded from the sitemap; see [`deeplinks.md`](deeplinks.md).

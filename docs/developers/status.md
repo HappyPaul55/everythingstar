@@ -84,6 +84,11 @@ A status page ages; `updated` at the foot of this page is when it was last true.
   blurred) on the stage, and drifting flares so the room is not a photograph — and
   whether a song's own plays at all is a **setting** rather than a rule.
 
+- **The charter** (`/charter`): a separate island that opens a song and every
+  instrument chart it carries, shows up to eight 2D panes, adds and moves notes with
+  the pointer, records a take from the keyboard, a gamepad or MIDI, snaps to a tempo
+  grid, and downloads the set as a Clone Hero / YARG `.chart`. It is a tool, not a
+  run: no band, no judging, no score, and no write-back to a remote playlist.
 The built-in index is read fresh once per visit; a browser seeded with the old local
 `/playlist/default.json` is migrated onto it, and `src/lib/game/mock/` stays a
 **fixture generator** for the tests.

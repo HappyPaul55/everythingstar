@@ -82,6 +82,15 @@ export const BUILD_NOTE_NAME = "BUILD.txt";
  */
 const RUNTIME_FILES = ["audio/sounds.json", "images/background_1.jpg"];
 
+/**
+ * A page a standalone archive carries beside its entry.
+ *
+ * The charter is reached from the menu and is a page of its own, so a game folder
+ * without it has a menu link that 404s. It is not the entry and never becomes
+ * `index.html`; it is the one extra document the game's own menu names.
+ */
+const EXTRA_PAGES = ["charter.html"];
+
 export interface BundlePlan {
   bundle: ReleaseBundle;
   /**
@@ -120,7 +129,11 @@ export function planBundle(
   return {
     bundle,
     files: distFiles
-      .filter((file) => SHARED_DIRECTORIES.some((directory) => file.startsWith(directory)))
+      .filter(
+        (file) =>
+          SHARED_DIRECTORIES.some((directory) => file.startsWith(directory)) ||
+          EXTRA_PAGES.includes(file),
+      )
       .sort(),
     entry: { from: ENTRY_PAGE[bundle], to: ENTRY_NAME },
     // The built manifest cannot be copied as it is: it starts at `/app`, which a
