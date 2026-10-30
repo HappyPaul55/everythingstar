@@ -7,40 +7,34 @@
  * only the frame — one `<details>` per variant, so the selector needs no
  * JavaScript and the page keeps its "no island" promise.
  *
- * The manifest is read, never Playwright: a production build with no capture for
- * a fence fails here rather than shipping a placeholder.
+ * The paths come from the **config and the fence**, not the manifest: the
+ * manifest is the capture side's business, and a build that read it could ship a
+ * stale placeholder when the two disagreed. A missing file in a build is Astro's
+ * own `ImageNotFound`, which names the path; only a dev server, told to allow it,
+ * draws a placeholder.
  */
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { MdastContent, MdastPluginDefinition } from "satteri";
+import docshots from "../../../docshots.config";
 import { parseFenceMeta } from "../docshots/fence";
-import { MANIFEST_PATH, imageUrl, shotKey, type Manifest, type Shot } from "../docshots/manifest";
+import { imageUrl, variantFile } from "../docshots/manifest";
 import { docIdFromPath } from "./paths";
 
 export interface DocsShotsOptions {
   /** Absolute repository root. */
   root: string;
-  /** A build: a missing capture is an error. In dev it is a visible placeholder. */
-  strict: boolean;
+  /** A dev server: a capture that is not on disk yet is a visible placeholder. */
+  allowPlaceholder: boolean;
 }
 
-function readAt(root: string): Manifest | null {
-  const path = join(root, MANIFEST_PATH);
-  try {
-    const mtime = statSync(path).mtimeMs;
-    if (cache?.mtime !== mtime) {
-      cache = { mtime, manifest: JSON.parse(readFileSync(path, "utf8")) as Manifest };
-    }
-    return cache.manifest;
-  } catch {
-    return null;
-  }
+interface FrameShot {
+  id: string;
+  alt: string;
+  caption?: string;
+  variants: { name: string }[];
 }
-
-// The manifest changes between a capture run and the build that reads it, and a
-// dev server outlives both; cache on the file's mtime rather than forever.
-let cache: { mtime: number; manifest: Manifest } | null = null;
 
 function escapeHtml(value: string): string {
   return value
@@ -54,9 +48,15 @@ function label(name: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
-function frame(shot: Shot, docPath: string, root: string, outDir: string): MdastContent[] {
+function frame(
+  shot: FrameShot,
+  docPath: string,
+  root: string,
+  outDir: string,
+): MdastContent[] {
   const images = shot.variants.map((variant): MdastContent => {
-    const url = imageUrl(docPath, root, outDir, variant.file);
+    const file = variantFile(shot.id, variant.name);
+    const url = imageUrl(docPath, root, outDir, file);
     return { type: "paragraph", children: [{ type: "image", url, alt: shot.alt }] };
   });
 
@@ -86,7 +86,10 @@ function frame(shot: Shot, docPath: string, root: string, outDir: string): Mdast
   ];
 }
 
-export function docsShots({ root, strict }: DocsShotsOptions): MdastPluginDefinition {
+export function docsShots({
+  root,
+  allowPlaceholder,
+}: DocsShotsOptions): MdastPluginDefinition {
   return {
     name: "docs-shots",
     code(node, ctx) {
@@ -96,22 +99,23 @@ export function docsShots({ root, strict }: DocsShotsOptions): MdastPluginDefini
 
       const fileURL = ctx.fileURL;
       if (!fileURL) return;
-      const doc = docIdFromPath(fileURLToPath(fileURL));
+      const docPath = fileURLToPath(fileURL);
+      const doc = docIdFromPath(docPath);
       if (!doc) return;
 
-      const manifest = readAt(root);
-      const shot = manifest?.shots[shotKey(doc, meta.id)];
-      // The manifest is written before the browser runs, so a capture that has
-      // not been taken yet is a file that does not exist. In dev that is a
-      // placeholder — the dev server must not fail a page for the picture the
-      // capture run is about to make.
-      if (
-        !shot ||
-        !manifest ||
-        shot.variants.some((variant) => !existsSync(join(root, manifest.outDir, variant.file)))
-      ) {
-        const message = `${doc}:${node.position?.start.line ?? 0}: no capture for "${meta.id}" — run \`bun run docs:shots\``;
-        if (strict) throw new Error(message);
+      const names = meta.viewports
+        ? meta.viewports.split(",").map((name) => name.trim())
+        : Object.keys(docshots.variants);
+      const variants = names
+        .filter((name) => docshots.variants[name])
+        .map((name) => ({ name }));
+      if (variants.length === 0) return;
+
+      const missing = variants.some(
+        (variant) =>
+          !existsSync(join(root, docshots.outDir, variantFile(meta.id, variant.name))),
+      );
+      if (missing && allowPlaceholder) {
         ctx.replaceNode(node, {
           type: "html",
           value: `<p class="doc-shot doc-shot--missing"><strong>Screenshot not generated.</strong> Run <code>bun run docs:shots</code>.</p>`,
@@ -119,7 +123,20 @@ export function docsShots({ root, strict }: DocsShotsOptions): MdastPluginDefini
         return;
       }
 
-      ctx.replaceNode(node, frame(shot, fileURLToPath(fileURL), root, manifest.outDir));
+      ctx.replaceNode(
+        node,
+        frame(
+          {
+            id: meta.id,
+            alt: meta.alt ?? "",
+            ...(meta.caption ? { caption: meta.caption } : {}),
+            variants,
+          },
+          docPath,
+          root,
+          docshots.outDir,
+        ),
+      );
     },
   };
 }
