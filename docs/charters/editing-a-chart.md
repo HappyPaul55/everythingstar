@@ -17,6 +17,8 @@ a band would play.
 
 ## Edit
 
+- A note is a **strum** or a **hopo**. Tapping is how a controller plays it — a key,
+  a dance pad or a phone — not a third kind of note.
 - **Click** an empty cell to add a note at that column and moment.
 - **Drag** across empty cells to paint notes.
 - **Drag a note** to move it; the other selected notes move with it.
@@ -41,7 +43,8 @@ and level.
 
 Choose the chart you are editing, press **Record**, and play with the keyboard, a
 gamepad or a MIDI input. A strum takes the frets held at that moment; a tapped
-instrument takes each press; a held fret is a sustain. The take starts at the
+instrument turns each press into an ordinary strum note; a held fret is a sustain.
+Tapping is the controller's way of playing the note, not a third note kind. The take starts at the
 playhead and stops when you press Record again (or Escape). **Replace section** is the
 default; **Overdub** lays the take over what is already there. **Quantize** snaps the
 take as it is captured.

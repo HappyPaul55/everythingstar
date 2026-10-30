@@ -35,12 +35,12 @@ follows the song's stems.
 - `src/lib/game/charter/edit.ts` — every edit is a pure function over notes:
   add, remove, move, set one note, quantize, copy/paste, duplicate chart. Every
   result goes through `normaliseChart`, which sorts, dedupes a column at a moment,
-  fixes a kind the instrument cannot play, and stops a sustain at the next note in
-  its column.
+  keeps the note a **strum** or a **hopo** (tapping is a controller behaviour, not a
+  note kind), and stops a sustain at the next note in its column.
 - `src/lib/game/charter/record.ts` — a take (`ActionEvent[]`, the same actions a run
   judges) becomes notes: a strum takes the frets held at that moment, a tapped
-  instrument takes each press, a hold becomes a sustain, and a strum with nothing
-  down on a drum kit is not an open note.
+  instrument takes each press (as an ordinary strum note), a hold becomes a sustain,
+  and a strum with nothing down on a drum kit is not an open note.
 - `src/lib/game/charter/exportChart.ts` — the whole chart set as one Clone Hero /
   YARG `.chart` file.
 

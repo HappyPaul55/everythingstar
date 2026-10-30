@@ -335,12 +335,12 @@ function readChart(
           continue;
         }
         if (cell === STEP) {
-          notes.push({ id: `dance-${difficulty}-${serial++}`, timeMs, lengthMs: 0, kind: "tap", column, hero: false });
+          notes.push({ id: `dance-${difficulty}-${serial++}`, timeMs, lengthMs: 0, kind: "strum", column, hero: false });
           continue;
         }
         if (HOLD_HEADS.includes(cell)) {
           open.set(column, { timeMs, index: notes.length });
-          notes.push({ id: `dance-${difficulty}-${serial++}`, timeMs, lengthMs: 0, kind: "tap", column, hero: false });
+          notes.push({ id: `dance-${difficulty}-${serial++}`, timeMs, lengthMs: 0, kind: "strum", column, hero: false });
           continue;
         }
         const head = cell === HOLD_TAIL ? open.get(column) : undefined;

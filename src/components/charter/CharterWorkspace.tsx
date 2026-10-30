@@ -9,6 +9,7 @@ import { useT } from "../../i18n/react";
 import type { SourceSongDoc } from "../../lib/game/source";
 import type { Song } from "../../lib/game/song";
 import {
+  strums,
   type Difficulty,
   type InstrumentKind,
   type LaneNote,
@@ -811,13 +812,12 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
                   value={one.kind}
                   onChange={(event) => patchNote({ kind: event.target.value as LaneNote["kind"] })}
                 >
-                  {["strum", "tap", "hopo"].map((kind) => (
+                  {(active && strums(active.instrument)
+                    ? ["strum", "hopo"]
+                    : ["strum"]
+                  ).map((kind) => (
                     <option key={kind} value={kind}>
-                      {kind === "strum"
-                        ? t("charter.kindStrum")
-                        : kind === "tap"
-                          ? t("charter.kindTap")
-                          : t("charter.kindHopo")}
+                      {kind === "strum" ? t("charter.kindStrum") : t("charter.kindHopo")}
                     </option>
                   ))}
                 </select>

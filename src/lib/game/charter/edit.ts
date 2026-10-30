@@ -48,9 +48,9 @@ export function chartStrums(chart: Pick<LaneChart, "instrument">): boolean {
   return strums(chart.instrument);
 }
 
-/** The kind a new note takes on this chart. */
-export function plainKind(chart: Pick<LaneChart, "instrument">): LaneNoteKind {
-  return chartStrums(chart) ? "strum" : "tap";
+/** The kind a new note takes on this chart: every note is a strum or a hopo. */
+export function plainKind(_chart: Pick<LaneChart, "instrument">): LaneNoteKind {
+  return "strum";
 }
 
 /** A fresh id for a note the editor made. */
@@ -89,7 +89,10 @@ function normaliseNotes(
       continue;
     }
     let kind = note.kind;
-    if (!strummed) kind = "tap";
+    // A hopo is a hammer-on: it only means something on an instrument that can
+    // strum. A tapped instrument plays every note by pressing its key, so its
+    // notes are ordinary strums (the tap is the controller, not the note).
+    if (!strummed) kind = "strum";
     else if (kind !== "hopo") kind = plain;
     // A drum chart has no open note: an open note there was a mistake in the file
     // and is dropped rather than becoming a sixth, invisible pad.
@@ -317,7 +320,7 @@ export function pasteNotes(
       lengthMs: options.quantize && options.grid
         ? Math.max(0, snapMs(at + entry.lengthMs, options.grid) - at)
         : entry.lengthMs,
-      kind: strummed ? (entry.kind === "hopo" ? "hopo" : plain) : "tap",
+      kind: strummed ? (entry.kind === "hopo" ? "hopo" : plain) : "strum",
       column: entry.column,
       hero: entry.hero,
     } satisfies LaneNote];

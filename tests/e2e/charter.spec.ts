@@ -32,6 +32,10 @@ test("opens a song, edits, records and downloads a Clone Hero chart", async ({
   await page.mouse.click(box!.x + box!.width * 0.45, box!.y + box!.height * 0.4);
   await expect(page.locator(".charter-inspect__left")).toContainText("1 selected");
   await expect(page.locator(".charter-note-editor")).toBeVisible();
+  // A note is a strum or a hopo; tapping is a controller behaviour, not a kind.
+  await expect(
+    page.locator(".charter-note-editor select").nth(1).locator("option"),
+  ).toHaveText(["Strum", "Hopo"]);
 
   // Undo puts the note back to where it was.
   await page.getByRole("button", { name: "Undo" }).click();

@@ -924,10 +924,15 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   carries its own treatment (and a hit its burst **above** the line) and nothing but
   the hand ever fills the pad. Pure and unit-tested; the pads only render what it
   returns, and nothing here is ever read into judging.
+- **A note is a strum or a hopo, and tapping is a controller.** The chart's
+  `LaneNoteKind` is `strum | hopo`; a tapped instrument (keys, dance, or any touch
+  pad) plays a strum note by pressing its key, with the tap supplying the strum. Do
+  not add `tap` back as a note kind, and do not infer a note's kind from whether the
+  instrument is tapped. An older document's `tap` is read as `strum`.
 - **A hit marker can be a control, and a tap is a fret and a strum at once.** The
   `tap` setting (on by default, because it is the only way a phone has to play a
   highway) makes each pad a **button**; a press sends a `touch` trigger to that
-  panel's own run, which plays **any** note under its column — strum, tap, hopo or
+  panel's own run, which plays **any** note under its column — strum, hopo or
   open — with no hopo chain to read. A tap is stamped with the **event's own
   `timeStamp` projected through `clock.timeOf`**, exactly as a keypress or a MIDI
   note is: a DOM stamp is wall time, and judging it as song time is a tap that never

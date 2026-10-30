@@ -528,7 +528,6 @@ export const en = {
   "charter.noteLength": "Length (ms)",
   "charter.noteKind": "Kind",
   "charter.kindStrum": "Strum",
-  "charter.kindTap": "Tap",
   "charter.kindHopo": "Hopo",
   "charter.openNote": "Open",
   "charter.download": "Download .chart",

@@ -80,17 +80,28 @@ A **column** is one vertical position on the highway. A **part** is a melodic li
 
 | Field | Meaning |
 | --- | --- |
-| `timeMs`, `lengthMs` | When it is hit, and how long it is held. `0` is a tap. |
-| `kind` | `strum`, `tap` or `hopo`. |
+| `timeMs`, `lengthMs` | When it is hit, and how long it is held. `0` is not held. |
+| `kind` | `strum` or `hopo`. |
 | `column` | `0` to `columns - 1`, or `null` for an **open** note. |
 | `hero` | A bonus note, worth five times the normal value. |
 
-The note kinds follow the instrument:
+A note is a **strum** or a **hopo**. Tapping is not a note kind: it is how a controller
+plays the note. Keys, a dance mat and a phone pad press the note with no separate strum
+bar; a guitar strums. The chart says what the note is, and the controller says how the
+player performs it.
 
-- A **strummed** instrument (guitar, bass, drums) has `strum` and `hopo`. A **tapped** one (keys, dance) has only `tap`.
-- A **hopo** is a note that can be hammered on: struck by the fret alone, without a strum. The chart says which notes those are, per note; the game does not infer it from the spacing.
-- An **open** note has no column. It is strummed with no frets, spans the highway, and must stand alone at its moment — an open note beside another note is refused.
-- On **drums**, column 5 is the **kick pedal**. A drum highway is six columns wide whether or not the chart uses the pedal, and a kick can share a moment with a pad.
+- A **strum** note needs the strum gesture with its frets held — or, on a tapped
+  instrument, a press of its key.
+- A **hopo** is a note that can be hammered on: struck by the fret alone, without a
+  strum. The chart says which notes those are, per note; the game does not infer it
+  from the spacing. A hopo only exists on an instrument that strums.
+- An **open** note has no column. It is strummed with no frets, spans the highway, and
+  must stand alone at its moment — an open note beside another note is refused.
+- On **drums**, column 5 is the **kick pedal**. A drum highway is six columns wide
+  whether or not the chart uses the pedal, and a kick can share a moment with a pad.
+
+An older document may still say `tap` for a note on a tapped instrument. It is read as
+an ordinary `strum`, which is the same note under a clearer name.
 
 A **chord** is implicit: notes that share a moment in one chart are the chord. There is no chord id and no chord shape, and a strum judges the whole group — all of it or none of it. A chord can start several sustains at once, so letting one fret go stops that hold and leaves the others.
 
@@ -107,7 +118,7 @@ The rules, in the order they bite:
 5. Every column is inside the highway. A note outside the columns is not clamped onto the board; the chart is refused.
 6. An open note is on a strummed instrument, and is alone at its moment.
 7. A hopo is on a strummed instrument, and is not the first note — there is nothing before it to hammer on from.
-8. A `tap` does not appear on an instrument that strums, and a `strum` or `hopo` does not appear on one that taps.
+8. A note kind is `strum` or `hopo`; `tap` is not a note kind. A legacy `tap` is read as `strum`.
 
 It deliberately does not check a note against the song's length, or the chart against the audio: those are the source's business, and a chart that starts late is still a chart. A note with a missing or negative time is refused earlier, by the reader that places it.
 

@@ -52,10 +52,10 @@ describe("recording a take", () => {
     expect(take([fret(1, true, 100), fret(1, false, 500)])).toHaveLength(0);
   });
 
-  test("a tapped instrument records the press itself", () => {
+  test("a tapped instrument records an ordinary strum on the press", () => {
     const notes = take([fret(2, true, 100), fret(2, false, 400)], "keys");
     expect(notes).toHaveLength(1);
-    expect(notes[0].kind).toBe("tap");
+    expect(notes[0].kind).toBe("strum");
     expect(notes[0].lengthMs).toBe(250);
   });
 

@@ -79,10 +79,10 @@ describe("editing a chart", () => {
     expect(notes[1].timeMs).toBe(1800);
   });
 
-  test("a tapped instrument's notes are taps, not strums", () => {
+  test("a tapped instrument's notes are ordinary strums", () => {
     const keys: LaneChart = { ...chart(), instrument: "keys" };
     const notes = addNote([], note({ kind: "strum", column: 2 }), keys);
-    expect(notes[0].kind).toBe("tap");
+    expect(notes[0].kind).toBe("strum");
   });
 
   test("a hopo cannot be the first note", () => {
@@ -130,7 +130,7 @@ describe("editing a chart", () => {
     const keys: LaneChart = { ...chart(), instrument: "keys" };
     const pasted = pasteNotes([], clip, 4000, keys);
     expect(pasted.map((entry) => entry.timeMs)).toEqual([4000, 4250]);
-    expect(pasted.every((entry) => entry.kind === "tap")).toBe(true);
+    expect(pasted.every((entry) => entry.kind === "strum")).toBe(true);
   });
 
   test("paste skips a column the target does not have", () => {

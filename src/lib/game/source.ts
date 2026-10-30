@@ -641,23 +641,24 @@ export function readChart(
   return { lane: lane.chart, melody: null, problems: lane.problems };
 }
 
-const LANE_KINDS: LaneNoteKind[] = ["strum", "tap", "hopo"];
+const LANE_KINDS: LaneNoteKind[] = ["strum", "hopo"];
 
 /**
- * The kind a note can actually be played as on this instrument.
+ * The kind a note can actually be on this instrument.
  *
- * A chart document is somebody else's file, and it can say a keys chart's notes are
- * `strum`s or a guitar's are `tap`s. That is not a note the kit can play: the highway
- * would draw it and `chartProblems` would drop the whole chart over it. So an
- * explicit kind the kit cannot play is brought back to the instrument's own — a
- * tapped kit only taps, a strummed one strums or hammers on — exactly as the MIDI
- * and `.chart` readers settle the note that opens a chart.
+ * Every note is a strum or a hopo. A tapped instrument has no hammer-on, so a
+ * document that called one of its notes `hopo` is brought back to `strum`; an older
+ * document's `tap` is read as `strum` before this is asked. The controller decides
+ * whether the note is performed with a strum bar or a key press.
  */
 function playableKind(
   kind: LaneNoteKind,
   strummed: boolean,
   plain: LaneNoteKind,
 ): LaneNoteKind {
+  // A tapped instrument has no hammer-on: its notes are ordinary strums, and the
+  // controller plays them by tapping. `plain` is always `strum` now; keeping it a
+  // parameter makes the two callers read the same.
   if (!strummed) return plain;
   return kind === "hopo" ? "hopo" : plain;
 }
@@ -671,7 +672,7 @@ function readLanes(
   const columns = chart.columns ?? 0;
   const offset = chart.offsetMs;
   const strummed = strums(instrument);
-  const plain: LaneNoteKind = strummed ? "strum" : "tap";
+  const plain: LaneNoteKind = "strum";
   const notes: Omit<LaneNote, "id">[] = [];
   for (const entry of list(body.notes)) {
     if (!isObject(entry)) continue;
@@ -691,10 +692,13 @@ function readLanes(
       problems.push(`${chart.id}: a note outside the ${columns} columns`);
       continue;
     }
+    // `tap` was an older document's name for an ordinary note on a tapped
+    // instrument. It is read as a strum now, which is the same note.
+    const toldKind = entry.kind === "tap" ? "strum" : entry.kind;
     notes.push({
       timeMs: Math.max(0, at + offset),
       lengthMs,
-      kind: playableKind(oneOf(entry.kind, LANE_KINDS) ?? plain, strummed, plain),
+      kind: playableKind(oneOf(toldKind, LANE_KINDS) ?? plain, strummed, plain),
       column,
       hero: flag(entry.hero),
     });

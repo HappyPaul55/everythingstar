@@ -169,7 +169,9 @@ One instrument at one level, or the one melody:
 
 - A **chord** is several notes at one `timeMs`; there is no chord id.
 - An **open** note is `column: null`, on a strummed instrument, alone at its moment.
-- A **hopo** is a note kind, written by the chart. Do not re-derive it from spacing.
+- Every note is a **strum** or a **hopo**; `tap` is not a note kind. Tapping is how a
+  controller (keys, a dance mat, a phone) plays a strum note. A **hopo** is written by
+  the chart; do not re-derive it from spacing.
 - Order does not matter and notes carry no ids; the reader sorts and numbers them.
 - `phrases` are energy spans. `fills` are drum-only freestyle windows.
 - `chartType`, if present, must match the listing: `lanes`, `drums`, `vocals` or `lyrics`.
