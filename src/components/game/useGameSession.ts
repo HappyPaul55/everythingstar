@@ -9,6 +9,7 @@ import {
   type SetStateAction,
 } from "react";
 import { devToolsEnabled } from "../../lib/game/dev";
+import { DEFAULT_PLAYLIST } from "../../lib/game/defaultPlaylist";
 import {
   firstBand,
   makeBand,
@@ -61,10 +62,6 @@ import {
   type Seat,
   type SongLoad,
 } from "./library/useSongTrack";
-
-/** The public EverythingStar FOSS library, seeded on a first visit. */
-const DEFAULT_PLAYLIST =
-  "https://raw.githubusercontent.com/HappyPaul55/everythingstar-foss/main/songs/playlist.json";
 
 /**
  * How long a settings change waits before it is written down. The state is

@@ -90,6 +90,9 @@ export function Menu({ onQuickPlay, onOptions, onCredits, onBack }: Props) {
             {item("options", "02", t("screen.options"), t("screen.optionsHint"), onOptions)}
             {item("credits", "03", t("screen.credits"), t("screen.creditsHint"), onCredits)}
           </ul>
+          <a className="menu__charter" href="/charter">
+            {t("charter.menu")}
+          </a>
         </nav>
       </div>
     </div>

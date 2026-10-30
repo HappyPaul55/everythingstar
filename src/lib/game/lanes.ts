@@ -6,7 +6,7 @@ import {
   multiplier,
   notePoints,
 } from "./scoring";
-import { isOpen, momentAt, type ChartPhrase, type LaneChart, type LaneNote } from "./track";
+import { isOpen, momentAt, strums, type ChartPhrase, type LaneChart, type LaneNote } from "./track";
 import {
   STAR_POWER_MS,
   canActivateStar,
@@ -23,11 +23,13 @@ import {
  *
  * The rules:
  *
- * - **Note kinds.** A `strum` note needs a strum with its frets held; a `tap`
- *   note is hit by pressing its fret (a strum works too); a `hopo` is a tap
- *   while its chain holds and a strum once it does not.
+ * - **Note kinds.** A note is a `strum` or a `hopo`. A strum needs the strum
+ *   gesture with its frets held; a hopo is hammered while its chain holds and
+ *   strummed once it does not. **Tapping is not a note kind**: a tapped
+ *   instrument (keys, dance, or a guitar on a phone) plays every note by pressing
+ *   its fret, with the tap supplying the strum.
  * - **Tapping the hit line.** A `touch` trigger is a tap on a pad: it carries its
- *   own strum, so it plays **any** note under that column — strum, tap, hopo or
+ *   own strum, so it plays **any** note under that column — strum, hopo or
  *   open — without asking about the hopo chain. That is the playing style for a
  *   phone, where there is no strum bar to press and no second hand to press it.
  * - **Chords.** Notes sharing a moment are one chord, judged together on a
@@ -284,7 +286,7 @@ function held(
  */
 export function applyTrigger(
   run: LaneRun,
-  chart: Pick<LaneChart, "notes" | "fills">,
+  chart: Pick<LaneChart, "instrument" | "notes" | "fills">,
   trigger: LaneTrigger,
 ): LaneRun {
   // A wave of the whammy spends a full meter and buys a window of double points.
@@ -303,7 +305,7 @@ export function applyTrigger(
     };
   }
 
-  const index = nearestPending(chart.notes, run, trigger);
+  const index = nearestPending(chart.notes, run, trigger, !strums(chart.instrument));
   if (index < 0) {
     // A strike inside a fill has nothing wrong with it: the window is freestyle,
     // so it is a fill hit (rate-limited and unmultiplied) rather than an error.
@@ -386,6 +388,7 @@ function nearestPending(
   notes: readonly LaneNote[],
   run: LaneRun,
   trigger: LaneTrigger,
+  tapped: boolean,
 ): number {
   let best = -1;
   let bestDistance = Number.POSITIVE_INFINITY;
@@ -394,7 +397,7 @@ function nearestPending(
     if (run.outcomes[index] !== "pending") return;
     const distance = Math.abs(note.timeMs - trigger.timeMs);
     if (distance > HIT_WINDOW_MS || distance >= bestDistance) return;
-    if (!canJudge(note, run, notes, index, trigger)) return;
+    if (!canJudge(note, run, notes, index, trigger, tapped)) return;
     best = index;
     bestDistance = distance;
   });
@@ -408,18 +411,20 @@ function canJudge(
   notes: readonly LaneNote[],
   index: number,
   trigger: LaneTrigger,
+  tapped: boolean,
 ): boolean {
   if (trigger.signal === "fret") {
-    // A fret press only hammers: a tap underneath, or a hopo whose chain holds.
+    // On a tapped instrument the fret *is* the note: every note is played by
+    // pressing its key. On a strummed one a fret only hammers a hopo.
     if (note.column === null || note.column !== trigger.column) return false;
-    return note.kind === "tap" || hopoTappable({ notes }, run, index, trigger.timeMs);
+    return tapped || hopoTappable({ notes }, run, index, trigger.timeMs);
   }
   if (trigger.signal === "touch") {
     // A pad is a column, and an open note spans them all — so any pad takes it.
     // A tap carries its own strum, so the note's kind never refuses one.
     return note.column === null || note.column === trigger.column;
   }
-  // A strum judges a strum note, a tap, or a hopo whatever its chain says.
+  // A strum judges any note whatever its chain says.
   return true;
 }
 

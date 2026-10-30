@@ -235,7 +235,7 @@ function readBand(
 
   const strummed = strums(part.instrument);
   const drums = part.instrument === "drums";
-  const plain: LaneNoteKind = strummed ? "strum" : "tap";
+  const plain: LaneNoteKind = "strum";
   const byTick = new Map<number, { frets: { column: number; lengthMs: number }[]; flag: LaneNoteKind | null; open: number | null }>();
   for (const note of inBand) {
     const offset = note.pitch - band.base;
@@ -261,8 +261,8 @@ function readBand(
   const notes: LaneNote[] = [];
   for (const [tick, moment] of sorted) {
     const timeMs = Math.max(0, Math.round(doc.toMs(tick)));
-    // A tap instrument ignores the flags: its notes are tapped whatever the file
-    // called them, which is what `chartProblems` insists on.
+    // A tapped instrument ignores the flags: its notes are ordinary strums, played
+    // by pressing their keys.
     const kind: LaneNoteKind = strummed ? (moment.flag ?? "strum") : plain;
     if (moment.frets.length === 0) {
       if (moment.open !== null && strummed) {

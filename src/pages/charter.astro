@@ -1,0 +1,20 @@
+---
+/**
+ * The charter: a separate island for making and editing instrument charts.
+ *
+ * It is game-only (no website header or footer), `noindex`, and not in the
+ * sitemap — it is a tool reached from the game's menu, not a page to find in a
+ * search. It shares the game's token and stage stylesheets, then adds its own.
+ */
+import GameLayout from "../layouts/GameLayout.astro";
+import CharterApp from "../components/charter/CharterApp.tsx";
+import { localeFromPath, tFor } from "../i18n/astro";
+import "../styles/charter.css";
+
+const locale = localeFromPath(Astro.url.pathname);
+const t = tFor(locale);
+---
+
+<GameLayout title={t("charter.title")} heading={t("charter.title")} locale={locale}>
+  <CharterApp client:load locale={locale} />
+</GameLayout>

@@ -315,7 +315,7 @@ function readChartNotes(
   toMs: (tick: number) => number,
 ): LaneChart | null {
   const strummed = strums(part.instrument);
-  const plain: LaneNoteKind = strummed ? "strum" : "tap";
+  const plain: LaneNoteKind = "strum";
   const notes: LaneNote[] = [];
   const phrases: ChartPhrase[] = [];
   for (const line of lines) {

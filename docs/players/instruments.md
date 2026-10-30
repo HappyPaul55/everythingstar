@@ -25,6 +25,9 @@ A note that lands leaves the neck, and a small burst above the pad shows where i
 
 ## The note kinds
 
+A note is a **strum** or a **hopo**. Tapping is how a controller plays the note, not a
+third kind: a key, a dance pad or a phone pad presses it with no separate strum bar.
+
 - **Strum** — the ordinary note. Put the fret down and strum as it crosses. On a tapped instrument, just press the key.
 - **Hopo** (hammer-on or pull-off) — a note that does not need a strum if the note before it in your chart landed. Its face turns solid white while it can be hammered. A miss breaks that chain, so the next one has to be strummed.
 - **Open** — a purple note with no fret. Strum it on its own, with no fret held. On drums, the open note is the **kick**: it lives in the sixth column and is played with the kick control.

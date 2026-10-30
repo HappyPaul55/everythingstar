@@ -842,8 +842,8 @@ The chart's `url` is resolved against the song document, and the song document's
 | --- | --- | --- | --- |
 | `notes` | array | **yes** (may be empty) | The notes. |
 | `notes[].timeMs` | number | **yes** | When it is hit, non-negative. |
-| `notes[].lengthMs` | number | optional (default `0`) | A sustain; `0` is a tap. |
-| `notes[].kind` | string | optional | `strum`, `tap` or `hopo`. Defaults to the instrument's plain kind. |
+| `notes[].lengthMs` | number | optional (default `0`) | A sustain; `0` is not held. |
+| `notes[].kind` | string | optional | `strum` or `hopo`. Defaults to `strum`; a legacy `tap` is read as `strum`. |
 | `notes[].column` | number or `null` | optional | `0` to `laneCount - 1`, or `null` for an **open** note. |
 | `notes[].hero` | boolean | optional | A bonus note; worth five times the normal value. |
 | `phrases` | array | optional | `{ "startMs", "endMs" }` energy spans. |
@@ -1629,11 +1629,14 @@ lyrics  words only, typed; no singer score, so Listen is the read-along
 **Lane note kinds**:
 
 ```
-strum  tap  hopo
+strum  hopo
 ```
 
-A plain note defaults to `strum` on guitar/bass/drums and `tap` on keys/dance. `hopo` only
-exists on strummed instruments.
+Every note is a strum or a hopo, whatever the instrument. **Tapping is a controller
+behaviour, not a note kind**: keys, a dance mat and a phone pad play a strum note by
+pressing its key, and a guitar plays it with the strum bar. A `hopo` only exists on an
+instrument that strums. A document from an older build may say `tap`; it is read as
+`strum`.
 
 **Melody parts**: 1 = solo, 2 = duet, 3 = trio. More players than parts share them;
 adding a singer never turns a solo into a duet.

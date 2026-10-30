@@ -168,3 +168,23 @@ test("the band screen, the stage, the pause, Practice and the results have no cr
 
   expect(leaked, "unexpected external requests").toEqual([]);
 });
+
+test("the charter picker and its open song have no critical or serious violations", async ({
+  context,
+  page,
+}) => {
+  const leaked = await installFixtures(context);
+  await page.goto("/charter");
+  await expect(page.locator(".charter-picker h1")).toBeVisible();
+  expect(describe(await seriousViolations(page))).toBe("");
+
+  await page.getByRole("button", { name: new RegExp(SONG_TITLE) }).click();
+  await expect(page.locator(".charter-pane")).toHaveCount(1, { timeout: 20_000 });
+  expect(describe(await seriousViolations(page))).toBe("");
+
+  await page.getByRole("button", { name: "Record options" }).click();
+  await expect(page.getByRole("group", { name: "Record options" })).toBeVisible();
+  expect(describe(await seriousViolations(page))).toBe("");
+
+  expect(leaked, "unexpected external requests").toEqual([]);
+});

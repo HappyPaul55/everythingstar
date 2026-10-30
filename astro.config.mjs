@@ -51,7 +51,7 @@ export default defineConfig({
     // the native app; it is noindex and has no site furniture, so it stays out
     // with the error pages.
     sitemap({
-      filter: (page) => !/\/(?:app|arcade|embed|open|404|500)\/?$/.test(page),
+      filter: (page) => !/^https?:\/\/[^/]+\/(?:app|arcade|embed|open|charter|404|500)\/?$/.test(page),
     }),
     react(),
   ],
