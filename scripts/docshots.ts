@@ -202,3 +202,19 @@ execFileSync("bunx", ["playwright", "test", "--config", "playwright.docs.config.
   cwd: ROOT,
   stdio: "inherit",
 });
+
+// A green capture run that wrote nothing is the failure that hides: the build
+// would render a placeholder, and only `check:docs` would notice. Say it here,
+// where the missing file is the answer.
+const missing = Object.entries(manifest.shots).flatMap(([key, shot]) =>
+  shot.variants
+    .map((variant) => join(ROOT, manifest.outDir, variant.file))
+    .filter((file) => !existsSync(file))
+    .map((file) => `${key} → ${relative(ROOT, file)}`),
+);
+if (missing.length > 0) {
+  console.error("docshots: the capture run passed but wrote no image for:");
+  for (const entry of missing) console.error(`  ${entry}`);
+  process.exit(1);
+}
+console.log(`docshots: ${count} image(s) ready in ${docshots.outDir}/`);

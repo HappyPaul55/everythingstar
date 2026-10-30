@@ -69,9 +69,10 @@ export default defineConfig({
           root: fileURLToPath(new URL(".", import.meta.url)),
           // `test:pwa` builds the site without the capture run — its subject is
           // the installed game, not a documentation page — and asks for the
-          // placeholder instead of failing.
+          // placeholder instead of failing. The build scripts set
+          // `DOCSHOTS_BUILD=1`; neither a dev server nor `astro check` is a build.
           strict:
-            process.argv.includes("build") &&
+            process.env.DOCSHOTS_BUILD === "1" &&
             process.env.DOCSHOTS_PLACEHOLDER !== "1",
         }),
       ],
