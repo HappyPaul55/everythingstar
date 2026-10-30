@@ -21,8 +21,8 @@
   "scripts": {
     "dev": "bun --bun astro dev",
     "start": "bun --bun astro dev",
-    "build": "bun run docs:shots && bun --bun astro build && bun scripts/build-sw.ts",
-    "build:quick": "bun --bun astro build && bun scripts/build-sw.ts",
+    "build": "bun run docs:shots && bun scripts/clean-content.ts && bun --bun astro build && bun scripts/build-sw.ts",
+    "build:quick": "bun scripts/clean-content.ts && bun --bun astro build && bun scripts/build-sw.ts",
     "docs:shots": "bun scripts/docshots.ts",
     "docs:library": "bun scripts/sync-docs-library.ts",
     "preview": "bun --bun astro preview",
