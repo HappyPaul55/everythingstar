@@ -2,7 +2,7 @@
 title: Note types
 description: "What a chart can put on a highway: single notes, chords, hammer-ons and pull-offs, sustains and the notes inside them, open strums, and the three note styles."
 updated: "2026-10-30"
-order: 21
+order: 22
 ---
 
 A highway is drawn from a chart's `notes`. Each one is a `LaneNote`:

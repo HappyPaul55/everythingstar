@@ -67,7 +67,12 @@ export default defineConfig({
         // so `bun run dev` works on a checkout that has never run Playwright.
         docsShots({
           root: fileURLToPath(new URL(".", import.meta.url)),
-          strict: process.argv.includes("build"),
+          // `test:pwa` builds the site without the capture run — its subject is
+          // the installed game, not a documentation page — and asks for the
+          // placeholder instead of failing.
+          strict:
+            process.argv.includes("build") &&
+            process.env.DOCSHOTS_PLACEHOLDER !== "1",
         }),
       ],
     }),
