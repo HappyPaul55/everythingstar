@@ -770,21 +770,25 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
               ))}
             </select>
           </label>
-          <label className="charter-check">
-            <input
-              type="checkbox"
-              checked={metronome}
-              onChange={(event) => setMetronome(event.target.checked)}
-            />
-            {t("charter.metronome")}
+          <label className="charter-mini">
+            <span>{t("charter.metronome")}</span>
+            <select
+              value={metronome ? "on" : "off"}
+              onChange={(event) => setMetronome(event.target.value === "on")}
+            >
+              <option value="on">{t("charter.on")}</option>
+              <option value="off">{t("charter.off")}</option>
+            </select>
           </label>
-          <label className="charter-check">
-            <input
-              type="checkbox"
-              checked={quantize}
-              onChange={(event) => setQuantize(event.target.checked)}
-            />
-            {t("charter.quantize")}
+          <label className="charter-mini">
+            <span>{t("charter.quantizeTake")}</span>
+            <select
+              value={quantize ? "on" : "off"}
+              onChange={(event) => setQuantize(event.target.value === "on")}
+            >
+              <option value="on">{t("charter.on")}</option>
+              <option value="off">{t("charter.off")}</option>
+            </select>
           </label>
         </div>
       </div>

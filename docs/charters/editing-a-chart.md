@@ -25,7 +25,11 @@ a band would play.
 - **Click** a note to select it; **Shift-click** adds to the selection. The footer
   shows its exact time, column, length and kind.
 - **Double-click** a highway to select every note in that chart.
-- Use **Snap** to choose the grid, and **Quantize** to pull the selection onto it.
+- **Snap** chooses the grid: where a new or moved note lands, and the lines drawn
+  under the notes. It does not move anything that is already there.
+- **Quantize takes** snaps recorded notes as they are captured. The **Quantize**
+  button is an action: it pulls the selected notes — or the whole active chart when
+  nothing is selected — onto the current Snap grid.
 - **Copy / Paste** moves a selection to the playhead, including into another chart.
 - **Undo / Redo** covers every edit and a whole take as one step.
 
