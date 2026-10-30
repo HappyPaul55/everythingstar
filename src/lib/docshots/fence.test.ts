@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { fenceShots, parseFenceMeta } from "./fence";
 
 const BODY = [
-  'import { expect, test } from "./support";',
+  'import { expect, test } from "@docshots/support";',
   "",
   'test("a screen", async ({ page }) => {',
   "  expect(page).toBeDefined();",
@@ -99,14 +99,14 @@ describe("a capture fence", () => {
     );
   });
 
-  test("refuses a test that does not come from ./support", () => {
+  test("refuses a test that does not come from @docshots/support", () => {
     const body = 'import { test } from "@playwright/test";\n\ntest("a screen", async () => {});';
     const { problems } = fenceShots(
       fence('id="jukebox" alt="The jukebox with its A–Z index and its rows."', body),
       "players/songs",
     );
     expect(problems).toContain(
-      'players/songs:3: "jukebox" must import test and its helpers from "./support"',
+      'players/songs:3: "jukebox" must import test and its helpers from "@docshots/support"',
     );
   });
 

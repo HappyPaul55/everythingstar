@@ -11,7 +11,8 @@
     // The generated capture specs import this; they are gitignored, so the module
     // has no visible importer even though it is the fixture's only consumer.
     "src/lib/docshots/capture.ts",
-    // The capture fences import it from `./support`, which is Markdown to knip.
+    // The capture fences import it through `@docshots/support`, which is Markdown to knip.
+    "tests/e2e/support.ts",
     "tests/e2e/docs-library.ts",
     "tests/e2e/docs-screens.ts",
     "tests/e2e/note-guide.ts"

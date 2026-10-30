@@ -77,7 +77,7 @@ describe a screen the test does not prove:
 
 ````markdown
 ```ts id="jukebox" alt="The jukebox: an A–Z index down the side, song rows with their length and offers, and the now-playing panel on the right." viewports="desktop"
-import { captureJukebox, test } from "./support";
+import { captureJukebox, test } from "@docshots/support";
 
 test("the jukebox, its index, its rows and the now-playing panel", async ({
   context,
@@ -101,9 +101,9 @@ test("the jukebox, its index, its rows and the now-playing panel", async ({
 - **`caption`** adds a visible `<figcaption>`.
 - **`ts`**, not `playwright`: the first word is the language GitHub highlights,
   and everything after it is metadata for the plugin.
-- Import `test` and the capture from `./support` — it is generated beside the
-  spec and re-exports `tests/e2e/fixture.ts`, `docs-library.ts`,
-  `docs-screens.ts`, `note-guide.ts` and `helpers.ts`.
+- Import `test` and the capture from `@docshots/support`. `tsconfig.json` maps
+  that name to `tests/e2e/support.ts`, so an editor resolves it from the page;
+  the generator rewrites it to `./support` beside the spec it writes.
 - **Write the steps once, in a helper.** A player screen is `captureJukebox`,
   `captureGuitarHighway`, `captureBandScreen`, `captureSinger` or
   `capturePhonePads` (`tests/e2e/docs-screens.ts`); a note example is

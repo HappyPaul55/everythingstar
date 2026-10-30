@@ -123,8 +123,8 @@ export function fenceShots(markdown: string, doc: string): FenceResult {
           fail(at, `"${meta.id}" must not use test${modifier}(): one capture, one plain test`);
         }
       }
-      if (!/\bfrom\s+["']\.\/support["']/.test(source)) {
-        fail(at, `"${meta.id}" must import test and its helpers from "./support"`);
+      if (!/\bfrom\s+["']@docshots\/support["']/.test(source)) {
+        fail(at, `"${meta.id}" must import test and its helpers from "@docshots/support"`);
       }
       if (/\btest\.afterEach\s*\(/.test(source)) {
         fail(at, `"${meta.id}" must not register hooks: the capture owns the screenshot`);
