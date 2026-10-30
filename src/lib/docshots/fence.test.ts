@@ -62,6 +62,25 @@ describe("a capture fence", () => {
     expect(shots[0]?.caption).toBe("The jukebox, on two screens.");
   });
 
+  test("keeps the foot of a named variant", () => {
+    const { shots, problems } = fenceShots(
+      fence('id="jukebox" crop="mobile:bottom 50%" alt="The jukebox with its A–Z index and its rows."'),
+      "players/songs",
+    );
+    expect(problems).toEqual([]);
+    expect(shots[0]?.crop).toEqual({ mobile: { edge: "bottom", percent: 50 } });
+  });
+
+  test("refuses a crop it cannot read", () => {
+    const { problems } = fenceShots(
+      fence('id="jukebox" crop="mobile:top 50%" alt="The jukebox with its A–Z index and its rows."'),
+      "players/songs",
+    );
+    expect(problems).toContain(
+      'players/songs:3: "jukebox" crop "mobile:top 50%" must look like mobile:bottom 50%',
+    );
+  });
+
   test("refuses an alt short enough to say nothing", () => {
     const { problems } = fenceShots(fence('id="jukebox" alt="A shot."'), "players/songs");
     expect(problems).toEqual([

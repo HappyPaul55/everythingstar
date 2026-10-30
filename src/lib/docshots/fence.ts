@@ -6,6 +6,7 @@
  * `caption`/`viewports` as metadata. Nothing about this is Astro-specific: the
  * same function is the core another project's renderer would use.
  */
+import type { ShotCrop } from "./manifest";
 
 export interface FenceShot {
   /** The document's id, e.g. `players/songs`. */
@@ -15,6 +16,8 @@ export interface FenceShot {
   caption?: string;
   /** Variant names from the config; undefined means every variant. */
   viewports?: string[];
+  /** Per-variant crops, e.g. a phone shot that keeps the bottom half. */
+  crop?: Record<string, ShotCrop>;
   /** The test body, verbatim. */
   body: string;
   /** 1-based line of the opening fence, for an error a human can act on. */
@@ -28,6 +31,32 @@ export interface FenceResult {
 
 const LANG = new Set(["ts", "typescript"]);
 const ID = /^[a-z][a-z0-9-]*$/;
+
+/**
+ * `mobile:bottom 50%, desktop:bottom 70%` → crops by variant.
+ *
+ * Only the bottom edge exists: a highway falls from the top, so the part worth
+ * keeping is the foot of the frame. A variant with no crop keeps the viewport.
+ */
+function parseCrops(value: string): {
+  crops?: Record<string, ShotCrop>;
+  problem?: string;
+} {
+  const crops: Record<string, ShotCrop> = {};
+  for (const entry of value.split(",")) {
+    const match = /^\s*([a-z][a-z0-9-]*):bottom\s+(\d{1,3})%\s*$/.exec(entry);
+    if (!match) {
+      return { problem: `crop "${entry.trim()}" must look like mobile:bottom 50%` };
+    }
+    const percent = Number(match[2]);
+    if (percent < 5 || percent > 100) {
+      return { problem: `crop "${entry.trim()}" must keep between 5% and 100%` };
+    }
+    crops[match[1]!] = { edge: "bottom", percent };
+  }
+  if (Object.keys(crops).length === 0) return { problem: 'crop="" names no variant' };
+  return { crops };
+}
 
 /** `id="jukebox" alt="…" viewports=desktop,mobile` → a record. */
 export function parseFenceMeta(meta: string): Record<string, string> {
@@ -109,12 +138,20 @@ export function fenceShots(markdown: string, doc: string): FenceResult {
         fail(at, `"${meta.id}" has an empty viewports=""`);
       }
 
+      let crop: Record<string, ShotCrop> | undefined;
+      if (meta.crop !== undefined) {
+        const parsed = parseCrops(meta.crop);
+        if (parsed.problem) fail(at, `"${meta.id}" ${parsed.problem}`);
+        else crop = parsed.crops;
+      }
+
       shots.push({
         doc,
         id: meta.id,
         alt: meta.alt,
         ...(meta.caption ? { caption: meta.caption } : {}),
         ...(viewports && viewports.length > 0 ? { viewports } : {}),
+        ...(crop ? { crop } : {}),
         body: source,
         line: at,
       });

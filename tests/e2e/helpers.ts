@@ -73,6 +73,20 @@ export async function startRun(page: Page, seats: RunSeats = "one"): Promise<voi
 }
 
 /**
+ * A capture answered every request it made.
+ *
+ * The fixture routes the seeded library and aborts everything else, so this is
+ * how a capture says "the screen is the game's, not the network's". It lives
+ * here rather than in each fence because it is a property of every capture, not
+ * a step of the screen being documented.
+ *
+ * `@public` — read by the capture helpers, which the docs fences call.
+ */
+export function expectNoExternalRequests(leaked: string[]): void {
+  expect(leaked, "the capture made an unexpected external request").toEqual([]);
+}
+
+/**
  * The documentation captures' front door.
  *
  * `installDocsFixtures` serves the published FOSS library, and Code Monkey is

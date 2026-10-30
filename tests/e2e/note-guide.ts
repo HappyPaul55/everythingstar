@@ -1,6 +1,13 @@
 import type { BrowserContext, Page } from "@playwright/test";
 import { disableFullscreen, installRoutes } from "./fixture";
-import { enterGame, openDocsBand, seatPlayers, setSlot, startDocsRun } from "./helpers";
+import {
+  enterGame,
+  expectNoExternalRequests,
+  openDocsBand,
+  seatPlayers,
+  setSlot,
+  startDocsRun,
+} from "./helpers";
 
 /**
  * The chart the **note types** page is written against.
@@ -81,13 +88,13 @@ export const GUIDE_SONGS: GuideSong[] = [
     id: "sustain-and-strum",
     title: "Held, then strummed",
     // The hold stays held while a second note is strummed inside it.
-    notes: [note(2_200, 2, { lengthMs: 5_000 }), note(3_600, 4)],
+    notes: [note(2_200, 2, { lengthMs: 5_000 }), note(2_900, 4)],
   },
   {
     id: "sustain-and-hammer",
     title: "Held, then hammered",
     // The same shape, but the second note needs no strum.
-    notes: [note(2_200, 2, { lengthMs: 5_000 }), note(3_600, 4, { kind: "hopo" })],
+    notes: [note(2_200, 2, { lengthMs: 5_000 }), note(2_900, 4, { kind: "hopo" })],
   },
   {
     id: "empty-strum",
@@ -208,7 +215,7 @@ export async function captureNoteType(
   page: Page,
   title: string,
   style?: "Bars" | "Gems" | "Arrows",
-): Promise<string[]> {
+): Promise<void> {
   const leaked = await installNoteFixtures(context);
   await disableFullscreen(page);
   await enterGame(page, "/app");
@@ -221,5 +228,5 @@ export async function captureNoteType(
   await seatPlayers(page, 1);
   await setSlot(page, 1, "Guitar");
   await startDocsRun(page);
-  return leaked;
+  expectNoExternalRequests(leaked);
 }

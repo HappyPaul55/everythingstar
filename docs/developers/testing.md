@@ -16,6 +16,7 @@ same: a check belongs where it is cheapest and where it can actually see the reg
 bun install
 bun run dev              # dev server on http://localhost:4321
 bun run build            # static build into dist/ (captures the docs screenshots first)
+bun run build:quick      # the same build, reusing the captures already on disk
 bun run docs:shots       # capture the documentation's screenshots (Playwright)
 bun run preview          # serve the built site
 bun run check            # astro check — the app's type gate
@@ -108,11 +109,14 @@ why the gate now needs Chromium installed.
 
 The capture is taken in `afterEach` only when the test passed, with animations disabled,
 the caret hidden, fonts settled and CSS-pixel scale, so a failed assertion writes
-nothing. A fence may narrow itself with `viewports=desktop`. `--only <doc>` is the
-authoring loop; `src/lib/docshots/*.test.ts` covers the fence parser and the manifest
+nothing. A fence may narrow itself with `viewports=desktop` and keep the foot of a
+phone frame with `crop="mobile:bottom 50%"`. `--only <doc>` is the authoring loop;
+`src/lib/docshots/*.test.ts` covers the fence parser, the crops and the manifest
 without a browser. The mock is the published FOSS library: `bun run docs:library`
 refreshes `tests/e2e/docs-library/` from it, and every other run is offline.
-[Writing docs](writing-docs.md#screenshots) is the authoring rule.
+`bun run build:quick` skips the capture run for a site-only loop and builds from the
+images already on disk. [Writing docs](writing-docs.md#screenshots) is the authoring
+rule.
 
 ## The documentation gate
 

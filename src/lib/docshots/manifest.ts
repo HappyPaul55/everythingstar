@@ -21,6 +21,20 @@ export interface ShotVariant {
   height: number;
 }
 
+/**
+ * A crop of one variant's capture.
+ *
+ * A phone highway is mostly runway: the note a page is about sits near the foot
+ * and the rest is empty board. Cropping keeps the note, the hit line and the
+ * pads, and drops the space nothing is in. It is applied per variant, because
+ * the desktop shot is already the frame the page wants.
+ */
+export interface ShotCrop {
+  edge: "bottom";
+  /** How much of the viewport's height to keep, from `edge`. */
+  percent: number;
+}
+
 export interface Shot {
   /** The document's id, as `src/lib/docs/paths.ts` names it: `players/songs`. */
   doc: string;
@@ -30,6 +44,8 @@ export interface Shot {
   alt: string;
   /** The visible caption, when the page shows one. */
   caption?: string;
+  /** Per-variant crops, keyed by variant name. */
+  crop?: Record<string, ShotCrop>;
   variants: ShotVariant[];
 }
 

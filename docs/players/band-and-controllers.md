@@ -8,28 +8,10 @@ order: 6
 Choosing a song and choosing a band are two screens, in that order: the jukebox decides **what**, and the band screen decides **who** and **how hard**. A **player** is somebody on stage, and their **seat** is their place in the band — so Player 3 means the same person in the box, on the stage and on the results.
 
 ```ts id="band-screen" alt="The band screen: a character box per player with their instrument, difficulty and controller gear, and Play at the bottom right." viewports="desktop"
-import { expect, test } from "./support";
-import {
-  disableFullscreen,
-  enterGame,
-  installDocsFixtures,
-  openDocsBand,
-  seatPlayers,
-  setSlot,
-} from "./support";
+import { captureBandScreen, test } from "./support";
 
 test("the band screen with three players seated", async ({ context, page }) => {
-  const leaked = await installDocsFixtures(context);
-  await disableFullscreen(page);
-  await enterGame(page, "/app");
-
-  await openDocsBand(page);
-  await seatPlayers(page, 3);
-  await setSlot(page, 1, "Guitar");
-  await setSlot(page, 2, "Drums");
-  await setSlot(page, 3, "Vocals");
-
-  expect(leaked, "unexpected external requests").toEqual([]);
+  await captureBandScreen(context, page);
 });
 ```
 

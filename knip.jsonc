@@ -13,6 +13,7 @@
     "src/lib/docshots/capture.ts",
     // The capture fences import it from `./support`, which is Markdown to knip.
     "tests/e2e/docs-library.ts",
+    "tests/e2e/docs-screens.ts",
     "tests/e2e/note-guide.ts"
   ],
   "project": [

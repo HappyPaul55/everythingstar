@@ -70,12 +70,20 @@ for (const doc of docs()) {
         );
       }
     }
+    for (const name of Object.keys(fence.crop ?? {})) {
+      if (!names.includes(name)) {
+        problems.push(
+          `${fence.doc}:${fence.line}: crop names "${name}", which this capture does not take`,
+        );
+      }
+    }
 
     shots.push({
       doc: fence.doc,
       id: fence.id,
       alt: fence.alt,
       ...(fence.caption ? { caption: fence.caption } : {}),
+      ...(fence.crop ? { crop: fence.crop } : {}),
       variants: names
         .filter((name) => docshots.variants[name])
         .map((name) => ({
@@ -139,6 +147,7 @@ writeFileSync(
     'export { expect, test } from "@playwright/test";',
     'export * from "../../tests/e2e/fixture";',
     'export * from "../../tests/e2e/docs-library";',
+    'export * from "../../tests/e2e/docs-screens";',
     'export * from "../../tests/e2e/note-guide";',
     'export * from "../../tests/e2e/helpers";',
     "",

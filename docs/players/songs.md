@@ -8,30 +8,10 @@ order: 2
 A song in EverythingStar is a document — a title, an artist, a length, the parts it offers and the audio to play — reached through a **playlist**. The jukebox is where you find one, and the Playlists dialog is where the songs come from.
 
 ```ts id="jukebox" alt="The jukebox: an A–Z index down the side, song rows with their length and offers, and the now-playing panel on the right." viewports="desktop"
-import { expect, test } from "./support";
-import { disableFullscreen, enterGame, installDocsFixtures } from "./support";
+import { captureJukebox, test } from "./support";
 
-test("the jukebox shows its index, its rows and the now-playing panel", async ({
-  context,
-  page,
-}) => {
-  const leaked = await installDocsFixtures(context);
-  await disableFullscreen(page);
-  // `/app` is the game alone: a documentation capture has no site header in it.
-  await enterGame(page, "/app");
-
-  await page.getByRole("button", { name: /Quick Play/ }).click();
-  await expect(page.getByRole("heading", { name: "Pick a song" })).toBeVisible();
-  await expect(page.locator(".jukebox__index")).toBeVisible();
-
-  // A row's own click fills the now-playing panel; the capture is of the whole
-  // screen, so both halves have to be there.
-  await page.getByRole("button", { name: /Code Monkey/ }).first().click();
-  await expect(page.locator(".jukebox__selection .jukebox__title")).toHaveText(
-    "Code Monkey",
-  );
-
-  expect(leaked, "unexpected external requests").toEqual([]);
+test("the jukebox shows its index, its rows and the now-playing panel", async ({ context, page }) => {
+  await captureJukebox(context, page);
 });
 ```
 

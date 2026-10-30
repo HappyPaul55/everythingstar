@@ -48,6 +48,21 @@ export function docshot(test: CapturableTest, spec: DocshotSpec): void {
     // the same page a second later.
     await page.evaluate(() => document.fonts.ready);
 
+    // A crop keeps the part of the frame the page is about. The percentages are
+    // of the viewport, and Playwright's clip is in CSS pixels, so a phone capture
+    // is still the phone's own device scale.
+    const viewport = page.viewportSize();
+    const crop = shot.crop?.[variant.name];
+    const clip =
+      crop && viewport
+        ? {
+            x: 0,
+            y: Math.round(viewport.height * (1 - crop.percent / 100)),
+            width: viewport.width,
+            height: Math.round(viewport.height * (crop.percent / 100)),
+          }
+        : undefined;
+
     const path = join(root, manifest.outDir, variant.file);
     mkdirSync(join(root, manifest.outDir), { recursive: true });
     await page.screenshot({
@@ -59,6 +74,7 @@ export function docshot(test: CapturableTest, spec: DocshotSpec): void {
       // project's, so a phone capture is a phone's own pixels.
       animations: "disabled",
       caret: "hide",
+      ...(clip ? { clip } : {}),
     });
   });
 }

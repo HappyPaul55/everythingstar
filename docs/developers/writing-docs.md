@@ -76,19 +76,14 @@ A picture of the game is a Playwright test that takes it, so the picture cannot
 describe a screen the test does not prove:
 
 ````markdown
-```ts id="jukebox" alt="The jukebox: an A–Z index down the side, song rows with their length and offers, and the now-playing panel on the right."
-import { expect, test } from "./support";
-import { disableFullscreen, enterGame, installDocsFixtures } from "./support";
+```ts id="jukebox" alt="The jukebox: an A–Z index down the side, song rows with their length and offers, and the now-playing panel on the right." viewports="desktop"
+import { captureJukebox, test } from "./support";
 
-test("the jukebox shows its index, its rows and the now-playing panel", async ({
+test("the jukebox, its index, its rows and the now-playing panel", async ({
   context,
   page,
 }) => {
-  const leaked = await installDocsFixtures(context);
-  await disableFullscreen(page);
-  await enterGame(page, "/app");
-  // …drive the screen…
-  expect(leaked, "unexpected external requests").toEqual([]);
+  await captureJukebox(context, page);
 });
 ```
 ````
@@ -99,13 +94,26 @@ test("the jukebox shows its index, its rows and the now-playing panel", async ({
   caption, not a description.
 - **`viewports`** (`desktop,mobile`) narrows a capture to some of
   `docshots.config.ts`'s variants. Omit it and every variant is taken.
+- **`crop`** keeps part of a variant's frame: `crop="mobile:bottom 50%"` keeps
+  the bottom half of the phone shot. A highway is mostly runway, so the cropped
+  phone capture is the note, the hit line and the pads rather than the empty
+  board above them. It is per variant, so the desktop frame is untouched.
 - **`caption`** adds a visible `<figcaption>`.
 - **`ts`**, not `playwright`: the first word is the language GitHub highlights,
   and everything after it is metadata for the plugin.
-- Import `test` and the fixtures from `./support` — it is generated beside the
-  spec and re-exports `tests/e2e/fixture.ts` and `tests/e2e/helpers.ts`.
+- Import `test` and the capture from `./support` — it is generated beside the
+  spec and re-exports `tests/e2e/fixture.ts`, `docs-library.ts`,
+  `docs-screens.ts`, `note-guide.ts` and `helpers.ts`.
+- **Write the steps once, in a helper.** A player screen is `captureJukebox`,
+  `captureGuitarHighway`, `captureBandScreen`, `captureSinger` or
+  `capturePhonePads` (`tests/e2e/docs-screens.ts`); a note example is
+  `captureNoteType` (`tests/e2e/note-guide.ts`). The helper drives the screen,
+  asserts it arrived and checks the capture made no external request, so a fence
+  stays a sentence and a call. A screen with nothing in common drives itself in
+  the fence.
 - The screenshot is taken in `afterEach` **only when the test passed**, with
-  animations disabled and fonts settled. A failing assertion writes nothing.
+  animations disabled, fonts settled and the project's own device scale. A
+  failing assertion writes nothing.
 - Use `/app` (the game alone) rather than `/play` (the site shell around it).
 - The fixture is the **published FOSS library**, not an invented one:
   `installDocsFixtures` serves a snapshot of its playlist and cover art, so the
@@ -114,10 +122,12 @@ test("the jukebox shows its index, its rows and the now-playing panel", async ({
   docs:library` refreshes the snapshot; it is the only part that touches the network.
 
 `bun run docs:shots` writes the images and `.docshots/manifest.json`; `bun run
-build` runs it first, so a build is always fresh. `bun run docs:shots --only
-players/songs` is the authoring loop for one document. The built page shows one
-`<details>` per variant — no JavaScript, so a documentation page still ships no
-island. The images are WebP, ignored by Git, and uploaded with `dist/`.
+build` runs it first, so a build is always fresh. `bun run build:quick` builds
+without the captures, for a loop that is changing the site rather than a page —
+it uses the images already on disk. `bun run docs:shots --only players/songs` is
+the authoring loop for one document. The built page shows one `<details>` per
+variant — no JavaScript, so a documentation page still ships no island. The
+images are WebP, ignored by Git, and uploaded with `dist/`.
 
 ## Adding a page
 

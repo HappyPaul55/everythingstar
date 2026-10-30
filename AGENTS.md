@@ -91,6 +91,7 @@ bun run check            # astro check (the app's type gate)
 bun run test             # unit tests
 bun run test:e2e         # Playwright, starts the dev server
 bun run build            # captures the docs screenshots, then builds into dist/ and dist/sw.js
+bun run build:quick      # the same build, reusing the captures already on disk
 bun run docs:shots       # capture the documentation's screenshots (Playwright)
 bun run docs:library     # refresh the capture fixture from the published FOSS library
 bun run verify           # everything CI runs
