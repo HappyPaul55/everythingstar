@@ -48,7 +48,7 @@ export default defineConfig({
     // five minutes of browser: this build asks for the docs placeholder rather
     // than the real captures. What the worker and `/play`'s CSS need is the same
     // either way.
-    command: `DOCSHOTS_PLACEHOLDER=1 bun run build:quick && bun run preview --host 127.0.0.1 --port ${PORT} --ignore-lock`,
+    command: `DOCSHOTS_ALLOW_PLACEHOLDER=1 bun run build:quick && bun run preview --host 127.0.0.1 --port ${PORT} --ignore-lock`,
     url: `http://127.0.0.1:${PORT}/app`,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,
