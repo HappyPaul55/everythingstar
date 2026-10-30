@@ -178,8 +178,8 @@ describe("note kinds", () => {
     expect(play(target, fret(1000, 2, frets(2))).judged).toBe(0);
   });
 
-  test("a tap note is played by its own fret, or by a strum", () => {
-    const target = chart([note({ kind: "tap", column: 2 })], 5);
+  test("a tapped instrument plays a strum note with its fret, or with a strum", () => {
+    const target: LaneChart = { ...chart([note({ column: 2 })], 5), instrument: "keys" };
     expect(play(target, fret(1000, 2, frets(2))).hits).toBe(1);
     expect(play(target, strum(1000, frets(2))).hits).toBe(1);
   });
@@ -461,8 +461,8 @@ describe("tapping the hit line", () => {
     expect(applyTrigger(missedRed, chart_, touch(1500, 2)).hits).toBe(1);
   });
 
-  test("a tap plays a tap note and an open note, from any pad", () => {
-    expect(play(chart([note({ kind: "tap", column: 3 })]), touch(1000, 3)).hits).toBe(1);
+  test("a tap plays a strum note and an open note, from any pad", () => {
+    expect(play(chart([note({ column: 3 })]), touch(1000, 3)).hits).toBe(1);
     // An open note spans the highway, so any pad can take it.
     expect(play(chart([note({ column: null })]), touch(1000, 0)).hits).toBe(1);
   });

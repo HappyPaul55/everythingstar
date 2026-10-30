@@ -61,8 +61,13 @@ export function isLaneRole(value: unknown): value is LaneRole {
  */
 export const MAX_PARTS = 3;
 
-/** How a note is played. `hopo` only exists on instruments that strum. */
-export type LaneNoteKind = "strum" | "tap" | "hopo";
+/**
+ * How a note is played: a **strum** or a **hopo**. Tapping is not a note kind:
+ * it is how a controller plays the note (a phone pad, a dance mat or a keyboard),
+ * and it is decided by the instrument and the controller, never written into the
+ * chart.
+ */
+export type LaneNoteKind = "strum" | "hopo";
 
 /**
  * How an instrument looks and how its notes are played. Data, so adding an
@@ -73,8 +78,12 @@ export interface InstrumentKit {
   glyph: "bar" | "arrow";
   /** What marks the hit area: a plain bar, a keyboard, or arrows. */
   hitMarker: "bar" | "keyboard" | "arrows";
-  /** The kind a plain note is, which is also what the instrument allows. */
-  noteKind: "strum" | "tap";
+  /**
+   * How the instrument is **played**: strummed, or tapped by pressing its keys.
+   * This is a controller behaviour, not a note kind — a guitar on a touch screen
+   * still plays strum notes, with the tap supplying the strum.
+   */
+  play: "strum" | "tap";
 }
 
 export interface InstrumentConfig {
@@ -86,33 +95,33 @@ export interface InstrumentConfig {
 export const INSTRUMENTS: Record<InstrumentKind, InstrumentConfig> = {
   guitar: {
     labelKey: "band.guitar",
-    kit: { glyph: "bar", hitMarker: "bar", noteKind: "strum" },
+    kit: { glyph: "bar", hitMarker: "bar", play: "strum" },
   },
   bass: {
     labelKey: "band.bass",
-    kit: { glyph: "bar", hitMarker: "bar", noteKind: "strum" },
+    kit: { glyph: "bar", hitMarker: "bar", play: "strum" },
   },
   // Drums are represented exactly as a guitar is; only the mapping of keys to
   // real pads differs, and that is a binding, not a rendering.
   drums: {
     labelKey: "band.drums",
-    kit: { glyph: "bar", hitMarker: "bar", noteKind: "strum" },
+    kit: { glyph: "bar", hitMarker: "bar", play: "strum" },
   },
   keys: {
     labelKey: "band.simpleKeys",
-    kit: { glyph: "bar", hitMarker: "keyboard", noteKind: "tap" },
+    kit: { glyph: "bar", hitMarker: "keyboard", play: "tap" },
   },
   dance: {
     labelKey: "band.dance",
-    kit: { glyph: "arrow", hitMarker: "arrows", noteKind: "tap" },
+    kit: { glyph: "arrow", hitMarker: "arrows", play: "tap" },
   },
 };
 
 export const INSTRUMENT_KINDS = Object.keys(INSTRUMENTS) as InstrumentKind[];
 
-/** Whether an instrument's notes are strummed rather than tapped. */
+/** Whether an instrument is played with a strum, rather than by tapping its keys. */
 export function strums(kind: InstrumentKind): boolean {
-  return INSTRUMENTS[kind].kit.noteKind === "strum";
+  return INSTRUMENTS[kind].kit.play === "strum";
 }
 
 /** How a note looks while it is being played. */
@@ -510,12 +519,6 @@ export function chartProblems(chart: LaneChart): string[] {
     if (note.kind === "hopo") {
       if (!strummed) problems.push(`note ${note.id} is a hopo on a tapped instrument`);
       if (index === 0) problems.push(`note ${note.id} is a hopo with nothing before it`);
-    }
-    if (note.kind === "tap" && strummed) {
-      problems.push(`note ${note.id} is a tap on an instrument that strums`);
-    }
-    if (note.kind !== "tap" && !strummed) {
-      problems.push(`note ${note.id} is not a tap on an instrument that taps`);
     }
   });
   return problems;

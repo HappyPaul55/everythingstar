@@ -173,11 +173,20 @@ will share.
 
 While you play, the page reads note-on and note-off messages from the connected
 input so the notes can be judged; clock, aftertouch and other messages are
-ignored, and no MIDI output is opened. **Nothing is recorded, stored or sent
-anywhere** — the messages are used to play and then dropped. The access is let go
-when you leave the page. If you decline, the run is still playable: the seat
-falls back to the controller it had, and choosing a keyboard or a gamepad
-instead works exactly as before.
+ignored, and no MIDI output is opened. In a run the messages are used to play and
+then dropped. The **charter** is the one place they are kept: when you arm a
+recording there, the notes you play become notes in the chart you are editing, in
+that tab's memory. They are not sent anywhere and are saved only if you download
+the chart. The access is let go when you leave the page. If you decline, the run is
+still playable: the seat falls back to the controller it had, and choosing a
+keyboard or a gamepad instead works exactly as before.
+
+## The chart editor
+
+`/charter` is a local tool. It reads the song documents, charts and audio you ask
+it to open, keeps the edits in the page's memory, and writes a `.chart` file only
+when you press **Download**. It does not upload, does not keep a project in
+storage, and does not write back to a playlist's file.
 
 ## Music and video
 

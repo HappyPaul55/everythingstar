@@ -192,7 +192,7 @@ function buildChart(
       continue;
     }
     const column = LANE_WALK[serial % LANE_WALK.length] % plan.columns;
-    const kind: LaneNoteKind = !strummed ? "tap" : random() < 0.22 ? "hopo" : "strum";
+    const kind: LaneNoteKind = strummed && random() < 0.22 ? "hopo" : "strum";
     push({
       timeMs: Math.round(at),
       lengthMs: random() < 0.16 ? randomInt(random, 380, 1100) : 0,
@@ -248,10 +248,10 @@ function zoo(instrument: InstrumentKind, difficulty: Difficulty): LaneNote[] {
         { timeMs: ZOO_START_MS + ZOO_STEP_MS * 7, lengthMs: 0, kind: "hopo", column: middle, hero: true },
       ]
     : [
-        { timeMs: ZOO_START_MS, lengthMs: 0, kind: "tap", column: middle, hero: false },
-        { timeMs: ZOO_START_MS + ZOO_STEP_MS, lengthMs: 600, kind: "tap", column: middle, hero: false },
-        { timeMs: ZOO_START_MS + ZOO_STEP_MS * 2, lengthMs: 0, kind: "tap", column: middle, hero: true },
-        { timeMs: ZOO_START_MS + ZOO_STEP_MS * 3, lengthMs: 800, kind: "tap", column: middle, hero: true },
+        { timeMs: ZOO_START_MS, lengthMs: 0, kind: "strum", column: middle, hero: false },
+        { timeMs: ZOO_START_MS + ZOO_STEP_MS, lengthMs: 600, kind: "strum", column: middle, hero: false },
+        { timeMs: ZOO_START_MS + ZOO_STEP_MS * 2, lengthMs: 0, kind: "strum", column: middle, hero: true },
+        { timeMs: ZOO_START_MS + ZOO_STEP_MS * 3, lengthMs: 800, kind: "strum", column: middle, hero: true },
       ];
   return exhibits.map((note, index) => ({
     ...note,

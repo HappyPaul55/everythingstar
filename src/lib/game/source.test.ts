@@ -545,17 +545,17 @@ describe("readChart", () => {
     expect(guitar.lane?.fills).toBeUndefined();
   });
 
-  test("a note with no kind takes the instrument's own", () => {    const read = readChart(
+  test("a note with no kind is a strum, whatever the instrument", () => {    const read = readChart(
       { schemaVersion: 1, chartType: "lanes", columns: 4, notes: [{ timeMs: 100, column: 1 }] },
       laneChart({ chartType: "lanes", difficulty: "normal", columns: 4 }),
       "keys",
     );
-    expect(read.lane?.notes[0].kind).toBe("tap");
+    expect(read.lane?.notes[0].kind).toBe("strum");
   });
 
-  test("a keys chart that writes strums on its notes loads as taps", () => {
-    // A document is somebody else's file, and a kind its kit cannot play would make
-    // `chartProblems` drop the whole part. The note is brought back to the kit's own.
+  test("a tapped instrument's notes load as strums, even when the file says hopo", () => {
+    // A key is pressed, not strummed: the instrument's own play style decides how
+    // the note is hit. The chart still carries ordinary strum notes.
     const read = readChart(
       {
         schemaVersion: 1,
@@ -570,7 +570,7 @@ describe("readChart", () => {
       laneChart({ chartType: "lanes", difficulty: "normal", columns: 4 }),
       "keys",
     );
-    expect(read.lane?.notes.map((note) => note.kind)).toEqual(["tap", "tap", "tap"]);
+    expect(read.lane?.notes.map((note) => note.kind)).toEqual(["strum", "strum", "strum"]);
     expect(chartProblems(read.lane as LaneChart)).toEqual([]);
   });
 
@@ -606,7 +606,7 @@ describe("readChart", () => {
       laneChart({ chartType: "lanes", difficulty: "normal", columns: 4 }),
       "keys",
     );
-    expect(read.lane?.notes[0].kind).toBe("tap");
+    expect(read.lane?.notes[0].kind).toBe("strum");
     expect(chartProblems(read.lane as LaneChart)).toEqual([
       `note ${read.lane?.notes[0].id} is an open note on a tapped instrument`,
     ]);

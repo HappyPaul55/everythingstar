@@ -73,10 +73,10 @@ describe("the mock track", () => {
     expect(opening.some((entry) => momentAt(guitar.notes, guitar.notes.indexOf(entry)).length > 1)).toBe(true);
   });
 
-  test("a tapped instrument only taps, and never opens", () => {
+  test("a tapped instrument carries ordinary strums, and never opens", () => {
     for (const instrument of ["keys", "dance"] as const) {
       const tapped = chartFor(track, instrument, "hard")!;
-      expect(tapped.notes.every((entry) => entry.kind === "tap")).toBe(true);
+      expect(tapped.notes.every((entry) => entry.kind === "strum")).toBe(true);
       expect(tapped.notes.some(isOpen)).toBe(false);
     }
   });
@@ -139,19 +139,10 @@ describe("chartProblems", () => {
     );
   });
 
-  test("a tapped instrument's notes are all taps, and never strums or hopos", () => {
-    expect(chartProblems(chart([note({ kind: "tap" })], 5, "keys"))).toEqual([]);
-    expect(chartProblems(chart([note({ kind: "strum" })], 5, "keys"))).toContain(
-      "note n is not a tap on an instrument that taps",
-    );
+  test("a tapped instrument's notes are ordinary strums; a hopo is still refused", () => {
+    expect(chartProblems(chart([note({ kind: "strum" })], 5, "keys"))).toEqual([]);
     expect(chartProblems(chart([note({ kind: "hopo" })], 5, "keys"))).toContain(
       "note n is a hopo on a tapped instrument",
-    );
-  });
-
-  test("a tap on an instrument that strums is caught", () => {
-    expect(chartProblems(chart([note({ kind: "tap" })]))).toContain(
-      "note n is a tap on an instrument that strums",
     );
   });
 

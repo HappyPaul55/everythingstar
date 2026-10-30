@@ -34,6 +34,8 @@ are fetched by the browser from a URL the player gave it.
 | the provider contract | [Playlist API](docs/developers/playlist-api.md) |
 | links into the game | [Links](docs/developers/deeplinks.md) |
 | a provider's documents | [Libraries](docs/charters/libraries.md) |
+| a chart, a take, an export | [Charter](docs/developers/charter.md) |
+| making a chart, as a player | [Making a chart](docs/charters/editing-a-chart.md) |
 
 ## The vocabulary is exact
 
