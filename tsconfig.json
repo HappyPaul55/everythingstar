@@ -2,13 +2,7 @@
   "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
     "jsx": "react-jsx",
-    "jsxImportSource": "react",
-    // A documentation fence imports this, and the fence lives in `docs/`, not
-    // beside `tests/e2e`. The capture generator rewrites it to `./support` when
-    // it writes the spec; this is what makes the Markdown resolvable in an IDE.
-    "paths": {
-      "@docshots/support": ["./tests/e2e/support.ts"]
-    }
+    "jsxImportSource": "react"
   },
   "include": [".astro/types.d.ts", "**/*"],
   "exclude": ["dist", "src/**/*.test.ts", ".docshots/**"]

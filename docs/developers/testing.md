@@ -100,23 +100,23 @@ fullscreen, so Escape reaches the game rather than the browser's own way out.
 
 ## Documentation captures
 
-A documentation screenshot is a Playwright test in a Markdown fence, so the picture is
-always of a screen that passes its assertions. `bun run docs:shots` reads every fence,
-writes a generated spec per capture, runs it once per variant in `docshots.config.ts`
-(desktop, mobile) and writes `.docshots/manifest.json` plus the WebP files in
-`docs/screenshots/` — both ignored by Git. **`bun run build` runs it first**, which is
-why the gate now needs Chromium installed.
+A documentation screenshot is a Playwright test in `tests/e2e/docs`, and the page
+names it with `[description](shot:<id>)`. `bun run docs:shots` clears the images, runs
+every capture test once per variant in `docshots.config.ts` (desktop, mobile) and
+writes `.docshots/manifest.json` plus the WebP files in `docs/screenshots/` — both
+ignored by Git. **`bun run build` runs it first**, which is why the gate needs
+Chromium installed.
 
-The capture is taken in `afterEach` only when the test passed, with animations disabled,
-the caret hidden, fonts settled and CSS-pixel scale, so a failed assertion writes
-nothing. A fence may narrow itself with `viewports=desktop` and keep the foot of a
-phone frame with `crop="mobile:bottom 50%"`. `--only <doc>` is the authoring loop;
-`src/lib/docshots/*.test.ts` covers the fence parser, the crops and the manifest
-without a browser. The mock is the published FOSS library: `bun run docs:library`
-refreshes `tests/e2e/docs-library/` from it, and every other run is offline.
-`bun run build:quick` skips the capture run for a site-only loop and builds from the
-images already on disk. [Writing docs](writing-docs.md#screenshots) is the authoring
-rule.
+The capture is taken in `afterEach` only when the test passed, with animations
+disabled, the caret hidden, fonts settled and the project's own device scale, so a
+failed assertion writes nothing. A test narrows itself with
+`{ viewports: ["desktop"] }` and crops a phone frame with
+`{ crop: { mobile: { edge: "bottom", percent: 40 } } }`. The reference and the test
+are held together by `src/lib/docshots/references.test.ts`: every `shot:` has a
+`docshot(test, "<id>")`, and every capture is shown. The mock is the published FOSS
+library: `bun run docs:library` refreshes `tests/e2e/docs-library/` from it, and
+every other run is offline. `bun run build:quick` skips the capture run for a
+site-only loop. [Writing docs](writing-docs.md#screenshots) is the authoring rule.
 
 ## The documentation gate
 

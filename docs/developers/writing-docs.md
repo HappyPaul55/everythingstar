@@ -59,9 +59,9 @@ with a missing or malformed field does not reach the build.
   (`https://everythingstar.happypaul55.com/play`) or the repository
   (`https://github.com/HappyPaul55/everythingstar/blob/main/SECURITY.md`). A relative
   link to a root file works on GitHub and not on the site, so it is not used.
-- A screenshot is a **test**, not a file: a `ts` fence with an `id` and an `alt`,
-  which `bun run docs:shots` runs and captures. See [Screenshots](#screenshots)
-  below. Nothing under `docs/screenshots/` is committed.
+- A screenshot is a **test** in `tests/e2e/docs`, not a file: the page names its id
+  with `[description](shot:<id>)`. See [Screenshots](#screenshots) below. Nothing
+  under `docs/screenshots/` is committed.
 - `<kbd>` is the one raw tag the content uses, for a key: `<kbd>Space</kbd>`.
   Everything else is Markdown — no MDX, no components, no scripts.
 - Tables and fenced code blocks (with a language) are styled by the layout. Keep a
@@ -72,62 +72,57 @@ with a missing or malformed field does not reach the build.
 
 ## Screenshots
 
-A picture of the game is a Playwright test that takes it, so the picture cannot
-describe a screen the test does not prove:
+A picture of the game is a Playwright test in `tests/e2e/docs`, and the page
+names the shot it took:
 
-````markdown
-```ts id="jukebox" alt="The jukebox: an A–Z index down the side, song rows with their length and offers, and the now-playing panel on the right." viewports="desktop"
-import { captureJukebox, test } from "@docshots/support";
+```markdown
+[The jukebox: an A–Z index down the side, song rows with their length and offers, and the now-playing panel on the right.](shot:jukebox "The jukebox on a desktop")
+```
 
-test("the jukebox, its index, its rows and the now-playing panel", async ({
+The link **text is the alt** and is required; the link **title is the caption**
+and is optional; `shot:jukebox` is the id. The test that takes it:
+
+```ts
+import { captureJukebox, docshot, test } from "../support";
+
+docshot(test, "jukebox", { viewports: ["desktop"] });
+
+test("the jukebox shows its index, rows and now-playing panel", async ({
   context,
   page,
 }) => {
   await captureJukebox(context, page);
 });
 ```
-````
 
-- **`id`** names the capture and the files (`desktop-<id>.webp`); it is unique
-  across every document.
-- **`alt`** is what a screen reader hears, and is required. A test title is a
-  caption, not a description.
-- **`viewports`** (`desktop,mobile`) narrows a capture to some of
-  `docshots.config.ts`'s variants. Omit it and every variant is taken.
-- **`crop`** keeps part of a variant's frame: `crop="mobile:bottom 50%"` keeps
-  the bottom half of the phone shot. A highway is mostly runway, so the cropped
-  phone capture is the note, the hit line and the pads rather than the empty
-  board above them. It is per variant, so the desktop frame is untouched.
-- **`caption`** adds a visible `<figcaption>`.
-- **`ts`**, not `playwright`: the first word is the language GitHub highlights,
-  and everything after it is metadata for the plugin.
-- Import `test` and the capture from `@docshots/support`. `tsconfig.json` maps
-  that name to `tests/e2e/support.ts`, so an editor resolves it from the page;
-  the generator rewrites it to `./support` beside the spec it writes.
-- **Write the steps once, in a helper.** A player screen is `captureJukebox`,
-  `captureGuitarHighway`, `captureBandScreen`, `captureSinger` or
-  `capturePhonePads` (`tests/e2e/docs-screens.ts`); a note example is
-  `captureNoteType` (`tests/e2e/note-guide.ts`). The helper drives the screen,
-  asserts it arrived and checks the capture made no external request, so a fence
-  stays a sentence and a call. A screen with nothing in common drives itself in
-  the fence.
-- The screenshot is taken in `afterEach` **only when the test passed**, with
-  animations disabled, fonts settled and the project's own device scale. A
-  failing assertion writes nothing.
+- `docshot(test, "<id>")` takes the WebP in `afterEach`, **only when the test
+  passed**, once per Playwright project — `desktop` and `mobile` from
+  `docshots.config.ts`. The page shows both renders; one variant needs no
+  selector.
+- **`viewports`** narrows a shot to some variants (the jukebox is desktop-only:
+  on a phone the now-playing panel is a sheet).
+- **`crop`** keeps part of a variant's frame, per variant:
+  `{ crop: { mobile: { edge: "bottom", percent: 40 } } }`. A highway is mostly
+  runway, so a phone note is the note, the hit line and the pads.
+- The test drives the screen — `captureJukebox`, `captureGuitarHighway`,
+  `captureBandScreen`, `captureSinger`, `capturePhonePads`
+  (`tests/e2e/docs-screens.ts`) or `captureNoteType` (`tests/e2e/note-guide.ts`)
+  — and asserts it arrived. The shared steps live in the helpers; the test file
+  is the id and the call.
 - Use `/app` (the game alone) rather than `/play` (the site shell around it).
 - The fixture is the **published FOSS library**, not an invented one:
   `installDocsFixtures` serves a snapshot of its playlist and cover art, so the
-  jukebox, the band and the stage show real songs. Code Monkey is the one song with
-  guitar, bass, drums and vocals, so the stage captures use it. `bun run
-  docs:library` refreshes the snapshot; it is the only part that touches the network.
-
-`bun run docs:shots` writes the images and `.docshots/manifest.json`; `bun run
-build` runs it first, so a build is always fresh. `bun run build:quick` builds
-without the captures, for a loop that is changing the site rather than a page —
-it uses the images already on disk. `bun run docs:shots --only players/songs` is
-the authoring loop for one document. The built page shows one `<details>` per
-variant — no JavaScript, so a documentation page still ships no island. The
-images are WebP, ignored by Git, and uploaded with `dist/`.
+  jukebox, the band and the stage show real songs. Code Monkey is the one song
+  with guitar, bass, drums and vocals, so the stage captures use it.
+- `bun run docs:shots` clears the captures, runs every test in `tests/e2e/docs`
+  and writes `.docshots/manifest.json`; `bun run build` runs it first.
+  `bun run build:quick` reuses the images already on disk; a one-shot loop runs
+  the spec directly with the docs config.
+- Two checks in `bun test` hold the halves together: every `shot:` reference has
+  a test, and every capture test is shown by a page. A reference with no test,
+  or a test nobody shows, is a failure.
+- The images are WebP, ignored by Git, and uploaded with `dist/`. GitHub shows
+  the link text rather than the picture — the page is the site's.
 
 ## Adding a page
 

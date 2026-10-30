@@ -21,7 +21,7 @@ import {
  * The timing matters. A run is captured 1.5 s after `playing`, so a note at 2.2 s
  * is just above the hit line and nothing has been missed yet.
  */
-export const NOTE_PLAYLIST_URL =
+const NOTE_PLAYLIST_URL =
   "https://raw.githubusercontent.com/HappyPaul55/everythingstar-foss/main/songs/playlist.json";
 
 interface GuideNote {
@@ -51,7 +51,7 @@ interface GuideSong {
  * The ten songs the page captures. A style sample is the same chart under three
  * settings, so it is one song rather than three.
  */
-export const GUIDE_SONGS: GuideSong[] = [
+const GUIDE_SONGS: GuideSong[] = [
   { id: "single-note", title: "One note", notes: [note(2_200, 2)] },
   {
     id: "chord",
@@ -162,8 +162,8 @@ function docOf(song: GuideSong) {
 /**
  * The note guide in place of the seeded library, at the same URL.
  *
- * `@public` — read by the capture fences in `docs/`, which are Markdown, so knip
- * cannot see the import that uses it.
+ * `@public` — read through `tests/e2e/support.ts`, one level away from knip's
+ * entry specs.
  */
 export async function installNoteFixtures(context: BrowserContext): Promise<string[]> {
   const routes: Record<string, unknown> = {
@@ -208,7 +208,7 @@ async function setNoteStyle(page: Page, label: "Bars" | "Gems" | "Arrows"): Prom
  * The style is set first, from the menu, because it is a setting the highway
  * reads rather than a property of the chart.
  *
- * `@public` — read by the capture fences in `docs/`, which are Markdown.
+ * `@public` — read through `tests/e2e/support.ts` by the capture tests.
  */
 export async function captureNoteType(
   context: BrowserContext,

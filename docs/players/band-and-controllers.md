@@ -7,13 +7,7 @@ order: 6
 
 Choosing a song and choosing a band are two screens, in that order: the jukebox decides **what**, and the band screen decides **who** and **how hard**. A **player** is somebody on stage, and their **seat** is their place in the band — so Player 3 means the same person in the box, on the stage and on the results.
 
-```ts id="band-screen" alt="The band screen: a character box per player with their instrument, difficulty and controller gear, and Play at the bottom right." viewports="desktop"
-import { captureBandScreen, test } from "@docshots/support";
-
-test("the band screen with three players seated", async ({ context, page }) => {
-  await captureBandScreen(context, page);
-});
-```
+[The band screen: a character box per player with their instrument, difficulty and controller gear, and Play at the bottom right.](shot:band-screen)
 
 ## A seat per player
 

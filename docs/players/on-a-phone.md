@@ -7,13 +7,7 @@ order: 7
 
 EverythingStar plays on a phone. The same stage fits the screen, the hit markers become the controls, and a song can be kept on the device so it plays without a connection. Nothing has to be installed to start.
 
-```ts id="phone-pads" alt="A lone guitar on a portrait phone: the score, combo and multiplier above the highway, and the five pads along the bottom." viewports="mobile"
-import { capturePhonePads, test } from "@docshots/support";
-
-test("the pads on a portrait phone, a beat into the run", async ({ context, page }) => {
-  await capturePhonePads(context, page);
-});
-```
+[A lone guitar on a portrait phone: the score, combo and multiplier above the highway, and the five pads along the bottom.](shot:phone-pads)
 
 ## The screen it makes
 

@@ -7,13 +7,7 @@ order: 2
 
 A song in EverythingStar is a document — a title, an artist, a length, the parts it offers and the audio to play — reached through a **playlist**. The jukebox is where you find one, and the Playlists dialog is where the songs come from.
 
-```ts id="jukebox" alt="The jukebox: an A–Z index down the side, song rows with their length and offers, and the now-playing panel on the right." viewports="desktop"
-import { captureJukebox, test } from "@docshots/support";
-
-test("the jukebox shows its index, its rows and the now-playing panel", async ({ context, page }) => {
-  await captureJukebox(context, page);
-});
-```
+[The jukebox: an A–Z index down the side, song rows with their length and offers, and the now-playing panel on the right.](shot:jukebox)
 
 ## Finding a song
 

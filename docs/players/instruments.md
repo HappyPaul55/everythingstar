@@ -7,13 +7,7 @@ order: 3
 
 An instrument is played on a **highway**: a scrolling board of notes that arrive at a line near the bottom. Each player has their own **panel**, with their highway in the middle, their score on the left and their star power meter on the right. Guitar, bass, simple keys and drums all use the same highway; what changes is the chart on it and the controls in your hands.
 
-```ts id="guitar-highway" alt="A lone guitar highway: five columns of notes above the hit line, with score, combo and multiplier down the left." viewports="desktop"
-import { captureGuitarHighway, test } from "@docshots/support";
-
-test("one guitar player's highway, a beat into the run", async ({ context, page }) => {
-  await captureGuitarHighway(context, page);
-});
-```
+[A lone guitar highway: five columns of notes above the hit line, with score, combo and multiplier down the left.](shot:guitar-highway)
 
 ## Columns and the hit line
 

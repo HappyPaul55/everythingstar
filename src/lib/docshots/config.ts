@@ -2,7 +2,7 @@
  * The shape of `docshots.config.ts`.
  *
  * Pure: no Astro, no Playwright, no filesystem. The same object is read by the
- * capture CLI (`scripts/docshots.ts`) and by the Playwright config, which is why
+ * capture tests (`tests/e2e/docs`) and by the Playwright config, which is why
  * the variant names can be trusted as Playwright project names.
  */
 

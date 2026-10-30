@@ -81,8 +81,9 @@ microphone, or the machine); a **layout** is what that controller's controls mea
   targets, native dialogs and a pad that drives real focus. Do not regress them.
 - **The documentation is part of the change.** A rule that changes is a doc page that
   changes; [Writing docs](docs/developers/writing-docs.md) is the system. A screenshot
-  is a Playwright test in the page, not a file: `bun run docs:shots` makes the images,
-  and neither they nor `.docshots/` are committed.
+  is a Playwright test in `tests/e2e/docs` and a `[description](shot:<id>)` reference
+  in the page; `bun run docs:shots` makes the images, and neither they nor
+  `.docshots/` are committed.
 
 ## Commands
 

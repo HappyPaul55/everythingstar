@@ -14,8 +14,8 @@ import {
  * The player pages' captures: the steps that get to each screen, and the
  * assertion that the screen is the one the page is about.
  *
- * A fence names the picture; the driving lives here because it is the same
- * every time and the prose beside the fence already describes the screen. The
+ * A capture test names the picture; the driving lives here because it is the
+ * same every time and the page's prose already describes the screen. The
  * library is the published FOSS playlist (`installDocsFixtures`), and Code
  * Monkey is the song: it carries guitar, bass, drums and vocals, so one fixture
  * covers the highway, the band and the singer.

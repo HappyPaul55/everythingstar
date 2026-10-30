@@ -7,15 +7,7 @@
     "tests/e2e/**/*.spec.ts",
     // The capture config is read by a command, not imported by anything knip can
     // follow. The Playwright configs are found as configs on their own.
-    "docshots.config.ts",
-    // The generated capture specs import this; they are gitignored, so the module
-    // has no visible importer even though it is the fixture's only consumer.
-    "src/lib/docshots/capture.ts",
-    // The capture fences import it through `@docshots/support`, which is Markdown to knip.
-    "tests/e2e/support.ts",
-    "tests/e2e/docs-library.ts",
-    "tests/e2e/docs-screens.ts",
-    "tests/e2e/note-guide.ts"
+    "docshots.config.ts"
   ],
   "project": [
     "src/**/*.{ts,tsx,astro,css}",

@@ -1,13 +1,12 @@
 /**
- * The one import a documentation fence uses.
+ * The one import a documentation capture test uses.
  *
- * A fence is written in `docs/`, where the generated spec and its `./support`
- * shim do not exist. It imports `@docshots/support` instead: `tsconfig.json`
- * maps that name here, so an editor resolves it from the Markdown, and the
- * capture generator rewrites the import to `./support` beside the spec it
- * writes. One name, the same surface in both places.
+ * `tests/e2e/docs/jukebox.spec.ts` imports `docshot`, `test` and its capture
+ * helper from here; the page it belongs to names the id with
+ * `[description](shot:jukebox)`.
  */
-export { expect, test } from "@playwright/test";
+export { test } from "@playwright/test";
+export { docshot } from "../../src/lib/docshots/capture";
 export * from "./fixture";
 export * from "./docs-library";
 export * from "./docs-screens";

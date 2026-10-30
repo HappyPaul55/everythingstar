@@ -6,7 +6,7 @@ import {
   MANIFEST_PATH,
   imageUrl,
   readManifest,
-  shotKey,
+  recordVariant,
   variantFile,
   writeManifest,
   type Manifest,
@@ -17,13 +17,41 @@ describe("the capture manifest", () => {
     expect(variantFile("jukebox", "desktop")).toBe("desktop-jukebox.webp");
   });
 
-  test("keys a shot by document and id", () => {
-    expect(shotKey("players/songs", "jukebox")).toBe("players/songs#jukebox");
+  test("gives the document a path relative to itself", () => {
+    const url = imageUrl(
+      "/repo/docs/players/songs.md",
+      "/repo",
+      "docs/screenshots",
+      "desktop-jukebox.webp",
+    );
+    expect(url).toBe("../screenshots/desktop-jukebox.webp");
   });
 
-  test("gives the document a path relative to itself", () => {
-    const url = imageUrl("/repo/docs/players/songs.md", "/repo", "docs/screenshots", "desktop-jukebox.webp");
-    expect(url).toBe("../screenshots/desktop-jukebox.webp");
+  test("records one variant at a time, replacing its own", () => {
+    const root = mkdtempSync(join(tmpdir(), "docshots-"));
+    recordVariant(root, "docs/screenshots", 82, "jukebox", {
+      name: "desktop",
+      file: "desktop-jukebox.webp",
+      width: 1440,
+      height: 900,
+    });
+    recordVariant(root, "docs/screenshots", 82, "jukebox", {
+      name: "mobile",
+      file: "mobile-jukebox.webp",
+      width: 390,
+      height: 844,
+    });
+    recordVariant(root, "docs/screenshots", 82, "jukebox", {
+      name: "desktop",
+      file: "desktop-jukebox.webp",
+      width: 1440,
+      height: 900,
+    });
+
+    expect(readManifest(root)?.shots.jukebox?.variants).toEqual([
+      { name: "mobile", file: "mobile-jukebox.webp", width: 390, height: 844 },
+      { name: "desktop", file: "desktop-jukebox.webp", width: 1440, height: 900 },
+    ]);
   });
 
   test("round-trips through the ignored manifest", () => {
@@ -33,10 +61,7 @@ describe("the capture manifest", () => {
       outDir: "docs/screenshots",
       quality: 82,
       shots: {
-        "players/songs#jukebox": {
-          doc: "players/songs",
-          id: "jukebox",
-          alt: "The jukebox with its A–Z index and its rows.",
+        jukebox: {
           variants: [
             { name: "desktop", file: "desktop-jukebox.webp", width: 1440, height: 900 },
           ],
@@ -45,7 +70,9 @@ describe("the capture manifest", () => {
     };
     writeManifest(root, manifest);
     expect(readManifest(root)).toEqual(manifest);
-    expect(readFileSync(join(root, MANIFEST_PATH), "utf8")).toContain('"desktop-jukebox.webp"');
+    expect(readFileSync(join(root, MANIFEST_PATH), "utf8")).toContain(
+      '"desktop-jukebox.webp"',
+    );
   });
 
   test("a tree with no manifest reads as null", () => {

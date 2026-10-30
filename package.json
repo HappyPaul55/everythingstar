@@ -23,7 +23,7 @@
     "start": "DOCSHOTS_DEV=1 bun --bun astro dev",
     "build": "bun run docs:shots && bun scripts/clean-content.ts && bun --bun astro build && bun scripts/build-sw.ts",
     "build:quick": "bun scripts/clean-content.ts && bun --bun astro build && bun scripts/build-sw.ts",
-    "docs:shots": "bun scripts/docshots.ts",
+    "docs:shots": "bun scripts/clean-shots.ts && playwright test --config playwright.docs.config.ts",
     "docs:library": "bun scripts/sync-docs-library.ts",
     "preview": "bun --bun astro preview",
     "check": "bun --bun astro check",

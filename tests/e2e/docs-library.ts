@@ -24,7 +24,7 @@ import { installRoutes, type FixtureFile } from "./fixture";
  *
  * Sync with `bun run docs:library` (see `scripts/sync-docs-library.ts`).
  */
-export const DOCS_PLAYLIST_URL =
+const DOCS_PLAYLIST_URL =
   "https://raw.githubusercontent.com/HappyPaul55/everythingstar-foss/main/songs/playlist.json";
 
 interface Entry {
@@ -233,8 +233,8 @@ function cover(id: string): FixtureFile {
 /**
  * The published library in place of the tiny default.
  *
- * `@public` — read by the capture fences in `docs/`, which are Markdown, so knip
- * cannot see the import that uses it.
+ * `@public` — read through `tests/e2e/support.ts`, one level away from knip's
+ * entry specs.
  */
 export async function installDocsFixtures(context: BrowserContext): Promise<string[]> {
   return installRoutes(context, responses());

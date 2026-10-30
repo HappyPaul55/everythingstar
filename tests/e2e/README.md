@@ -5,6 +5,14 @@ and drives the screen machine in a real browser. `playwright.config.ts` runs it
 against the dev server, `tests/e2e/fixture.ts` answers every external document, and
 `bun run test:pwa` is the separate offline run against a production build.
 
+## The documentation captures
+
+`tests/e2e/docs/` holds one spec per documentation screenshot. It imports
+`docshot` and its capture helper from `../support`, and the page names the same id
+with `[description](shot:<id>)`. `bun run docs:shots` runs them; `bun run build`
+runs that first. `src/lib/docshots/references.test.ts` fails when a page and a test
+disagree.
+
 ## The rule
 
 A browser test earns its place only when **no cheaper gate can see the regression**:
