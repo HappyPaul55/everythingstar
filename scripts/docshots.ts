@@ -13,6 +13,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import docshots from "../docshots.config";
+import { clearContentCache } from "../src/lib/docshots/cache";
 import { fenceShots, type FenceShot } from "../src/lib/docshots/fence";
 import {
   MANIFEST_PATH,
@@ -190,10 +191,9 @@ console.log(
 );
 console.log(`docshots: images → ${docshots.outDir}/ (${Object.keys(docshots.variants).join(", ")})`);
 
-// The content layer caches every image path a document referenced. A capture
-// that has just been added, renamed or removed would be resolved from that cache
-// before the browser has made the file, so the run starts from a clean one.
-rmSync(join(ROOT, ".astro"), { recursive: true, force: true });
+// The content layer caches every page it compiled, including one compiled before
+// its captures existed. Start from empty on both sides of the run.
+clearContentCache();
 
 // The browser runs from here rather than from a second package script, so
 // `bun run docs:shots --only <doc>` hands its flag to the generator instead of

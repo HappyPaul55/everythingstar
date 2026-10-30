@@ -67,9 +67,12 @@ export default defineConfig({
         // so `bun run dev` works on a checkout that has never run Playwright.
         docsShots({
           root: fileURLToPath(new URL(".", import.meta.url)),
-          // Only a dev server draws the placeholder: a build with no capture lets
-          // Astro fail with the path instead of shipping a page with a gap.
-          allowPlaceholder: process.env.DOCSHOTS_ALLOW_PLACEHOLDER === "1",
+          // A dev server draws the placeholder; a build lets Astro fail with the
+          // path instead of shipping a page with a gap. The PWA suite's throwaway
+          // build is the one build allowed to have none. Two explicit flags
+          // rather than a guess about how the command was started.
+          allowPlaceholder:
+            process.env.DOCSHOTS_DEV === "1" || process.env.DOCSHOTS_PWA === "1",
         }),
       ],
     }),
