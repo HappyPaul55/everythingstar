@@ -119,6 +119,8 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
   const [recordMode, setRecordMode] = useState<"replace" | "overdub">("replace");
   const [metronome, setMetronome] = useState(true);
   const [dialog, setDialog] = useState(false);
+  const [recordMenu, setRecordMenu] = useState(false);
+  const recordMenuRef = useRef<HTMLDivElement | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [startedAt, setStartedAt] = useState(0);
   const [exportProblems, setExportProblems] = useState<string[]>([]);
@@ -384,6 +386,30 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
     clock.setRate(speed);
   }, [clock, speed]);
 
+  // The record options sit in a small popover beside the split button. An outside
+  // press or Escape closes it; Escape is captured so it does not also clear the
+  // chart selection behind the menu.
+  useEffect(() => {
+    if (!recordMenu) return;
+    const outside = (event: PointerEvent) => {
+      if (recordMenuRef.current && !recordMenuRef.current.contains(event.target as Node)) {
+        setRecordMenu(false);
+      }
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      setRecordMenu(false);
+    };
+    document.addEventListener("pointerdown", outside);
+    document.addEventListener("keydown", escape, true);
+    return () => {
+      document.removeEventListener("pointerdown", outside);
+      document.removeEventListener("keydown", escape, true);
+    };
+  }, [recordMenu]);
+
   // Keyboard shortcuts. While a take is armed the recording layout owns the keys,
   // so only Escape (stop) is read here.
   useEffect(() => {
@@ -565,19 +591,22 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
             {project.song.artist.name} · {charts.length} {t("charter.charts").toLowerCase()}
           </p>
         </div>
-        <div className="charter-actions">
-          <button type="button" className="charter-btn" onClick={onBack}>
-            {t("charter.song")}
-          </button>
-          <button type="button" className="charter-btn" onClick={() => setDialog(true)}>
-            {t("charter.charts")}
-          </button>
-          <button type="button" className="charter-btn charter-btn--primary" onClick={exportChart}>
-            {t("charter.download")}
-          </button>
-          <button type="button" className="charter-btn" onClick={onGame}>
-            {t("charter.back")}
-          </button>
+        <div className="charter-head__actions">
+          <div className="charter-actions">
+            <button type="button" className="charter-btn" onClick={onBack}>
+              {t("charter.song")}
+            </button>
+            <button type="button" className="charter-btn" onClick={() => setDialog(true)}>
+              {t("charter.charts")}
+            </button>
+            <button type="button" className="charter-btn charter-btn--primary" onClick={exportChart}>
+              {t("charter.download")}
+            </button>
+            <button type="button" className="charter-btn" onClick={onGame}>
+              {t("charter.back")}
+            </button>
+          </div>
+          <p className="charter-help">{t("charter.help")}</p>
         </div>
       </header>
 
@@ -591,6 +620,77 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
           >
             {clock.playing ? "❚❚" : "▶"}
           </button>
+          <div
+            className={["charter-record-combo", record.recording ? "is-on" : ""].filter(Boolean).join(" ")}
+            ref={recordMenuRef}
+          >
+            <button
+              type="button"
+              className={["charter-btn", "charter-btn--record", "charter-record-main", record.recording ? "is-on" : ""]
+                .filter(Boolean)
+                .join(" ")}
+              onClick={() => {
+                setRecordMenu(false);
+                if (record.recording) stopRecording();
+                else startRecording();
+              }}
+              disabled={!active}
+            >
+              <span className="charter-record-dot" aria-hidden="true" />
+              {record.recording ? t("charter.stopRecording") : t("charter.record")}
+            </button>
+            <button
+              type="button"
+              className="charter-btn charter-btn--record charter-record-arrow"
+              aria-label={t("charter.recordOptions")}
+              aria-haspopup="true"
+              aria-expanded={recordMenu}
+              onClick={() => setRecordMenu((open) => !open)}
+            >
+              ▾
+            </button>
+            {recordMenu ? (
+              <div className="charter-record-menu" role="group" aria-label={t("charter.recordOptions")}>
+                <label className="charter-mini">
+                  <span>{t("charter.controller")}</span>
+                  <select
+                    value={record.controller.on}
+                    onChange={(event) => {
+                      const on = event.target.value;
+                      if (on === "midi") {
+                        void record.requestMidi().then((ok) => {
+                          if (!ok) setStatus(t("charter.midiRefused"));
+                        });
+                        return;
+                      }
+                      record.setController(
+                        on === "pad" ? { on: "pad", index: 0 } : { on: "keyboard", layout: 0 },
+                      );
+                    }}
+                  >
+                    <option value="keyboard">{t("charter.keyboard")}</option>
+                    <option value="pad">{t("charter.gamepad")}</option>
+                    <option value="midi">{t("charter.midi")}</option>
+                  </select>
+                </label>
+                <label className="charter-mini">
+                  <span>{t("charter.recordMode")}</span>
+                  <select
+                    value={recordMode}
+                    onChange={(event) => setRecordMode(event.target.value as "replace" | "overdub")}
+                  >
+                    <option value="replace">{t("charter.replace")}</option>
+                    <option value="overdub">{t("charter.overdub")}</option>
+                  </select>
+                </label>
+              </div>
+            ) : null}
+          </div>
+          {record.recording ? (
+            <span className="charter-recording" role="status">
+              {t("charter.armed")} · {t("charter.notes")}: {preview.length}
+            </span>
+          ) : null}
           <button type="button" className="charter-btn charter-btn--small" onClick={() => seekTo(0)}>
             {t("charter.stop")}
           </button>
@@ -687,58 +787,6 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
             {t("charter.quantize")}
           </label>
         </div>
-      </div>
-
-      <div className="charter-recordbar">
-        <button
-          type="button"
-          className={["charter-btn", "charter-btn--record", record.recording ? "is-on" : ""]
-            .filter(Boolean)
-            .join(" ")}
-          onClick={record.recording ? stopRecording : startRecording}
-          disabled={!active}
-        >
-          <span className="charter-record-dot" aria-hidden="true" />
-          {record.recording ? t("charter.stopRecording") : t("charter.record")}
-        </button>
-        <label className="charter-mini">
-          <span>{t("charter.controller")}</span>
-          <select
-            value={record.controller.on}
-            onChange={(event) => {
-              const on = event.target.value;
-              if (on === "midi") {
-                void record.requestMidi().then((ok) => {
-                  if (!ok) setStatus(t("charter.midiRefused"));
-                });
-                return;
-              }
-              record.setController(
-                on === "pad" ? { on: "pad", index: 0 } : { on: "keyboard", layout: 0 },
-              );
-            }}
-          >
-            <option value="keyboard">{t("charter.keyboard")}</option>
-            <option value="pad">{t("charter.gamepad")}</option>
-            <option value="midi">{t("charter.midi")}</option>
-          </select>
-        </label>
-        <label className="charter-mini">
-          <span>{t("charter.replace")}</span>
-          <select
-            value={recordMode}
-            onChange={(event) => setRecordMode(event.target.value as "replace" | "overdub")}
-          >
-            <option value="replace">{t("charter.replace")}</option>
-            <option value="overdub">{t("charter.overdub")}</option>
-          </select>
-        </label>
-        {record.recording ? (
-          <span className="charter-recording" role="status">
-            {t("charter.armed")} · {t("charter.notes")}: {preview.length}
-          </span>
-        ) : null}
-        <span className="charter-hint">{t("charter.help")}</span>
       </div>
 
       <div className={`charter-grid charter-grid--${columns}`} style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>

@@ -83,12 +83,31 @@
   font-size: 0.66rem;
 }
 
+.charter-head__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  max-width: 42rem;
+}
+
 .charter-actions {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+/* The pointer/recording hint sits under the header's actions, where it costs the
+   chart grid no row of its own. */
+.charter-help {
+  margin: 0;
+  max-width: 38rem;
+  color: rgba(251, 251, 243, 0.64);
+  font-size: 0.62rem;
+  line-height: 1.35;
+  text-align: right;
 }
 
 .charter-btn {
@@ -149,6 +168,55 @@
   height: 0.42rem;
   border-radius: 50%;
   background: currentColor;
+}
+
+/* A split button: the record action, and the arrow that opens its two settings. */
+.charter-record-combo {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.charter-record-main {
+  border-radius: var(--radius-inner) 0 0 var(--radius-inner);
+  border-right: 0;
+}
+
+.charter-record-arrow {
+  min-width: 1.35rem;
+  padding: 0 0.3rem;
+  border-radius: 0 var(--radius-inner) var(--radius-inner) 0;
+  font-size: 0.55rem;
+}
+
+.charter-record-combo.is-on .charter-record-arrow {
+  border-color: #ff6b6b;
+  color: #ff9a9a;
+}
+
+.charter-record-menu {
+  position: absolute;
+  top: calc(100% + 0.3rem);
+  left: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 13rem;
+  padding: 0.55rem;
+  border: 1px solid rgba(251, 251, 243, 0.22);
+  border-radius: var(--radius-inner);
+  background: #171a11;
+  box-shadow: 0 0.9rem 2rem rgba(0, 0, 0, 0.45);
+}
+
+.charter-record-menu .charter-mini {
+  gap: 0.2rem;
+}
+
+.charter-record-menu .charter-mini select {
+  width: 100%;
+  min-width: 8rem;
 }
 
 .charter-picker__bar,
@@ -295,8 +363,7 @@
 
 /* ---------------------------------------------------------------- workspace */
 
-.charter-toolbar,
-.charter-recordbar {
+.charter-toolbar {
   display: flex;
   align-items: center;
   gap: 0.55rem;
@@ -372,23 +439,10 @@
   accent-color: var(--color-yellow);
 }
 
-.charter-recordbar {
-  border-bottom: 1px solid var(--color-line-ink);
-}
-
 .charter-recording {
   color: #ff9a9a;
   font-family: var(--font-mono);
   font-size: 0.64rem;
-}
-
-.charter-hint {
-  margin-left: auto;
-  max-width: 32rem;
-  color: rgba(251, 251, 243, 0.64);
-  font-size: 0.62rem;
-  line-height: 1.35;
-  text-align: right;
 }
 
 .charter-grid {
@@ -751,13 +805,16 @@
   .charter-settings {
     margin-left: 0;
   }
-  .charter-hint {
+  .charter-help {
     display: none;
   }
 }
 
 @media (max-width: 540px) {
   .charter-head--workspace {
+    align-items: flex-start;
+  }
+  .charter-head__actions {
     align-items: flex-start;
   }
   .charter-actions {
@@ -770,11 +827,4 @@
   .charter-note-editor {
     display: none;
   }
-}
-
-/* The record bar's selects name devices and modes, so they get the width of the
-   word rather than the narrow numeric field beside a BPM. */
-.charter-recordbar .charter-mini select {
-  width: auto;
-  min-width: 6.5rem;
 }

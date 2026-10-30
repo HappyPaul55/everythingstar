@@ -43,8 +43,16 @@ test("opens a song, edits, records and downloads a Clone Hero chart", async ({
     "Click a note to select it",
   );
 
+  // The record split button opens its two settings without taking a row of its own.
+  await page.getByRole("button", { name: "Record options" }).click();
+  const recordMenu = page.getByRole("group", { name: "Record options" });
+  await expect(recordMenu).toContainText("Record with");
+  await expect(recordMenu).toContainText("Record mode");
+  await page.keyboard.press("Escape");
+  await expect(recordMenu).toBeHidden();
+
   // Record a take with the game's own left-hand layout: a fret and a strum.
-  await page.getByRole("button", { name: "Record" }).click();
+  await page.getByRole("button", { name: "Record", exact: true }).click();
   await expect(page.locator(".charter-recording")).toBeVisible();
   await page.keyboard.down("KeyA");
   await page.keyboard.down("ArrowUp");

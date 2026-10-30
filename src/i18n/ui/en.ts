@@ -499,6 +499,8 @@ export const en = {
   "charter.stop": "Stop",
   "charter.stopRecording": "Stop recording",
   "charter.record": "Record",
+  "charter.recordOptions": "Record options",
+  "charter.recordMode": "Record mode",
   "charter.armed": "Recording",
   "charter.takeEmpty": "The take heard nothing. Press a fret and strum, or try again.",
   "charter.takeAdded": "{count} notes added",

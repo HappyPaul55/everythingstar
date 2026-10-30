@@ -42,7 +42,8 @@ and level.
 ## Record a take
 
 Choose the chart you are editing, press **Record**, and play with the keyboard, a
-gamepad or a MIDI input. A strum takes the frets held at that moment; a tapped
+gamepad or a MIDI input. The arrow beside Record opens **Record with** (the
+controller) and **Record mode** (replace the section, or overdub). A strum takes the frets held at that moment; a tapped
 instrument turns each press into an ordinary strum note; a held fret is a sustain.
 Tapping is the controller's way of playing the note, not a third note kind. The take starts at the
 playhead and stops when you press Record again (or Escape). **Replace section** is the

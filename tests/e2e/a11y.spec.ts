@@ -182,5 +182,9 @@ test("the charter picker and its open song have no critical or serious violation
   await expect(page.locator(".charter-pane")).toHaveCount(1, { timeout: 20_000 });
   expect(describe(await seriousViolations(page))).toBe("");
 
+  await page.getByRole("button", { name: "Record options" }).click();
+  await expect(page.getByRole("group", { name: "Record options" })).toBeVisible();
+  expect(describe(await seriousViolations(page))).toBe("");
+
   expect(leaked, "unexpected external requests").toEqual([]);
 });
