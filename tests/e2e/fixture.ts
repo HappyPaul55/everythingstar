@@ -288,7 +288,22 @@ const bigSongDoc = {
   parts: [],
 };
 
-async function installRoutes(
+/** A binary response: a picture the fixture serves under a URL the game asks for. */
+export interface FixtureFile {
+  body: Uint8Array;
+  contentType: string;
+}
+
+function isFixtureFile(value: unknown): value is FixtureFile {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "body" in value &&
+    "contentType" in value
+  );
+}
+
+export async function installRoutes(
   context: BrowserContext,
   responses: Record<string, unknown>,
   seen?: (url: string) => void,
@@ -304,6 +319,15 @@ async function installRoutes(
     const body = responses[url];
     if (body !== undefined) {
       seen?.(url);
+      if (isFixtureFile(body)) {
+        await route.fulfill({
+          status: 200,
+          contentType: body.contentType,
+          headers: { "access-control-allow-origin": "*" },
+          body: Buffer.from(body.body),
+        });
+        return;
+      }
       if (body instanceof Uint8Array) {
         await route.fulfill({
           status: 200,

@@ -1,7 +1,7 @@
 ---
 title: Gotchas
 description: "The rules that have already been broken once: the vocabulary, the track format, the parsers, the stems, the stage geometry and the local records."
-updated: "2026-10-28"
+updated: "2026-10-30"
 order: 3
 ---
 
@@ -1966,6 +1966,19 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   settings). `bun run cards` renders both from the one layout; re-render it (do not
   build it) if the branding changes, and bump `OG_IMAGE_VERSION` when the picture
   a visitor sees actually changed.
+- **A documentation screenshot is a test, and it is never committed.** A `ts`
+  fence in a page with an `id` and an `alt` is a Playwright test; `bun run
+  docs:shots` — which `bun run build` runs before Astro — writes
+  `docs/screenshots/<variant>-<id>.webp` and `.docshots/manifest.json`, both
+  ignored by Git. The picture is taken in `afterEach` and only for a test that
+  **passed**, so a broken screen cannot leave a good-looking image behind.
+  `src/lib/docs/shots.ts` reads the manifest and renders one `<details>` per
+  variant, so the page still ships no island. Two consequences follow: the build
+  needs Chromium, and a fresh clone has no images until it builds. Do not
+  hand-write `![…](../screenshots/…)` again, and do not commit the folder.
+  The Astro dev toolbar is disabled in `astro.config.mjs` for the same reason:
+  it is a floating overlay at the foot of every page, and the captures run
+  against the dev server.
 - **This repo has no server, and must not grow one.** `wrangler.jsonc` is
   assets-only: no `main`, no Worker script, no `/api/*` and no bindings.
   Everything the game reads at runtime is fetched by the browser from a URL it
@@ -1973,8 +1986,8 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   `playlist-api.md`) — so a provider is a **separate project** reached through the
   Playlists feature. If a feature seems to need an API, the answer is a different
   project, not a Worker here.
-- **`workers_dev` and `preview_urls` are `false`**, and stay false: branch previews
-  are served from `<branch>.everythingstar.happypaul55.com` through the custom
-  domain, so a deploy must not re-enable the workers.dev route. `previews: {}` is
-  present because a Workers Builds branch preview runs `wrangler preview`, which
-  requires the block even when it is empty; assets stay at the top level.
+- **`workers_dev` and `preview_urls` are `false`**, and stay false: only a push to
+  `main` deploys automatically, from `.github/workflows/deploy.yml`, so a deploy
+  must not re-enable the workers.dev route or a version-preview URL. `previews: {}`
+  is inert now that Workers Builds is disconnected — nothing runs
+  `wrangler preview` — and is kept because removing it buys nothing.

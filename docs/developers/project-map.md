@@ -1,7 +1,7 @@
 ---
 title: Project map
 description: "Where everything lives: every module, what it owns, and the seam it sits behind — the file-by-file map of the game, the site and the scripts."
-updated: "2026-10-28"
+updated: "2026-10-30"
 order: 2
 ---
 
@@ -46,6 +46,25 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   id to its URL (`/docs/...`, or `/privacy` for a notice), relative link rewriting,
   the sidebar's groups and the page's neighbours. Tested beside them: `paths.test.ts`,
   `nav.test.ts`, and `content.test.ts` for the source's own links and frontmatter.
+- `src/lib/docshots/{fence,manifest,config}.ts` — the capture contract, pure and
+  tested: a fence's metadata and body, the `doc#id` → `<variant>-<id>.webp` manifest,
+  and the variant list `docshots.config.ts` declares. `capture.ts` is the Playwright
+  side: `docshot(test, …)` writes the WebP in `afterEach`, only when the test passed.
+- `scripts/docshots.ts` — `bun run docs:shots`: scans the fences, writes
+  `.docshots/specs/*.spec.ts` and the `support.ts` shim beside them, writes the
+  manifest, then runs `playwright.docs.config.ts` (one project per variant).
+  `bun run build` runs it before Astro, so a build always captures first.
+- `src/lib/docs/shots.ts` — the satteri plugin that replaces a fence with a
+  `<figure>`, a real mdast `image` per variant (so Astro optimises it) and one
+  `<details>` per screen. It reads the manifest, never a browser.
+- `docs/screenshots/` + `.docshots/` — **generated, ignored by Git**: the captures
+  and the manifest/specs. [Writing docs](writing-docs.md#screenshots) is the rule.
+- `tests/e2e/docs-library/` + `docs-library.ts` — the captures' **mock**: a snapshot
+  of the published EverythingStar FOSS playlist (real titles, artists, offers, cover
+  art at 96×96) served under the URL a fresh install seeds, with documents and charts
+  generated per song. `bun run docs:library` refreshes it; it never runs in a gate.
+- `tests/e2e/note-guide.ts` — the note-types page's own charts: one short song per
+  note type, at the seeded URL, so a capture shows the note its prose names.
 - `src/pages/docs/index.astro` + `src/pages/docs/[...slug].astro` — the hub and a page
   per sectioned document; `src/pages/[...legal].astro` builds the notices at the site
   root; `src/layouts/DocsLayout.astro` and `LegalLayout.astro` are their frames.
@@ -483,11 +502,11 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   scale and the fonts) and the shell components (`.spray-*`, `.hazard`,
   `.comment`, `.mark`, `.sticker`, the nav), plus the print and reduced-motion
   layers.
-- `wrangler.jsonc` — the Cloudflare deploy: the project name and
-  `assets.directory: ./dist`, with **no `main` and no `run_worker_first`**, so a
-  deploy uploads static files and nothing else. An empty `previews` block is what
-  a Workers Builds branch preview requires (`wrangler preview`); assets and
-  compatibility stay at the top level. A provider is its own project.
+- `wrangler.jsonc` — the Cloudflare upload: the Worker name and
+  `assets.directory: ./dist`, with **no `main` and no `run_worker_first`**, so
+  `bunx wrangler deploy` uploads static files and nothing else. `workers_dev` and
+  `preview_urls` are off, and the empty `previews` block is inert now that Workers
+  Builds is disconnected. A provider is its own project.
 - `scripts/generate-icons.mjs`, `scripts/fetch-fonts.mjs`, `scripts/check-budget.ts`,
   `scripts/og-card.html`, `scripts/render-cards.ts`, `scripts/check-docs.ts` — icon set,
   self-hosted fonts, the dist/audio size caps, the social cards' source layout and

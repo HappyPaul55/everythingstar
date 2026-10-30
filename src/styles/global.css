@@ -600,6 +600,46 @@
     border: 1px solid rgba(12, 13, 10, 0.16);
     border-radius: var(--radius-brand);
   }
+  /* A captured screen (src/lib/docs/shots.ts): one <details> per variant, so
+     the selector needs no JavaScript and a docs page stays without an island. */
+  .doc .doc-shot {
+    margin: 1.5rem 0;
+  }
+  .doc .doc-shot__variant {
+    border: 1px solid rgba(12, 13, 10, 0.16);
+    border-radius: var(--radius-brand);
+    background: var(--color-cream);
+    padding: 0.5rem 0.65rem;
+  }
+  .doc .doc-shot__variant + .doc-shot__variant {
+    margin-top: 0.5rem;
+  }
+  .doc .doc-shot__variant > summary {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    cursor: pointer;
+  }
+  .doc .doc-shot__variant[open] > summary {
+    margin-bottom: 0.6rem;
+  }
+  .doc .doc-shot__variant img {
+    display: block;
+    border: 0;
+    border-radius: var(--radius-inner);
+  }
+  .doc .doc-shot figcaption {
+    margin-top: 0.5rem;
+    font-size: 0.82rem;
+    color: var(--color-muted);
+  }
+  .doc .doc-shot--missing {
+    border: 1px dashed rgba(12, 13, 10, 0.3);
+    border-radius: var(--radius-inner);
+    padding: 0.75rem 1rem;
+  }
   .doc hr,
   .legal hr {
     border: 0;

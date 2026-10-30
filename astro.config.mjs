@@ -7,6 +7,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath } from "node:url";
 import { readVersion } from "./scripts/version.ts";
 import { docIdFromPath, resolveDocLink } from "./src/lib/docs/paths.ts";
+import { docsShots } from "./src/lib/docs/shots.ts";
 
 const buildVersion = readVersion();
 
@@ -34,6 +35,10 @@ const docsLinks = {
 
 export default defineConfig({
   site: "https://everythingstar.happypaul55.com",
+  // The dev toolbar is a floating overlay at the foot of every page, and the
+  // documentation captures run against the dev server: it would be in every
+  // screenshot. The repo has its own accessibility and browser gates.
+  devToolbar: { enabled: false },
   build: {
     format: "file",
     inlineStylesheets: "always",
@@ -54,7 +59,18 @@ export default defineConfig({
     // The docs have tables, code and commands; the light theme is the paper
     // page's. Everything the game itself shows is components, not Markdown.
     shikiConfig: { theme: "github-light" },
-    processor: satteri({ mdastPlugins: [docsLinks] }),
+    processor: satteri({
+      mdastPlugins: [
+        docsLinks,
+        // A capture fence becomes the image `bun run docs:shots` took for it. In
+        // a build an ungenerated fence is an error; in dev it is a placeholder,
+        // so `bun run dev` works on a checkout that has never run Playwright.
+        docsShots({
+          root: fileURLToPath(new URL(".", import.meta.url)),
+          strict: process.argv.includes("build"),
+        }),
+      ],
+    }),
   },
   vite: {
     define: { __BUILD_VERSION__: JSON.stringify(buildVersion) },

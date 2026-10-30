@@ -1,13 +1,37 @@
 ---
 title: Instruments
 description: "Playing a highway in EverythingStar: columns, note kinds, the whammy and star power, drums, misses and how difficulty works."
-updated: "2026-10-28"
+updated: "2026-10-30"
 order: 3
 ---
 
 An instrument is played on a **highway**: a scrolling board of notes that arrive at a line near the bottom. Each player has their own **panel**, with their highway in the middle, their score on the left and their star power meter on the right. Guitar, bass, simple keys and drums all use the same highway; what changes is the chart on it and the controls in your hands.
 
-![A lone guitar highway: five columns of notes above the hit line, with score, combo and multiplier down the left.](../screenshots/desktop-guitar.webp)
+```ts id="guitar-highway" alt="A lone guitar highway: five columns of notes above the hit line, with score, combo and multiplier down the left." viewports="desktop"
+import { expect, test } from "./support";
+import {
+  disableFullscreen,
+  enterGame,
+  installDocsFixtures,
+  openDocsBand,
+  seatPlayers,
+  setSlot,
+  startDocsRun,
+} from "./support";
+
+test("one guitar player's highway, a beat into the run", async ({ context, page }) => {
+  const leaked = await installDocsFixtures(context);
+  await disableFullscreen(page);
+  await enterGame(page, "/app");
+
+  await openDocsBand(page);
+  await seatPlayers(page, 1);
+  await setSlot(page, 1, "Guitar");
+  await startDocsRun(page);
+
+  expect(leaked, "unexpected external requests").toEqual([]);
+});
+```
 
 ## Columns and the hit line
 

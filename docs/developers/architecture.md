@@ -1,7 +1,7 @@
 ---
 title: Architecture
 description: "The loop, the screen machine and the one stage: how EverythingStar is laid out, what is mounted for every screen, and where the seams are."
-updated: "2026-10-28"
+updated: "2026-10-30"
 order: 1
 ---
 
@@ -247,8 +247,8 @@ keep the regions readable:
 
 - **Astro 7** (static) + **React 19** island (`@astrojs/react`, `client:load`)
 - **Tailwind CSS v4** with design tokens in `@theme` (`src/styles/global.css`)
-- **Cloudflare static assets** (`wrangler.jsonc`) — the build is uploaded as
-  files, with no Worker script and no API
+- **Cloudflare static assets** (`wrangler.jsonc`) — GitHub Actions builds and
+  uploads the files with `wrangler deploy`, with no Worker script and no API
 - **Bun** for installs, scripts and binaries — never `npm`/`npx`; the lockfile is
   `bun.lock`
 - Self-hosted fonts: **Permanent Marker** (display), **Space Grotesk** (body),

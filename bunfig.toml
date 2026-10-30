@@ -1,5 +1,6 @@
 # Unit tests are `*.test.ts` under `src/`. The browser tests are Playwright specs
 # under `tests/e2e/` and run with `bun run test:e2e`; Bun's test runner also
-# discovers `*.spec.ts`, so keep them out of `bun test`.
+# discovers `*.spec.ts`, so keep them out of `bun test`. `.docshots/` holds the
+# generated capture specs, which are Playwright's too.
 [test]
-pathIgnorePatterns = ["tests/e2e/**"]
+pathIgnorePatterns = ["tests/e2e/**", ".docshots/**"]

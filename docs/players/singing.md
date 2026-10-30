@@ -1,13 +1,37 @@
 ---
 title: Singing
 description: "Singing in EverythingStar: the microphone, the guide vocal, how notes are judged, duets and what is never recorded."
-updated: "2026-10-28"
+updated: "2026-10-30"
 order: 5
 ---
 
 Vocals is karaoke on the same stage. Choose **Vocals** for a words player on a song that carries pitch, and the game shows you the melody as a piano roll with the words beneath it. You sing into a microphone; the game listens to the pitch, and each note is judged on how much of its own length you held in tune.
 
-![A singer's stage: note bars on a piano roll, the words under them, and the singer's score and combo at the top right.](../screenshots/desktop-vocals.webp)
+```ts id="singer" alt="A singer's stage: note bars on a piano roll, the words under them, and the singer's score and combo at the top right." viewports="desktop"
+import { expect, test } from "./support";
+import {
+  disableFullscreen,
+  enterGame,
+  installDocsFixtures,
+  openDocsBand,
+  seatPlayers,
+  setSlot,
+  startDocsRun,
+} from "./support";
+
+test("a singer's piano roll, a beat into the run", async ({ context, page }) => {
+  const leaked = await installDocsFixtures(context);
+  await disableFullscreen(page);
+  await enterGame(page, "/app");
+
+  await openDocsBand(page);
+  await seatPlayers(page, 1);
+  await setSlot(page, 1, "Vocals");
+  await startDocsRun(page);
+
+  expect(leaked, "unexpected external requests").toEqual([]);
+});
+```
 
 ## Choosing Vocals, and the microphone prompt
 

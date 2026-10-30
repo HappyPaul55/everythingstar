@@ -1,13 +1,37 @@
 ---
 title: On a phone
 description: "Playing EverythingStar on a phone: tapping the pads, portrait screens, installing it and keeping songs available offline."
-updated: "2026-10-28"
+updated: "2026-10-30"
 order: 7
 ---
 
 EverythingStar plays on a phone. The same stage fits the screen, the hit markers become the controls, and a song can be kept on the device so it plays without a connection. Nothing has to be installed to start.
 
-![A lone guitar on a portrait phone: the score, combo and multiplier above the highway, and the five pads along the bottom.](../screenshots/mobile-guitar.webp)
+```ts id="phone-pads" alt="A lone guitar on a portrait phone: the score, combo and multiplier above the highway, and the five pads along the bottom." viewports="mobile"
+import { expect, test } from "./support";
+import {
+  disableFullscreen,
+  enterGame,
+  installDocsFixtures,
+  openDocsBand,
+  seatPlayers,
+  setSlot,
+  startDocsRun,
+} from "./support";
+
+test("the pads on a portrait phone, a beat into the run", async ({ context, page }) => {
+  const leaked = await installDocsFixtures(context);
+  await disableFullscreen(page);
+  await enterGame(page, "/app");
+
+  await openDocsBand(page);
+  await seatPlayers(page, 1);
+  await setSlot(page, 1, "Guitar");
+  await startDocsRun(page);
+
+  expect(leaked, "unexpected external requests").toEqual([]);
+});
+```
 
 ## The screen it makes
 

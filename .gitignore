@@ -47,5 +47,11 @@ playwright-report/
 # Local cache used by scripts and the dev server
 .cache/
 
+# Documentation captures: built by `bun run docs:shots` on every build, never
+# committed. `.docshots/` holds the manifest and the generated specs, and
+# `docs/screenshots/` is what Astro optimises into `dist/` — neither is source.
+.docshots/
+docs/screenshots/
+
 # Local binaries / downloads (never part of the site)
 *.exe

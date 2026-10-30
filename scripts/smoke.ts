@@ -1,12 +1,10 @@
 /**
  * The production smoke test: is the live site the build we shipped?
  *
- * Cloudflare Workers Builds deploys on every push to `main`, but GitHub only
- * learns that a *check* finished — it never learns whether the deploy worked,
- * and it records no deployment. So the deploy workflow waits for the build and
- * then runs this: the pages, the PWA shell, the App Link and the headers are
- * requested from the real origin, and the service worker's build identity is
- * held against the version this commit produced.
+ * `.github/workflows/deploy.yml` builds `dist/`, uploads it with `wrangler deploy`
+ * and then runs this: the pages, the PWA shell, the App Link and the headers are
+ * requested from the real origin, and the service worker's build identity is held
+ * against the version this commit produced.
  *
  * It is deliberately dependency-free — `fetch` and Bun built-ins, nothing from
  * `src/` or `node_modules` — so it can run on a bare runner with Bun installed.

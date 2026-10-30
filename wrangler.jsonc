@@ -1,27 +1,24 @@
 {
-  // Checked by an editor, not by a build: wrangler is not a dependency of this
-  // repo (Cloudflare supplies its own at deploy time), so the schema is the
-  // published one, pinned to the major that deploys.
+  // Checked by an editor, not by a build: the schema is the published one, pinned
+  // to the major that `bunx wrangler deploy` runs. Wrangler is a devDependency, so
+  // its version follows `bun.lock`.
   "$schema": "https://unpkg.com/wrangler@4/config-schema.json",
-  // Must match the connected Cloudflare Worker name, which Workers Builds
-  // supplies as the CI worker name; a mismatch is overridden at deploy time and
-  // logged as a warning.
+  // The static-assets Worker the deploy uploads to. It must match the Worker in the
+  // Cloudflare dashboard, which owns the custom domain and its version history.
   "name": "client-everythingstar-happypaul55-com",
-  // Static assets only: `bun run build` writes `dist/` and Cloudflare serves it
-  // from the edge cache. There is deliberately no `main` and no Worker script,
-  // because this project has no API. Anything the game needs at runtime comes
-  // from the browser: playlists are URLs on other projects, read over CORS.
+  // Static assets only: `bun run build` writes `dist/` and `wrangler deploy` uploads
+  // it. There is deliberately no `main` and no Worker script, because this project
+  // has no API. Anything the game needs at runtime comes from the browser: playlists
+  // are URLs on other projects, read over CORS.
   "compatibility_date": "2026-10-14",
   // Custom domains are managed in the Cloudflare dashboard. Explicitly disable the
   // workers.dev route and version preview URLs so neither is re-enabled on deploy.
-  // Branch previews are served from <branch>.everythingstar.happypaul55.com, because
-  // the custom domain is enabled for preview traffic.
+  // Only a push to `main` deploys automatically, so there are no branch previews to
+  // serve.
   "workers_dev": false,
   "preview_urls": false,
-  // Workers Builds runs `wrangler preview` for a branch build, and that command
-  // requires a `previews` block even when there is nothing Preview-specific to
-  // set: assets, compatibility and the like stay at the top level. There are no
-  // bindings here to point at staging, so the block is empty on purpose.
+  // Inert without Workers Builds: nothing here runs `wrangler preview` any more.
+  // It is kept because removing it buys nothing.
   "previews": {},
   "assets": {
     "directory": "./dist",
