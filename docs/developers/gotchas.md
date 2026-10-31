@@ -1,7 +1,7 @@
 ---
 title: Gotchas
 description: "The rules that have already been broken once: the vocabulary, the track format, the parsers, the stems, the stage geometry and the local records."
-updated: "2026-10-30"
+updated: "2026-10-31"
 order: 3
 ---
 

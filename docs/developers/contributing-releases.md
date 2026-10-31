@@ -1,7 +1,7 @@
 ---
 title: Releases
 description: "Why a release is a checkpoint rather than a build, how the version is named, and what the tag and the GitHub release are allowed to contain."
-updated: "2026-10-28"
+updated: "2026-10-31"
 order: 17
 ---
 
