@@ -55,7 +55,7 @@ microphone, or the machine); a **layout** is what that controller's controls mea
 
 - **`bun run verify` is the gate.** Lint, knip, `astro check`, the tests' typecheck, the
   unit tests, the build, the PWA and docs checks, the budget — in that order. CI runs
-  one `build`, a `unit` job and three browser shards, then a `package` job that joins
+  one `build`, a `unit` job and four browser shards, then a `package` job that joins
   the build to the screenshots the shards took; `verify` and `e2e` are the required
   checks. `bun run test:e2e` is the browser suite. Use **Bun**, never npm/npx.
 - **Pure logic lives in `src/lib/game/**` with a colocated `*.test.ts`.** Components

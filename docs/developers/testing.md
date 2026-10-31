@@ -6,7 +6,7 @@ order: 13
 ---
 
 `bun run verify` is the gate, and the one command that runs it locally. CI runs the same
-checks in a pipeline: one `build`, a `unit` job and three browser shards, then a
+checks in a pipeline: one `build`, a `unit` job and four browser shards, then a
 `package` job that joins the build to the screenshots the shards took; the required
 checks are `verify` and `e2e`. The rule for all of them is the same: a check belongs
 where it is cheapest and where it can actually see the regression.
@@ -46,7 +46,7 @@ bun run cards            # render the social cards from og-card.html
 Verify every change with `bun run verify`: lint, knip, `astro check`, the tests'
 typecheck, the unit tests, the build, the PWA gate, the docs gate, the size budget and the
 release archives, in that order. CI splits the same checks into a fast `unit` job, one
-`build` job and three browser shards, then a `package` job. The build runs first with
+`build` job and four browser shards, then a `package` job. The build runs first with
 the documentation's `<img>` tags but no images; the shards fill the images,
 `docs:bundle` puts them into `dist/`, and the package runs `check:docs` and the PWA
 test against that same build. The local command remains one sequence, so a checkout

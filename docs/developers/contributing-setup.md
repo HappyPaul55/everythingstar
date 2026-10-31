@@ -48,7 +48,7 @@ bun run import --from <charts> --to <library>   # a folder of charts into the th
 bun run icons / bun run fonts                   # regenerate the icon set / self-hosted fonts
 ```
 
-CI (`.github/workflows/ci.yml`) runs one `build`, a `unit` job and three browser
+CI (`.github/workflows/ci.yml`) runs one `build`, a `unit` job and four browser
 shards on every pull request and on `main`; the shards also take the documentation
 screenshots, and a final `package` job joins them to the build. The required checks are
 `verify` and `e2e`; the local `bun run verify` remains the one-command gate.
