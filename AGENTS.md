@@ -47,9 +47,10 @@ the band (`Player.seat`), so "Player 3" means the same person on the band screen
 stage, in the plan and in the results; a **panel** is their 1:1 area; a **highway** is
 the scrolling note area inside it; a **column** is one vertical lane of that highway; a
 **part** is a melodic line in the track; a **role** is what a melody player does with a
-part (`sing` or `type`); a **chart** is one instrument at one difficulty; a
-**controller** is what a player holds (their own keys, a gamepad, a MIDI kit, the
-microphone, or the machine); a **layout** is what that controller's controls mean.
+part (`sing` or `type`); a **chart** is one instrument at one difficulty; a **slide** is a
+**link** between two notes, never a note kind; a **controller** is what a player holds
+(their own keys, a gamepad, a MIDI kit, the microphone, or the machine); a **layout** is
+what that controller's controls mean.
 
 ## The rules
 

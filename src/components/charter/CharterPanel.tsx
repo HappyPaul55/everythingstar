@@ -1,6 +1,12 @@
-import { useRef, type PointerEvent as ReactPointerEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { useT } from "../../i18n/react";
-import { noteBox, noteColumnBox } from "../../lib/game/band/notes";
+import { columnCentre, noteBox, noteColumnBox } from "../../lib/game/band/notes";
+import { slideRibbon } from "../../lib/game/band/slides";
 import { notesInWindow } from "../../lib/game/scroll";
 import type { CharterChart } from "../../lib/game/charter/edit";
 import type { LaneNote } from "../../lib/game/track";
@@ -68,6 +74,26 @@ export function CharterPanel({
     beforeMs: 1200,
     afterMs: zoom * 1000 + 1200,
   });
+  /** The pane's layout size: a slide band is a rotated box, so it needs pixels. */
+  const [trackSize, setTrackSize] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    const element = track.ref.current;
+    if (!element) return;
+    const measure = () => {
+      const width = element.clientWidth;
+      const height = element.clientHeight;
+      setTrackSize((current) =>
+        current.width === width && current.height === height
+          ? current
+          : { width, height },
+      );
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [track.ref]);
   const notes = notesInWindow(chart.notes, track.fromMs, track.toMs);
   const lines = gridLines(track.fromMs, track.toMs, grid);
   const dragging = drag?.chartKey === chart.key;
@@ -167,6 +193,25 @@ export function CharterPanel({
     return { note, timeMs, column };
   });
 
+  // The links this pane can show, from the source's tail to the target's head —
+  // the same two points the stage glides between. A link outside the mounted
+  // window is not drawn, so a long chart costs the pane only what is on screen.
+  const byId = new Map(chart.notes.map((note) => [note.id, note]));
+  const slides = chart.notes.flatMap((note) => {
+    const target = note.slideTo === undefined ? undefined : byId.get(note.slideTo);
+    if (!target || note.column === null || target.column === null) return [];
+    const startMs = note.timeMs + Math.max(0, note.lengthMs);
+    if (target.timeMs < track.fromMs || startMs > track.toMs) return [];
+    return [{
+      key: note.id,
+      ribbon: slideRibbon(
+        { x: columnCentre(note.column, chart.columns), y: track.position(startMs) },
+        { x: columnCentre(target.column, chart.columns), y: track.position(target.timeMs) },
+        trackSize,
+      ),
+    }];
+  });
+
   return (
     <section
       className={["charter-pane", active ? "is-active" : "", dragging ? "is-dragging" : ""]
@@ -216,6 +261,20 @@ export function CharterPanel({
               aria-hidden="true"
             />
           ))}
+          <div className="charter-pane__slides" aria-hidden="true">
+            {slides.map((slide) => (
+              <div
+                key={`slide-${slide.key}`}
+                className={`charter-slide is-${slide.ribbon.side}`}
+                style={{
+                  left: `${slide.ribbon.left}px`,
+                  top: `${slide.ribbon.top}px`,
+                  width: `${slide.ribbon.width}px`,
+                  height: `${slide.ribbon.height}px`,
+                }}
+              />
+            ))}
+          </div>
           {take.map((note) => {
             const head = track.position(note.timeMs);
             const tail = track.position(note.timeMs + note.lengthMs);

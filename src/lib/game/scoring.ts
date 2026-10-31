@@ -176,19 +176,23 @@ export function starRating(
 }
 
 /**
- * A run's score as the **star rating** reads it: the freestyle fill points taken
- * back out.
+ * A run's score as the **star rating** reads it: the freestyle fill points and the
+ * **slide points** taken back out.
  *
  * A fill is paid and shown — the drummer played it — but it is not in the base
  * score the rating divides by, so leaving it in the numerator let a busy fill buy
- * four or five stars with no note played. This is the rating's own figure, not the
- * run's; the board still reads the full score. Zero is the floor, because a stored
- * oddity with more fill points than score must rate as nothing rather than as a
- * negative.
+ * four or five stars with no note played. A slide is the same shape for a
+ * different reason: it can only be played by a finger gliding on a touch screen,
+ * so a guitar run on the same chart cannot earn it. Including it in the rating
+ * would make the touch player's stars a controller advantage rather than a
+ * performance. This is the rating's own figure, not the run's; the board still
+ * reads the full score. Zero is the floor, because a stored oddity with more bonus
+ * points than score must rate as nothing rather than as a negative.
  */
-export function ratingScore(score: number, fillHits = 0): number {
+export function ratingScore(score: number, fillHits = 0, slidePoints = 0): number {
   const fills = Number.isFinite(fillHits) ? Math.max(0, Math.trunc(fillHits)) : 0;
-  return Math.max(0, score - fills * FILL_POINTS);
+  const slides = Number.isFinite(slidePoints) ? Math.max(0, slidePoints) : 0;
+  return Math.max(0, score - fills * FILL_POINTS - slides);
 }
 
 /** A score, with thousands separators. */

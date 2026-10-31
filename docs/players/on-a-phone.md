@@ -31,6 +31,7 @@ Tap the pad under a note as it lands, and the note plays. A tap counts as a fret
 
 - The pad's **whole column** is its touch target, roughly a finger deep around the hit line.
 - A tap at nothing is **not an error**; it is a hand finding the screen, and a late second tap does nothing.
+- A note linked by a **slide** ribbon can be played without lifting: keep the finger down and glide to the target's pad. A glide across 800 ms at 120 BPM pays 10 points on top of the note; tapping the target instead plays it without them.
 - The drums use the same highway, with the kick column a pad like the others.
 - The pads are not in the tab order: a keyboard or gamepad remains the accessible route, and a machine-played seat has none.
 

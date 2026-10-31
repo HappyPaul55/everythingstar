@@ -293,8 +293,8 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   entrance. They read what they
   need from context (the run board, the song, the clock) and take callbacks for
   everything else.
-- `src/pages/charter.astro` + `src/components/charter/**` — **the charter island**, a tool at `/charter` rather than a screen in the run loop. It opens a song and every chart it carries, draws up to eight 2D panes, adds and moves notes by pointer, records keyboard/gamepad/MIDI takes, and downloads a Clone Hero `.chart`. Its clock and `SongAudio` are its own; the band, judging, score board and mixer are not mounted. See [Charter](charter.md).
-- `src/lib/game/charter/**` — the charter's pure rules: `grid.ts` (BPM, subdivision, snapping, bar lines), `edit.ts` (the canonical note list and every edit, including copy/paste and cross-chart paste), `record.ts` (a take of the game's own actions into notes), and `exportChart.ts` (the whole set as a `.chart`). Unit-tested beside them.
+- `src/pages/charter.astro` + `src/components/charter/**` — **the charter island**, a tool at `/charter` rather than a screen in the run loop. It opens a song and every chart it carries, draws up to eight 2D panes, adds and moves notes by pointer, links a selected pair of notes as a **slide**, records keyboard/gamepad/MIDI takes, and downloads a Clone Hero `.chart`. Its clock and `SongAudio` are its own; the band, judging, score board and mixer are not mounted. See [Charter](charter.md).
+- `src/lib/game/charter/**` — the charter's pure rules: `grid.ts` (BPM, subdivision, snapping, bar lines), `edit.ts` (the canonical note list and every edit, including copy/paste, cross-chart paste and dropping a stale slide link), `record.ts` (a take of the game's own actions into notes), and `exportChart.ts` (the whole set as a `.chart`, naming the slides it cannot write). Unit-tested beside them.
 - `src/styles/charter.css` — the charter's own look, imported only by `/charter`; it keeps the stage's tokens and never reaches a marketing page or `/play`.
 - `src/lib/game/song.ts` — **the song**: what a library lists and a band is offered
   (title, artist, album, art, length, and what there is to play). Not a track — a
@@ -451,6 +451,12 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
 - `src/lib/game/band/notes.ts` — the highway's own geometry and its note
   treatments (`columnCentre`, `noteGlyph`, `noteClasses`, `heldColumns`,
   `hitBursts`), pure and tested.
+- `src/lib/game/band/slides.ts` — the **slide** band's geometry, pure and tested: a
+  box whose bottom centre is the source's end and whose right or left centre is the
+  target's head, in the highway's own percentages. The visible quarter of the
+  ellipse leaves the source **across** and turns **up** into the target, the same
+  way whichever direction the slide goes. Drawing only — `track.ts` decides whether
+  a link is playable, and `lanes.ts` decides whether a glide landed.
 - `src/lib/game/mock/**` — the **fixture generator, and nothing but fixtures**:
   `songs.ts` (the fixture songs: a few written by hand, then every
   pairing of two word lists), `track.ts` (lyric lines, a duet, a pitch contour with

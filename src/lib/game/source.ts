@@ -16,12 +16,14 @@
 
 import {
   chartProblems,
+  cleanSlides,
   DIFFICULTIES,
   fitMelodyTurns,
   INSTRUMENT_KINDS,
   LANE_ROLES,
   MAX_PARTS,
   nearestDifficulty,
+  slideProblems,
   strums,
   type ChartPhrase,
   type Difficulty,
@@ -716,6 +718,10 @@ function readLanes(
     instrument === "drums"
       ? readSpans(body.fills, offset).filter((span) => span.endMs > span.startMs)
       : [];
+  // Numbered after the sort, so a chart's ids run in its own order whatever order
+  // the file happened to write its notes in. The **slides** are coordinates until
+  // here, because the file has no ids: they are resolved against this list.
+  const numbered = notes.map((note, index) => ({ ...note, id: `${chart.id}:${index}` }));
   return {
     chart: {
       instrument,
@@ -729,12 +735,119 @@ function readLanes(
       ...(phrases.length > 0 ? { phrases } : {}),
       // The drum fills, when it marks any: freestyle windows, not notes.
       ...(fills.length > 0 ? { fills } : {}),
-      // Numbered after the sort, so a chart's ids run in its own order whatever
-      // order the file happened to write its notes in.
-      notes: notes.map((note, index) => ({ ...note, id: `${chart.id}:${index}` })),
+      notes: readSlides(body.slides, numbered, offset, chart.id, problems),
     },
     problems,
   };
+}
+
+/**
+ * The chart's **slides**, as links between the notes they name.
+ *
+ * A slide is two coordinates in the file — where it leaves and where it arrives —
+ * because a document has no note ids. One note per time and column is what a cell
+ * means; a cell two notes call their own is ambiguous and named rather than
+ * guessed. Coordinates share the notes' clock, so the chart's own `offsetMs` moves
+ * both and they keep meeting.
+ *
+ * Every link is then held to `slideProblems`, the same rule the stage applies, and
+ * `cleanSlides` drops what it refuses: a source may be half a chart's problem, but
+ * a chart with one bad link is still a chart. Only the link list is at stake here —
+ * `chartProblems` is the caller's gate.
+ */
+function readSlides(
+  value: unknown,
+  notes: readonly LaneNote[],
+  offset: number,
+  chartId: string,
+  problems: string[],
+): LaneNote[] {
+  const entries = list(value);
+  if (entries.length === 0) return notes.slice();
+
+  // A cell with more than one note is nobody's target: `null` says ambiguous and
+  // `undefined` says absent — the two faults a coordinate can have.
+  const byCell = new Map<string, LaneNote | null>();
+  for (const note of notes) {
+    const key = cellKey(note.timeMs, note.column);
+    byCell.set(key, byCell.has(key) ? null : note);
+  }
+
+  const links = new Map<string, string>();
+  for (const entry of entries) {
+    if (!isObject(entry)) {
+      problems.push(`${chartId}: a slide that is not an object`);
+      continue;
+    }
+    const fromTime = num(entry.fromTimeMs);
+    const toTime = num(entry.toTimeMs);
+    const fromColumn = slideColumn(entry.fromColumn);
+    const toColumn = slideColumn(entry.toColumn);
+    if (
+      fromTime === null ||
+      toTime === null ||
+      fromColumn === undefined ||
+      toColumn === undefined
+    ) {
+      problems.push(`${chartId}: a slide without both ends`);
+      continue;
+    }
+    const fromAt = Math.max(0, fromTime + offset);
+    const toAt = Math.max(0, toTime + offset);
+    const from = byCell.get(cellKey(fromAt, fromColumn));
+    const to = byCell.get(cellKey(toAt, toColumn));
+    if (from === null || to === null) {
+      const [at, column] = from === null ? [fromAt, fromColumn] : [toAt, toColumn];
+      problems.push(
+        `${chartId}: a slide end at ${at} ms column ${columnWord(column)} is on more than one note`,
+      );
+      continue;
+    }
+    if (!from || !to) {
+      const [at, column] = from ? [toAt, toColumn] : [fromAt, fromColumn];
+      problems.push(
+        `${chartId}: a slide end at ${at} ms column ${columnWord(column)} is not a note`,
+      );
+      continue;
+    }
+    // One source, one glide: a second link on the same note is not a chart a
+    // finger can follow. (A link to the note itself is `slideProblems`' to name.)
+    if (links.has(from.id)) {
+      problems.push(
+        `${chartId}: the note at ${fromAt} ms column ${columnWord(fromColumn)} slides more than once`,
+      );
+      continue;
+    }
+    links.set(from.id, to.id);
+  }
+
+  const linked = notes.map((note) => {
+    const target = links.get(note.id);
+    return target === undefined ? note : { ...note, slideTo: target };
+  });
+  // The size, column and ordering rules are `track.ts`'s own, so the reader and
+  // the charter explain a bad link the same way.
+  problems.push(...slideProblems(linked));
+  return cleanSlides(linked);
+}
+
+/** A slide coordinate's cell: the note's time and column, with an open note's `null`. */
+function cellKey(timeMs: number, column: number | null): string {
+  return `${timeMs}:${column === null ? "open" : column}`;
+}
+
+/**
+ * A slide coordinate's column: a number, `null` for the open note at that time, or
+ * `undefined` when the document's value is not a column at all.
+ */
+function slideColumn(value: unknown): number | null | undefined {
+  if (value === null) return null;
+  const column = num(value);
+  return column === null ? undefined : Math.trunc(column);
+}
+
+function columnWord(column: number | null): string {
+  return column === null ? "open" : String(column);
 }
 
 /**

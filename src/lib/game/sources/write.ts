@@ -271,6 +271,20 @@ export function trackFromSource(source: ParsedSource): TrackBuild {
  * about the reader.
  */
 export function chartJson(chart: LaneChart): unknown {
+  // A link is a note id in memory and a pair of coordinates in the file, so the
+  // writer is where the two ends are looked up. A link whose target is not in the
+  // chart is not a coordinate pair at all, so there is nothing to write.
+  const byId = new Map(chart.notes.map((note) => [note.id, note]));
+  const slides = chart.notes.flatMap((note) => {
+    const target = note.slideTo === undefined ? undefined : byId.get(note.slideTo);
+    if (!target) return [];
+    return [{
+      fromTimeMs: note.timeMs,
+      fromColumn: note.column,
+      toTimeMs: target.timeMs,
+      toColumn: target.column,
+    }];
+  });
   return {
     schemaVersion: 1,
     chartType: chart.instrument === "drums" ? "drums" : "lanes",
@@ -279,6 +293,7 @@ export function chartJson(chart: LaneChart): unknown {
     ...(chart.bpm !== undefined ? { bpm: chart.bpm } : {}),
     ...(chart.phrases && chart.phrases.length > 0 ? { phrases: chart.phrases } : {}),
     ...(chart.fills && chart.fills.length > 0 ? { fills: chart.fills } : {}),
+    ...(slides.length > 0 ? { slides } : {}),
     notes: chart.notes.map((note) => ({
       timeMs: note.timeMs,
       lengthMs: note.lengthMs,

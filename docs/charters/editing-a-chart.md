@@ -37,6 +37,18 @@ reads **every** chart the song carries, not only the one a band would play.
 `Space` plays and pauses; arrow keys nudge the selection by a column or grid step,
 Shift and up/down by a bar; Delete removes it.
 
+## Make a slide
+
+A **slide** is a link between two notes, not a third note kind. Select exactly two
+notes — the earlier one is the source — and press **Slide**. The pane draws a ribbon
+from the source's end to the target's head, and on a touch screen a finger that has
+played the source can glide to the target without lifting.
+
+The pair must be fretted, in different columns, with the target after the source's end
+and nothing else in either endpoint column between them; a target can be arrived at
+from one source only. A pair that fails any of that is not linked and the status line
+says why. Select the source and press **Remove slide** to break its link.
+
 ## Show more than one chart
 
 A song can have any number of charts, and up to **eight** panes are visible at once —
@@ -59,8 +71,10 @@ there. **Quantize** snaps the take as it is captured.
 ## Download
 
 **Download .chart** writes a Clone Hero / YARG `.chart` with every chart the format
-can carry. To play it here, put it beside the song's audio as `song.ogg` and open
-that folder from **Playlists**; Clone Hero and YARG use the same folder.
+can carry. A `.chart` has no field for a **slide**, so every link is named in the
+export and left out; the notes themselves still go. To play it here, put it beside
+the song's audio as `song.ogg` and open that folder from **Playlists**; Clone Hero
+and YARG use the same folder.
 
 The charter uploads nothing and never writes back to a playlist's file: your work
 lives in the tab until you download it.

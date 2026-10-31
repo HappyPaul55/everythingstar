@@ -74,6 +74,20 @@ const touch = (timeMs: number, column: number, held: boolean[] = frets()): LaneT
   column,
 });
 
+/** A finger gliding from one pad to another, still down. */
+const glide = (
+  timeMs: number,
+  from: number,
+  to: number,
+  held: boolean[] = frets(),
+): LaneTrigger => ({
+  timeMs,
+  signal: "slide",
+  frets: held,
+  column: to,
+  from,
+});
+
 /** A run for a chart, with a helper that plays one trigger. */
 function play(chart_: LaneChart, ...triggers: LaneTrigger[]): LaneRun {
   return triggers.reduce(
@@ -534,6 +548,174 @@ describe("tapping the hit line", () => {
     const kept = advanceLanes(started, open, 1600, frets(0), touching);
     expect(kept.holding).toEqual([0]);
     expect(kept.score).toBeGreaterThan(started.score);
+  });
+});
+
+describe("slides", () => {
+  /** A source at 1000 that links to a target at 2000, at 120 bpm. */
+  const linked = (target: Partial<LaneNote> = {}): LaneChart =>
+    chart(
+      [
+        note({ id: "a", timeMs: 1000, column: 1, slideTo: "b" }),
+        note({ id: "b", timeMs: 2000, column: 2, ...target }),
+      ],
+      5,
+      120,
+    );
+
+  /** The source landed at ×1, so the target's glide is worth at ×1. */
+  const landed = (target: Partial<LaneNote> = {}): { chart_: LaneChart; run: LaneRun } => {
+    const chart_ = linked(target);
+    return { chart_, run: play(chart_, strum(1000, frets(1))) };
+  };
+
+  test("a glide lands a linked target and pays the span it crossed", () => {
+    const { chart_, run } = landed();
+    const slid = applyTrigger(run, chart_, glide(2000, 1, 2));
+    expect(slid.outcomes).toEqual(["hit", "hit"]);
+    expect(slid.hits).toBe(2);
+    expect(slid.slideHits).toBe(1);
+    // 1000ms at 120 bpm is half a measure, so 25 at ×1 is 12.5. It is part of the
+    // raw score, and `slidePoints` is what the rating reads to take it back out.
+    expect(slid.slidePoints).toBeCloseTo(HOLD_POINTS_PER_MEASURE / 2);
+    expect(slid.score).toBeCloseTo(NOTE_POINTS * 2 + HOLD_POINTS_PER_MEASURE / 2);
+    // The target is played by touch: it records when it arrived and the multiplier
+    // it landed at, so a chord's later arrivals share one gesture.
+    expect(slid.tapTimes[1]).toBe(2000);
+    expect(slid.tapMultipliers[1]).toBe(1);
+  });
+
+  test("a glide with no link does nothing at all", () => {
+    const chart_ = chart(
+      [
+        note({ id: "a", timeMs: 1000, column: 1 }),
+        note({ id: "b", timeMs: 2000, column: 2 }),
+      ],
+      5,
+      120,
+    );
+    const run = play(chart_, strum(1000, frets(1)));
+    const slid = applyTrigger(run, chart_, glide(2000, 1, 2));
+    expect(slid).toBe(run);
+    expect(slid.slidePoints).toBe(0);
+    expect(slid.slideHits).toBe(0);
+    expect(slid.errors).toBe(0);
+    expect(slid.outcomes).toEqual(["hit", "pending"]);
+  });
+
+  test("a plain tap on the target lands it with no slide points", () => {
+    const { chart_, run } = landed();
+    const tapped = applyTrigger(run, chart_, touch(2000, 2));
+    expect(tapped.outcomes).toEqual(["hit", "hit"]);
+    expect(tapped.slidePoints).toBe(0);
+    expect(tapped.slideHits).toBe(0);
+    expect(tapped.score).toBe(NOTE_POINTS * 2);
+  });
+
+  test("a source that was missed leaves nothing to slide from", () => {
+    const chart_ = linked();
+    // Let the source's window close: the link is only playable from a note this
+    // run already hit.
+    const missed = advanceLanes(
+      emptyLaneRun(chart_),
+      chart_,
+      1000 + HIT_WINDOW_MS + 1,
+      frets(),
+    );
+    expect(missed.outcomes[0]).toBe("miss");
+    const slid = applyTrigger(missed, chart_, glide(2000, 1, 2));
+    expect(slid).toBe(missed);
+    expect(slid.outcomes).toEqual(["miss", "pending"]);
+    expect(slid.slidePoints).toBe(0);
+    expect(slid.errors).toBe(0);
+  });
+
+  test("a chain pays each link it lands", () => {
+    const chart_ = chart(
+      [
+        note({ id: "a", timeMs: 1000, column: 0, slideTo: "b" }),
+        note({ id: "b", timeMs: 2000, column: 1, slideTo: "c" }),
+        note({ id: "c", timeMs: 3000, column: 2 }),
+      ],
+      5,
+      120,
+    );
+    let run = play(chart_, strum(1000, frets(0)));
+    run = applyTrigger(run, chart_, glide(2000, 0, 1));
+    run = applyTrigger(run, chart_, glide(3000, 1, 2));
+    expect(run.outcomes).toEqual(["hit", "hit", "hit"]);
+    expect(run.slideHits).toBe(2);
+    expect(run.slidePoints).toBeCloseTo(HOLD_POINTS_PER_MEASURE);
+    expect(run.score).toBeCloseTo(NOTE_POINTS * 3 + HOLD_POINTS_PER_MEASURE);
+    expect(run.errors).toBe(0);
+  });
+
+  test("a chord with two links lands both, without the tap-chord debounce", () => {
+    const chart_ = chart(
+      [
+        note({ id: "a", timeMs: 1000, column: 0, slideTo: "c" }),
+        note({ id: "b", timeMs: 1000, column: 1, slideTo: "d" }),
+        note({ id: "c", timeMs: 2000, column: 2 }),
+        note({ id: "d", timeMs: 2000, column: 3 }),
+      ],
+      5,
+      120,
+    );
+    let run = play(chart_, strum(1000, frets(0, 1)));
+    run = applyTrigger(run, chart_, glide(2000, 0, 2));
+    // 100ms after the first arrival: past `TAP_CHORD_MS`, still inside the hit
+    // window. A glide is one finger arriving, not two taps that must be together.
+    run = applyTrigger(run, chart_, glide(2100, 1, 3));
+    expect(run.outcomes).toEqual(["hit", "hit", "hit", "hit"]);
+    expect(run.slideHits).toBe(2);
+    expect(run.slidePoints).toBeCloseTo(HOLD_POINTS_PER_MEASURE);
+    expect(run.errors).toBe(0);
+  });
+
+  test("a slid sustain is held from its arrival", () => {
+    const { chart_, run } = landed({ lengthMs: 1000 });
+    const slid = applyTrigger(run, chart_, glide(2000, 1, 2));
+    expect(slid.holding).toEqual([1]);
+    const kept = advanceLanes(slid, chart_, 2500, frets(2));
+    expect(kept.holding).toEqual([1]);
+    expect(kept.score).toBeGreaterThan(slid.score);
+    expect(advanceLanes(kept, chart_, 2600, frets()).holding).toEqual([]);
+  });
+
+  test("a glide outside the target's hit window does nothing", () => {
+    const { chart_, run } = landed();
+    const late = applyTrigger(
+      run,
+      chart_,
+      glide(2000 + HIT_WINDOW_MS + 1, 1, 2),
+    );
+    expect(late).toBe(run);
+    expect(late.outcomes).toEqual(["hit", "pending"]);
+    expect(late.slidePoints).toBe(0);
+    expect(late.errors).toBe(0);
+  });
+
+  test("star power doubles the points the glide crossed", () => {
+    const chart_ = linked();
+    const live = { ...emptyLaneRun(chart_), starUntilMs: 3000, starActive: true };
+    let run = applyTrigger(live, chart_, strum(1000, frets(1)));
+    run = applyTrigger(run, chart_, glide(2000, 1, 2));
+    // The whole 1000ms span is inside the window, so the hold value is doubled on
+    // top of the target's own doubled note: 100 + 100 + 25.
+    expect(run.slidePoints).toBeCloseTo(HOLD_POINTS_PER_MEASURE / 2 * STAR_MULTIPLE);
+    expect(run.score).toBeCloseTo(
+      NOTE_POINTS * STAR_MULTIPLE * 2 + (HOLD_POINTS_PER_MEASURE / 2) * STAR_MULTIPLE,
+    );
+  });
+
+  test("a slide to a note already played does nothing", () => {
+    const { chart_, run } = landed();
+    const tapped = applyTrigger(run, chart_, touch(2000, 2));
+    const slid = applyTrigger(tapped, chart_, glide(2000, 1, 2));
+    expect(slid).toBe(tapped);
+    expect(slid.slidePoints).toBe(0);
+    expect(slid.slideHits).toBe(0);
+    expect(slid.errors).toBe(0);
   });
 });
 

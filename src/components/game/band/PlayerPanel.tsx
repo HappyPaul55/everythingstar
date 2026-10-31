@@ -72,7 +72,7 @@ export function PlayerPanel({ player, width, height, view, noteStyle, noteSpeed,
   const label = role
     ? t(role === "lead" ? "band.leadGuitar" : "band.rhythmGuitar")
     : t(INSTRUMENTS[player.kind].labelKey);
-  const { run, held, tapDown, tapUp } = useLaneRun({
+  const { run, held, tapDown, tapUp, slide } = useLaneRun({
     chart: chart ?? null,
     seed,
     // The player's own place in the band: their controller's input, and the run
@@ -173,6 +173,7 @@ export function PlayerPanel({ player, width, height, view, noteStyle, noteSpeed,
           tap={tap && !auto}
           onTapDown={tapDown}
           onTapUp={tapUp}
+          onSlide={slide}
         />
       ) : (
         <div className="highway highway--empty" role="note">

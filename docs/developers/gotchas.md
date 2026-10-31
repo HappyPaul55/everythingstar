@@ -16,8 +16,9 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   scrolling note area inside it; a **column** is one vertical lane of that highway;
   a **part** is a melodic line in the track; a **role** is what a melody player does
   with a part (`sing` or `type`); a **chart** is one instrument at one difficulty; a
-  **controller** is what a player holds (their own keys, a gamepad, a MIDI kit, the
-  microphone, or the machine); and a **layout** is what that controller's controls mean. Keep to
+  **slide** is a **link** between two notes and never a note kind; a **controller**
+  is what a player holds (their own keys, a gamepad, a MIDI kit, the microphone, or
+  the machine); and a **layout** is what that controller's controls mean. Keep to
   these words in code, comments and conversation.
 - **The charter is an island, not a screen.** `/charter` is its own React root with
   its own `StageClock` and `SongAudio`; the game's session, band, judging, score board
@@ -70,7 +71,7 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   lazy dialog still mounts as
   a native `<dialog>` with `useModal`, and its opener keeps `aria-haspopup="dialog"`, so
   Escape and focus return are unchanged. **The initial `/play` graph is the number that
-  matters** — 560 KiB raw / 182 KiB gzipped across 26 files — and
+  matters** — 570 KiB raw / 184 KiB gzipped across 21 files — and
   `scripts/check-budget.ts` gates the initial raw and gzipped sizes directly, and fails
   if a translator marker appears in it. Do not lazy-load the main screens: a flash on every navigation costs more than
   the bytes it saves.
@@ -883,9 +884,10 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   repeating one of four arrows would read as two lefts), three are `← ↑ →`, two are
   `← →`, one is a centre dot, and anything else cycles the mat's four.
 - **The note zoo is how a treatment regression is caught.** Every chart opens with
-  one of every type and combination in its first few seconds, and a test asserts
-  each one is generated, so a broken treatment is on screen within seconds of
-  pressing play. Do not remove it.
+  one of every type and combination in its first few seconds — the strummed zoo ends
+  with a **slide** link, and the tapped zoo carries one too — and a test asserts each
+  one is generated, so a broken treatment is on screen within seconds of pressing
+  play. Do not remove it.
 - **A highway is one plane, drawn flat or tilted.** The `view` setting
   (`HighwayView` in `settings.ts`) picks between `flat` — the board face-on — and
   `3d` — the same board rotated into perspective, and the default. Both are **one element**,
@@ -929,6 +931,22 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   pad) plays a strum note by pressing its key, with the tap supplying the strum. Do
   not add `tap` back as a note kind, and do not infer a note's kind from whether the
   instrument is tapped. An older document's `tap` is read as `strum`.
+- **A slide is a link, not a kind, and its points are touch-only.** `LaneNote.slideTo`
+  names the later note a note glides to; both ends keep the kind they had, so there is
+  no `slide` note kind to add. `slideProblems` (`track.ts`, pure) is the rule — both
+  ends fretted, a target strictly after the source's **end**, different columns,
+  nothing else in either endpoint column between them, one incoming link per target —
+  and `chartProblems` includes it. A document has no note ids, so `source.ts` resolves
+  the `slides` coordinates after sorting; `cleanSlides` drops a link the chart cannot
+  play and the reader names it, keeping the chart. On the stage only a **touch** glide
+  can play the link: `lanes.ts` judges a `slide` trigger by the source having landed
+  and leaving its own column, pays the span's `holdBasePoints` into `slidePoints`, and
+  `ratingScore` takes those points back out so a phone is never rated above a guitar
+  for the same chart. A glide with no link, from a note that did not land, or onto a
+  target already played does nothing and is **not** an error. The `.chart` exporter has
+  no field for a link, so it names each slide and writes the notes without it. Do not
+  add `slide` as a kind, and do not pay slide points on a strum, keyboard, gamepad or
+  MIDI.
 - **A hit marker can be a control, and a tap is a fret and a strum at once.** The
   `tap` setting (on by default, because it is the only way a phone has to play a
   highway) makes each pad a **button**; a press sends a `touch` trigger to that

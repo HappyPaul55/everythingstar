@@ -1,7 +1,7 @@
 ---
 title: Architecture
 description: "The loop, the screen machine and the one stage: how EverythingStar is laid out, what is mounted for every screen, and where the seams are."
-updated: "2026-10-30"
+updated: "2026-10-31"
 order: 1
 ---
 
@@ -239,9 +239,13 @@ keep the regions readable:
 - **Lanes region** — one panel per player (guitar, bass, drums, keys, dance),
   side by side. Each panel holds the score (left), the note highway (centre) and
   the info rail (right — the power meter, a full-height bar). A highway note is a
-  **button**: it is hit where it lands, so nothing on it slides. Once it lands the
-  note leaves the neck, and a **burst** above the pad says where it was played; a
-  miss keeps its red note travelling past the line.
+  **button**: it is hit where it lands. The pads are one pointer surface — the hit
+  row captures the pointer, not the pad — so a finger already on the line may
+  **glide** from one pad to the next without lifting. That is the chart's one
+  **slide** link, the only ribbon on the neck: a touch player earns its span's hold
+  value, and no other controller can. Once a note lands it leaves the neck, and a
+  **burst** above the pad says where it was played; a miss keeps its red note
+  travelling past the line.
 
 ## The stack, and the first download
 
@@ -266,8 +270,8 @@ player who opens the JSON library and never presses Calibrate, opens Downloads, 
 a link or uses `?dev=1` does not pay for any of it.
 
 That matters because `/play` is the page the game starts on: the initial JavaScript
-graph is **560 KiB raw / 182 KiB gzipped across 26 files**. That is the first download
-only; every `_astro` JavaScript chunk in the build totals **644 KiB**, because the lazy
+graph is **570 KiB raw / 184 KiB gzipped across 21 files**. That is the first download
+only; every `_astro` JavaScript chunk in the build totals **697 KiB**, because the lazy
 chunks still ship — they are just not requested first. `scripts/check-budget.ts` walks
 `play.html`'s initial island graph, gates the initial raw and gzipped sizes directly,
 and fails if a translator marker leaks into it, so the split cannot quietly regress.

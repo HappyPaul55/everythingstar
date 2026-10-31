@@ -32,6 +32,19 @@ import {
  *   own strum, so it plays **any** note under that column — strum, hopo or
  *   open — without asking about the hopo chain. That is the playing style for a
  *   phone, where there is no strum bar to press and no second hand to press it.
+ * - **A slide is a finger, not a note kind.** A chart may **link** one fretted
+ *   note to a later one (`LaneNote.slideTo`), and a run that already hit the
+ *   source may glide the finger from its column to the target's without lifting.
+ *   The arrival plays the target as a touch — no new press, and no
+ *   `TAP_CHORD_MS`, because it is one finger arriving rather than two taps of a
+ *   chord — and the target's sustain is held from there. The glide pays the hold
+ *   value of the span it crossed (`holdBasePoints`), at the arrival's streak and
+ *   the star power over that span, and records it as `slidePoints` so the rating
+ *   can take it back out: only a touch screen can play it, and a stars rating must
+ *   not reward the controller. A glide with no link, off a source that has not
+ *   landed, or onto a note already played does nothing at all — it is not an
+ *   error, and it is not a fill hit either. A strum, keyboard, gamepad or MIDI
+ *   player never earns one, and the machine player is unchanged.
  * - **Chords.** Notes sharing a moment are one chord, judged together on a
  *   strum: the whole chord is hit when every fret is held, and missed when one is
  *   not. A chord is not partly played — one hand short is a miss for the gesture.
@@ -102,16 +115,27 @@ export type NoteOutcome = "pending" | "hit" | "miss";
 /**
  * Something the player did. `strum` is the strum bar, `fret` is pressing a fret
  * (which is all a tapped instrument has, and how a hopo is hammered), `whammy` is
- * the extra key waving while a note is held, and `touch` is a tap on a pad — a
- * fret and a strum in one gesture.
+ * the extra key waving while a note is held, `touch` is a tap on a pad — a
+ * fret and a strum in one gesture — and `slide` is that finger arriving on
+ * another pad, still down.
  */
 export interface LaneTrigger {
   timeMs: number;
-  signal: "strum" | "fret" | "whammy" | "touch";
+  signal: "strum" | "fret" | "whammy" | "touch" | "slide";
   /** Which columns are held, by column. */
   frets: boolean[];
-  /** The column pressed, for a `fret` or a `touch` signal. */
+  /**
+   * The column pressed, for a `fret` or a `touch` signal — or the column a
+   * `slide` **arrives on**. An open note has none, but a slide can never target
+   * one: both ends of a link are fretted.
+   */
   column: number | null;
+  /**
+   * The column the finger left, for a `slide` only. It is where the source note
+   * must have been: the link is played from that pad, not from any other, so a
+   * glide that started somewhere else is not this target's slide.
+   */
+  from?: number;
 }
 
 export interface LaneRun {
@@ -182,6 +206,19 @@ export interface LaneRun {
    * `FILL_HIT_MS` is measured from here.
    */
   lastFillMs: number;
+  /**
+   * What this run has earned from **slides**: the hold value of every span a
+   * finger glided across, at the multiplier and star power it arrived with. It is
+   * in `score` but **not** in `laneBaseScore`, because only a touch screen can
+   * play a slide and the star rating must not prefer one controller over another;
+   * the results screen takes it back out with `ratingScore`.
+   */
+  slidePoints: number;
+  /**
+   * How many slides this run has landed. A read-out like `fillHits`: it is not a
+   * note judged, so it is not in `hits`, `judged` or the accuracy.
+   */
+  slideHits: number;
   /** The moment the run was last advanced to. */
   atMs: number;
 }
@@ -222,6 +259,8 @@ export function emptyLaneRun(
     starActive: false,
     fillHits: 0,
     lastFillMs: Number.NEGATIVE_INFINITY,
+    slidePoints: 0,
+    slideHits: 0,
     atMs,
   };
 }
@@ -286,7 +325,7 @@ function held(
  */
 export function applyTrigger(
   run: LaneRun,
-  chart: Pick<LaneChart, "instrument" | "notes" | "fills">,
+  chart: Pick<LaneChart, "instrument" | "notes" | "fills" | "bpm">,
   trigger: LaneTrigger,
 ): LaneRun {
   // A wave of the whammy spends a full meter and buys a window of double points.
@@ -303,6 +342,17 @@ export function applyTrigger(
       starUntilMs: Math.max(0, trigger.timeMs) + STAR_POWER_MS,
       starActive: true,
     };
+  }
+
+  // A glide is not a strike: it only lands through the link its source note
+  // carries, and when that link cannot be played it does nothing. In particular it
+  // is never an error and never a fill hit — the finger is still on the screen,
+  // moving, which is exactly what a touch surface is for. It is judged before the
+  // ordinary strike rules, so a missing fret or an empty column cannot reach it.
+  if (trigger.signal === "slide") {
+    const target = nearestPending(chart.notes, run, trigger, false);
+    if (target < 0) return run;
+    return slideArrival(run, chart, target, trigger);
   }
 
   const index = nearestPending(chart.notes, run, trigger, !strums(chart.instrument));
@@ -424,6 +474,12 @@ function canJudge(
     // A tap carries its own strum, so the note's kind never refuses one.
     return note.column === null || note.column === trigger.column;
   }
+  if (trigger.signal === "slide") {
+    // A glide arrives on one pad, and only a fretted note waits there: an open
+    // target spans the neck, so it is no more a slide's target than an open
+    // source is its origin. The chart refuses both; this is the run's own guard.
+    return note.column !== null && note.column === trigger.column;
+  }
   // A strum judges any note whatever its chain says.
   return true;
 }
@@ -517,6 +573,66 @@ function tapped(run: LaneRun, chart: Pick<LaneChart, "notes">, index: number, at
   const tapMultipliers = next.tapMultipliers.slice();
   tapMultipliers[index] = gesture;
   return { ...next, tapTimes, tapMultipliers };
+}
+
+/**
+ * A finger arriving on a **slide**'s target, still down.
+ *
+ * The target is played as a touch — `hitNotes` starts it, and a tail is recorded
+ * in `holding` from there — and its tap is stamped like any other touch, so a
+ * chord's later arrivals share the first tap's multiplier. `TAP_CHORD_MS` is
+ * deliberately not applied: a glide is one finger arriving rather than two taps
+ * that have to be kept together.
+ *
+ * The source must be the note that links here (`slideTo`), in the column the
+ * finger left (`trigger.from`), and it must have **landed** in this run. A chain
+ * is that rule twice: each target becomes the next slide's source once it lands.
+ * Without such a source there is nothing to play, and the run is returned exactly
+ * as it was — no judged note, no combo break and no error.
+ */
+function slideArrival(
+  run: LaneRun,
+  chart: Pick<LaneChart, "notes" | "bpm">,
+  index: number,
+  trigger: LaneTrigger,
+): LaneRun {
+  const target = chart.notes[index];
+  if (!target || trigger.from === undefined) return run;
+
+  let source = -1;
+  for (let at = 0; at < index; at += 1) {
+    const candidate = chart.notes[at];
+    if (candidate.slideTo !== target.id) continue;
+    if (candidate.column !== trigger.from) continue;
+    if (run.outcomes[at] !== "hit") continue;
+    source = at;
+    break;
+  }
+  if (source < 0) return run;
+
+  const sourceNote = chart.notes[source];
+  const gesture = multiplier(run.combo);
+  const next = hitNotes(run, chart, [index], gesture, trigger.timeMs);
+  const tapTimes = next.tapTimes.slice();
+  tapTimes[index] = trigger.timeMs;
+  const tapMultipliers = next.tapMultipliers.slice();
+  tapMultipliers[index] = gesture;
+  // The span runs from where the source **ended** (its tail, on a sustain) to
+  // where the target begins, so a held tail is never paid for twice. Star power
+  // is paid over that span rather than at one edge, exactly as a hold is.
+  const fromMs = sourceNote.timeMs + sourceNote.lengthMs;
+  const points =
+    holdBasePoints(target.timeMs - fromMs, chart.bpm) *
+    gesture *
+    starFactor(fromMs, target.timeMs, run.starUntilMs);
+  return {
+    ...next,
+    tapTimes,
+    tapMultipliers,
+    score: next.score + points,
+    slidePoints: next.slidePoints + points,
+    slideHits: next.slideHits + 1,
+  };
 }
 
 /**

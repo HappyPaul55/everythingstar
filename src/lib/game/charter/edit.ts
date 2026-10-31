@@ -10,6 +10,7 @@
 
 import {
   chartProblems,
+  cleanSlides,
   isOpen,
   KICK_COLUMN,
   strums,
@@ -108,6 +109,7 @@ function normaliseNotes(
       kind,
       column,
       hero: note.hero === true,
+      ...(note.slideTo ? { slideTo: note.slideTo } : {}),
     };
     // One note per column at one moment. The later entry wins: a paste over an
     // existing note is meant to replace it, and the panel draws one note there.
@@ -152,7 +154,10 @@ function normaliseNotes(
     }
     lastByColumn.set(key, index);
   }
-  return fitted;
+  // A link is only a slide while both ends are still where it left them: a note
+  // deleted, moved onto another column or turned into an open one takes its stale
+  // links with it, rather than leaving a chart that can never be played.
+  return cleanSlides(fitted);
 }
 
 /** The whole chart made canonical. */
@@ -270,6 +275,13 @@ export interface NoteClip {
   kind: LaneNoteKind;
   column: number | null;
   hero: boolean;
+  /**
+   * The note this one slides to, as its **index in this clipboard's own notes**.
+   * An index rather than an id because a paste makes fresh ids: the link is only
+   * carried when both ends are copied, and it is pointed at the pasted target
+   * after those ids exist.
+   */
+  slideTo?: number;
 }
 
 export interface Clipboard {
@@ -285,15 +297,22 @@ export function copyNotes(
 ): Clipboard {
   const picked = notes.filter((note) => ids.has(note.id));
   const first = picked.reduce((min, note) => Math.min(min, note.timeMs), Infinity);
+  const indexOf = new Map(picked.map((note, index) => [note.id, index]));
   return {
     sourceColumns: columns,
-    notes: picked.map((note) => ({
-      offsetMs: note.timeMs - first,
-      lengthMs: note.lengthMs,
-      kind: note.kind,
-      column: note.column,
-      hero: note.hero,
-    })),
+    notes: picked.map((note) => {
+      // A link with its target outside the selection would point at nothing once
+      // pasted, so the copy carries only whole links.
+      const target = note.slideTo === undefined ? undefined : indexOf.get(note.slideTo);
+      return {
+        offsetMs: note.timeMs - first,
+        lengthMs: note.lengthMs,
+        kind: note.kind,
+        column: note.column,
+        hero: note.hero,
+        ...(target !== undefined ? { slideTo: target } : {}),
+      };
+    }),
   };
 }
 
@@ -309,21 +328,33 @@ export function pasteNotes(
   const strummed = chartStrums(chart);
   const plain = plainKind(chart);
   const columns = Math.max(1, chart.columns);
-  const pasted = clipboard.notes.flatMap((entry) => {
+  const created = clipboard.notes.flatMap((entry, index) => {
     if (entry.column !== null && entry.column >= columns) return [];
     const at = options.quantize && options.grid
       ? snapMs(atMs + entry.offsetMs, options.grid)
       : Math.max(0, Math.round(atMs + entry.offsetMs));
     return [{
-      id: noteId(),
-      timeMs: at,
-      lengthMs: options.quantize && options.grid
-        ? Math.max(0, snapMs(at + entry.lengthMs, options.grid) - at)
-        : entry.lengthMs,
-      kind: strummed ? (entry.kind === "hopo" ? "hopo" : plain) : "strum",
-      column: entry.column,
-      hero: entry.hero,
-    } satisfies LaneNote];
+      index,
+      note: {
+        id: noteId(),
+        timeMs: at,
+        lengthMs: options.quantize && options.grid
+          ? Math.max(0, snapMs(at + entry.lengthMs, options.grid) - at)
+          : entry.lengthMs,
+        kind: strummed ? (entry.kind === "hopo" ? "hopo" : plain) : "strum",
+        column: entry.column,
+        hero: entry.hero,
+      } satisfies LaneNote,
+    }];
+  });
+  // The links are pointed at the ids the paste just made, after every one of them
+  // exists. A target whose column the destination does not carry was not pasted,
+  // so its link goes with it.
+  const idAt = new Map(created.map(({ index, note }) => [index, note.id]));
+  const pasted = created.map(({ index, note }) => {
+    const target = clipboard.notes[index]?.slideTo;
+    const slideTo = target === undefined ? undefined : idAt.get(target);
+    return slideTo === undefined ? note : { ...note, slideTo };
   });
   return normaliseNotes([...notes, ...pasted], chart);
 }

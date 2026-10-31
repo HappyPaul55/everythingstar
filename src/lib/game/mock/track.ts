@@ -216,9 +216,10 @@ function buildChart(
   return { instrument, difficulty, columns: plan.columns, bpm: MOCK_BPM, notes };
 }
 
-/** The end of the zoo, where a chart's own content starts. */
+/** The end of the zoo, where a chart's own content starts. The last exhibit is
+ *  its slide's target, at step nine. */
 function zooEnd(): number {
-  return ZOO_START_MS + ZOO_STEP_MS * 8;
+  return ZOO_START_MS + ZOO_STEP_MS * 10;
 }
 
 /**
@@ -230,7 +231,12 @@ function zoo(instrument: InstrumentKind, difficulty: Difficulty): LaneNote[] {
   const strummed = strums(instrument);
   const columns = LANE_PLAN[difficulty].columns;
   const middle = Math.floor(columns / 2);
-  const exhibits: Array<Omit<LaneNote, "id">> = strummed
+  /** The slide target's column: two across from the source, so the ribbon crosses
+   *  the middle rather than stepping to the edge. */
+  const targetColumn = Math.min(2, columns - 1);
+  /** An exhibit, and the exhibit it slides to: ids exist only after the map. */
+  type Exhibit = Omit<LaneNote, "id" | "slideTo"> & { slideToIndex?: number };
+  const exhibits: Exhibit[] = strummed
     ? [
         // A plain note, then one that can be hammered on from it.
         { timeMs: ZOO_START_MS, lengthMs: 0, kind: "strum", column: middle, hero: false },
@@ -246,16 +252,25 @@ function zoo(instrument: InstrumentKind, difficulty: Difficulty): LaneNote[] {
         // A hero note, and a hero hopo to stack them.
         { timeMs: ZOO_START_MS + ZOO_STEP_MS * 6, lengthMs: 0, kind: "strum", column: middle, hero: true },
         { timeMs: ZOO_START_MS + ZOO_STEP_MS * 7, lengthMs: 0, kind: "hopo", column: middle, hero: true },
+        // A slide: the earlier note links to a later one in another column.
+        { timeMs: ZOO_START_MS + ZOO_STEP_MS * 8, lengthMs: 0, kind: "strum", column: 0, hero: false, slideToIndex: 10 },
+        { timeMs: ZOO_START_MS + ZOO_STEP_MS * 9, lengthMs: 0, kind: "strum", column: targetColumn, hero: false },
       ]
     : [
         { timeMs: ZOO_START_MS, lengthMs: 0, kind: "strum", column: middle, hero: false },
         { timeMs: ZOO_START_MS + ZOO_STEP_MS, lengthMs: 600, kind: "strum", column: middle, hero: false },
         { timeMs: ZOO_START_MS + ZOO_STEP_MS * 2, lengthMs: 0, kind: "strum", column: middle, hero: true },
         { timeMs: ZOO_START_MS + ZOO_STEP_MS * 3, lengthMs: 800, kind: "strum", column: middle, hero: true },
+        // A slide: the same exhibit a tapped highway can also carry.
+        { timeMs: ZOO_START_MS + ZOO_STEP_MS * 4, lengthMs: 0, kind: "strum", column: 0, hero: false, slideToIndex: 5 },
+        { timeMs: ZOO_START_MS + ZOO_STEP_MS * 5, lengthMs: 0, kind: "strum", column: targetColumn, hero: false },
       ];
-  return exhibits.map((note, index) => ({
+  return exhibits.map(({ slideToIndex, ...note }, index) => ({
     ...note,
     id: `${instrument}-${difficulty}-zoo-${index}`,
+    ...(slideToIndex === undefined
+      ? {}
+      : { slideTo: `${instrument}-${difficulty}-zoo-${slideToIndex}` }),
   }));
 }
 

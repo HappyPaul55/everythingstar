@@ -144,6 +144,14 @@ export function writeChart(input: ChartExportInput): ChartExport {
       problems.push(`${chart.key}: nothing the file can carry`);
       continue;
     }
+    // A `.chart` note is a fret and a length: there is no field for a glide, so
+    // every link is named and left out. The notes themselves still export — a
+    // playable chart without its slides is worth more than no chart at all.
+    for (const note of chart.notes) {
+      if (note.slideTo) {
+        problems.push(`${chart.key}: the slide at ${note.timeMs} ms has no .chart form`);
+      }
+    }
     lines.sort((a, b) => Number(a.split(" ")[0]) - Number(b.split(" ")[0]));
     blocks.push(`[${section}]\n{\n${lines.map((line) => `  ${line}`).join("\n")}\n}`);
   }

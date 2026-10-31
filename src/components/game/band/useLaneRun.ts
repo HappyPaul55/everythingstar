@@ -63,6 +63,16 @@ export interface LaneView {
   tapDown: (column: number, eventTimeMs?: number) => void;
   /** The finger left the pad; that column is no longer held by a tap. */
   tapUp: (column: number) => void;
+  /**
+   * A finger already on the line gliding from one pad to another without lifting.
+   * `from` is the column it left and `to` the one it arrived on; the run plays the
+   * target only if the note it was linked from has landed, and the glide itself is
+   * never an error. `fromStillHeld` says another finger is still on the column it
+   * left, so that pad stays down; otherwise the glide releases it. `eventTimeMs`
+   * is a DOM event's own `timeStamp`, projected onto the clock like a tap's.
+   * Inert when the machine is playing, and while the stage is standing still.
+   */
+  slide: (from: number, to: number, eventTimeMs?: number, fromStillHeld?: boolean) => void;
 }
 
 /** One panel's judging state, kept in a ref so a frame is not a render. */
@@ -122,6 +132,8 @@ function runChanged(before: LaneRun, after: LaneRun): boolean {
     before.starUntilMs !== after.starUntilMs ||
     before.starActive !== after.starActive ||
     before.fillHits !== after.fillHits ||
+    before.slidePoints !== after.slidePoints ||
+    before.slideHits !== after.slideHits ||
     before.outcomes !== after.outcomes ||
     before.holding !== after.holding ||
     before.hitTimes !== after.hitTimes ||
@@ -184,6 +196,7 @@ export function useLaneRun({ chart, seed, seat, auto, identity }: LaneOptions): 
       judged: run.judged,
       heroHits: run.heroHits,
       fillHits: run.fillHits,
+      slidePoints: run.slidePoints,
     };
     board.report(entry);
   };
@@ -240,6 +253,34 @@ export function useLaneRun({ chart, seed, seat, auto, identity }: LaneOptions): 
     touched[column] = false;
     current.touched = touched;
   }, []);
+
+  // A finger gliding across the line. It is queued like a tap so it is judged in
+  // the same place on the same frame as everything else, and it is **not** a
+  // press: the old column is let go (unless another finger is still on it) and
+  // the new one is held, which is what keeps the target's sustain and drops the
+  // source's. A glide with nothing to land on does nothing, which `lanes.ts`
+  // decides; there is no error to count here.
+  const slide = useCallback(
+    (from: number, to: number, eventTimeMs?: number, fromStillHeld?: boolean) => {
+      const current = state.current;
+      if (!current || auto || !clock.playing) return;
+      if (!Number.isInteger(from) || !Number.isInteger(to) || from === to) return;
+      if (from < 0 || from >= current.touched.length) return;
+      if (to < 0 || to >= current.touched.length) return;
+      const touched = current.touched.slice();
+      touched[from] = fromStillHeld === true;
+      touched[to] = true;
+      current.touched = touched;
+      current.taps.push({
+        timeMs: eventTimeMs === undefined ? clock.timeRef.current : clock.timeOf(eventTimeMs),
+        signal: "slide",
+        frets: mergeHeld(current.input.held, touched),
+        column: to,
+        from,
+      });
+    },
+    [auto, clock],
+  );
 
   // A window blur, a hidden tab or an unplugged pad gets no pointerup either, so
   // the stage route says when a hand has been let go. The keys and MIDI controls
@@ -368,5 +409,5 @@ export function useLaneRun({ chart, seed, seat, auto, identity }: LaneOptions): 
     });
   }, [clock, clean, seed, auto, perfect, ports, seat, clockTimeRef, seekSerialRef]);
 
-  return { ...view, tapDown, tapUp };
+  return { ...view, tapDown, tapUp, slide };
 }

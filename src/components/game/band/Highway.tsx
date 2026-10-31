@@ -22,6 +22,7 @@ import {
 } from "../../../lib/game/track";
 import {
   arrowFor,
+  columnCentre,
   HIT_BURST_MS,
   heldColumns,
   hitBursts,
@@ -32,6 +33,7 @@ import {
   noteWindowSeconds,
   type ArrowGlyph,
 } from "../../../lib/game/band/notes";
+import { slideRibbon } from "../../../lib/game/band/slides";
 import { notesInWindow, beatsInWindow } from "../../../lib/game/scroll";
 import { useClock, useClockMs } from "./StageClock";
 import { useScrollTrack } from "./useScrollTrack";
@@ -40,15 +42,21 @@ import { useScrollTrack } from "./useScrollTrack";
  * The note highway inside a player panel: notes fall to the hit line and are hit
  * there.
  *
- * A highway note is a **button** — it is hit where it lands, it does not slide —
- * so the highway carries no ribbons; only the voice does. Every note is a span and
- * a **face**: the skin (`NoteStyle`) decides whether the face is a bar, a rounded
- * gem or an arrow, and everything else a note can be is a channel of its own: an
- * open note spans the highway, a sustain has a tail, a hero note wears a border,
- * and a hopo wears a white face while it can be hammered on. The **bottom of the
- * span is the head** (`noteBox`), so a plain note and the head of a sustain at the
- * same moment meet the hit line together; the body stands above it, where the song
- * is going.
+ * A highway note is a **button** — it is hit where it lands — but a chart may
+ * **link** one note to a later one (`LaneNote.slideTo`), and a finger already on
+ * the line may glide from the source's pad to the target's without lifting. The
+ * highway draws that link as a ribbon between the two notes; the ribbon is
+ * picture only, and `lanes.ts` is what decides a slide. Apart from that link, the
+ * neck carries no ribbons — only the voice does — and every note still goes where
+ * it lands.
+ *
+ * Every note is a span and a **face**: the skin (`NoteStyle`) decides whether the
+ * face is a bar, a rounded gem or an arrow, and everything else a note can be is a
+ * channel of its own: an open note spans the highway, a sustain has a tail, a hero
+ * note wears a border, and a hopo wears a white face while it can be hammered on.
+ * The **bottom of the span is the head** (`noteBox`), so a plain note and the head
+ * of a sustain at the same moment meet the hit line together; the body stands
+ * above it, where the song is going.
  *
  * The highway is a **neck**, and it is drawn two ways (see `HighwayView`): `flat`,
  * face-on, and `3d`, the same board tilted into perspective so its columns converge
@@ -111,6 +119,17 @@ interface Props {
   onTapDown: (column: number, eventTimeMs?: number) => void;
   /** The finger left the pad. */
   onTapUp: (column: number) => void;
+  /**
+   * The finger glided from one pad to another without lifting. `fromStillHeld`
+   * is whether another finger still holds the column it left, so a glide across
+   * a chord does not put out the pad a second finger is on.
+   */
+  onSlide: (
+    from: number,
+    to: number,
+    eventTimeMs?: number,
+    fromStillHeld?: boolean,
+  ) => void;
 }
 
 /** Where the hit line sits: low on the neck, with only the flash room beneath it. */
@@ -187,6 +206,7 @@ export function Highway({
   tap,
   onTapDown,
   onTapUp,
+  onSlide,
 }: Props) {
   const t = useT();
   const now = useClockMs(80);
@@ -231,6 +251,32 @@ export function Highway({
     afterMs: HIT_FRACTION * secondsAcross * 1000 + 300,
     offsetMs: visualLagMs,
   });
+  /**
+   * The track's own layout size, for the one drawing that needs pixels rather than
+   * percentages: a **slide** band is a rotated box, so its length and angle depend
+   * on the neck's aspect. A `ResizeObserver` keeps it right through a panel resize
+   * and the 3D deck's larger layout box, and the updater returns the same object
+   * when nothing moved so a measurement cannot cause a render loop.
+   */
+  const [trackSize, setTrackSize] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    const element = track.ref.current;
+    if (!element) return;
+    const measure = () => {
+      const width = element.clientWidth;
+      const height = element.clientHeight;
+      setTrackSize((current) =>
+        current.width === width && current.height === height
+          ? current
+          : { width, height },
+      );
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [track.ref]);
 
   const columns = chart.columns;
   const kit = INSTRUMENTS[chart.instrument].kit;
@@ -314,10 +360,29 @@ export function Highway({
     return column;
   };
 
-  const padDown = (column: number) => (event: ReactPointerEvent<HTMLButtonElement>) => {
-    // The pad is the input: no focus, no text selection, no page scroll, and no
-    // compatibility click. Capturing the pointer means a finger that slides off
-    // still lets the pad go rather than leaving a sustain held for ever.
+  /**
+   * The column a pointer is over, from the pad row's own box. The row's **whole
+   * width** is the target, so the band above the visible pads maps to the same
+   * columns and a finger does not have to find a narrow strip. Clamped, because a
+   * captured pointer can be dragged past either edge.
+   */
+  const columnAt = (event: ReactPointerEvent<HTMLDivElement>): number => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    if (!(rect.width > 0)) return 0;
+    const across = (event.clientX - rect.left) / rect.width;
+    return Math.min(columns - 1, Math.max(0, Math.floor(across * columns)));
+  };
+
+  /**
+   * A press on the line. The `.highway__hit` row is the **one pointer surface**:
+   * the pads are its targets and its labels, but capture belongs to the row, so a
+   * finger that slides off a pad still lets it go — and a glide between pads is
+   * the same gesture rather than a lost press and a new one.
+   */
+  const hitDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!tap) return;
+    // Only the primary button is a note. A touch and a pen report 0 as well.
+    if (event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
     try {
@@ -325,18 +390,45 @@ export function Highway({
     } catch {
       // Capture is best effort; the run still got the tap.
     }
-    holdPad(event.pointerId, column, event.timeStamp);
+    holdPad(event.pointerId, columnAt(event), event.timeStamp);
+  };
+
+  /**
+   * A pointer moving across the line. Only a move **between** columns is a slide:
+   * within one column the finger is still on the same pad, and saying otherwise
+   * would be a glide that goes nowhere.
+   */
+  const hitMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!tap) return;
+    const previous = pointers.current.get(event.pointerId);
+    if (previous === undefined) return;
+    const column = columnAt(event);
+    if (column === previous) return;
+    pointers.current.set(event.pointerId, column);
+    // Another finger may still be on the column this one left. The glide is the
+    // same either way; only the pad's own light differs.
+    const fromStillHeld = [...pointers.current.values()].includes(previous);
+    setPressed((current) => {
+      if (current[column] && (fromStillHeld || !current[previous])) return current;
+      const next = current.slice();
+      next[column] = true;
+      if (!fromStillHeld) next[previous] = false;
+      return next;
+    });
+    onSlide(previous, column, event.timeStamp, fromStillHeld);
   };
 
   /** A pointerup, which a compatibility click may follow. */
-  const padUp = (event: ReactPointerEvent<HTMLButtonElement>) => {
+  const hitUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!tap) return;
     event.stopPropagation();
     const column = releasePad(event.pointerId);
     if (column !== null) pointerTaps.current.set(column, performance.now());
   };
 
   /** A cancelled or lost pointer produces no click, so it leaves no click to swallow. */
-  const padCancel = (event: ReactPointerEvent<HTMLButtonElement>) => {
+  const hitCancel = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!tap) return;
     event.stopPropagation();
     releasePad(event.pointerId);
   };
@@ -381,6 +473,53 @@ export function Highway({
     chart.notes.forEach((note, index) => map.set(note.id, index));
     return map;
   }, [chart.notes]);
+  /**
+   * The **slide** ribbons that touch the mounted window. A link runs from the
+   * source note's end (its tail, on a sustain) to the target's head, in the
+   * columns' own centres, and is shown while any of that span is on the neck.
+   *
+   * It is picture only: `lanes.ts` judges a slide, and a ribbon never decides
+   * anything. `is-armed` says the glide is playable now — the source has landed
+   * and its column is still held — while `is-miss` mutes a link whose source was
+   * dropped, because there is nothing left to slide from. A target that has
+   * already landed needs no ribbon.
+   */
+  const slides = useMemo(() => {
+    const links: {
+      key: string;
+      className: string;
+      ribbon: ReturnType<typeof slideRibbon>;
+    }[] = [];
+    chart.notes.forEach((source) => {
+      if (!source.slideTo) return;
+      const targetAt = indexOf.get(source.slideTo);
+      if (targetAt === undefined) return;
+      const target = chart.notes[targetAt];
+      // Both ends of a link are fretted; a chart that says otherwise is refused
+      // before it reaches the stage, and this is the drawing's own guard.
+      if (source.column === null || target.column === null) return;
+      if (run.outcomes[targetAt] === "hit") return;
+      const fromMs = source.timeMs + source.lengthMs;
+      if (fromMs > track.toMs || target.timeMs < track.fromMs) return;
+      const ribbon = slideRibbon(
+        { x: columnCentre(source.column, columns), y: track.position(fromMs) },
+        { x: columnCentre(target.column, columns), y: track.position(target.timeMs) },
+        trackSize,
+      );
+      const at = indexOf.get(source.id) ?? -1;
+      const outcome = at >= 0 ? run.outcomes[at] : undefined;
+      const classes = ["highway__slide", `is-${ribbon.side}`];
+      if (outcome === "miss") classes.push("is-miss");
+      else if (outcome === "hit" && held[source.column]) classes.push("is-armed");
+      links.push({
+        key: `${source.id}:${source.slideTo}`,
+        className: classes.join(" "),
+        ribbon,
+      });
+    });
+    return links;
+  }, [chart.notes, indexOf, run.outcomes, held, columns, track, trackSize]);
+
   const box = (note: LaneNote) =>
     noteBox(
       track.position(note.timeMs),
@@ -455,6 +594,26 @@ export function Highway({
               style={{ top: `${track.position(beat.timeMs)}%` }}
             />
           ))}
+          {/* The slide links, under the notes they join: one box per link, in the
+              track's own pixels so its half-ellipse border scrolls with the song
+              like everything else. Drawing only — the whether of a slide belongs
+              to the run, not to this band. */}
+          {slides.length > 0 ? (
+            <div className="highway__slides" aria-hidden="true">
+              {slides.map((link) => (
+                <div
+                  key={link.key}
+                  className={link.className}
+                  style={{
+                    left: `${link.ribbon.left}px`,
+                    top: `${link.ribbon.top}px`,
+                    width: `${link.ribbon.width}px`,
+                    height: `${link.ribbon.height}px`,
+                  }}
+                />
+              ))}
+            </div>
+          ) : null}
           {mounted.map((note) => {
             const index = indexOf.get(note.id) ?? -1;
             const state = stateOf(note, run, index, now);
@@ -539,8 +698,20 @@ export function Highway({
             on they are also the **controls**: a press plays the note above the pad,
             because on a phone there is no strum bar to reach for. An arrow marker
             keeps the pad's full-column target and draws its direction inside it, so
-            a mat's four and a five-column neck are hit the same way. */}
-        <div className="highway__hit" aria-hidden={tap ? undefined : true}>
+            a mat's four and a five-column neck are hit the same way.
+            The **row** is the pointer surface, not the pads: a press is captured
+            here, and a finger crossing from one pad to the next is one gesture
+            (a slide) rather than a release and a new tap. The pads stay buttons so
+            a keyboard or an assistive activation still has something to click. */}
+        <div
+          className="highway__hit"
+          aria-hidden={tap ? undefined : true}
+          onPointerDown={hitDown}
+          onPointerMove={hitMove}
+          onPointerUp={hitUp}
+          onPointerCancel={hitCancel}
+          onLostPointerCapture={hitCancel}
+        >
           {Array.from({ length: columns }, (_, column) => {
             const lit = down[column] || pressed[column];
             const kick = column === kickColumn;
@@ -570,10 +741,6 @@ export function Highway({
                 aria-label={label}
                 tabIndex={-1}
                 draggable={false}
-                onPointerDown={padDown(column)}
-                onPointerUp={padUp}
-                onPointerCancel={padCancel}
-                onLostPointerCapture={padCancel}
                 onClick={padClick(column)}
                 onContextMenu={(event) => event.preventDefault()}
               >
