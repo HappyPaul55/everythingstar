@@ -113,8 +113,8 @@ bun run check:release    # every archive holds its plan, and both formats agree
 
 Cloudflare static assets, built and uploaded by GitHub Actions after CI succeeds on
 `main` (`site-dist` → `bunx wrangler deploy`), configured by `wrangler.jsonc`; `dist/`
-and nothing else. GitHub records the deployment
-(`.github/workflows/deploy.yml`), watches
+and nothing else. GitHub records the automatic deployment in
+`.github/workflows/ci.yml` (the manual `deploy.yml` is the rollback path), watches
 the live site daily (`production-check.yml`), and refuses a release tag that disagrees
 with `package.json` or is not on `main` — a tag builds that commit and attaches the six
 archives (`game`, `arcade` and `website`, each zip and tar.gz) to the GitHub Release.

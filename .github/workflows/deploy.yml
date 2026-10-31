@@ -1,10 +1,9 @@
-# The production deploy, after CI has proved the commit.
+# The manual deploy: rollback and an explicit redeploy.
 #
-# CI builds `dist/` and the e2e shards fill its documentation screenshots; the
-# `site-dist` artifact is the one package every job has agreed on. This workflow
-# waits for a successful CI run on `main` and deploys that artifact. A manual
-# dispatch still builds and verifies the checkout, which is the path for a
-# rollback to an older commit.
+# The automatic deploy is the `deploy` job in ci.yml: it runs only after `verify`
+# and `e2e` have passed on `main`, and it consumes the `site-dist` artifact that
+# the package job built. This workflow is the path with no CI artifact to consume: it
+# builds and verifies the checkout it is given, then deploys that `dist/`.
 #
 # Two things live outside this file. The repository secrets are
 # `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit) and `CLOUDFLARE_ACCOUNT_ID`. And
@@ -13,37 +12,25 @@
 #
 # The `environment` below is what creates the GitHub Deployment entry, and the
 # smoke test at the end is what proves the live site is serving this commit's
-# build. There is deliberately no concurrency group: a burst of merges must each
-# deploy, and the last one wins.
+# build.
 name: Deploy
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
-    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
   deployments: write
-  # The workflow_run path downloads the `site-dist` artifact from CI's run.
-  actions: read
 
 jobs:
   production:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     environment:
       name: production
       url: https://everythingstar.happypaul55.com
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          # The CI run's commit, not the default branch's tip: the artifact was
-          # built from this checkout and the smoke test reads its version.
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       # setup-bun reads the Bun version from package.json's `packageManager`.
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
@@ -52,36 +39,25 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
-      # A manual dispatch has no CI artifact to download, so it builds and
-      # verifies the checkout itself. A normal deploy does neither: CI already did
-      # both, and this workflow only moves the agreed package to Cloudflare.
+      # `bun run verify` captures the documentation screenshots with Playwright,
+      # so the browser has to be installed before the build starts.
       - name: Cache Playwright browsers
-        if: github.event_name == 'workflow_dispatch'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
       - name: Install Chromium
-        if: github.event_name == 'workflow_dispatch'
         run: bunx playwright install --with-deps chromium
-      - name: Build and verify the checkout
-        if: github.event_name == 'workflow_dispatch'
-        run: bun run verify
-      - name: Download the packaged site
-        if: github.event_name == 'workflow_run'
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: site-dist
-          path: dist
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      # A manual deploy has no CI artifact, so it builds and verifies this
+      # checkout. It deploys exactly what `verify` produced.
+      - run: bun run verify
       - name: Deploy to Cloudflare
         run: bunx wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - name: Smoke-test production
-        # The build identity is the point: this checkout built `dist/` (or CI did),
-        # and the origin serves those files, so `/sw.js` must name this checkout's
+        # The build identity is the point: this checkout built `dist/`, and the
+        # origin serves those files, so `/sw.js` must name this checkout's
         # version.
         run: bun scripts/smoke.ts --base https://everythingstar.happypaul55.com --expect "$(bun scripts/version.ts)"

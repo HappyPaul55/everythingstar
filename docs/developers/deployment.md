@@ -11,9 +11,10 @@ verifies.**
 
 ## What a deploy is
 
-`.github/workflows/deploy.yml` waits for a successful **CI** run on `main` and downloads
-the `site-dist` artifact that CI packaged; a manual dispatch instead builds and verifies
-the checkout itself, which is the rollback path. `bunx wrangler deploy` uploads that
+The `deploy` job in `.github/workflows/ci.yml` runs only on a push to `main`, after
+`verify` and `e2e` have passed, and downloads the `site-dist` artifact that the same
+run packaged. `.github/workflows/deploy.yml` is the manual path: it builds and verifies
+the checkout itself, which is the rollback route. `bunx wrangler deploy` uploads that
 `dist/` as static assets — configured by `wrangler.jsonc` (`name:
 client-everythingstar-happypaul55-com`, `assets.directory: ./dist`, **no `main`**). There
 is no Worker script, no `/api/*`, no binding and no database in this project. Every
@@ -51,9 +52,10 @@ building a second time, and Cloudflare does not rebuild the same commit either.
 ## The record
 
 The job declares the `production` environment, which is what creates the GitHub
-Deployment entry and its live URL. A normal deploy waits for CI to finish green, then
-downloads `site-dist`; it does not run `verify` or rebuild. A manual dispatch builds and
-verifies the checkout, then deploys that. The environment is created on the first run.
+Deployment entry and its live URL. The automatic deploy is the last job in CI: it runs
+after `verify` and `e2e`, downloads `site-dist`, and does not run `verify` or rebuild. A
+manual dispatch builds and verifies the checkout, then deploys that. The environment is
+created on the first run.
 
 When the upload finishes, the job smokes the live origin (`scripts/smoke.ts`) with the
 version this checkout produced (`bun scripts/version.ts`) and fails the deployment when

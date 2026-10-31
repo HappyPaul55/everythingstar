@@ -43,6 +43,9 @@ jobs:
           name: site-build
           path: dist/
           if-no-files-found: error
+          # `dist/.well-known/assetlinks.json` is a hidden path, and the PWA
+          # check fails without it.
+          include-hidden-files: true
 
   # The cheap checks need the build only as a sequencing point; they do not read
   # its files. Keeping them separate means a type or unit failure is reported while
@@ -167,6 +170,7 @@ jobs:
           name: site-dist
           path: dist/
           if-no-files-found: error
+          include-hidden-files: true
 
   # The required `verify` check is this aggregate, not the package job's name:
   # the ruleset keeps one stable check while the jobs beneath it change.
@@ -198,6 +202,43 @@ jobs:
             echo "browser=${{ needs.browser.result }}"
             exit 1
           fi
+
+  # The deploy is the last job in the same run, so the artifact it consumes is
+  # the one this workflow built and checked. A manual dispatch of deploy.yml
+  # remains the rollback path, where there is no CI artifact to consume.
+  deploy:
+    name: deploy
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [verify, e2e]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://everythingstar.happypaul55.com
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
+      - name: Download the packaged site
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: site-dist
+          path: dist
+      - name: Deploy to Cloudflare
+        run: bunx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Smoke-test production
+        run: bun scripts/smoke.ts --base https://everythingstar.happypaul55.com --expect "$(bun scripts/version.ts)"
 
   workflows:
     runs-on: ubuntu-latest
