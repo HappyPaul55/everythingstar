@@ -1,11 +1,9 @@
-# The production build, and the proof behind it.
+# The manual deploy: rollback and an explicit redeploy.
 #
-# GitHub Actions builds the site and uploads it with `wrangler deploy`. The build
-# runs `docs:shots`, which captures the documentation screenshots with Playwright,
-# so the machine that builds must have a browser — and the CI runner already has
-# one. Building once here and pushing `dist/` to Cloudflare means Cloudflare does
-# not rebuild the same commit, and there is one pipeline instead of two that could
-# disagree.
+# The automatic deploy is the `deploy` job in ci.yml: it runs only after `verify`
+# and `e2e` have passed on `main`, and it consumes the `site-dist` artifact that
+# the package job built. This workflow is the path with no CI artifact to consume: it
+# builds and verifies the checkout it is given, then deploys that `dist/`.
 #
 # Two things live outside this file. The repository secrets are
 # `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit) and `CLOUDFLARE_ACCOUNT_ID`. And
@@ -14,15 +12,10 @@
 #
 # The `environment` below is what creates the GitHub Deployment entry, and the
 # smoke test at the end is what proves the live site is serving this commit's
-# build. It takes as long as `bun run verify`, plus the upload and the smoke test.
-#
-# There is deliberately no concurrency group: a burst of merges must each deploy,
-# and the last one wins. A cancelled run would leave a merge with no record.
+# build.
 name: Deploy
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -40,17 +33,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # setup-bun reads the Bun version from package.json's `packageManager`.
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-      # Bun's own download cache, keyed on the lockfile, so a deploy does not fetch
-      # the tree from the registry again.
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
-      # `bun run build` captures the documentation screenshots with Playwright, so
-      # the browser has to be installed before the build starts. Cache the download,
-      # not the system libraries; `--with-deps` installs those.
+      # `bun run verify` captures the documentation screenshots with Playwright,
+      # so the browser has to be installed before the build starts.
       - name: Cache Playwright browsers
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
@@ -58,8 +48,8 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
       - name: Install Chromium
         run: bunx playwright install --with-deps chromium
-      # The gate builds `dist/` and checks it, so this job deploys exactly what was
-      # verified rather than a second build Cloudflare would make.
+      # A manual deploy has no CI artifact, so it builds and verifies this
+      # checkout. It deploys exactly what `verify` produced.
       - run: bun run verify
       - name: Deploy to Cloudflare
         run: bunx wrangler deploy
@@ -68,5 +58,6 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - name: Smoke-test production
         # The build identity is the point: this checkout built `dist/`, and the
-        # origin serves those files, so `/sw.js` must name this checkout's version.
+        # origin serves those files, so `/sw.js` must name this checkout's
+        # version.
         run: bun scripts/smoke.ts --base https://everythingstar.happypaul55.com --expect "$(bun scripts/version.ts)"

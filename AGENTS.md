@@ -55,8 +55,9 @@ microphone, or the machine); a **layout** is what that controller's controls mea
 
 - **`bun run verify` is the gate.** Lint, knip, `astro check`, the tests' typecheck, the
   unit tests, the build, the PWA and docs checks, the budget — in that order. CI runs
-  the same command. `bun run test:e2e` is the browser suite. Use **Bun**, never
-  npm/npx.
+  one `build`, a `unit` job and four browser shards, then a `package` job that joins
+  the build to the screenshots the shards took; `verify` and `e2e` are the required
+  checks. `bun run test:e2e` is the browser suite. Use **Bun**, never npm/npx.
 - **Pure logic lives in `src/lib/game/**` with a colocated `*.test.ts`.** Components
   render; they do not decide. A rule that needs testing goes in a module, not in JSX.
 - **The screen is session state, not a route.** One island, one screen at a time, no
@@ -83,8 +84,8 @@ microphone, or the machine); a **layout** is what that controller's controls mea
 - **The documentation is part of the change.** A rule that changes is a doc page that
   changes; [Writing docs](docs/developers/writing-docs.md) is the system. A screenshot
   is a Playwright test in `tests/e2e/docs` and a `[description](shot:<id>)` reference
-  in the page; `bun run docs:shots` makes the images, and neither they nor
-  `.docshots/` are committed.
+  in the page; the e2e shards make the images, `bun run docs:bundle` puts them in the
+  build, and neither they nor `.docshots/` are committed.
 
 ## Commands
 
@@ -95,10 +96,11 @@ bun run check            # astro check (the app's type gate)
 bun run test             # unit tests
 bun run test:e2e         # Playwright, starts the dev server
 bun run build            # captures the docs screenshots, then builds into dist/ and dist/sw.js
-bun run build:quick      # the same build, reusing the captures already on disk
+bun run build:quick      # the static build with whatever captures are on disk
 bun run docs:shots       # capture the documentation's screenshots (Playwright)
+bun run docs:bundle      # copy captures into a built dist/ before check:docs
 bun run docs:library     # refresh the capture fixture from the published FOSS library
-bun run verify           # everything CI runs
+bun run verify           # the gate in one command (CI splits it into parallel jobs)
 bun run version          # v<package.json>+<sha>
 bun run import --from <dir> --to <dir>     # a folder of charts into a library
 bun run playlist:check <url>               # a playlist against the game's own reader
@@ -109,9 +111,10 @@ bun run check:release    # every archive holds its plan, and both formats agree
 
 ## Deployment
 
-Cloudflare static assets, built and uploaded by GitHub Actions on every push to `main`
-(`bun run verify` → `bunx wrangler deploy`), configured by `wrangler.jsonc`; `dist/` and
-nothing else. GitHub records the deployment (`.github/workflows/deploy.yml`), watches
+Cloudflare static assets, built and uploaded by GitHub Actions after CI succeeds on
+`main` (`site-dist` → `bunx wrangler deploy`), configured by `wrangler.jsonc`; `dist/`
+and nothing else. GitHub records the automatic deployment in
+`.github/workflows/ci.yml` (the manual `deploy.yml` is the rollback path), watches
 the live site daily (`production-check.yml`), and refuses a release tag that disagrees
 with `package.json` or is not on `main` — a tag builds that commit and attaches the six
 archives (`game`, `arcade` and `website`, each zip and tar.gz) to the GitHub Release.

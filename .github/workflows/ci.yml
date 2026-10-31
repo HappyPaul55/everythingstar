@@ -17,42 +17,44 @@ on:
   pull_request:
 
 jobs:
-  verify:
+  # Build first, with no captures on disk. The documentation plugin still writes the
+  # `<img>` tags for every promised variant; the e2e shards fill the files and the
+  # package job joins them to this build. Keeping the capture run out of the build
+  # is what makes the two layers independent.
+  build:
+    name: build
     runs-on: ubuntu-latest
-    # The gate is about a minute of install and four of checks; the documentation
-    # captures add five minutes of browser. Anything near these limits is a hung
-    # runner, not a slow test.
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      # setup-bun reads the Bun version from package.json's `packageManager`.
-      # The scripts run Astro on Bun's own runtime (`bun --bun astro …`), so the
-      # runner image's Node is never the version Astro checks itself against.
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-      # Bun's own download cache, keyed on the lockfile: without it both jobs fetch
-      # the same tree from the registry on every push.
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
-      # The gate builds, and the build captures the documentation screenshots with
-      # Playwright: the browser must be here before `verify`, not only in `e2e`.
-      # The browser build is pinned by @playwright/test in bun.lock; cache the
-      # download, not the system libraries. `--with-deps` installs those.
-      - name: Cache Playwright browsers
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+      # No docs captures yet: the build writes the image tags for them. The PWA
+      # test belongs to the package job, where the build and its images meet.
+      - run: bun run build:quick
+      - name: Keep the build for the package job
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
-      - name: Install Chromium
-        run: bunx playwright install --with-deps chromium
-      - run: bun run verify
+          name: site-build
+          path: dist/
+          if-no-files-found: error
+          # `dist/.well-known/assetlinks.json` is a hidden path, and the PWA
+          # check fails without it.
+          include-hidden-files: true
 
-  e2e:
+  # The cheap checks need the build only as a sequencing point; they do not read
+  # its files. Keeping them separate means a type or unit failure is reported while
+  # the browser suite is still running.
+  unit:
+    name: unit
+    needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
@@ -62,8 +64,33 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
-      # The browser build is pinned by @playwright/test in bun.lock; cache the
-      # download, not the system libraries. `--with-deps` installs those.
+      - run: bun run lint
+      - run: bun run knip
+      - run: bun run check
+      - run: bun run typecheck:tests
+      - run: bun test
+
+  # The browser suite and the documentation captures are one run: the desktop and
+  # mobile projects in playwright.config.ts are the capture projects, and the
+  # chromium project is the behavioural suite. Each shard uploads the WebPs it took.
+  browser:
+    name: e2e (${{ matrix.shard }}/${{ strategy.job-total }})
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
       - name: Cache Playwright browsers
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
@@ -71,21 +98,147 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
       - name: Install Chromium
         run: bunx playwright install --with-deps chromium
-      # The specs start their own dev server (playwright.config.ts), so this job
-      # needs no separate build step.
-      - run: bun run test:e2e
-      # The offline half needs a production build and `astro preview`; that config
-      # builds inside its own webServer.
-      - run: bun run test:pwa
-      # The whole directory: both JUnit reports and, when a test fails, the traces
-      # and screenshots each config keeps in its own output directory.
+      # The dev server has no service worker to intercept the routes the specs
+      # answer, so a shard needs no built site; the build it depends on is the
+      # package's build, not this suite's target.
+      - run: bun run test:e2e --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+      # The captured WebPs are the other half of the build. The shard number keeps
+      # the partial sets apart; the package job merges them.
+      - name: Upload the documentation captures
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: doc-shots-${{ matrix.shard }}
+          path: public/docs/test-output/
+          if-no-files-found: ignore
       - name: Upload the Playwright results
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: playwright-results
+          name: playwright-results-${{ matrix.shard }}
           path: test-results/
           if-no-files-found: ignore
+
+  # The two halves meet here: the build that names the images, and the captures
+  # the browser shards made. `docs:bundle` copies the WebPs into the built site,
+  # and `check:docs` refuses to pass if a named image is absent.
+  package:
+    name: package
+    needs: [build, e2e]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
+      - name: Cache Playwright browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
+      - name: Install Chromium
+        run: bunx playwright install --with-deps chromium
+      - name: Download the build
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: site-build
+          path: dist
+      - name: Download the captures
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: doc-shots-*
+          path: public/docs/test-output
+          merge-multiple: true
+      - run: bun run docs:bundle
+      - run: bun run check:docs
+      - run: bun run check:pwa
+      - run: bun run budget
+      - run: bun run release:assets
+      - run: bun run check:release
+      - name: Test the installed game against the package
+        run: bun run test:pwa
+        env:
+          PLAYWRIGHT_PWA_BUILT: "1"
+      - name: Keep the packaged site
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: site-dist
+          path: dist/
+          if-no-files-found: error
+          include-hidden-files: true
+
+  # The required `verify` check is this aggregate, not the package job's name:
+  # the ruleset keeps one stable check while the jobs beneath it change.
+  verify:
+    name: verify
+    needs: [unit, package]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require the unit and package jobs
+        run: |
+          if [ "${{ needs.unit.result }}" != "success" ] || [ "${{ needs.package.result }}" != "success" ]; then
+            echo "unit=${{ needs.unit.result }} package=${{ needs.package.result }}"
+            exit 1
+          fi
+
+  # The required `e2e` check is this aggregate, not the matrix job's own name.
+  e2e:
+    name: e2e
+    needs: browser
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every browser shard
+        run: |
+          if [ "${{ needs.browser.result }}" != "success" ]; then
+            echo "browser=${{ needs.browser.result }}"
+            exit 1
+          fi
+
+  # The deploy is the last job in the same run, so the artifact it consumes is
+  # the one this workflow built and checked. A manual dispatch of deploy.yml
+  # remains the rollback path, where there is no CI artifact to consume.
+  deploy:
+    name: deploy
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [verify, e2e]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://everythingstar.happypaul55.com
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
+      - name: Download the packaged site
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: site-dist
+          path: dist
+      - name: Deploy to Cloudflare
+        run: bunx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Smoke-test production
+        run: bun scripts/smoke.ts --base https://everythingstar.happypaul55.com --expect "$(bun scripts/version.ts)"
 
   workflows:
     runs-on: ubuntu-latest

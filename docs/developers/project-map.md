@@ -52,14 +52,16 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   `public/docs/test-output/`.
 - `tests/e2e/docs/*.spec.ts` — the capture tests, one spec per shot, each taken on
   desktop and mobile, with `annotation: [{ type: "doc", description: "<id>" }]`. The
-  page names the id with `[description](shot:<id>)`; `bun run docs:shots` runs them
-  and `bun run build` runs that first. They cover the whole guide, not only the
-  player pages: the welcome, menu and options; playlists and import; Listen and the
-  results; pause and practice; typing, the duet and the controllers; and the
-  charter's picker, editor and charts.
+  page names the id with `[description](shot:<id>)`; the `desktop` and `mobile`
+  projects in `playwright.config.ts` run them, `bun run docs:shots` is the focused
+  capture run, and CI joins their images to the build with `docs:bundle`. They cover
+  the whole guide, not only the player pages: the welcome, menu and options; playlists
+  and import; Listen and the results; pause and practice; typing, the duet and the
+  controllers; and the charter's picker, editor and charts.
 - `src/lib/docs/shots.ts` — the satteri link visitor that replaces a `shot:`
-  paragraph with a `<figure>`, the `<img>` for each variant file that exists and
-  one `<details>` per screen. `references.test.ts` holds the page and the test
+  paragraph with a `<figure>`, the `<img>` for each configured variant (the `shots`
+  map narrows the one phone-only exception) and one `<details>` per screen.
+  `references.test.ts` holds the page and the test
   together.
 - `public/docs/test-output/` — **generated, ignored by Git**: the captures, served
   as written. [Writing docs](writing-docs.md#screenshots) is the rule.

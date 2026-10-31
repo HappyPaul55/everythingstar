@@ -475,13 +475,13 @@ test.describe("stem sync", () => {
     expect(ducked, "the missing guitar part should duck out of the mix").toBe(true);
     console.log(`playing: ${(settledShare(during) * 100).toFixed(0)}% of samples settled`);
 
-    // The report's own scenario: **pause for a minute**, then come back. The
-    // resume is a fresh start for every element — the browser has had time to let
-    // its buffered ranges go and each pipeline restarts on its own moment, which
-    // is where the old settle window turned the stagger into a flam.
+    // The report's own scenario: pause, then come back. Ten seconds is six
+    // hundred paused frames — enough for the old frame-hammer to blow the write
+    // budget many times over and for each pipeline to restart on its own moment —
+    // without spending a minute of every CI run waiting.
     await page.keyboard.press("Escape");
     await expect(page.locator("html")).toHaveAttribute("data-screen", "paused");
-    await page.waitForTimeout(60_000);
+    await page.waitForTimeout(10_000);
     const paused = await read(page);
     note("paused", paused);
     expect(paused.paused.every(Boolean), "every stem stops with the song").toBe(true);

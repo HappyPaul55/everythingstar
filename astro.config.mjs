@@ -62,15 +62,16 @@ export default defineConfig({
     processor: satteri({
       mdastPlugins: [
         docsLinks,
-        // A capture fence becomes the image `bun run docs:shots` took for it. In
-        // a build an ungenerated fence is an error; in dev it is a placeholder,
-        // so `bun run dev` works on a checkout that has never run Playwright.
+        // A capture fence becomes the image the e2e capture wrote. A dev server
+        // draws a placeholder until the browser has taken it, so `bun run dev`
+        // works on a checkout that has never run Playwright; a build writes the
+        // tag even before the capture exists, and `check:docs` proves the file
+        // arrived.
         docsShots({
           root: fileURLToPath(new URL(".", import.meta.url)),
-          // A dev server draws the placeholder; a build lets Astro fail with the
-          // path instead of shipping a page with a gap. The PWA suite's throwaway
-          // build is the one build allowed to have none. Two explicit flags
-          // rather than a guess about how the command was started.
+          // The dev server and the PWA suite's throwaway build draw the
+          // placeholder. The real build writes the tag for every promised
+          // variant; the package step then supplies the WebP.
           allowPlaceholder:
             process.env.DOCSHOTS_DEV === "1" || process.env.DOCSHOTS_PWA === "1",
         }),

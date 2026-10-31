@@ -8,8 +8,9 @@ import { defineDocshots } from "./src/lib/docshots/config";
  * The list is deliberately short: every entry multiplies the capture run.
  */
 export default defineDocshots({
-  // Written by `bun run docs:shots` and ignored by Git: the images are a build
-  // artefact, not source. Under `public/` so the page can name the file directly.
+  // Written by the e2e capture projects and by `bun run docs:shots`, ignored by
+  // Git: the images are a build artefact, not source. Under `public/` so the page
+  // can name the file directly; `docs:bundle` copies them into `dist/` in CI.
   outDir: "public/docs/test-output",
   quality: 82,
   variants: {
@@ -19,5 +20,10 @@ export default defineDocshots({
       hasTouch: true,
       deviceScaleFactor: 2,
     },
+  },
+  // A phone picture by definition. The page still gets an image tag for it while
+  // the build runs ahead of the captures; it just does not ask for a desktop one.
+  shots: {
+    "phone-pads": ["mobile"],
   },
 });

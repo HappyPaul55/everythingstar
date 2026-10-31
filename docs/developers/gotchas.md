@@ -1,7 +1,7 @@
 ---
 title: Gotchas
 description: "The rules that have already been broken once: the vocabulary, the track format, the parsers, the stems, the stage geometry and the local records."
-updated: "2026-10-30"
+updated: "2026-10-31"
 order: 3
 ---
 
@@ -1987,16 +1987,18 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   committed.** A page says `[description](shot:<id>)`; a test carries
   `annotation: [{ type: "doc", description: "<id>" }]`, and the automatic
   fixture takes the picture in its teardown, once per Playwright project, only
-  for a test that **passed**. `bun run docs:shots` — which `bun run build` runs
-  before Astro — writes `public/docs/test-output/<id>-<variant>.webp`, ignored by
-  Git. `src/lib/docs/shots.ts` renders one `<details>` per variant, so the page
-  ships no island, and `references.test.ts` fails if a page names a shot no test
-  takes or a test no page shows. Two consequences follow: the build needs
-  Chromium, and a fresh clone has no images until it builds. Do not hand-write
-  `![…](/docs/test-output/…)`, and do not commit the folder. The Astro dev
-  toolbar is disabled in `astro.config.mjs` for the same reason: it is a
-  floating overlay at the foot of every page, and the captures run against the
-  dev server.
+  for a test that **passed**. The `desktop` and `mobile` projects in
+  `playwright.config.ts` write `public/docs/test-output/<id>-<variant>.webp`,
+  ignored by Git. `src/lib/docs/shots.ts` renders one `<details>` per promised
+  variant, so the page ships no island, and `references.test.ts` fails if a page
+  names a shot no test takes, a test no page shows, or a narrowed shot whose
+  `docshots.config.ts` entry and annotation disagree. The **build runs before the
+  captures in CI**: it writes the image tags, the e2e shards fill them, and
+  `bun run docs:bundle` copies them into `dist/`; `check:docs` fails if a named
+  image is missing. A local `bun run build` still captures first. Do not hand-write
+  `![…](/docs/test-output/…)`, and do not commit the folder. The Astro dev toolbar
+  is disabled in `astro.config.mjs` for the same reason: it is a floating overlay
+  at the foot of every page, and the captures run against the dev server.
 - **This repo has no server, and must not grow one.** `wrangler.jsonc` is
   assets-only: no `main`, no Worker script, no `/api/*` and no bindings.
   Everything the game reads at runtime is fetched by the browser from a URL it
@@ -2005,7 +2007,8 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   Playlists feature. If a feature seems to need an API, the answer is a different
   project, not a Worker here.
 - **`workers_dev` and `preview_urls` are `false`**, and stay false: only a push to
-  `main` deploys automatically, from `.github/workflows/deploy.yml`, so a deploy
-  must not re-enable the workers.dev route or a version-preview URL. `previews: {}`
+  `main` deploys automatically, from the deploy job in `.github/workflows/ci.yml`,
+  so a deploy must not re-enable the workers.dev route or a version-preview URL.
+  `previews: {}`
   is inert now that Workers Builds is disconnected — nothing runs
   `wrangler preview` — and is kept because removing it buys nothing.

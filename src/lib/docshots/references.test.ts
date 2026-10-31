@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import docshots from "../../../docshots.config";
 
 /**
  * The two halves of a screenshot, held together.
@@ -16,6 +17,7 @@ const SPECS = join(ROOT, "tests", "e2e", "docs");
 
 const REFERENCE = /\[([^\]]+)\]\(shot:([a-z][a-z0-9-]*)(?:\s+"[^"]*")?\)/g;
 const CAPTURE = /type:\s*"doc",\s*description:\s*"([a-z][a-z0-9-]*)"/g;
+const VIEWPORT = /type:\s*"doc-viewport",\s*description:\s*"([^"]+)"/;
 
 function docs(): { id: string; text: string }[] {
   return readdirSync(DOCS, { recursive: true, encoding: "utf8" })
@@ -34,6 +36,19 @@ function captures(): string[] {
     .flatMap((file) =>
       Array.from(readFileSync(join(SPECS, file), "utf8").matchAll(CAPTURE), (m) => m[1]!),
     );
+}
+
+/** The shots whose spec narrows the variants, by the variants it names. */
+function narrowed(): Record<string, string[]> {
+  const found: Record<string, string[]> = {};
+  for (const file of readdirSync(SPECS).filter((name) => name.endsWith(".spec.ts"))) {
+    const text = readFileSync(join(SPECS, file), "utf8");
+    const id = new RegExp(CAPTURE.source).exec(text)?.[1];
+    const viewports = text.match(VIEWPORT)?.[1];
+    if (!id || !viewports) continue;
+    found[id] = viewports.split(",").map((name) => name.trim()).sort();
+  }
+  return found;
 }
 
 describe("documentation shots", () => {
@@ -64,5 +79,15 @@ describe("documentation shots", () => {
       ).filter(Boolean),
     );
     expect(empty).toEqual([]);
+  });
+
+  test("a narrowed shot is declared in docshots.config.ts", () => {
+    const declared = Object.fromEntries(
+      Object.entries(docshots.shots ?? {}).map(([id, variants]) => [
+        id,
+        [...variants].sort(),
+      ]),
+    );
+    expect(narrowed()).toEqual(declared);
   });
 });

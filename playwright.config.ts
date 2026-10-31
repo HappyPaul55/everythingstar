@@ -1,20 +1,26 @@
 import { availableParallelism } from "node:os";
 import { defineConfig, devices } from "@playwright/test";
+import docshots from "./docshots.config";
 
 /**
- * Browser smoke tests.
+ * Browser tests: the behavioural suite and the documentation captures.
  *
  * The unit suite proves the pure parts; this is the only gate that mounts the
  * island and drives the screen machine in a real browser. The **dev server** is
- * the target rather than a preview build: `bun run verify` already builds the app,
- * and the smoke test is about the loop rather than the bundle, so starting Vite
- * keeps the run a single command with no second build to keep in step.
+ * the target rather than a preview build: the smoke test is about the loop, and
+ * the capture tests need the app's own document routes with no service worker to
+ * intercept them.
  *
  * Every external request is routed by the specs (`tests/e2e/fixture.ts`); the
  * browser never reaches the public FOSS playlist or YouTube. A local run stays on
  * one worker, so the timing-sensitive run is as quiet as the specs assume; CI
  * takes every core but one, because the suite is CPU-bound and a single worker
  * spends most of the run waiting on the test before it.
+ *
+ * `desktop` and `mobile` are the capture projects from `docshots.config.ts`; the
+ * `chromium` project is the behavioural suite and ignores them. `test:e2e` runs
+ * all three, so one browser run both validates the app and writes the images the
+ * build names.
  */
 // A worktree checkout can already hold 4321; let a local run pick another port
 // rather than silently reusing a different tree's dev server.
@@ -23,10 +29,9 @@ const PORT = Number(process.env.PLAYWRIGHT_PORT ?? 4321);
 export default defineConfig({
   testDir: "./tests/e2e",
   // The worker spec needs a production build and `astro preview`; it has its own
-  // config (`playwright.pwa.config.ts`) and command. The documentation's capture
-  // tests have their own config too (`playwright.docs.config.ts`): they take the
-  // screenshots the build needs.
-  testIgnore: ["**/pwa.spec.ts", "**/docs/**"],
+  // config (`playwright.pwa.config.ts`) and command. The documentation captures
+  // are projects here, so the browser suite and the capture run cannot drift.
+  testIgnore: ["**/pwa.spec.ts"],
   fullyParallel: false,
   // One worker is the quiet local run. In CI the count follows the runner: every
   // core but one, because the suite is CPU-bound and a single worker spends most
@@ -62,8 +67,21 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
+      testIgnore: ["**/pwa.spec.ts", "**/docs/**"],
       use: { ...devices["Desktop Chrome"], headless: true },
     },
+    ...Object.entries(docshots.variants).map(([name, options]) => ({
+      name,
+      testMatch: ["**/docs/**"],
+      // A capture drives the whole game, and the slower screens (the results,
+      // the charter) spend more time waiting than the smoke tests do.
+      timeout: 120_000,
+      use: {
+        ...devices["Desktop Chrome"],
+        headless: true,
+        ...options,
+      },
+    })),
   ],
   webServer: {
     // `--ignore-lock` keeps the dev server in the foreground: Astro's agent

@@ -1,7 +1,7 @@
 ---
 title: Setting up
 description: "Bun, the repository, the dev server and the gate: everything a new contributor needs to run the game and prove a change before opening a pull request."
-updated: "2026-10-28"
+updated: "2026-10-31"
 order: 10
 ---
 
@@ -16,7 +16,8 @@ bun run dev              # http://localhost:4321; the game is /play
 
 ## The gate
 
-`bun run verify` is what CI runs, and what a change has to pass. In order:
+`bun run verify` is the gate a change has to pass, and the local shorthand for every
+check CI runs. In order:
 
 ```bash
 bun run lint             # oxlint
@@ -47,6 +48,8 @@ bun run import --from <charts> --to <library>   # a folder of charts into the th
 bun run icons / bun run fonts                   # regenerate the icon set / self-hosted fonts
 ```
 
-CI (`.github/workflows/ci.yml`) runs `verify` and the Playwright suite on every pull
-request, and on `main`. [Testing](testing.md) says what each gate is for and what only
-a browser can prove.
+CI (`.github/workflows/ci.yml`) runs one `build`, a `unit` job and four browser
+shards on every pull request and on `main`; the shards also take the documentation
+screenshots, and a final `package` job joins them to the build. The required checks are
+`verify` and `e2e`; the local `bun run verify` remains the one-command gate.
+[Testing](testing.md) says what each gate is for and what only a browser can prove.

@@ -16,8 +16,8 @@ export interface Viewport {
  *
  * A subset of Playwright's own `use` options, deliberately: a project per
  * variant is Playwright's answer to "the same test on several screens", and
- * anything else a project may set is better set in `playwright.docs.config.ts`
- * than invented here.
+ * anything else a project may set is better set in `playwright.config.ts` than
+ * invented here.
  */
 export interface VariantOptions {
   viewport: Viewport;
@@ -33,6 +33,14 @@ export interface DocshotsConfig {
   quality: number;
   /** One Playwright project each; the keys are the labels the page shows. */
   variants: Record<string, VariantOptions>;
+  /**
+   * Shots captured in only some variants, keyed by shot id.
+   *
+   * The page renders the variants listed here even before the capture run has
+   * written them; the build no longer has to wait for the browser to know which
+   * images the page will name. Omitted means every variant.
+   */
+  shots?: Record<string, string[]>;
 }
 
 const NAME = /^[a-z][a-z0-9-]*$/;
@@ -63,6 +71,20 @@ export function defineDocshots(config: DocshotsConfig): DocshotsConfig {
   }
   if (!Number.isInteger(config.quality) || config.quality < 1 || config.quality > 100) {
     throw new Error("docshots: quality must be an integer from 1 to 100");
+  }
+
+  for (const [id, variants] of Object.entries(config.shots ?? {})) {
+    if (!NAME.test(id)) {
+      throw new Error(`docshots: shot "${id}" must be lower-case words joined by -`);
+    }
+    if (variants.length === 0) {
+      throw new Error(`docshots: shot "${id}" must name at least one variant`);
+    }
+    for (const variant of variants) {
+      if (!names.includes(variant)) {
+        throw new Error(`docshots: shot "${id}" names unknown variant "${variant}"`);
+      }
+    }
   }
 
   return config;
