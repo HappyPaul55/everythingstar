@@ -24,7 +24,7 @@ a provider live in its own project.
 
 CI builds once. The `build` job writes the documentation's image tags before the
 captures exist; the e2e shards take the screenshots, and the `package` job joins the two
-into `site-dist`. The deploy workflow therefore moves an agreed package rather than
+into `site-dist`. The deploy job therefore moves an agreed package rather than
 building a second time, and Cloudflare does not rebuild the same commit either.
 
 - **The domain.** Production is `everythingstar.happypaul55.com`, and a push to `main`

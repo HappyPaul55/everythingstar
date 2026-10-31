@@ -12,8 +12,9 @@ is the whole deployment picture; this is the press itself. To cut one:
    `major`); it edits `package.json` and prints the rest.
 2. Open a PR titled `chore(release): vX.Y.Z` and merge it like any other change —
    `main` takes pull requests only, with `verify` and `e2e` green.
-3. Wait for that merge's deployment to be green — `gh run list --workflow deploy.yml`
-   — then tag the merge commit `vX.Y.Z` and push the tag. The `Release` workflow
+3. Wait for that merge's deployment to be green —
+   `gh run list --workflow ci.yml --branch main` — then tag the merge commit
+   `vX.Y.Z` and push the tag. The `Release` workflow
    refuses a tag that disagrees with `package.json` or that is not on `main`, and
    otherwise publishes the generated release notes.
 

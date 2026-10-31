@@ -2007,7 +2007,8 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   Playlists feature. If a feature seems to need an API, the answer is a different
   project, not a Worker here.
 - **`workers_dev` and `preview_urls` are `false`**, and stay false: only a push to
-  `main` deploys automatically, from `.github/workflows/deploy.yml`, so a deploy
-  must not re-enable the workers.dev route or a version-preview URL. `previews: {}`
+  `main` deploys automatically, from the deploy job in `.github/workflows/ci.yml`,
+  so a deploy must not re-enable the workers.dev route or a version-preview URL.
+  `previews: {}`
   is inert now that Workers Builds is disconnected — nothing runs
   `wrangler preview` — and is kept because removing it buys nothing.

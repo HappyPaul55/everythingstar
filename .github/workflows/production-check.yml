@@ -1,7 +1,7 @@
 # The live site, checked when it is not deploying.
 #
-# `deploy.yml` verifies production the moment a merge reaches it, and never again.
-# Everything that can go wrong afterwards is invisible to it: a header edited in the
+# The deploy job in `ci.yml` verifies production the moment a merge reaches it, and
+# never again. Everything that can go wrong afterwards is invisible to it: a header edited in the
 # Cloudflare dashboard, an expired certificate, an outage, a build promoted from a
 # branch, a service worker that stops answering. This job asks the same questions on
 # a schedule — the same `scripts/smoke.ts`, the same origin — and one of its own.
