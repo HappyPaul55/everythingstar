@@ -55,8 +55,9 @@ microphone, or the machine); a **layout** is what that controller's controls mea
 
 - **`bun run verify` is the gate.** Lint, knip, `astro check`, the tests' typecheck, the
   unit tests, the build, the PWA and docs checks, the budget — in that order. CI runs
-  the same command. `bun run test:e2e` is the browser suite. Use **Bun**, never
-  npm/npx.
+  those checks as parallel `unit` and `build` jobs, and the browser suite as three
+  shards; `verify` and `e2e` are the required checks. `bun run test:e2e` is the browser
+  suite. Use **Bun**, never npm/npx.
 - **Pure logic lives in `src/lib/game/**` with a colocated `*.test.ts`.** Components
   render; they do not decide. A rule that needs testing goes in a module, not in JSX.
 - **The screen is session state, not a route.** One island, one screen at a time, no
@@ -98,7 +99,7 @@ bun run build            # captures the docs screenshots, then builds into dist/
 bun run build:quick      # the same build, reusing the captures already on disk
 bun run docs:shots       # capture the documentation's screenshots (Playwright)
 bun run docs:library     # refresh the capture fixture from the published FOSS library
-bun run verify           # everything CI runs
+bun run verify           # the gate in one command (CI splits it into parallel jobs)
 bun run version          # v<package.json>+<sha>
 bun run import --from <dir> --to <dir>     # a folder of charts into a library
 bun run playlist:check <url>               # a playlist against the game's own reader

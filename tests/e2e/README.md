@@ -94,10 +94,11 @@ suite is 56 tests in 28 files.
 
 ## Flakes
 
-CI runs one retry per test and one worker per core but one (never fewer than two);
-a local run is one worker and no retries. **A test that needs its retry is a test to
-fix** — the retry is a safety net, not a plan. Timing assertions must watch a signal
-that lasts (the practice loop's score **drop**, not a transient zero).
+CI runs the suite as three shards, one retry per test, and one worker per core but one
+(never fewer than two) inside each shard; a local run is one worker and no retries.
+**A test that needs its retry is a test to fix** — the retry is a safety net, not a
+plan. Timing assertions must watch a signal that lasts (the practice loop's score
+**drop**, not a transient zero).
 
 ## Running a subset
 

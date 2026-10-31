@@ -17,10 +17,36 @@ on:
   pull_request:
 
 jobs:
-  verify:
+  # The cheap checks do not need a build and start first. Keeping them out of the
+  # build job means a type error or a unit failure is reported while the docs
+  # captures are still running, rather than after them.
+  unit:
+    name: unit
     runs-on: ubuntu-latest
-    # The gate is about a minute of install and four of checks; the documentation
-    # captures add five minutes of browser. Anything near these limits is a hung
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun run knip
+      - run: bun run check
+      - run: bun run typecheck:tests
+      - run: bun test
+
+  # The one build. The docs captures make it the longest job, which is why the unit
+  # checks and every browser shard run beside it rather than waiting for it. The PWA
+  # test is served this `dist/` instead of building a second copy.
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    # The build is about a minute of install and seven of checks: the documentation
+    # captures are five minutes of browser. Anything near this limit is a hung
     # runner, not a slow test.
     timeout-minutes: 30
     steps:
@@ -29,7 +55,7 @@ jobs:
       # The scripts run Astro on Bun's own runtime (`bun --bun astro …`), so the
       # runner image's Node is never the version Astro checks itself against.
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
-      # Bun's own download cache, keyed on the lockfile: without it both jobs fetch
+      # Bun's own download cache, keyed on the lockfile: without it every job fetches
       # the same tree from the registry on every push.
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
@@ -37,8 +63,8 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
-      # The gate builds, and the build captures the documentation screenshots with
-      # Playwright: the browser must be here before `verify`, not only in `e2e`.
+      # The build captures the documentation screenshots with Playwright: the
+      # browser must be here before `build`, not only in `browser`.
       # The browser build is pinned by @playwright/test in bun.lock; cache the
       # download, not the system libraries. `--with-deps` installs those.
       - name: Cache Playwright browsers
@@ -48,11 +74,55 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
       - name: Install Chromium
         run: bunx playwright install --with-deps chromium
-      - run: bun run verify
+      - run: bun run build
+      - run: bun run check:pwa
+      - run: bun run check:docs
+      - run: bun run budget
+      - run: bun run release:assets
+      - run: bun run check:release
+      # `build` already made `dist/`; this only serves it. A local `test:pwa` still
+      # builds a throwaway copy with the docs placeholder.
+      - name: Test the installed game against the build
+        run: bun run test:pwa
+        env:
+          PLAYWRIGHT_PWA_BUILT: "1"
+      - name: Upload the build's Playwright results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: build-results
+          path: test-results/
+          if-no-files-found: ignore
 
-  e2e:
+  # The required `verify` check is this gate, not the job id: a split job would
+  # otherwise leave the ruleset waiting for a check that no longer exists.
+  verify:
+    name: verify
+    needs: [unit, build]
+    if: always()
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 5
+    steps:
+      - name: Require the unit and build jobs
+        run: |
+          if [ "${{ needs.unit.result }}" != "success" ] || [ "${{ needs.build.result }}" != "success" ]; then
+            echo "unit=${{ needs.unit.result }} build=${{ needs.build.result }}"
+            exit 1
+          fi
+
+  # The browser suite is sharded rather than one long job. Each shard still runs
+  # every core but one (playwright.config.ts), because the suite is CPU-bound and a
+  # single worker spends most of a shard waiting on the test before it.
+  browser:
+    name: e2e (${{ matrix.shard }}/${{ strategy.job-total }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      # One broken shard must not hide the other two: the logs and the artifacts of
+      # a failure are the first thing a person looks at.
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
@@ -71,21 +141,34 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
       - name: Install Chromium
         run: bunx playwright install --with-deps chromium
-      # The specs start their own dev server (playwright.config.ts), so this job
-      # needs no separate build step.
-      - run: bun run test:e2e
-      # The offline half needs a production build and `astro preview`; that config
-      # builds inside its own webServer.
-      - run: bun run test:pwa
-      # The whole directory: both JUnit reports and, when a test fails, the traces
-      # and screenshots each config keeps in its own output directory.
+      # The specs start their own dev server (playwright.config.ts), so a shard
+      # needs no build. That is deliberate: the dev server has no service worker to
+      # intercept the routes the specs answer.
+      - run: bun run test:e2e --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+      # The whole directory: that shard's JUnit report and, when a test fails, its
+      # traces and screenshots. The shard number keeps three artifacts apart.
       - name: Upload the Playwright results
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: playwright-results
+          name: playwright-results-${{ matrix.shard }}
           path: test-results/
           if-no-files-found: ignore
+
+  # The required `e2e` check is this aggregate, not the matrix job's own name.
+  e2e:
+    name: e2e
+    needs: browser
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require every browser shard
+        run: |
+          if [ "${{ needs.browser.result }}" != "success" ]; then
+            echo "browser=${{ needs.browser.result }}"
+            exit 1
+          fi
 
   workflows:
     runs-on: ubuntu-latest

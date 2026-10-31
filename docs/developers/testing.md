@@ -5,9 +5,11 @@ updated: "2026-10-31"
 order: 13
 ---
 
-`bun run verify` is the gate CI runs. It builds the documentation's screenshots with a
-real browser on the way (see [Documentation captures](#documentation-captures)), but the
-**browser suite** is still the one thing it does not run. The rule for all of them is the
+`bun run verify` is the gate, and the one command that runs it locally. CI runs the same
+checks as parallel `unit` and `build` jobs, plus the **browser suite** as three shards;
+the required checks are `verify` and `e2e`. The build captures the documentation's
+screenshots with a real browser on the way (see
+[Documentation captures](#documentation-captures)). The rule for all of them is the
 same: a check belongs where it is cheapest and where it can actually see the regression.
 
 ## The commands
@@ -31,7 +33,7 @@ bun run check:pwa        # manifest and worker gate (scripts/check-pwa.ts)
 bun run check:docs       # the built documentation, the sitemap and the offline shell
 bun run release:assets   # game, arcade and website archives into release/
 bun run check:release    # every archive holds its plan, and both formats agree
-bun run verify           # all of the above that CI runs, in order
+bun run verify           # the gate in one command (CI splits it into parallel jobs)
 bun run version          # the build's version: v<package.json>+<7-char sha>
 bun run version:bump     # bump package.json and print the release steps
 bun run import           # a folder of charts into the three documents
@@ -43,7 +45,10 @@ bun run cards            # render the social cards from og-card.html
 
 Verify every change with `bun run verify`: lint, knip, `astro check`, the tests'
 typecheck, the unit tests, the build, the PWA gate, the docs gate, the size budget and the
-release archives, in that order. CI runs the same command.
+release archives, in that order. CI runs the same checks as a fast `unit` job, one
+`build` job and three browser shards. The `build` job's `dist/` is the build the PWA
+test is served; there is no second build. The local command remains one sequence, so a
+checkout needs nothing more than Bun and Chromium.
 
 Every script that calls Astro says `bun --bun astro …`: without `--bun` Bun hands the
 bin to the machine's Node through its shebang, and Astro then refuses to run on a Node
@@ -82,8 +87,10 @@ not in a bigger cap.
 `bun run test:e2e` drives the real island in headless Chromium through Playwright
 (`playwright.config.ts`, specs in `tests/e2e/`), starting `bun run dev` itself. It is
 not part of `bun test`: the unit suite is `*.test.ts` under `src/`, and `bunfig.toml`
-keeps `tests/e2e/**` out of Bun's discovery. Locally the suite runs on one worker; in
-CI it uses every core but one, never fewer than two, with a single retry per test.
+keeps `tests/e2e/**` out of Bun's discovery. Locally the suite runs on one worker. In
+CI it is split into three shards, and each shard uses every core but one, never fewer
+than two, with a single retry per test. A red shard is a red `e2e` check: the aggregate
+job exists so the ruleset still has one check to require when the shard count changes.
 
 [`tests/e2e/README.md`](https://github.com/HappyPaul55/everythingstar/blob/main/tests/e2e/README.md)
 carries the suite's rule and inventory: **a browser test is kept only when no cheaper

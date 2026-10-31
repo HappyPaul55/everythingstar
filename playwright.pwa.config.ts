@@ -13,6 +13,14 @@ import { defineConfig, devices } from "@playwright/test";
  */
 const PORT = Number(process.env.PLAYWRIGHT_PWA_PORT ?? 4322);
 
+/**
+ * CI's build job has already built `dist/` once, with the real documentation
+ * captures. Set `PLAYWRIGHT_PWA_BUILT=1` there and this config only serves that
+ * build. A local `test:pwa` still builds a throwaway copy, so it needs no capture
+ * run.
+ */
+const PREBUILT = process.env.PLAYWRIGHT_PWA_BUILT === "1";
+
 export default defineConfig({
   testDir: "./tests/e2e",
   // The install test, plus the computed-style guard for `/play`: that one only
@@ -45,10 +53,13 @@ export default defineConfig({
   ],
   webServer: {
     // The installed game does not carry the documentation, and the capture run is
-    // five minutes of browser: this build asks for the docs placeholder rather
+    // five minutes of browser: a local build asks for the docs placeholder rather
     // than the real captures. What the worker and `/play`'s CSS need is the same
-    // either way.
-    command: `DOCSHOTS_PWA=1 bun run build:quick && bun run preview --host 127.0.0.1 --port ${PORT} --ignore-lock`,
+    // either way. CI's build job sets PREBUILT and serves the build it already
+    // checked, so there is no second build.
+    command: `${
+      PREBUILT ? "" : "DOCSHOTS_PWA=1 bun run build:quick && "
+    }bun run preview --host 127.0.0.1 --port ${PORT} --ignore-lock`,
     url: `http://127.0.0.1:${PORT}/app`,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,
