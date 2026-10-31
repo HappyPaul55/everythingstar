@@ -1,7 +1,14 @@
-import { captureJukebox, docshot, test } from "../support";
+import { captureJukebox, test } from "../support";
 
-docshot(test, "jukebox", { viewports: ["desktop"] });
-
-test("the jukebox shows its index, rows and now-playing panel", async ({ context, page }) => {
-  await captureJukebox(context, page);
-});
+test(
+  "the jukebox shows its index, rows and now-playing panel",
+  {
+    annotation: [
+      { type: "doc", description: "jukebox" },
+      { type: "doc-viewport", description: "desktop" },
+    ],
+  },
+  async ({ context, page }) => {
+    await captureJukebox(context, page);
+  },
+);

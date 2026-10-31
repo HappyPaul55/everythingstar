@@ -1,7 +1,14 @@
-import { captureNoteType, docshot, test } from "../support";
+import { captureNoteType, test } from "../support";
 
-docshot(test, "style-gems", { crop: { mobile: { edge: "bottom", percent: 40 } } });
-
-test("the gems style", async ({ context, page }) => {
-  await captureNoteType(context, page, "Note style", "Gems");
-});
+test(
+  "the gems style",
+  {
+    annotation: [
+      { type: "doc", description: "style-gems" },
+      { type: "doc-crop", description: "mobile:bottom 40%" },
+    ],
+  },
+  async ({ context, page }) => {
+    await captureNoteType(context, page, "Note style", "Gems");
+  },
+);

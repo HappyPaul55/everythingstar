@@ -1984,18 +1984,19 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   build it) if the branding changes, and bump `OG_IMAGE_VERSION` when the picture
   a visitor sees actually changed.
 - **A documentation screenshot is a test in `tests/e2e/docs`, and it is never
-  committed.** A page says `[description](shot:<id>)`; `docshot(test, "<id>")`
-  takes the picture in `afterEach`, once per Playwright project, and only for a
-  test that **passed**. `bun run docs:shots` — which `bun run build` runs before
-  Astro — writes `docs/screenshots/<variant>-<id>.webp` and
-  `.docshots/manifest.json`, both ignored by Git. `src/lib/docs/shots.ts` renders
-  one `<details>` per variant, so the page ships no island, and
-  `references.test.ts` fails if a page names a shot no test takes or a test no
-  page shows. Two consequences follow: the build needs Chromium, and a fresh
-  clone has no images until it builds. Do not hand-write
-  `![…](../screenshots/…)`, and do not commit the folder. The Astro dev toolbar
-  is disabled in `astro.config.mjs` for the same reason: it is a floating overlay
-  at the foot of every page, and the captures run against the dev server.
+  committed.** A page says `[description](shot:<id>)`; a test carries
+  `annotation: [{ type: "doc", description: "<id>" }]`, and the automatic
+  fixture takes the picture in its teardown, once per Playwright project, only
+  for a test that **passed**. `bun run docs:shots` — which `bun run build` runs
+  before Astro — writes `public/docs/test-output/<id>-<variant>.webp`, ignored by
+  Git. `src/lib/docs/shots.ts` renders one `<details>` per variant, so the page
+  ships no island, and `references.test.ts` fails if a page names a shot no test
+  takes or a test no page shows. Two consequences follow: the build needs
+  Chromium, and a fresh clone has no images until it builds. Do not hand-write
+  `![…](/docs/test-output/…)`, and do not commit the folder. The Astro dev
+  toolbar is disabled in `astro.config.mjs` for the same reason: it is a
+  floating overlay at the foot of every page, and the captures run against the
+  dev server.
 - **This repo has no server, and must not grow one.** `wrangler.jsonc` is
   assets-only: no `main`, no Worker script, no `/api/*` and no bindings.
   Everything the game reads at runtime is fetched by the browser from a URL it

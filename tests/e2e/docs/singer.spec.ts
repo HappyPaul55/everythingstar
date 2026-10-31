@@ -1,7 +1,14 @@
-import { captureSinger, docshot, test } from "../support";
+import { captureSinger, test } from "../support";
 
-docshot(test, "singer", { viewports: ["desktop"] });
-
-test("a singer's piano roll, a beat into the run", async ({ context, page }) => {
-  await captureSinger(context, page);
-});
+test(
+  "a singer's piano roll, a beat into the run",
+  {
+    annotation: [
+      { type: "doc", description: "singer" },
+      { type: "doc-viewport", description: "desktop" },
+    ],
+  },
+  async ({ context, page }) => {
+    await captureSinger(context, page);
+  },
+);

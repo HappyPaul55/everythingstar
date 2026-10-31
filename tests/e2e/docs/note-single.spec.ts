@@ -1,7 +1,14 @@
-import { captureNoteType, docshot, test } from "../support";
+import { captureNoteType, test } from "../support";
 
-docshot(test, "note-single", { crop: { mobile: { edge: "bottom", percent: 40 } } });
-
-test("a single note", async ({ context, page }) => {
-  await captureNoteType(context, page, "One note");
-});
+test(
+  "a single note",
+  {
+    annotation: [
+      { type: "doc", description: "note-single" },
+      { type: "doc-crop", description: "mobile:bottom 40%" },
+    ],
+  },
+  async ({ context, page }) => {
+    await captureNoteType(context, page, "One note");
+  },
+);

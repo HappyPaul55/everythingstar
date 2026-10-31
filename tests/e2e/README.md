@@ -7,11 +7,11 @@ against the dev server, `tests/e2e/fixture.ts` answers every external document, 
 
 ## The documentation captures
 
-`tests/e2e/docs/` holds one spec per documentation screenshot. It imports
-`docshot` and its capture helper from `../support`, and the page names the same id
-with `[description](shot:<id>)`. `bun run docs:shots` runs them; `bun run build`
-runs that first. `src/lib/docshots/references.test.ts` fails when a page and a test
-disagree.
+`tests/e2e/docs/` holds one spec per documentation screenshot. It imports `test`
+from `../support` and carries `annotation: [{ type: "doc", description: "<id>" }]`;
+the page names the same id with `[description](shot:<id>)`. `bun run docs:shots`
+runs them; `bun run build` runs that first. `src/lib/docshots/references.test.ts`
+fails when a page and a test disagree.
 
 ## The rule
 

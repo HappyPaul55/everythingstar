@@ -1,7 +1,14 @@
-import { captureGuitarHighway, docshot, test } from "../support";
+import { captureGuitarHighway, test } from "../support";
 
-docshot(test, "guitar-highway", { viewports: ["desktop"] });
-
-test("one guitar player's highway, a beat into the run", async ({ context, page }) => {
-  await captureGuitarHighway(context, page);
-});
+test(
+  "one guitar player's highway, a beat into the run",
+  {
+    annotation: [
+      { type: "doc", description: "guitar-highway" },
+      { type: "doc-viewport", description: "desktop" },
+    ],
+  },
+  async ({ context, page }) => {
+    await captureGuitarHighway(context, page);
+  },
+);

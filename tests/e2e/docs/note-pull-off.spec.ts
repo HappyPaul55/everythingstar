@@ -1,7 +1,14 @@
-import { captureNoteType, docshot, test } from "../support";
+import { captureNoteType, test } from "../support";
 
-docshot(test, "note-pull-off", { crop: { mobile: { edge: "bottom", percent: 40 } } });
-
-test("a pull-off", async ({ context, page }) => {
-  await captureNoteType(context, page, "Pulled off");
-});
+test(
+  "a pull-off",
+  {
+    annotation: [
+      { type: "doc", description: "note-pull-off" },
+      { type: "doc-crop", description: "mobile:bottom 40%" },
+    ],
+  },
+  async ({ context, page }) => {
+    await captureNoteType(context, page, "Pulled off");
+  },
+);

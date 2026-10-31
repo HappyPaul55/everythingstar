@@ -46,19 +46,20 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   id to its URL (`/docs/...`, or `/privacy` for a notice), relative link rewriting,
   the sidebar's groups and the page's neighbours. Tested beside them: `paths.test.ts`,
   `nav.test.ts`, and `content.test.ts` for the source's own links and frontmatter.
-- `src/lib/docshots/{manifest,config}.ts` — the capture contract: the `id` →
-  `<variant>-<id>.webp` manifest written by the browser, and the variant list
-  `docshots.config.ts` declares. `capture.ts` is the Playwright side:
-  `docshot(test, "<id>")` writes the WebP in `afterEach`, only when the test passed.
-- `tests/e2e/docs/*.spec.ts` — the capture tests, one file per shot. The page names
-  the id with `[description](shot:<id>)`; `bun run docs:shots` runs them and
+- `src/lib/docshots/config.ts` + `capture.ts` — the capture side: the variant
+  list `docshots.config.ts` declares, and the automatic fixture that reads a
+  test's `doc` annotation, takes the WebP in the test's teardown and writes it to
+  `public/docs/test-output/`.
+- `tests/e2e/docs/*.spec.ts` — the capture tests, one file per shot, with
+  `annotation: [{ type: "doc", description: "<id>" }]`. The page names the id
+  with `[description](shot:<id>)`; `bun run docs:shots` runs them and
   `bun run build` runs that first.
 - `src/lib/docs/shots.ts` — the satteri link visitor that replaces a `shot:`
-  paragraph with a `<figure>`, a real mdast `image` per variant (so Astro optimises
-  it) and one `<details>` per screen. It reads the manifest, never a browser;
-  `references.test.ts` holds the page and the test together.
-- `docs/screenshots/` + `.docshots/` — **generated, ignored by Git**: the captures
-  and the manifest. [Writing docs](writing-docs.md#screenshots) is the rule.
+  paragraph with a `<figure>`, the `<img>` for each variant file that exists and
+  one `<details>` per screen. `references.test.ts` holds the page and the test
+  together.
+- `public/docs/test-output/` — **generated, ignored by Git**: the captures, served
+  as written. [Writing docs](writing-docs.md#screenshots) is the rule.
 - `tests/e2e/docs-library/` + `docs-library.ts` — the captures' **mock**: a snapshot
   of the published EverythingStar FOSS playlist (real titles, artists, offers, cover
   art at 96×96) served under the URL a fresh install seeds, with documents and charts

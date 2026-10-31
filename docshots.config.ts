@@ -9,8 +9,8 @@ import { defineDocshots } from "./src/lib/docshots/config";
  */
 export default defineDocshots({
   // Written by `bun run docs:shots` and ignored by Git: the images are a build
-  // artefact, not source. `docs/` is where a relative Markdown image resolves.
-  outDir: "docs/screenshots",
+  // artefact, not source. Under `public/` so the page can name the file directly.
+  outDir: "public/docs/test-output",
   quality: 82,
   variants: {
     desktop: { viewport: { width: 1440, height: 900 } },

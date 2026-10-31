@@ -1,7 +1,14 @@
-import { captureNoteType, docshot, test } from "../support";
+import { captureNoteType, test } from "../support";
 
-docshot(test, "note-sustain-strum", { crop: { mobile: { edge: "bottom", percent: 40 } } });
-
-test("a note to strum inside a sustain", async ({ context, page }) => {
-  await captureNoteType(context, page, "Held, then strummed");
-});
+test(
+  "a note to strum inside a sustain",
+  {
+    annotation: [
+      { type: "doc", description: "note-sustain-strum" },
+      { type: "doc-crop", description: "mobile:bottom 40%" },
+    ],
+  },
+  async ({ context, page }) => {
+    await captureNoteType(context, page, "Held, then strummed");
+  },
+);

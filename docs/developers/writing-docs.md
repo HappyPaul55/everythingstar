@@ -72,57 +72,55 @@ with a missing or malformed field does not reach the build.
 
 ## Screenshots
 
-A picture of the game is a Playwright test in `tests/e2e/docs`, and the page
-names the shot it took:
+A picture of the game is a Playwright test that carries a `doc` annotation, and
+the page names the same id:
 
 ```markdown
 [The jukebox: an A–Z index down the side, song rows with their length and offers, and the now-playing panel on the right.](shot:jukebox "The jukebox on a desktop")
 ```
 
-The link **text is the alt** and is required; the link **title is the caption**
-and is optional; `shot:jukebox` is the id. The test that takes it:
-
 ```ts
-import { captureJukebox, docshot, test } from "../support";
+import { captureJukebox, test } from "../support";
 
-docshot(test, "jukebox", { viewports: ["desktop"] });
-
-test("the jukebox shows its index, rows and now-playing panel", async ({
-  context,
-  page,
-}) => {
-  await captureJukebox(context, page);
-});
+test(
+  "the jukebox shows its index, rows and now-playing panel",
+  { annotation: [{ type: "doc", description: "jukebox" }] },
+  async ({ context, page }) => {
+    await captureJukebox(context, page);
+  },
+);
 ```
 
-- `docshot(test, "<id>")` takes the WebP in `afterEach`, **only when the test
+- The link **text is the alt** and is required; the link **title is the caption**
+  and is optional; `shot:jukebox` is the id.
+- The `doc` annotation is the only thing added to the test. An automatic fixture
+  in `tests/e2e/support.ts` reads it and takes the WebP **only when the test
   passed**, once per Playwright project — `desktop` and `mobile` from
-  `docshots.config.ts`. The page shows both renders; one variant needs no
-  selector.
-- **`viewports`** narrows a shot to some variants (the jukebox is desktop-only:
-  on a phone the now-playing panel is a sheet).
-- **`crop`** keeps part of a variant's frame, per variant:
-  `{ crop: { mobile: { edge: "bottom", percent: 40 } } }`. A highway is mostly
-  runway, so a phone note is the note, the hit line and the pads.
+  `docshots.config.ts`.
+- Two more annotations narrow a shot without code:
+  - `{ type: "doc-viewport", description: "desktop" }` — capture it only there
+    (the jukebox on a phone opens the now-playing panel as a sheet).
+  - `{ type: "doc-crop", description: "mobile:bottom 40%" }` — keep the foot of
+    the phone frame. A highway is mostly runway, so a phone note is the note, the
+    hit line and the pads.
 - The test drives the screen — `captureJukebox`, `captureGuitarHighway`,
   `captureBandScreen`, `captureSinger`, `capturePhonePads`
   (`tests/e2e/docs-screens.ts`) or `captureNoteType` (`tests/e2e/note-guide.ts`)
-  — and asserts it arrived. The shared steps live in the helpers; the test file
-  is the id and the call.
+  — and asserts it arrived.
+- The files land in `public/docs/test-output/<id>-<variant>.webp`, ignored by Git
+  and served as written. The page shows one `<details>` per variant that exists;
+  one variant needs no selector.
+- `bun run docs:shots` clears the captures, runs every test in `tests/e2e/docs`;
+  `bun run build` runs it first. `bun run build:quick` reuses the images already
+  on disk, and a one-shot loop runs the spec directly with the docs config.
+- Two checks in `bun test` hold the halves together: every `shot:` reference has
+  a `doc` annotation, and every annotated test is shown by a page.
 - Use `/app` (the game alone) rather than `/play` (the site shell around it).
 - The fixture is the **published FOSS library**, not an invented one:
   `installDocsFixtures` serves a snapshot of its playlist and cover art, so the
   jukebox, the band and the stage show real songs. Code Monkey is the one song
   with guitar, bass, drums and vocals, so the stage captures use it.
-- `bun run docs:shots` clears the captures, runs every test in `tests/e2e/docs`
-  and writes `.docshots/manifest.json`; `bun run build` runs it first.
-  `bun run build:quick` reuses the images already on disk; a one-shot loop runs
-  the spec directly with the docs config.
-- Two checks in `bun test` hold the halves together: every `shot:` reference has
-  a test, and every capture test is shown by a page. A reference with no test,
-  or a test nobody shows, is a failure.
-- The images are WebP, ignored by Git, and uploaded with `dist/`. GitHub shows
-  the link text rather than the picture — the page is the site's.
+- GitHub shows the link text rather than the picture — the page is the site's.
 
 ## Adding a page
 

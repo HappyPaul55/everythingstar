@@ -1,10 +1,10 @@
 /**
  * The documentation capture tests.
  *
- * `tests/e2e/docs` holds one spec per shot. A page shows it with
- * `[description](shot:<id>)`, and the id in `docshot(test, "<id>")` is the other
- * half of the pair. Playwright runs each spec once per project — a project per
- * variant in `docshots.config.ts` — with its own fresh page. The dev server is
+ * `tests/e2e/docs` holds one spec per shot, with
+ * `annotation: [{ type: "doc", description: "<id>" }]`; a page shows it with
+ * `[description](shot:<id>)`. Playwright runs each spec once per project — a
+ * project per variant in `docshots.config.ts` — with its own fresh page. The dev server is
  * the target for the same reason the smoke suite uses it: the capture is about a
  * screen, not about the bundle.
  */

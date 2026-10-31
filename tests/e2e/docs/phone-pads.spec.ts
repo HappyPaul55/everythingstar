@@ -1,7 +1,14 @@
-import { capturePhonePads, docshot, test } from "../support";
+import { capturePhonePads, test } from "../support";
 
-docshot(test, "phone-pads", { viewports: ["mobile"] });
-
-test("the pads on a portrait phone, a beat into the run", async ({ context, page }) => {
-  await capturePhonePads(context, page);
-});
+test(
+  "the pads on a portrait phone, a beat into the run",
+  {
+    annotation: [
+      { type: "doc", description: "phone-pads" },
+      { type: "doc-viewport", description: "mobile" },
+    ],
+  },
+  async ({ context, page }) => {
+    await capturePhonePads(context, page);
+  },
+);

@@ -10,5 +10,4 @@
  */
 import { rmSync } from "node:fs";
 
-rmSync("docs/screenshots", { recursive: true, force: true });
-rmSync(".docshots/manifest.json", { force: true });
+rmSync("public/docs/test-output", { recursive: true, force: true });

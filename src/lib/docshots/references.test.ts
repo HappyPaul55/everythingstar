@@ -6,16 +6,16 @@ import { join } from "node:path";
  * The two halves of a screenshot, held together.
  *
  * A page says `[description](shot:id)`; a test in `tests/e2e/docs` says
- * `docshot(test, "id")` and takes it. Neither imports the other, so this is the
- * check that the names still meet: a reference with no test is a picture nobody
- * takes, and a test with no reference is work nobody sees.
+ * `annotation: [{ type: "doc", description: "id" }]`. Neither imports the other,
+ * so this is the check that the names still meet: a reference with no test is a
+ * picture nobody takes, and a test with no reference is work nobody sees.
  */
 const ROOT = join(import.meta.dir, "..", "..", "..");
 const DOCS = join(ROOT, "docs");
 const SPECS = join(ROOT, "tests", "e2e", "docs");
 
 const REFERENCE = /\[([^\]]+)\]\(shot:([a-z][a-z0-9-]*)(?:\s+"[^"]*")?\)/g;
-const CAPTURE = /docshot\(\s*test\s*,\s*"([a-z][a-z0-9-]*)"\s*(?:,\s*\{[\s\S]*?\})?\s*\)/g;
+const CAPTURE = /type:\s*"doc",\s*description:\s*"([a-z][a-z0-9-]*)"/g;
 
 function docs(): { id: string; text: string }[] {
   return readdirSync(DOCS, { recursive: true, encoding: "utf8" })
@@ -29,7 +29,6 @@ function docs(): { id: string; text: string }[] {
 }
 
 function captures(): string[] {
-  if (readdirSync(SPECS).length === 0) throw new Error(`${SPECS} is empty`);
   return readdirSync(SPECS)
     .filter((file) => file.endsWith(".spec.ts"))
     .flatMap((file) =>

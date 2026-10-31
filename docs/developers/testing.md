@@ -100,20 +100,19 @@ fullscreen, so Escape reaches the game rather than the browser's own way out.
 
 ## Documentation captures
 
-A documentation screenshot is a Playwright test in `tests/e2e/docs`, and the page
-names it with `[description](shot:<id>)`. `bun run docs:shots` clears the images, runs
-every capture test once per variant in `docshots.config.ts` (desktop, mobile) and
-writes `.docshots/manifest.json` plus the WebP files in `docs/screenshots/` — both
-ignored by Git. **`bun run build` runs it first**, which is why the gate needs
+A documentation screenshot is a Playwright test in `tests/e2e/docs` with
+`annotation: [{ type: "doc", description: "<id>" }]`, and the page names the same id
+with `[description](shot:<id>)`. `bun run docs:shots` clears the images, runs every
+capture test once per variant in `docshots.config.ts` (desktop, mobile) and writes
+`<id>-<variant>.webp` into `public/docs/test-output/`, which is ignored by Git. **`bun run build` runs it first**, which is why the gate needs
 Chromium installed.
 
 The capture is taken in `afterEach` only when the test passed, with animations
 disabled, the caret hidden, fonts settled and the project's own device scale, so a
-failed assertion writes nothing. A test narrows itself with
-`{ viewports: ["desktop"] }` and crops a phone frame with
-`{ crop: { mobile: { edge: "bottom", percent: 40 } } }`. The reference and the test
-are held together by `src/lib/docshots/references.test.ts`: every `shot:` has a
-`docshot(test, "<id>")`, and every capture is shown. The mock is the published FOSS
+failed assertion writes nothing. A test narrows itself with a `doc-viewport` annotation and crops a phone frame
+with `doc-crop`. The reference and the test are held together by
+`src/lib/docshots/references.test.ts`: every `shot:` has a `doc` annotation, and
+every annotated test is shown. The mock is the published FOSS
 library: `bun run docs:library` refreshes `tests/e2e/docs-library/` from it, and
 every other run is offline. `bun run build:quick` skips the capture run for a
 site-only loop. [Writing docs](writing-docs.md#screenshots) is the authoring rule.

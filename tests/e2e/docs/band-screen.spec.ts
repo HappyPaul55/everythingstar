@@ -1,7 +1,14 @@
-import { captureBandScreen, docshot, test } from "../support";
+import { captureBandScreen, test } from "../support";
 
-docshot(test, "band-screen", { viewports: ["desktop"] });
-
-test("the band screen with three players seated", async ({ context, page }) => {
-  await captureBandScreen(context, page);
-});
+test(
+  "the band screen with three players seated",
+  {
+    annotation: [
+      { type: "doc", description: "band-screen" },
+      { type: "doc-viewport", description: "desktop" },
+    ],
+  },
+  async ({ context, page }) => {
+    await captureBandScreen(context, page);
+  },
+);
