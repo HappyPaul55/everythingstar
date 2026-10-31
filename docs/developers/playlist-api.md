@@ -1,7 +1,7 @@
 ---
 title: Playlist API
 description: "The wire contract a playlist library or an on-demand search endpoint implements: the three documents, URL resolution, CORS, timing, and an acceptance checklist."
-updated: "2026-10-28"
+updated: "2026-10-31"
 order: 7
 ---
 
@@ -830,7 +830,11 @@ The chart's `url` is resolved against the song document, and the song document's
     { "timeMs": 3375, "lengthMs": 700, "kind": "strum", "column": 1 },
     { "timeMs": 4000, "lengthMs": 900, "kind": "strum", "column": 1, "hero": true },
     { "timeMs": 4625, "lengthMs": 0,   "kind": "strum", "column": 0 },
-    { "timeMs": 4625, "lengthMs": 0,   "kind": "strum", "column": 1 }
+    { "timeMs": 4625, "lengthMs": 0,   "kind": "strum", "column": 1 },
+    { "timeMs": 5250, "lengthMs": 0,   "kind": "strum", "column": 2 }
+  ],
+  "slides": [
+    { "fromTimeMs": 4625, "fromColumn": 1, "toTimeMs": 5250, "toColumn": 2 }
   ],
   "phrases": [
     { "startMs": 12000, "endMs": 24000 }
@@ -846,6 +850,7 @@ The chart's `url` is resolved against the song document, and the song document's
 | `notes[].kind` | string | optional | `strum` or `hopo`. Defaults to `strum`; a legacy `tap` is read as `strum`. |
 | `notes[].column` | number or `null` | optional | `0` to `laneCount - 1`, or `null` for an **open** note. |
 | `notes[].hero` | boolean | optional | A bonus note; worth five times the normal value. |
+| `slides` | array | optional | Links between notes: `{ "fromTimeMs", "fromColumn", "toTimeMs", "toColumn" }`. |
 | `phrases` | array | optional | `{ "startMs", "endMs" }` energy spans. |
 | `columns` | number | optional | A copy for humans; the listing's `laneCount` wins. |
 | `bpm` | number | optional | A copy for humans; the listing's `bpm` wins. |
@@ -854,6 +859,14 @@ Rules that matter:
 
 - **Chord = notes with the same `timeMs`** in the same chart. Send one note per column at
   that moment; there is no chord id.
+- **A slide is a link, not a note kind.** Every entry in `slides` names two notes that are
+  already in `notes`, by their cell: `fromTimeMs`/`fromColumn` leaves and
+  `toTimeMs`/`toColumn` arrives. Both ends must be fretted, the target strictly after the
+  source's own end (its tail, on a sustain), in a different column, with nothing else in
+  either endpoint column between them, and a target has one incoming link. A chain is
+  allowed. The reader resolves the coordinates to note ids after sorting; it drops a link
+  whose end is not exactly one note and names it, and the notes stay. The listing's
+  `offsetMs` moves both ends with the notes.
 - **Open note** is `column: null`. Use it on strummed instruments; it spans the highway.
 - **Order does not matter.** The reader sorts by `timeMs`. Do not send note ids; the game
   numbers them after sorting.
@@ -1568,6 +1581,8 @@ Run through this before handing the service to a player.
 - [ ] `schemaVersion: 1` and the matching `chartType`.
 - [ ] Lane notes have `timeMs`, `column` within `laneCount`, and sensible `lengthMs`.
 - [ ] A chord is several notes at one `timeMs`.
+- [ ] Every `slides` end names an existing note's own `timeMs` and `column`, and every
+  link passes the rules above.
 - [ ] Melody `line.words[].timeMs` is **relative to the line**; `notes[].timeMs` is
   **absolute**.
 - [ ] Every line has `parts: [{ "part": 0, "offset": 0 }]` for a solo.
@@ -1636,7 +1651,8 @@ Every note is a strum or a hopo, whatever the instrument. **Tapping is a control
 behaviour, not a note kind**: keys, a dance mat and a phone pad play a strum note by
 pressing its key, and a guitar plays it with the strum bar. A `hopo` only exists on an
 instrument that strums. A document from an older build may say `tap`; it is read as
-`strum`.
+`strum`. A **slide** is not a kind either: it is a link in `slides` between two notes,
+and both ends keep the kind they have.
 
 **Melody parts**: 1 = solo, 2 = duet, 3 = trio. More players than parts share them;
 adding a singer never turns a solo into a duet.

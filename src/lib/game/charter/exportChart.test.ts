@@ -88,6 +88,28 @@ describe("writing a .chart", () => {
     expect(written.problems).toEqual([]);
   });
 
+  test("a slide is named and dropped, and its notes still export", () => {
+    const written = writeChart({
+      title: "Song",
+      artist: "Artist",
+      charts: [
+        chart({
+          notes: [
+            { id: "a", timeMs: 1000, lengthMs: 0, kind: "strum", column: 0, hero: false, slideTo: "b" },
+            { id: "b", timeMs: 1500, lengthMs: 0, kind: "strum", column: 2, hero: false },
+          ],
+        }),
+      ],
+      grid: DEFAULT_GRID,
+    });
+    // `.chart` has no field for a glide: one message per link, and the notes stay.
+    expect(written.problems).toHaveLength(1);
+    expect(written.problems[0]).toContain("guitar::expert");
+    expect(written.problems[0]).toContain("1000");
+    const read = readChartText({ text: written.text, baseUrl: null });
+    expect(read.lanes[0].notes.map((note) => note.timeMs)).toEqual([1000, 1500]);
+  });
+
   test("star power spans become S events", () => {
     const written = writeChart({
       title: "Song",

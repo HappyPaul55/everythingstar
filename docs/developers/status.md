@@ -1,7 +1,7 @@
 ---
 title: What is built, and where it stops
 description: "The honest state of EverythingStar: every mode that works end to end, the parts that are deliberately out of scope, and what a next version would take on."
-updated: "2026-10-28"
+updated: "2026-10-31"
 order: 20
 ---
 
@@ -61,7 +61,8 @@ A status page ages; `updated` at the foot of this page is when it was last true.
   a button, and a **MIDI control change** (a hi-hat pedal, say) is mapped like a note.
   The **hit markers are
   controls too**: tapping one plays the note above it, with the tap carrying its own
-  strum, so a phone with no keyboard or gamepad can play a highway. The pad is also the
+  strum, so a phone with no keyboard or gamepad can play a highway, and a finger
+  already on a linked note can **glide** to the next pad without lifting. The pad is also the
   **menu cursor**: D-pad or left stick moves DOM focus, A selects, B goes back and Start
   pauses. Text fields stay the operating system's keyboard; the game never draws one.
 - **Audio** (see **[`audio.md`](audio.md)** for the ids, the contract and the shopping list): menu

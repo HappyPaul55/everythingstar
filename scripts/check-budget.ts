@@ -18,9 +18,9 @@
  *   upload, and the part most likely to arrive in megabytes at a time.
  *
  * The numbers were measured on 2026-10-31, after the documentation's captures
- * grew to cover the loop, the players and the charter:
- * `dist/_astro` JS 688 KiB, `dist/` 17.6 MiB, `public/audio` 8.8 MiB and the
- * **initial `/play` graph** 564 KiB raw / 182 KiB gzipped across 21 files; the parser
+ * grew to cover the loop, the players and the charter, and after **slides** landed:
+ * `dist/_astro` JS 697 KiB, `dist/` 17.8 MiB, `public/audio` 8.8 MiB and the
+ * **initial `/play` graph** 570 KiB raw / 184 KiB gzipped across 21 files; the parser
  * chunk, the brag card, the profile module, the queue's own UI and the whole charter
  * island are not part of it. The charter is a separate root, so its code is lazy
  * from `/play`'s point of view and is why the whole-payload cap moved by 37 KiB.
@@ -40,7 +40,10 @@
  * but it is still upload and first-visit weight, so the cap is a limit rather
  * than a target.
  * Every documentation page is plain HTML with no island, and `check-docs.ts`
- * proves it.
+ * proves it. **Slides** moved the raw cap by 6 KiB (566 → 572): a slide is a link,
+ * and its model, its judging, its ribbon and its document reader all belong to the
+ * first download because a chart and a highway are the game. The gzipped graph kept
+ * its headroom, and the total stayed inside the whole-payload cap.
  *
  * The script will not measure a build it cannot find: `dist/_astro`, `dist/`,
  * `public/audio` and `play.html` are each required before any number is read, and
@@ -187,7 +190,7 @@ const checks: Check[] = [
     actual: sizeOf(join(DIST, "_astro"), (file) => file.endsWith(".js")),
     limit: 700 * KIB,
   },
-  { label: "initial /play raw", actual: initialRaw, limit: 566 * KIB },
+  { label: "initial /play raw", actual: initialRaw, limit: 572 * KIB },
   { label: "initial /play gzip", actual: initialGzip, limit: 190 * KIB },
   { label: "dist/ total", actual: sizeOf(DIST), limit: 20 * MIB },
   { label: "public/audio", actual: sizeOf(join(ROOT, "public", "audio")), limit: 10 * MIB },

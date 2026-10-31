@@ -75,15 +75,17 @@ out of `astro check`, and the test config includes them with the runner's types.
   formats agree, and every root-absolute URL its entry page names is inside it. See
   [Deployment and releases](deployment.md#the-release-archives).
 
-The budget was measured on 2026-10-31: 688 KiB of `_astro` JS, an initial graph of
-564 KiB raw / 182 KiB gzipped across 21 files, 17.6 MiB in `dist/` and 8.8 MiB of
-audio. The caps sit just above those numbers. The **whole-build cap is the one that
-keeps moving**, raised when the documentation landed and again for its pictures: the
-[note-types page](../charters/note-types.md) in charters, then the screens across the
-loop, the players and the charter, each captured on desktop and mobile. A prose page
-and a screenshot are upload and first-visit weight but not code. The **initial graph
-is the number to watch**: the next feature-sized byte belongs behind a lazy boundary,
-not in a bigger cap.
+The budget was measured on 2026-10-31: 697 KiB of `_astro` JS, an initial graph of
+570 KiB raw / 184 KiB gzipped across 21 files, 17.8 MiB in `dist/` and 8.8 MiB of
+audio. The caps sit just above those numbers — 700 KiB, 572 KiB, 190 KiB, 20 MiB,
+10 MiB. The **whole-build cap is the one that keeps moving**, raised when the
+documentation landed and again for its pictures: the [note-types page](../charters/note-types.md)
+in charters, then the screens across the loop, the players and the charter, each
+captured on desktop and mobile. A prose page and a screenshot are upload and
+first-visit weight but not code. The raw cap moved by 6 KiB for **slides**, whose
+model, judging, ribbon and document reader are all part of the first download because
+a chart and a highway are the game. The **initial graph is the number to watch**: the
+next feature-sized byte belongs behind a lazy boundary, not in a bigger cap.
 
 ## Browser tests
 

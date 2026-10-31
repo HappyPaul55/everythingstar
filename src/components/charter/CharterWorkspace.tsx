@@ -9,6 +9,8 @@ import { useT } from "../../i18n/react";
 import type { SourceSongDoc } from "../../lib/game/source";
 import type { Song } from "../../lib/game/song";
 import {
+  cleanSlides,
+  slideProblems,
   strums,
   type Difficulty,
   type InstrumentKind,
@@ -317,6 +319,18 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
 
   const selectedNotes = active ? active.notes.filter((note) => selection.has(note.id)) : [];
   const one = selectedNotes.length === 1 ? selectedNotes[0] : null;
+  // A slide is two notes and a direction: the earlier one leaves, the later one
+  // arrives. Ties keep a stable order so the same pair always means the same link.
+  const pair =
+    selectedNotes.length === 2
+      ? [...selectedNotes].sort(
+          (a, b) => a.timeMs - b.timeMs || (a.column ?? -1) - (b.column ?? -1),
+        )
+      : null;
+  const slideTarget =
+    one?.slideTo === undefined
+      ? null
+      : (active?.notes.find((note) => note.id === one.slideTo) ?? null);
 
   const patchNote = useCallback(
     (patch: Partial<Omit<LaneNote, "id">>) => {
@@ -328,6 +342,45 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
     },
     [active, one, update],
   );
+
+  // The canvas cannot show a half-made slide, so an invalid pair is answered in
+  // the status line rather than becoming a link `normaliseChart` would drop.
+  const linkSlide = () => {
+    if (!active) return;
+    if (!pair) {
+      setStatus(t("charter.slideTwo"));
+      return;
+    }
+    const [source, target] = pair;
+    const linked = active.notes.map((note) =>
+      note.id === source.id ? { ...note, slideTo: target.id } : note,
+    );
+    // The repair is the test: a link the canonical chart would drop is not added,
+    // whatever the reason — a stale link elsewhere in the chart must not make a
+    // new one look valid just because its message was already there.
+    const kept = cleanSlides(linked).find((note) => note.id === source.id)?.slideTo;
+    if (kept !== target.id) {
+      const reason =
+        slideProblems(linked).find((problem) => problem.startsWith(`note ${source.id} `)) ??
+        t("charter.slideInvalid");
+      setStatus(reason);
+      return;
+    }
+    update(active.key, (chart) => ({
+      ...chart,
+      notes: setOneNote(chart.notes, source.id, { slideTo: target.id }, chart),
+    }));
+    setStatus(t("charter.slideAdded"));
+  };
+
+  const removeSlide = () => {
+    if (!active || !one) return;
+    update(active.key, (chart) => ({
+      ...chart,
+      notes: setOneNote(chart.notes, one.id, { slideTo: undefined }, chart),
+    }));
+    setStatus(t("charter.slideRemoved"));
+  };
 
   const startRecording = useCallback(() => {
     if (!active) return;
@@ -882,6 +935,23 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
                 />
                 {t("charter.hero")}
               </label>
+              {slideTarget ? (
+                <div className="charter-mini">
+                  <span>
+                    {t("charter.slideTo", {
+                      time: slideTarget.timeMs,
+                      column: slideTarget.column === null ? "–" : slideTarget.column + 1,
+                    })}
+                  </span>
+                  <button
+                    type="button"
+                    className="charter-btn charter-btn--small"
+                    onClick={removeSlide}
+                  >
+                    {t("charter.removeSlide")}
+                  </button>
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -900,6 +970,9 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
           </button>
           <button type="button" className="charter-btn charter-btn--small" onClick={quantizeSelection}>
             {t("charter.quantize")}
+          </button>
+          <button type="button" className="charter-btn charter-btn--small" onClick={linkSlide}>
+            {t("charter.slide")}
           </button>
           <button type="button" className="charter-btn charter-btn--small" onClick={deleteSelection}>
             {t("charter.delete")}

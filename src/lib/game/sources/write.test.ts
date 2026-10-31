@@ -391,6 +391,46 @@ describe("a drum chart's fills", () => {
   });
 });
 
+describe("a chart document's slides", () => {
+  const chart: LaneChart = {
+    instrument: "guitar",
+    difficulty: "expert",
+    columns: 5,
+    notes: [
+      { id: "a", timeMs: 1500, lengthMs: 300, kind: "strum", column: 0, hero: false, slideTo: "b" },
+      { id: "b", timeMs: 2250, lengthMs: 0, kind: "strum", column: 2, hero: false },
+    ],
+  };
+  const meta = {
+    id: "slide-guitar-expert",
+    chartType: "lanes" as const,
+    difficulty: "expert" as const,
+    url: "https://everythingstar.test/library/charts/slide/guitar-expert.json",
+    columns: 5,
+    bpm: null,
+    offsetMs: 0,
+  };
+
+  test("are written as coordinates and read back as the same link", () => {
+    const json = chartJson(chart) as Record<string, unknown>;
+    expect(json.slides).toEqual([
+      { fromTimeMs: 1500, fromColumn: 0, toTimeMs: 2250, toColumn: 2 },
+    ]);
+    const read = readChart(json, meta, "guitar");
+    expect(read.problems).toEqual([]);
+    expect(read.lane?.notes[0].slideTo).toBe(read.lane?.notes[1].id);
+    expect(chartProblems(read.lane!)).toEqual([]);
+  });
+
+  test("a chart with no links writes no slides key", () => {
+    const json = chartJson({
+      ...chart,
+      notes: chart.notes.map((note) => ({ ...note, slideTo: undefined })),
+    }) as Record<string, unknown>;
+    expect(json.slides).toBeUndefined();
+  });
+});
+
 describe("trackFromSource", () => {
   test("a source's chart is validated at runtime too, and dropped when it fails", () => {    // A folder or a `.sng` never writes documents: its track comes straight from the
     // parsed source, so the same gate has to be on this path as on the fetched one.

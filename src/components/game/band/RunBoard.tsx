@@ -65,6 +65,13 @@ export interface RunEntry {
    */
   fillHits?: number;
   /**
+   * What this run earned from **slides**. They are in `score` but not in
+   * `baseScore`, so the results screen's rating takes them back out
+   * (`ratingScore`): only a touch screen can glide, and a rating must not reward
+   * a controller. Zero or absent for every run that never slid.
+   */
+  slidePoints?: number;
+  /**
    * What this player's counts are of. A highway counts **notes** and a typist
    * counts **words**, so the results screen can name the right thing instead of
    * calling every count a note. Left out, it is notes.

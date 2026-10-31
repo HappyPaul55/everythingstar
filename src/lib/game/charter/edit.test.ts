@@ -158,3 +158,51 @@ describe("editing a chart", () => {
     expect(chartProblems(normal)).toEqual([]);
   });
 });
+
+describe("slides in the charter", () => {
+  test("a normalised chart keeps a playable link", () => {
+    const source = note({ timeMs: 1000, column: 0, slideTo: "target" });
+    const target = note({ id: "target", timeMs: 1600, column: 2 });
+    const normal = normaliseChart({ ...chart([source, target]), key: "guitar::expert" });
+    expect(normal.notes[0].slideTo).toBe("target");
+    expect(chartProblems(normal)).toEqual([]);
+  });
+
+  test("deleting a target through the workspace repair drops the source's link", () => {
+    const source = note({ timeMs: 1000, column: 0, slideTo: "target" });
+    const target = note({ id: "target", timeMs: 1600, column: 2 });
+    const left = removeNotes([source, target], new Set(["target"]));
+    const normal = normaliseChart({ ...chart(left), key: "guitar::expert" });
+    expect(normal.notes).toHaveLength(1);
+    expect(normal.notes[0].slideTo).toBeUndefined();
+  });
+
+  test("moving a target onto the source's column drops the link", () => {
+    const source = note({ timeMs: 1000, column: 0, slideTo: "target" });
+    const target = note({ id: "target", timeMs: 1600, column: 2 });
+    const moved = moveNotes([source, target], new Set(["target"]), 0, -2, chart());
+    const normal = normaliseChart({ ...chart(moved), key: "guitar::expert" });
+    expect(normal.notes.find((entry) => entry.id === "target")?.column).toBe(0);
+    expect(normal.notes.find((entry) => entry.id === source.id)?.slideTo).toBeUndefined();
+  });
+
+  test("copy and paste carries a link when both ends are in the selection", () => {
+    const source = note({ timeMs: 1000, column: 0, slideTo: "target" });
+    const target = note({ id: "target", timeMs: 1600, column: 2 });
+    const clip = copyNotes([source, target], new Set([source.id, "target"]), 5);
+    expect(clip.notes[0].slideTo).toBe(1);
+    const pasted = pasteNotes([], clip, 4000, chart());
+    expect(pasted).toHaveLength(2);
+    expect(pasted[0].slideTo).toBe(pasted[1].id);
+    expect(chartProblems({ ...chart(pasted) })).toEqual([]);
+  });
+
+  test("a source copied without its target drops the link", () => {
+    const source = note({ timeMs: 1000, column: 0, slideTo: "target" });
+    const target = note({ id: "target", timeMs: 1600, column: 2 });
+    const clip = copyNotes([source, target], new Set([source.id]), 5);
+    expect(clip.notes[0].slideTo).toBeUndefined();
+    const pasted = pasteNotes([], clip, 0, chart());
+    expect(pasted[0].slideTo).toBeUndefined();
+  });
+});

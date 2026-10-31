@@ -1351,7 +1351,7 @@
   }
   /* One translated layer: the notes hold their places and this carries them past
      the hit line, so a frame costs a single style write. A highway note is a
-     button, so there are no ribbons here. */
+     button; the only ribbons on the neck are a slide's links between two notes. */
   .highway__track {
     position: absolute;
     inset: 0;
@@ -1359,6 +1359,51 @@
        note has to land *on* it rather than disappear behind it. */
     z-index: 4;
     will-change: transform;
+  }
+  /* A **slide** is a link between two notes, drawn as a wide band. It sits under
+     the notes and over the beat grid, in the track's own pixels: its bottom centre
+     is the source's end and its right or left centre is the target's head. The band
+     is a div with a huge border-radius, cut to the quarter of the ellipse on the
+     target's side — so it leaves the source **across** and turns **up** into the
+     target, the same way whichever direction the slide goes. It is a border, not a
+     stroked path: no SVG and nothing to repaint on a frame. It is never a target —
+     the pads own the line — so it takes no pointer events.
+     The colour is neutral gray at an opacity: a slide belongs to neither note's
+     column, and picking one would say something the chart does not. */
+  .highway__slides {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .highway__slide {
+    --slide-width: clamp(6px, 2.2cqmin, 12px);
+    --slide-colour: rgba(232, 232, 226, 0.34);
+    position: absolute;
+    border: var(--slide-width) solid var(--slide-colour);
+    border-radius: 50%;
+    opacity: 0.9;
+  }
+  .highway__slide.is-right {
+    clip-path: inset(50% 0 0 50%);
+  }
+  .highway__slide.is-left {
+    clip-path: inset(50% 50% 0 0);
+  }
+  /* Armed: the source has landed and its column is under a finger, so the glide
+     is playable **now**. Brighter and a little wider rather than moving, which is
+     the same "read it in place" rule the notes follow. */
+  .highway__slide.is-armed {
+    --slide-colour: rgba(248, 248, 242, 0.58);
+    border-width: calc(var(--slide-width) + 2px);
+    opacity: 1;
+  }
+  /* The source was dropped: the band stays to show what was lost, muted but still
+     neutral — it is a link nobody can play, not a note that was missed. */
+  .highway__slide.is-miss {
+    --slide-colour: rgba(232, 232, 226, 0.14);
+    opacity: 0.7;
   }
   /* A note is a **span** — where its head is and how long it is held — and a **face**
      on it, which is what it looks like. The span is the note element, so the mounted
@@ -1881,7 +1926,8 @@
      2px rail, and two fingers on a chord must not have to find two narrow strips.
      A pad is `NOTE_SHARE` (0.68) of its column, so 23.5% of the pad on each side
      reaches exactly the column's edges — neighbours meet without overlapping. The
-     pseudo-element is part of the button, so the press is the pad's. */
+     pseudo-element is part of the button, so the pad is what a finger touches;
+     the row around it owns the gesture and the pointer capture. */
   .highway--tap .highway__pad::before {
     content: "";
     position: absolute;

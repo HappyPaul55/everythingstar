@@ -2,9 +2,11 @@ import { describe, expect, test } from "bun:test";
 import {
   chartFor,
   chartProblems,
+  cleanSlides,
   difficultiesFor,
   fitMelodyTurns,
   nearestDifficulty,
+  slideProblems,
   type Difficulty,
   type InstrumentKind,
   type LaneChart,
@@ -149,6 +151,161 @@ describe("fitMelodyTurns", () => {
     ]);
     expect(fitted.find((note) => note.id === "a")?.lengthMs).toBe(0);
     expect(fitted.find((note) => note.id === "c")?.lengthMs).toBe(0);
+  });
+});
+
+describe("slides", () => {
+  const note = (over: Partial<LaneNote> = {}): LaneNote => ({
+    id: "n",
+    timeMs: 0,
+    lengthMs: 0,
+    kind: "strum",
+    column: 0,
+    hero: false,
+    ...over,
+  });
+
+  const lanes = (...notes: LaneNote[]): LaneChart => ({
+    instrument: "guitar",
+    difficulty: "hard",
+    columns: 5,
+    notes,
+  });
+
+  test("a link from one note to a later one is playable", () => {
+    expect(
+      chartProblems(
+        lanes(
+          note({ id: "a", timeMs: 1000, column: 0, slideTo: "b" }),
+          note({ id: "b", timeMs: 1600, column: 2 }),
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  test("a chord may slide all of its notes, or only some, including a cross", () => {
+    const chart_ = lanes(
+      note({ id: "a", timeMs: 1000, column: 0, slideTo: "c" }),
+      note({ id: "b", timeMs: 1000, column: 2, slideTo: "d" }),
+      note({ id: "c", timeMs: 1600, column: 3 }),
+      note({ id: "d", timeMs: 1600, column: 4 }),
+    );
+    expect(chartProblems(chart_)).toEqual([]);
+    expect(
+      chartProblems(
+        lanes(
+          note({ id: "a", timeMs: 1000, column: 0 }),
+          note({ id: "b", timeMs: 1000, column: 2, slideTo: "c" }),
+          note({ id: "c", timeMs: 1600, column: 3 }),
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  test("a chain is forward links, so it may keep gliding", () => {
+    expect(
+      chartProblems(
+        lanes(
+          note({ id: "a", timeMs: 1000, column: 0, slideTo: "b" }),
+          note({ id: "b", timeMs: 1600, column: 2, slideTo: "c" }),
+          note({ id: "c", timeMs: 2200, column: 4 }),
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  test("the source's end is where the glide begins, so a held tail counts", () => {
+    // The sustain ends at 1800; the target at 1600 is inside it.
+    expect(
+      slideProblems([
+        note({ id: "a", timeMs: 1000, lengthMs: 800, column: 0, slideTo: "b" }),
+        note({ id: "b", timeMs: 1600, column: 2 }),
+      ]),
+    ).toContain("note a slides to a note that is not after it");
+  });
+
+  test("an open note is not a pad, at either end", () => {
+    expect(
+      slideProblems([
+        note({ id: "a", timeMs: 1000, column: null, slideTo: "b" }),
+        note({ id: "b", timeMs: 1600, column: 2 }),
+      ]),
+    ).toContain("note a is an open note that slides");
+    expect(
+      slideProblems([
+        note({ id: "a", timeMs: 1000, column: 0, slideTo: "b" }),
+        note({ id: "b", timeMs: 1600, column: null }),
+      ]),
+    ).toContain("note a slides to an open note");
+  });
+
+  test("a slide changes pads", () => {
+    expect(
+      slideProblems([
+        note({ id: "a", timeMs: 1000, column: 2, slideTo: "b" }),
+        note({ id: "b", timeMs: 1600, column: 2 }),
+      ]),
+    ).toContain("note a slides along its own column");
+  });
+
+  test("the glide may not pass through another note in either column", () => {
+    expect(
+      slideProblems([
+        note({ id: "a", timeMs: 1000, column: 0, slideTo: "c" }),
+        note({ id: "b", timeMs: 1300, column: 0 }),
+        note({ id: "c", timeMs: 1600, column: 2 }),
+      ]),
+    ).toContain("note a slides past a note in its own column");
+    expect(
+      slideProblems([
+        note({ id: "a", timeMs: 1000, column: 0, slideTo: "c" }),
+        note({ id: "b", timeMs: 1300, column: 2 }),
+        note({ id: "c", timeMs: 1600, column: 2 }),
+      ]),
+    ).toContain("note a slides past a note in the target's column");
+  });
+
+  test("one target, one finger: a second source is refused", () => {
+    expect(
+      slideProblems([
+        note({ id: "a", timeMs: 1000, column: 0, slideTo: "c" }),
+        note({ id: "b", timeMs: 1000, column: 2, slideTo: "c" }),
+        note({ id: "c", timeMs: 1600, column: 3 }),
+      ]),
+    ).toContain("note b slides to a note another note already slides to");
+  });
+
+  test("a dangling target, a self-link and a backwards link are named", () => {
+    expect(slideProblems([note({ id: "a", slideTo: "gone" })])).toContain(
+      "note a slides to a note that is not in the chart",
+    );
+    expect(slideProblems([note({ id: "a", slideTo: "a" })])).toContain(
+      "note a slides to itself",
+    );
+    expect(
+      slideProblems([
+        note({ id: "a", timeMs: 2000, column: 0, slideTo: "b" }),
+        note({ id: "b", timeMs: 1000, column: 2 }),
+      ]),
+    ).toContain("note a slides to a note that is not after it");
+  });
+
+  test("cleanSlides drops the bad link and keeps the notes", () => {
+    const cleaned = cleanSlides([
+      note({ id: "a", timeMs: 1000, column: 0, slideTo: "gone" }),
+      note({ id: "b", timeMs: 1600, column: 2 }),
+    ]);
+    expect(cleaned.map((entry) => entry.id)).toEqual(["a", "b"]);
+    expect(cleaned[0].slideTo).toBeUndefined();
+    expect(slideProblems(cleaned)).toEqual([]);
+  });
+
+  test("cleanSlides leaves a playable list alone", () => {
+    const notes = [
+      note({ id: "a", timeMs: 1000, column: 0, slideTo: "b" }),
+      note({ id: "b", timeMs: 1600, column: 2 }),
+    ];
+    expect(cleanSlides(notes)).toEqual(notes);
   });
 });
 

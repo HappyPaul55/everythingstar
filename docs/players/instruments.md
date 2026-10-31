@@ -72,8 +72,14 @@ Three settings change how a highway looks, and none changes a note: **Note view*
 
 On a touch screen the pads are controls: **tap the pad under a note as it lands** and it plays, as a fret and a strum at once. **Tap the pads** is on by default and can be turned off in Options; [On a phone](on-a-phone.md) has the touch layout in full.
 
+### Sliding between pads
+
+Some notes are **linked**: a ribbon runs from one note to a later one in another column. Keep your finger on the source's pad after it plays and **glide** across to the target's pad; the target plays on arrival, its hold is kept, and the glide pays the hold value of the span you crossed. Tap the linked target instead and it still plays, but the glide's points are not paid.
+
+A slide is a link, not a third note kind: both notes are still strums or hopos. Only a touch screen can follow the link — a keyboard, gamepad or MIDI player plays the two notes normally — so the **star rating** leaves the glide's points out. The ribbon is drawn for everybody, so the chart reads the same on any controller.
+
 ## What a note is worth
 
-A plain note is **50 points**; a chord pays the sum of its notes, a **hero** note five times its own, and the streak multiplier is ×1, ×2, ×3 and ×4 at 0, 10, 20 and 30 notes. A sustain pays 25 per note for each measure held, prorated and multiplied. Star power doubles it for eight seconds.
+A plain note is **50 points**; a chord pays the sum of its notes, a **hero** note five times its own, and the streak multiplier is ×1, ×2, ×3 and ×4 at 0, 10, 20 and 30 notes. A sustain pays 25 per note for each measure held, prorated and multiplied. A **slide** pays the same hold value for the span it crossed — 10 points for 800 ms at 120 BPM — and star power doubles it for eight seconds.
 
 Timing decides whether a note is a hit at all; there are no perfect, great and good tiers. The results screen calls a run **lost** when the band hit fewer than half of at least ten judged notes or words — a verdict at the end, not a mid-song stop.

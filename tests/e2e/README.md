@@ -67,6 +67,7 @@ things that need a page.
 | `profile.spec.ts` | 1 | a profile file through the input, the confirmation and the reload — and IndexedDB unchanged |
 | `seo.spec.ts` | 1 | the head's canonical, Open Graph and JSON-LD wiring |
 | `sng.spec.ts` | 1 | one package fetched once for the preview and the band |
+| `slide.spec.ts` | 2 | a real glide between two pads (pointerdown/move/up) landing the linked target, and a tap on that target paying the note without the glide |
 | `stage-entrance.spec.ts` | 1 | the room arriving before the highways, in two beats |
 | `stage-safe-area.spec.ts` | 1 | safe-area insets keeping the score rail on screen |
 | `stem-sync.spec.ts` | 1 | a multitrack song's media-element clocks through misses, a ten-second pause and a resume — with every `currentTime` write timestamped, so the seek storm's burst is visible and no runner load can argue with it |

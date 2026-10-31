@@ -189,6 +189,19 @@ describe("ratingScore", () => {
     expect(full.stars).toBe(4);
     expect(filled.stars).toBe(2);
   });
+
+  test("slide points come out too, because only a touch screen can earn them", () => {
+    expect(ratingScore(1000, 0, 250)).toBe(750);
+    expect(ratingScore(1000, 10, 250)).toBe(1000 - 10 * FILL_POINTS - 250);
+    // A guitar run and a touch run on the same chart rate on the same notes.
+    expect(ratingScore(1000, 0, 0)).toBe(1000);
+  });
+
+  test("slide points cannot make the rating negative, and a broken count is ignored", () => {
+    expect(ratingScore(100, 0, 250)).toBe(0);
+    expect(ratingScore(1000, 0, -50)).toBe(1000);
+    expect(ratingScore(1000, 0, Number.NaN)).toBe(1000);
+  });
 });
 
 describe("formatScore", () => {

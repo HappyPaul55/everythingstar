@@ -138,6 +138,17 @@ export interface LaneNote {
   column: number | null;
   /** Worth `HERO_MULTIPLE` times as much: a note to encourage. */
   hero: boolean;
+  /**
+   * The later note this one **slides** to, by id, when it does: the finger that
+   * hit this note stays on its pad and glides to that note's pad, which needs no
+   * new press. It is a link between two notes, not a third `kind` — a slide's
+   * source is still a `strum` or a `hopo`, and the target keeps its own kind.
+   *
+   * The glide runs from this note's **end** (its tail when it is a sustain) to
+   * the target's head, so it never pays twice for a held tail. `slideProblems`
+   * is what makes a link playable; absent on every note that does not slide.
+   */
+  slideTo?: string;
 }
 
 /**
@@ -474,6 +485,115 @@ function spanProblems(
 }
 
 /**
+ * Why a slide from `note` to `target` cannot be played, or `null` when it can.
+ *
+ * `claimed` is the targets a link already owns, in chart order: a target can be
+ * glided to from **one** source, because two fingers arriving on one pad is not a
+ * thing a chart can mean. The rules are deliberately about what a finger can do:
+ *
+ * - both ends are fretted (an **open** note has no pad to glide from or to);
+ * - the target is strictly later than the source's own end, so a glide has time
+ *   to happen and a held tail is not paid for twice;
+ * - the two ends are in different columns (along one column is a hold, not a
+ *   glide);
+ * - nothing else in the source's column comes between them, and nothing else in
+ *   the target's column comes between the source's end and the target — the
+ *   finger must not pass through a note that is meant to be played.
+ *
+ * A **chain** is allowed: the target of one slide may be the source of the next,
+ * because each link is strictly forward in time.
+ */
+function slideFault(
+  note: LaneNote,
+  target: LaneNote | undefined,
+  notes: readonly LaneNote[],
+  claimed: ReadonlySet<string>,
+): string | null {
+  if (!target) return `note ${note.id} slides to a note that is not in the chart`;
+  if (target.id === note.id) return `note ${note.id} slides to itself`;
+  // An open note is the "empty strum": there is no pad at either end to hold.
+  if (note.column === null) return `note ${note.id} is an open note that slides`;
+  if (target.column === null) return `note ${note.id} slides to an open note`;
+  const endMs = note.timeMs + Math.max(0, note.lengthMs);
+  if (!(target.timeMs > endMs)) {
+    return `note ${note.id} slides to a note that is not after it`;
+  }
+  if (target.column === note.column) {
+    return `note ${note.id} slides along its own column`;
+  }
+  const between = (column: number, afterMs: number) =>
+    notes.some(
+      (other) =>
+        other.id !== note.id &&
+        other.id !== target.id &&
+        other.column === column &&
+        other.timeMs > afterMs &&
+        other.timeMs < target.timeMs,
+    );
+  if (between(note.column, note.timeMs)) {
+    return `note ${note.id} slides past a note in its own column`;
+  }
+  if (between(target.column, endMs)) {
+    return `note ${note.id} slides past a note in the target's column`;
+  }
+  if (claimed.has(target.id)) {
+    return `note ${note.id} slides to a note another note already slides to`;
+  }
+  return null;
+}
+
+/**
+ * What is wrong with the chart's **slides**, in note order. A chart with no
+ * links has none. Kept public because a player can build a link in the charter
+ * and the status line needs to say why it cannot be played yet.
+ */
+export function slideProblems(notes: readonly LaneNote[]): string[] {
+  const byId = new Map<string, LaneNote>();
+  for (const note of notes) byId.set(note.id, note);
+  const claimed = new Set<string>();
+  const problems: string[] = [];
+  for (const note of notes) {
+    if (!note.slideTo) continue;
+    const fault = slideFault(note, byId.get(note.slideTo), notes, claimed);
+    if (fault) problems.push(fault);
+    else claimed.add(note.slideTo);
+  }
+  return problems;
+}
+
+/**
+ * The same list with every link that `slideProblems` would refuse removed.
+ *
+ * The charter calls this after an edit, so a note that was deleted, moved onto
+ * another note's column, or turned into an open note takes its stale links with
+ * it rather than leaving a chart that can never be played. A list with nothing
+ * to repair is returned unchanged, so an ordinary render does not copy it.
+ */
+export function cleanSlides(notes: readonly LaneNote[]): LaneNote[] {
+  const byId = new Map<string, LaneNote>();
+  for (const note of notes) byId.set(note.id, note);
+  const claimed = new Set<string>();
+  let changed = false;
+  const cleaned: LaneNote[] = [];
+  for (const note of notes) {
+    if (!note.slideTo) {
+      cleaned.push(note);
+      continue;
+    }
+    const fault = slideFault(note, byId.get(note.slideTo), notes, claimed);
+    if (fault) {
+      changed = true;
+      const { slideTo: _stale, ...rest } = note;
+      cleaned.push(rest);
+      continue;
+    }
+    claimed.add(note.slideTo);
+    cleaned.push(note);
+  }
+  return changed ? cleaned : notes.slice();
+}
+
+/**
  * What is wrong with a chart, if anything. An empty list means it is playable —
  * the same rules a source parser will be held to.
  */
@@ -521,5 +641,6 @@ export function chartProblems(chart: LaneChart): string[] {
       if (index === 0) problems.push(`note ${note.id} is a hopo with nothing before it`);
     }
   });
+  problems.push(...slideProblems(chart.notes));
   return problems;
 }

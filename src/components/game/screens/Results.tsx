@@ -121,10 +121,16 @@ export function Results({
   const totalNotes = runs.reduce((total, run) => total + run.total, 0);
   // A fill is paid but is not in the song's base score, so it must not buy stars.
   // The score shown below still includes it — the drummer played it — while the
-  // rating is read against what was actually played.
+  // rating is read against what was actually played. A **slide** is the same shape
+  // for a different reason: only a finger gliding on a touch screen can earn one,
+  // so leaving it in the rating would make stars a controller advantage.
   const fillHits = runs.reduce((total, run) => total + (run.fillHits ?? 0), 0);
+  const slidePoints = runs.reduce(
+    (total, run) => total + (run.slidePoints ?? 0),
+    0,
+  );
   const rating = starRating(
-    ratingScore(score, fillHits),
+    ratingScore(score, fillHits, slidePoints),
     baseScore,
     hits,
     judged,
@@ -453,7 +459,7 @@ function PlayerCard({ run }: { run: RunEntry }) {
   const t = useT();
   const hitRatePercent = hitRate(run.hits, run.judged);
   const rating = starRating(
-    ratingScore(run.score, run.fillHits ?? 0),
+    ratingScore(run.score, run.fillHits ?? 0, run.slidePoints ?? 0),
     run.baseScore,
     run.hits,
     run.judged,

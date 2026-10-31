@@ -77,12 +77,19 @@ A **column** is one vertical position on the highway. A **part** is a melodic li
 ## A note
 
 A note is a time, a length, a kind (`strum` or `hopo`), a column (`null` for an
-**open** note) and an optional `hero` flag. Notes that share a moment are a
-**chord**, with no chord id and no shape. `tap` is not a note kind: a controller
-taps, the chart strums, and a legacy `tap` is read as `strum`. On **drums**,
-column 5 is the **kick pedal** and the highway is six columns wide whether or not
-the chart uses it. [Note types](note-types.md) covers every shape, how a chord
-judges as a whole, and how each one is drawn.
+**open** note) and an optional `hero` flag. A note may also carry `slideTo`, the id of
+a later note it leads to: a **slide** is that link, not a third kind. Notes that share
+a moment are a **chord**, with no chord id and no shape. `tap` is not a note kind: a
+controller taps, the chart strums, and a legacy `tap` is read as `strum`. On **drums**,
+column 5 is the **kick pedal** and the highway is six columns wide whether or not the
+chart uses it. [Note types](note-types.md) covers every shape, how a chord judges as a
+whole, and how each one is drawn.
+
+## A slide
+
+A **slide** is a link, not a note kind. A note may carry `slideTo`, the id of a later note it leads to; both ends keep the `kind` they already had, and the game draws the link as a ribbon from the source's end to the target's head. A glide from the source's pad plays the target on a touch highway, which is why the link is allowed to be strictly forward and across a column. [Note types](note-types.md#a-slide) has the gesture and its points.
+
+A **chain** is allowed: the target of one slide may be the source of the next, because every link is strictly forward in time. A chord may slide any subset of its notes, and two of its notes may cross to each other's columns — each link has its own source and target, so a crossing pair is two slides. One note can lead to only one target, and one target can be arrived at from only one source.
 
 ## What makes a chart playable
 
@@ -98,6 +105,7 @@ The rules, in the order they bite:
 6. An open note is on a strummed instrument, and is alone at its moment.
 7. A hopo is on a strummed instrument, and is not the first note — there is nothing before it to hammer on from.
 8. A note kind is `strum` or `hopo`; `tap` is not a note kind. A legacy `tap` is read as `strum`.
+9. A **slide** links two **fretted** notes in different columns. The target is strictly after the source's own end (its tail, on a sustain); nothing else is in either endpoint column between them; and a target has one incoming link. `slideProblems` is the rule, and a chart with a link that fails it is refused.
 
 It does not check a note against the song's length or the chart against the audio: those are the source's business, and a chart that starts late is still a chart. A missing or negative time is refused earlier, by the placing reader.
 
@@ -114,6 +122,7 @@ The readers are tolerant, and they name what they drop:
 - A chart document saying `drums` while the song document lists `lanes` is refused whole.
 - A voice chart on an instrument part, or a lane chart on the voice, is refused.
 - A word on a part the chart does not declare, or a row above the roll, is dropped and named.
+- A **slide** whose coordinates do not land on exactly one note at each end is dropped and named; so is a link that fails the rules above. The notes stay, and the chart is still playable without the link.
 - A melody with more than three parts keeps them: later voices **share the last part**, and the chart is told rather than losing a harmony.
 
 ## Difficulty belongs to the chart

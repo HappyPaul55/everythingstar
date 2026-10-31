@@ -601,6 +601,32 @@
   pointer-events: none;
 }
 
+/* A slide's band is a box with a huge border-radius, cut to the quarter of the
+   ellipse on the target's side: its bottom centre is the source and its right or
+   left centre the target, so it goes across and then up, the same way whichever
+   direction the slide takes. It is picture only; the chart's own rules decide
+   whether the pair is a link. */
+.charter-pane__slides {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.charter-slide {
+  position: absolute;
+  border: 5px solid rgba(232, 232, 226, 0.36);
+  border-radius: 50%;
+}
+
+.charter-slide.is-right {
+  clip-path: inset(50% 0 0 50%);
+}
+
+.charter-slide.is-left {
+  clip-path: inset(50% 50% 0 0);
+}
+
 .charter-note {
   position: absolute;
   min-height: 3px;

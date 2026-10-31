@@ -29,15 +29,23 @@ interface GuideNote {
   lengthMs?: number;
   kind?: "strum" | "tap" | "hopo";
   column: number | null;
+  /** The index in `song.notes` this note **slides** to, when it does. */
+  slideTo?: number;
 }
 
 /** A note: strummed unless it says otherwise. */
 function note(
   timeMs: number,
   column: number | null,
-  options: { kind?: "strum" | "tap" | "hopo"; lengthMs?: number } = {},
+  options: { kind?: "strum" | "tap" | "hopo"; lengthMs?: number; slideTo?: number } = {},
 ): GuideNote {
-  return { timeMs, column, kind: options.kind ?? "strum", lengthMs: options.lengthMs ?? 0 };
+  return {
+    timeMs,
+    column,
+    kind: options.kind ?? "strum",
+    lengthMs: options.lengthMs ?? 0,
+    ...(options.slideTo === undefined ? {} : { slideTo: options.slideTo }),
+  };
 }
 
 interface GuideSong {
@@ -48,7 +56,7 @@ interface GuideSong {
 }
 
 /**
- * The ten songs the page captures. A style sample is the same chart under three
+ * The twelve songs the page captures. A style sample is the same chart under three
  * settings, so it is one song rather than three.
  */
 const GUIDE_SONGS: GuideSong[] = [
@@ -103,6 +111,25 @@ const GUIDE_SONGS: GuideSong[] = [
     notes: [note(2_200, null)],
   },
   {
+    id: "slide",
+    title: "A slide",
+    // Two notes, different columns, 800 ms apart: a finger on the first glides
+    // to the second. At 120 BPM the glide pays 10 on top of the note.
+    notes: [note(2_200, 1, { slideTo: 1 }), note(3_000, 3)],
+  },
+  {
+    id: "chord-slide",
+    title: "A chord that crosses",
+    // Two sources leave together and each arrives on the other's column: the
+    // ribbons cross, which is what makes a pair two links rather than one shape.
+    notes: [
+      note(2_000, 1, { slideTo: 2 }),
+      note(2_000, 3, { slideTo: 3 }),
+      note(2_900, 3),
+      note(2_900, 1),
+    ],
+  },
+  {
     id: "note-style",
     title: "Note style",
     // Enough shapes that a skin's own drawing is the difference between shots.
@@ -116,6 +143,20 @@ const GUIDE_SONGS: GuideSong[] = [
 ];
 
 function chartOf(song: GuideSong) {
+  // A document has no note ids, so a link is two coordinates: the cell it leaves
+  // and the cell it arrives on. The reader resolves them to ids.
+  const slides = song.notes.flatMap((entry) => {
+    const target = entry.slideTo === undefined ? undefined : song.notes[entry.slideTo];
+    if (!target) return [];
+    return [
+      {
+        fromTimeMs: entry.timeMs,
+        fromColumn: entry.column,
+        toTimeMs: target.timeMs,
+        toColumn: target.column,
+      },
+    ];
+  });
   return {
     schemaVersion: 1,
     chartType: "lanes",
@@ -127,6 +168,7 @@ function chartOf(song: GuideSong) {
       kind: entry.kind ?? "strum",
       column: entry.column,
     })),
+    ...(slides.length > 0 ? { slides } : {}),
   };
 }
 

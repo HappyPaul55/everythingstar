@@ -1,6 +1,6 @@
 ---
 title: Note types
-description: "What a chart can put on a highway: single notes, chords, hammer-ons and pull-offs, sustains and the notes inside them, open strums, hero notes, and the styles a player can choose."
+description: "What a chart can put on a highway: single notes, chords, slides, hammer-ons and pull-offs, sustains and the notes inside them, open strums, hero notes, and the styles a player can choose."
 updated: "2026-10-31"
 order: 2
 ---
@@ -14,6 +14,7 @@ Each note on a highway is a `LaneNote`. The fields a chart sets:
 | `kind` | `strum` (the string must be struck) or `hopo` (hammer-on or pull-off). |
 | `column` | Its column, `0` to `columns - 1`, or `null` for an **open** note. |
 | `hero` | A note worth five times the normal value, drawn differently. |
+| `slideTo` | The id of a later note this one **slides** to, when it does. |
 
 Every note is a **strum** or a **hopo**; `tap` is not a kind. A strum needs the
 strum gesture with its frets held, or a press of its key on a tapped controller; a
@@ -32,6 +33,42 @@ Several notes at the same `timeMs`, one press of the strum and judged together:
 a chord cannot be half hit.
 
 [Three notes on the same beat, across three columns of the highway.](shot:note-chord)
+
+## A slide
+
+A **slide** is a link between two notes, not a third note kind. The earlier note —
+the **source** — carries a `slideTo` naming the later one, the **target**; both keep
+their own `kind`, both are **fretted**, and they are in different columns. The game
+draws the link as a ribbon from the source's end to the target's head, so the two
+notes are read as one movement. The ribbon leaves the source **across** the neck and
+turns **up** into the target, whichever direction the slide takes.
+
+[Two notes in different columns with a gray band leaving the lower one across and turning up into the higher one.](shot:note-slide)
+
+On a touch highway, a finger that has landed the source may **glide** to the
+target's pad without lifting: the arrival plays the target, and its sustain is held
+from there. The glide pays the hold value of the span it crossed — at 120 BPM a
+measure is 2000 ms, so an 800 ms glide pays 10 — while a tap on the target instead
+pays the note alone. That is why the same two notes score 110 with the glide and 100
+without it.
+
+The points are in the score but **not** in the star rating (`ratingScore` takes them
+back out), because only a touch screen can earn them. A strum, keyboard, gamepad or
+MIDI player plays the two notes as they always have: the ribbon is drawn for them
+too, and the link never asks for a gesture they cannot make.
+
+The rules a link must pass — both ends fretted, a strictly later target, a different
+column, nothing in either column between them, one incoming link per target — are in
+[What a chart is](what-a-chart-is.md#a-slide). A chain of links is allowed, and a
+chord may slide any subset of its notes.
+
+## A chord that crosses
+
+Each note of a chord may slide on its own. Two sources can leave two pads and cross
+to each other's columns: each link has its own source and target, so a crossing pair
+is two slides rather than one shape.
+
+[Two source notes and two target notes, with two gray bands crossing in the middle, each link leaving one column across and arriving up the other.](shot:note-chord-slide)
 
 ## A hammer-on
 

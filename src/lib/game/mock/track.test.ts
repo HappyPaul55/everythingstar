@@ -81,6 +81,26 @@ describe("the mock track", () => {
     }
   });
 
+  test("the zoo carries a slide, on both a strummed and a tapped chart", () => {
+    for (const instrument of INSTRUMENT_KINDS) {
+      for (const difficulty of DIFFICULTIES) {
+        const built = chartFor(track, instrument, difficulty)!;
+        const source = built.notes.find((entry) => entry.slideTo);
+        expect(source, `${instrument}/${difficulty} has no slide`).toBeDefined();
+        const target = built.notes.find((entry) => entry.id === source!.slideTo);
+        expect(target).toBeDefined();
+        // Both ends fretted, a different column, and strictly after the source's end:
+        // the link is a glide, not a hold along one column.
+        expect(source!.column).not.toBeNull();
+        expect(target!.column).not.toBeNull();
+        expect(target!.column).not.toBe(source!.column);
+        expect(target!.timeMs).toBeGreaterThan(source!.timeMs + source!.lengthMs);
+        // And it is in the opening seconds, where a manual play and the demo see it.
+        expect(target!.timeMs).toBeLessThan(8000);
+      }
+    }
+  });
+
   test("hero notes are the exception, not the rule", () => {
     const guitar = chartFor(track, "guitar", "hard")!;
     const heroes = guitar.notes.filter((entry) => entry.hero).length;

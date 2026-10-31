@@ -621,6 +621,128 @@ describe("readChart", () => {
     expect(read.lane?.notes[0].timeMs).toBe(800);
   });
 
+  test("a document's slide links the two notes it names", () => {
+    const read = readChart(
+      {
+        schemaVersion: 1,
+        chartType: "lanes",
+        columns: 5,
+        notes: [
+          { timeMs: 1500, lengthMs: 300, column: 0 },
+          { timeMs: 2250, lengthMs: 0, column: 2 },
+        ],
+        slides: [{ fromTimeMs: 1500, fromColumn: 0, toTimeMs: 2250, toColumn: 2 }],
+      },
+      laneChart(),
+      "guitar",
+    );
+    expect(read.problems).toEqual([]);
+    const notes = read.lane!.notes;
+    expect(notes[0].slideTo).toBe(notes[1].id);
+    // The link is a note id in memory, and both ends keep their own identity.
+    expect(notes[1].slideTo).toBeUndefined();
+    expect(chartProblems(read.lane as LaneChart)).toEqual([]);
+  });
+
+  test("the chart's offset moves the link with its notes", () => {
+    const read = readChart(
+      {
+        schemaVersion: 1,
+        chartType: "lanes",
+        columns: 5,
+        notes: [
+          { timeMs: 1000, lengthMs: 0, column: 0 },
+          { timeMs: 2000, lengthMs: 0, column: 2 },
+        ],
+        slides: [{ fromTimeMs: 1000, fromColumn: 0, toTimeMs: 2000, toColumn: 2 }],
+      },
+      laneChart({ offsetMs: 500 }),
+      "guitar",
+    );
+    expect(read.problems).toEqual([]);
+    expect(read.lane?.notes.map((note) => note.timeMs)).toEqual([1500, 2500]);
+    expect(read.lane?.notes[0].slideTo).toBe(read.lane?.notes[1].id);
+  });
+
+  test("a bad link is named and dropped, and the rest of the chart survives", () => {
+    const read = readChart(
+      {
+        schemaVersion: 1,
+        chartType: "lanes",
+        columns: 5,
+        notes: [
+          { timeMs: 1000, column: 0 },
+          { timeMs: 2000, column: 2 },
+          { timeMs: 3000, column: 2 },
+          { timeMs: 4000, column: null },
+          { timeMs: 5000, column: 0 },
+        ],
+        slides: [
+          // A valid link, from the first note to the second.
+          { fromTimeMs: 1000, fromColumn: 0, toTimeMs: 2000, toColumn: 2 },
+          // Along one column, backwards, and from an open note: all refused.
+          { fromTimeMs: 2000, fromColumn: 2, toTimeMs: 3000, toColumn: 2 },
+          { fromTimeMs: 3000, fromColumn: 2, toTimeMs: 2000, toColumn: 2 },
+          { fromTimeMs: 4000, fromColumn: null, toTimeMs: 5000, toColumn: 0 },
+          // A coordinate no note sits on.
+          { fromTimeMs: 9000, fromColumn: 0, toTimeMs: 2000, toColumn: 2 },
+        ],
+      },
+      laneChart(),
+      "guitar",
+    );
+    const chart = read.lane as LaneChart;
+    expect(chart.notes).toHaveLength(5);
+    // The one playable link is the one that stays, on the note it left.
+    expect(chart.notes.filter((note) => note.slideTo !== undefined).map((note) => note.id)).toEqual([
+      chart.notes[0].id,
+    ]);
+    expect(chart.notes[0].slideTo).toBe(chart.notes[1].id);
+    expect(read.problems.some((problem) => problem.includes("is not a note"))).toBe(true);
+    expect(read.problems.some((problem) => problem.includes("open note that slides"))).toBe(true);
+    expect(read.problems.some((problem) => problem.includes("along its own column"))).toBe(true);
+    expect(read.problems.some((problem) => problem.includes("not after it"))).toBe(true);
+    expect(chartProblems(chart)).toEqual([]);
+  });
+
+  test("a coordinate on a cell two notes share is ambiguous, and named", () => {
+    const read = readChart(
+      {
+        schemaVersion: 1,
+        chartType: "lanes",
+        columns: 5,
+        notes: [
+          { timeMs: 1000, column: 0 },
+          { timeMs: 1000, column: 0 },
+          { timeMs: 2000, column: 2 },
+        ],
+        slides: [{ fromTimeMs: 1000, fromColumn: 0, toTimeMs: 2000, toColumn: 2 }],
+      },
+      laneChart(),
+      "guitar",
+    );
+    expect(read.problems.some((problem) => problem.includes("more than one note"))).toBe(true);
+    expect(read.lane?.notes.every((note) => note.slideTo === undefined)).toBe(true);
+  });
+
+  test("a chart with no slides carries no links", () => {
+    const read = readChart(
+      {
+        schemaVersion: 1,
+        chartType: "lanes",
+        columns: 5,
+        notes: [
+          { timeMs: 1000, column: 0 },
+          { timeMs: 2000, column: 2 },
+        ],
+      },
+      laneChart(),
+      "guitar",
+    );
+    expect(read.problems).toEqual([]);
+    expect(read.lane?.notes.every((note) => note.slideTo === undefined)).toBe(true);
+  });
+
   test("a note that cannot be placed is dropped, and named", () => {
     const read = readChart(
       {

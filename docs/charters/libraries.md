@@ -163,11 +163,15 @@ One instrument at one level, or the one melody:
     { "timeMs": 4625, "lengthMs": 0,   "kind": "strum", "column": 0 },
     { "timeMs": 4625, "lengthMs": 0,   "kind": "strum", "column": 1 }
   ],
+  "slides": [
+    { "fromTimeMs": 3375, "fromColumn": 1, "toTimeMs": 4625, "toColumn": 0 }
+  ],
   "phrases": [{ "startMs": 12000, "endMs": 24000 }]
 }
 ```
 
 - Notes follow [Note types](note-types.md): a **chord** is notes at one `timeMs`, an **open** note is `column: null` on a strummed instrument, `tap` is not a kind, and order does not matter because the reader sorts and numbers them.
+- A **slide** is a link between two notes, not a note kind: `slides` names the cell it leaves and the cell it arrives on, and both ends stay strums or hopos. The ends are fretted, the target is after the source's own end, the columns differ, nothing else sits in either endpoint column between them, and a target has one incoming link.
 - `phrases` are energy spans; `fills` are drum-only freestyle windows.
 - `chartType`, if present, must match the listing: `lanes`, `drums`, `vocals` or `lyrics`.
 

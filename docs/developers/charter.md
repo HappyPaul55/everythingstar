@@ -1,7 +1,7 @@
 ---
 title: Charter
 description: "The /charter island: what it loads, how a take becomes notes, why eight charts are visible at once, and what its Download button writes."
-updated: "2026-10-29"
+updated: "2026-10-31"
 order: 21
 ---
 
@@ -36,7 +36,8 @@ follows the song's stems.
   add, remove, move, set one note, quantize, copy/paste, duplicate chart. Every
   result goes through `normaliseChart`, which sorts, dedupes a column at a moment,
   keeps the note a **strum** or a **hopo** (tapping is a controller behaviour, not a
-  note kind), and stops a sustain at the next note in its column.
+  note kind), stops a sustain at the next note in its column, and drops a **slide**
+  link whose ends no longer make a glide (`cleanSlides`).
 - `src/lib/game/charter/record.ts` — a take (`ActionEvent[]`, the same actions a run
   judges) becomes notes: a strum takes the frets held at that moment, a tapped
   instrument takes each press (as an ordinary strum note), a hold becomes a sustain,
@@ -73,13 +74,31 @@ While a take is armed the recording layout owns the keyboard; the editor's short
 step aside. Escape stops the take. A take can **replace** the span it covered or
 **overdub** on top of it; quantization is a toggle.
 
+## Slides
+
+A **slide** is a link between two notes, not a note kind. The **Slide** action takes
+the selection, which must be exactly two notes: the earlier one is the source and the
+later one the target. The workspace builds the candidate link and runs it through
+`cleanSlides` — a link the canonical chart would drop is not added at all — and the
+status line carries `slideProblems`' reason when the pair cannot be one. A selected
+source shows its target and a **Remove slide** action. The pane draws every link with
+`slideRibbon`, the same neutral band the highway draws.
+
+The rule is `track.ts`'s, not the charter's: both ends fretted, a target strictly
+after the source's end, different columns, nothing else in either endpoint column
+between them, one incoming link per target. A copy carries a link only when both of
+its ends are in the selection; a paste points it at the pasted target, and any link
+whose end was deleted or moved is dropped by `normaliseChart`.
+
 ## Export
 
 `Download .chart` writes one file containing every instrument chart it can express:
 `Single` / `DoubleRhythm` / `DoubleBass` / `Drums` / `Keyboard` (and `GHLGuitar` for a
 six-column guitar). Star-power phrases become `S 2` events, sections become
 `E "section …"`, and notes are converted to ticks at the project BPM. A dance chart
-is named and skipped — the format has no dance track. Pair the file with the song's
+is named and skipped — the format has no dance track. **A slide has no `.chart` form**
+either: `exportChart` names each link and writes the notes without it, because a chart
+that plays without its glides is still worth exporting. Pair the file with the song's
 audio as `song.ogg` (or `MusicStream`'s name) to read it in a folder or in Clone
 Hero.
 

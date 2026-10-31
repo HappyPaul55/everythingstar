@@ -12,7 +12,7 @@ A file is somebody else's, so every reader drops what it cannot place, **names t
 | Format | Gives you | Cannot give you |
 | --- | --- | --- |
 | Guitar Hero / YARG MIDI | Every instrument and level, vocals with pitch, sections, star power, drum fills | Metadata without a `song.ini`; a fourth voice of its own; a pitch below MIDI 40 |
-| Clone Hero `.chart` | The same, in readable text, with its own metadata | A chart type it has no section word for; lyrics |
+| Clone Hero `.chart` | The same, in readable text, with its own metadata | A chart type it has no section word for; lyrics; a slide's link |
 | UltraStar `.txt` | Karaoke words with pitch, one or two voices | Instruments, levels, sections, fills |
 | StepMania `.sm`/`.ssc` | A dance chart at several levels | Anything but dance; words; fills |
 | `.sng` package | A whole song folder in one file | Easy hand-editing; more than one chart in play |
@@ -90,6 +90,7 @@ A text format, the easiest instrument format to patch by hand: every chart is it
 - `E "section Name"` becomes a section. `E "mix 8"` and a section named "fill" become drum fills.
 - `MusicStream` names the mix when there is no `song.ogg`; a relative name resolves against the chart's URL.
 - `[Song]` can carry `name`, `artist`, `album`, `year` and `offset` (milliseconds), so a `.chart` needs no `song.ini`.
+- **A slide has no `.chart` form.** A line carries a fret, a length and a type; there is no field for a link to another note. The exporter names every link it leaves out and writes the notes without them: a playable chart without its slides is worth more than no chart at all.
 
 The section word is the instrument: `Single` and `DoubleGuitar` are **lead**, `DoubleRhythm` **rhythm**, `DoubleBass` bass, `Drums`/`DrumsReal` the kit, `Keyboard` keys, `GHLGuitar` a six-fret guitar. An unknown word is skipped, not approximated.
 
