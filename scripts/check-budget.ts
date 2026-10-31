@@ -17,8 +17,9 @@
  *   which took them from 22.5 MiB to 8.2 MiB; they are still most of a much smaller
  *   upload, and the part most likely to arrive in megabytes at a time.
  *
- * The numbers were measured on 2026-10-29, after the charter island landed:
- * `dist/_astro` JS 687 KiB, `dist/` 14.5 MiB, `public/audio` 8.8 MiB and the
+ * The numbers were measured on 2026-10-31, after the documentation's captures
+ * grew to cover the loop, the players and the charter:
+ * `dist/_astro` JS 688 KiB, `dist/` 17.6 MiB, `public/audio` 8.8 MiB and the
  * **initial `/play` graph** 564 KiB raw / 182 KiB gzipped across 21 files; the parser
  * chunk, the brag card, the profile module, the queue's own UI and the whole charter
  * island are not part of it. The charter is a separate root, so its code is lazy
@@ -32,10 +33,12 @@
  *
  * The whole-build cap was raised to 16 MiB when the documentation landed: ~40
  * prose pages, each carrying the inlined site CSS, plus the screenshots the guide
- * reuses. It moved to 18 MiB with the note-types page, whose twenty-four captures
- * (twelve examples on two screens) are the guide's own pictures. That is content
- * rather than code — it does not touch the initial graph or the audio — but it is
- * still upload and first-visit weight, so the cap is a limit rather than a target.
+ * reuses. It moved to 18 MiB with the note-types page, and to 20 MiB when the
+ * captures grew to cover the loop, the players and the charter — every shot on
+ * desktop and mobile, as a phone is where a layout fails. That is
+ * content rather than code — it does not touch the initial graph or the audio —
+ * but it is still upload and first-visit weight, so the cap is a limit rather
+ * than a target.
  * Every documentation page is plain HTML with no island, and `check-docs.ts`
  * proves it.
  *
@@ -186,7 +189,7 @@ const checks: Check[] = [
   },
   { label: "initial /play raw", actual: initialRaw, limit: 566 * KIB },
   { label: "initial /play gzip", actual: initialGzip, limit: 190 * KIB },
-  { label: "dist/ total", actual: sizeOf(DIST), limit: 18 * MIB },
+  { label: "dist/ total", actual: sizeOf(DIST), limit: 20 * MIB },
   { label: "public/audio", actual: sizeOf(join(ROOT, "public", "audio")), limit: 10 * MIB },
 ];
 

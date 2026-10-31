@@ -1,13 +1,13 @@
 ---
 title: Libraries
 description: "The three documents a library is made of — playlist, song and chart — how their URLs resolve, how ids and revisions work, and how to check one."
-updated: "2026-10-28"
-order: 5
+updated: "2026-10-31"
+order: 6
 ---
 
-A library is three kinds of document, normally three JSON files. The **playlist** is the index: one summary per song, enough to draw a row and offer it to a band. A **song document** says what a song is: its audio, its parts, and where each part's charts live. A **chart document** is the notes. They are fetched separately, and that separation is the point — a list of five hundred songs is one small fetch, and a run downloads only the charts its band needs.
+A library is three kinds of document, normally three JSON files. The **playlist** is the index: one summary per song, enough to draw a row and offer it to a band. A **song document** says what a song is: its audio, parts, and where each part's charts live. A **chart document** is the notes. They are fetched separately, so a list of five hundred songs is one small fetch and a run downloads only the charts its band needs.
 
-The full field-by-field contract is [the wire format](../developers/playlist-api.md) (on the site: [Playlist API](https://everythingstar.happypaul55.com/docs/developers/playlist-api)). This page is the shape and the habits; that page is the reference you check a field against.
+The field-by-field contract is [the wire format](../developers/playlist-api.md) (on the site: [Playlist API](https://everythingstar.happypaul55.com/docs/developers/playlist-api)); this page is the shape and habits.
 
 ```text
 https://example.com/library/
@@ -53,25 +53,25 @@ https://example.com/library/
 
 | Field | Required | Meaning |
 | --- | --- | --- |
-| `id` | yes | The song's key. Stable, unique, and the same as the song document's. |
-| `title` | yes | What the jukebox shows and files under its first letter. |
-| `artist` | yes in practice | An object `{ id?, name, art? }`, or a bare name here. |
+| `id` | yes | The stable, unique key, shared with the song document. |
+| `title` | yes | What the jukebox shows and files by first letter. |
+| `artist` | yes in practice | An object `{ id?, name, art? }` or a bare name. |
 | `album` | no | `{ id?, name, year?, art? }`. |
-| `durationMs` | yes in practice | The length the row shows. `0` is accepted and reads `0:00`. |
-| `art` | no | The cover; falls back to the album's, then the artist's, then initials. |
-| `previewStartMs` | no | Where the preview starts when there is no preview clip. |
-| `accent` | no | A CSS colour for the cover tile when there is no art (or it does not arrive). |
-| `song` | yes | The song document — or a `.sng` package. |
-| `offer` | yes for a playable song | What a band can choose before the document is fetched. |
-| `video` | no | A YouTube id or a direct video URL, for the backdrop. |
+| `durationMs` | yes in practice | The length the row shows; `0` reads `0:00`. |
+| `art` | no | The cover; falls back to album, artist, then initials. |
+| `previewStartMs` | no | Where the preview starts with no clip. |
+| `accent` | no | A CSS colour for the cover tile when art is missing. |
+| `song` | yes | The song document, or a `.sng` package. |
+| `offer` | yes for a playable song | What a band can choose before the document loads. |
+| `video` | no | A YouTube id or direct video URL for the backdrop. |
 
-An **offer** has an array of instruments, each with a non-empty list of difficulties, and one `voice`:
+An **offer** is an array of instruments, each with a non-empty list of difficulties, and one `voice`:
 
-- `role` is `guitar`, `bass`, `drums`, `keys`, `dance`, `lead_guitar` or `rhythm_guitar`. The two guitar flavours are **separate seats**: list both when the song carries both, and the band screen offers Lead guitar and Rhythm guitar.
-- `difficulties` are `easy`, `normal`, `hard`, `expert`, lower case.
-- `voice` is `{ "chartType": "vocals", "parts": 1 }`, or `"lyrics"` for words with no pitch, or absent for an instrumental. `parts` is 1–3.
-- **Never put `vocals` in `instruments`.** The voice is its own field, and a `vocals` entry there is reported and skipped.
-- A karaoke song is allowed to offer nothing but the words: `"instruments": []`.
+- `role` is `guitar`, `bass`, `drums`, `keys`, `dance`, `lead_guitar` or `rhythm_guitar`; the guitar flavours are **separate seats**, so list both when carried.
+- `difficulties` are lower-case `easy`, `normal`, `hard`, `expert`.
+- `voice` is `{ "chartType": "vocals", "parts": 1 }`, `"lyrics"` for words with no pitch, or absent for an instrumental; `parts` is 1–3.
+- **Never put `vocals` in `instruments`**: the voice is its own field, and a `vocals` entry there is reported and skipped.
+- A karaoke song may offer nothing but the words: `"instruments": []`.
 
 ## The song document
 
@@ -134,18 +134,18 @@ An **offer** has an array of instruments, each with a non-empty list of difficul
 | Field | Required | Meaning |
 | --- | --- | --- |
 | `schemaVersion` | yes | Exactly `1`, on every document. |
-| `id` | yes | Must equal the playlist entry's `id`. |
+| `id` | yes | Equal to the playlist entry's `id`. |
 | `title` | yes | The song's name. |
-| `artist` | recommended | An **object**. A string is not accepted here. |
+| `artist` | recommended | An **object**; a string is not accepted. |
 | `album`, `art`, `video` | no | As in the entry. |
 | `durationMs` | yes in practice | Should match the audio. |
 | `audio` | yes for sound | Stems and presets, or `source: "youtube"`. |
 | `parts` | yes for content | One per thing somebody can play. |
-| `sections` | no | `{ timeMs, name }` markers. Nothing judges on them. |
+| `sections` | no | `{ timeMs, name }` markers; nothing judges on them. |
 
-A **part** carries a `role`, an optional `label`, an optional `audioControl`, and at least one chart listing. A chart listing carries the **level**, the **column count**, the optional **tempo** and **offset**, and the chart's URL. For the voice there is no level: one melody chart, whichever `chartType` it is.
+A **part** carries a `role`, an optional `label` and `audioControl`, and at least one chart listing: **level**, **column count**, optional **tempo** and **offset**, and the chart's URL. The voice has no level: one melody chart, whichever `chartType`.
 
-The listing is authoritative. The game reads `laneCount`, `bpm` and `offsetMs` from the **song document**, not from the chart file, so a chart file that repeats them is a copy for humans. Changing only the file changes nothing.
+The listing is authoritative: the game reads `laneCount`, `bpm` and `offsetMs` from the **song document**, not the chart file, so a repeated value there is a copy for humans. Changing only the file changes nothing.
 
 ## A chart document
 
@@ -167,19 +167,11 @@ One instrument at one level, or the one melody:
 }
 ```
 
-- A **chord** is several notes at one `timeMs`; there is no chord id.
-- An **open** note is `column: null`, on a strummed instrument, alone at its moment.
-- Every note is a **strum** or a **hopo**; `tap` is not a note kind. Tapping is how a
-  controller (keys, a dance mat, a phone) plays a strum note. A **hopo** is written by
-  the chart; do not re-derive it from spacing.
-- Order does not matter and notes carry no ids; the reader sorts and numbers them.
-- `phrases` are energy spans. `fills` are drum-only freestyle windows.
+- Notes follow [Note types](note-types.md): a **chord** is notes at one `timeMs`, an **open** note is `column: null` on a strummed instrument, `tap` is not a kind, and order does not matter because the reader sorts and numbers them.
+- `phrases` are energy spans; `fills` are drum-only freestyle windows.
 - `chartType`, if present, must match the listing: `lanes`, `drums`, `vocals` or `lyrics`.
 
-A melody chart is one document for the voice, with `parts`, `rows`, `rootMidi`, `lines` and `notes`. Its two time bases are worth repeating because they are the commonest wiring mistake:
-
-- `lines[].timeMs` is absolute, and each word's `timeMs` is **relative to its line**.
-- `notes[].timeMs` is **absolute**.
+A melody chart is one voice document with `parts`, `rows`, `rootMidi`, `lines` and `notes`. Its two time bases are the commonest wiring mistake: lines absolute, words **relative to their line**, notes absolute — [What a chart is](what-a-chart-is.md#the-two-time-bases) has the rule.
 
 ```json
 {
@@ -206,11 +198,11 @@ A melody chart is one document for the voice, with `parts`, `rows`, `rootMidi`, 
 }
 ```
 
-A line with no `parts` is not drawn, so a solo line carries `[{ "part": 0, "offset": 0 }]`. A `vocals` note has a `row` inside `rows`, or `null` for a spoken word. A `lyrics` chart needs no notes at all: its words come from the lines, there is no pitch, and there is no singer score.
+A line with no `parts` is not drawn, so a solo line carries `[{ "part": 0, "offset": 0 }]`. A `vocals` note has a `row` inside `rows`, or `null` for a spoken word. A `lyrics` chart needs no notes: its words come from the lines, with no pitch or singer score.
 
 ## How a URL resolves
 
-Every relative URL resolves against **the document that wrote it**, exactly as a browser resolves a link:
+Every relative URL resolves against **the document that wrote it**, as a browser resolves a link:
 
 | Written in | Resolves against |
 | --- | --- |
@@ -218,11 +210,11 @@ Every relative URL resolves against **the document that wrote it**, exactly as a
 | A song document's `art`, audio, preview, video and chart URLs | The song document's URL |
 | A chart document | Nothing — a chart has no URLs of its own |
 
-That is why a playlist can live anywhere and point at a library beside it, and why the example above uses `../audio/…` from `songs/`.
+So a playlist can point at a library beside it, hence `../audio/…` from `songs/`.
 
-Every URL must be an absolute `http` or `https` address with a host, at most 8192 characters. `javascript:`, `data:`, `file:` and `blob:` are refused before any fetch, and a URL carrying credentials is refused too. A relative reference that cannot be resolved is named as a problem, and the field is dropped.
+Every URL must be an absolute `http` or `https` address with a host, at most 8192 characters. `javascript:`, `data:`, `file:` and `blob:` are refused before any fetch, as is a URL with credentials; an unresolvable relative reference is named and dropped.
 
-The limits, enforced by the same reader the game uses:
+Limits, enforced by the game's reader:
 
 - A **document** — playlist, song or chart — is capped at **8 MB**.
 - A **`.sng` package** is capped at **128 MB**.
@@ -235,43 +227,42 @@ Access-Control-Allow-Origin: *
 Content-Type: application/json
 ```
 
-Serve everything over **HTTPS** — HTTP media is blocked as mixed content — and let audio answer **Range** requests so a seek is comfortable. The full delivery rules are [§6 of the wire format](../developers/playlist-api.md#6-delivery-contract).
+Serve over **HTTPS** — HTTP media is blocked as mixed content — and let audio answer **Range** requests. The full rules are [§6 of the wire format](../developers/playlist-api.md#6-delivery-contract).
 
 ## The index is a summary, the song is the truth
 
-The playlist entry exists so that listing does not fetch every song. It is allowed to be less than the whole truth, but it must not promise more:
+The entry exists so listing does not fetch every song; it may be less than the truth but must not promise more:
 
-- `offer` must agree with the song document's parts. If the entry offers a bass and the document has no bass chart, the band screen offers a seat that cannot be filled.
+- `offer` must agree with the song document's parts: an offered bass with no bass chart is a seat that cannot be filled.
 - `durationMs` is what the row shows; the run's clock and its end come from the audio.
-- Where the two disagree on stage, the **document wins**: a part is what the document's `parts` say, not what the summary said.
+- Where they disagree on stage, the **document wins**: a part is what its `parts` say.
 
-A broken entry is **skipped and named**, never fatal: a song missing its id, its title or its `song` is reported in the Playlists dialog and the other songs still list. A document that is not a playlist at all comes back empty with the reason. In a search answer the skip is silent, so a malformed result is a result nobody sees.
+A broken entry is **skipped and named**, never fatal: a song missing its id, its title or its `song` is reported in the Playlists dialog and the rest still list. A document that is not a playlist comes back empty with the reason. In a search answer the skip is silent, so a malformed result is never seen.
 
 ## Ids and revisions
 
-The entry's `id` is the library's key, and it is used for more than listing:
+The entry's `id` is the library's key, used for more than listing:
 
 - merging playlists — the same id in two playlists is **one song**, and the first source wins;
 - the local score board, which is keyed by song id;
 - the song selected in the session;
 - the offline record, if the song has been downloaded.
 
-So it must be **stable** across reloads and searches, **unique** across your own catalogue (namespace it: `demo-neon-hearts`), and **shared** with the song document. Never reuse an id for a different recording.
+It must be **stable** across reloads and searches, **unique** across your catalogue (namespace it: `demo-neon-hearts`), and **shared** with the song document. Never reuse one for a different recording.
 
-A document can change under the same URL. To make the game notice, **change the playlist entry**: its revision is a hash of the raw entry, and a song or chart cached for an older revision is fetched again. That is what lets you fix a chart, or add a difficulty, without renaming anything.
+A document can change under the same URL; to make the game notice, **change the entry**. Its revision is a hash of the raw entry, and a song or chart cached for an older revision is fetched again — so you can fix a chart without renaming anything.
 
 - Change the entry's content and the documents follow.
 - If the summary would be identical, add a `revision` field with any new value; it is part of the hash.
 - A revision miss also bypasses the browser's own HTTP cache, so a `max-age` cannot serve the old copy.
-- `schemaVersion` is for a change of **shape**, not of content. Keep it at `1` unless the contract changes.
+- `schemaVersion` is for a change of **shape**, not content: keep it at `1` unless the contract changes.
 
 ## Cache, refresh and what a player sees
 
-- The playlist document is cached in the browser and refreshed when the player presses **Refresh** — never behind their back.
+- The playlist is cached in the browser and refreshed when the player presses **Refresh**, never behind their back.
 - Song and chart documents are cached under their URL and revision, so a second run is instant.
-- Search answers are session memory and are not stored.
-- Audio is never stored by the game. The browser streams it.
-- The built-in EverythingStar FOSS playlist is the exception: it is read fresh once per visit, because it is a published library that changes.
+- Search answers are session memory; audio is streamed by the browser and never stored.
+- The built-in EverythingStar FOSS playlist is the exception: read fresh once per visit, because it is a published library that changes.
 
 ## Checking a library
 
@@ -279,21 +270,21 @@ A document can change under the same URL. To make the game notice, **change the 
 bun run playlist:check https://example.com/library/playlist.json
 ```
 
-It reads the document with the **same reader** the jukebox uses, applies the game's URL policy and the 8 MB cap, prints the name, the songs it would list and every problem, and exits `1` if there is one. `--json` prints the same record for a build step.
+It reads with the jukebox's reader, applies the URL policy and 8 MB cap, prints the name, songs and every problem, and exits `1` if there is one; `--json` prints the record for a build step.
 
-The checker reads **one playlist document**. It does not fetch each song document or chart, so it cannot prove that a chart URL answers, that a `laneCount` matches its notes, or that the audio plays. Those are what the acceptance checklist in [the wire format](../developers/playlist-api.md#11-acceptance-checklist) walks through, and what [Publishing](publishing.md) is for.
+It reads **one playlist**, so it cannot prove a chart URL answers, a `laneCount` matches its notes, or the audio plays; [Publishing](publishing.md) and the wire format's [acceptance checklist](../developers/playlist-api.md#11-acceptance-checklist) walk those.
 
-For an editor, [`docs/playlist.schema.json`](https://github.com/HappyPaul55/everythingstar/blob/main/docs/playlist.schema.json) is the advisory shape (JSON Schema draft 2020-12). It catches a typo as it is typed, but it is deliberately not stricter than the contract and it cannot know what resolves, what is listed twice, or whether a song is playable. **The reader is authoritative.**
+For an editor, [`docs/playlist.schema.json`](https://github.com/HappyPaul55/everythingstar/blob/main/docs/playlist.schema.json) is the advisory shape (JSON Schema draft 2020-12): it catches a typo as it is typed, but cannot know what resolves, what is listed twice, or whether a song is playable. **The reader is authoritative.**
 
 ## A real one
 
-The shipped library, [EverythingStar FOSS](https://github.com/HappyPaul55/everythingstar-foss), is a published example of all of this. It is seeded into a first visit from:
+The shipped library, [EverythingStar FOSS](https://github.com/HappyPaul55/everythingstar-foss), is a published example, seeded into a first visit from:
 
 ```text
 https://raw.githubusercontent.com/HappyPaul55/everythingstar-foss/main/songs/playlist.json
 ```
 
-It uses a per-song folder rather than the importer's `songs/<id>.json` tree: each entry's `song` is something like `Jonathan Coulton - Code Monkey/song.json`, and that folder holds the song document, its chart documents, `album.jpg`, `preview.ogg` and the stems. Both layouts are valid; what matters is that every relative URL resolves against the document that wrote it.
+It uses a per-song folder rather than the importer's `songs/<id>.json` tree: each entry's `song` is like `Jonathan Coulton - Code Monkey/song.json`, holding the song document, charts, `album.jpg`, `preview.ogg` and stems. Both layouts are valid; every relative URL resolves against the document that wrote it.
 
 ## Where to go next
 

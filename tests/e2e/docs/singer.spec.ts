@@ -5,7 +5,6 @@ test(
   {
     annotation: [
       { type: "doc", description: "singer" },
-      { type: "doc-viewport", description: "desktop" },
     ],
   },
   async ({ context, page }) => {

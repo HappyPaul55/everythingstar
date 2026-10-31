@@ -1,7 +1,7 @@
 ---
 title: Writing docs
 description: "How this documentation is written and built: one Markdown source for GitHub and the site, the frontmatter, the link rules, the four sections, the screenshot tests and the checks."
-updated: "2026-10-30"
+updated: "2026-10-31"
 order: 5
 ---
 
@@ -32,7 +32,7 @@ is the one place that rule lives.
 ---
 title: Writing docs
 description: "How this documentation is written and built: one Markdown source for GitHub and the site, the frontmatter, the link rules, the four sections, the screenshot tests and the checks."
-updated: "2026-10-30"
+updated: "2026-10-31"
 order: 5
 ---
 ```
@@ -76,7 +76,7 @@ A picture of the game is a Playwright test that carries a `doc` annotation, and
 the page names the same id:
 
 ```markdown
-[The jukebox: an A–Z index down the side, song rows with their length and offers, and the now-playing panel on the right.](shot:jukebox "The jukebox on a desktop")
+[The jukebox: an A–Z index down the side, song rows with their length and offers, and the now-playing panel on the right.](shot:jukebox "The jukebox, with a row picked")
 ```
 
 ```ts
@@ -93,34 +93,37 @@ test(
 
 - The link **text is the alt** and is required; the link **title is the caption**
   and is optional; `shot:jukebox` is the id.
-- The `doc` annotation is the only thing added to the test. An automatic fixture
-  in `tests/e2e/support.ts` reads it and takes the WebP **only when the test
-  passed**, once per Playwright project — `desktop` and `mobile` from
-  `docshots.config.ts`.
-- Two more annotations narrow a shot without code:
-  - `{ type: "doc-viewport", description: "desktop" }` — capture it only there
-    (the jukebox on a phone opens the now-playing panel as a sheet).
-  - `{ type: "doc-crop", description: "mobile:bottom 40%" }` — keep the foot of
-    the phone frame. A highway is mostly runway, so a phone note is the note, the
-    hit line and the pads.
-- The test drives the screen — `captureJukebox`, `captureGuitarHighway`,
+- One spec per shot, in `tests/e2e/docs/`; the `doc` annotation is the only thing
+  a capture test adds.
+- **Desktop and mobile are the default.** Every shot is captured once for each
+  variant in `docshots.config.ts`, because a phone is where a highway's framing, a
+  menu's overflow and a jukebox's sheet actually fail. Add a picture because it
+  shows something a reader needs, not because a screen has two shapes.
+- Two annotations narrow a shot without code, and both are the exception:
+  - `{ type: "doc-viewport", description: "mobile" }` — only for a variant a
+    screen genuinely does not support: `phone-pads` is a phone picture by
+    definition. Never use it to save a run or because one shape is easier.
+  - `{ type: "doc-crop", description: "mobile:bottom 40%" }` — keep the foot of a
+    phone frame that is mostly runway. A highway is mostly runway, so a phone note
+    is the note, the hit line and the pads.
+- The test drives the screen through a journey helper — the same helpers the
+  behavioural suite uses, so a capture and a test that asserts the same screen
+  cannot drift apart: `captureJukebox`, `captureGuitarHighway`,
   `captureBandScreen`, `captureSinger`, `capturePhonePads`
-  (`tests/e2e/docs-screens.ts`) or `captureNoteType` (`tests/e2e/note-guide.ts`)
-  — and asserts it arrived.
-- The files land in `public/docs/test-output/<id>-<variant>.webp`, ignored by Git
-  and served as written. The page shows one `<details>` per variant that exists;
-  one variant needs no selector.
-- `bun run docs:shots` clears the captures, runs every test in `tests/e2e/docs`;
-  `bun run build` runs it first. `bun run build:quick` reuses the images already
-  on disk, and a one-shot loop runs the spec directly with the docs config.
-- Two checks in `bun test` hold the halves together: every `shot:` reference has
-  a `doc` annotation, and every annotated test is shown by a page.
+  (`tests/e2e/docs-screens.ts`), the duet and lyrics fixtures
+  (`tests/e2e/docs-charts.ts`), `captureNoteType` (`tests/e2e/note-guide.ts`),
+  and the rest, all on `helpers.ts`. It asserts the screen arrived.
+- The page shows one `<details>` per variant that exists; one variant needs no
+  selector.
 - Use `/app` (the game alone) rather than `/play` (the site shell around it).
 - The fixture is the **published FOSS library**, not an invented one:
   `installDocsFixtures` serves a snapshot of its playlist and cover art, so the
   jukebox, the band and the stage show real songs. Code Monkey is the one song
   with guitar, bass, drums and vocals, so the stage captures use it.
 - GitHub shows the link text rather than the picture — the page is the site's.
+
+[Testing](testing.md#documentation-captures) runs the captures, writes one WebP per
+variant and holds the references and the tests together.
 
 ## Adding a page
 
