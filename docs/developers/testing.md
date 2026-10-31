@@ -1,7 +1,7 @@
 ---
 title: Testing
 description: "The gates a change has to pass: the unit suite, the browser suite and its rule, the documentation captures, the build gates, and what only a real browser can prove."
-updated: "2026-10-30"
+updated: "2026-10-31"
 order: 13
 ---
 
@@ -67,13 +67,13 @@ out of `astro check`, and the test config includes them with the runner's types.
   formats agree, and every root-absolute URL its entry page names is inside it. See
   [Deployment and releases](deployment.md#the-release-archives).
 
-The budget was measured on 2026-10-28: 644 KiB of `_astro` JS, an initial graph of
-560 KiB raw / 182 KiB gzipped, 11.2 MiB in `dist/` before the docs and 8.8 MiB of
-audio; the docs added ~3 MiB of pages, each carrying the inlined site CSS. The caps sit
-just above those numbers — 650 KiB, 566 KiB, 190 KiB, 18 MiB, 10 MiB — and the lower
-whole-build cap was raised when the documentation landed, then again for the
-note-types page's twenty-four captures (twelve examples on desktop and mobile),
-because a prose page is upload and first-visit weight but not code. The **initial graph
+The budget was measured on 2026-10-31: 688 KiB of `_astro` JS, an initial graph of
+564 KiB raw / 182 KiB gzipped across 21 files, 17.6 MiB in `dist/` and 8.8 MiB of
+audio. The caps sit just above those numbers. The **whole-build cap is the one that
+keeps moving**, raised when the documentation landed and again for its pictures: the
+[note-types page](../charters/note-types.md) in charters, then the screens across the
+loop, the players and the charter, each captured on desktop and mobile. A prose page
+and a screenshot are upload and first-visit weight but not code. The **initial graph
 is the number to watch**: the next feature-sized byte belongs behind a lazy boundary,
 not in a bigger cap.
 
@@ -103,19 +103,20 @@ fullscreen, so Escape reaches the game rather than the browser's own way out.
 A documentation screenshot is a Playwright test in `tests/e2e/docs` with
 `annotation: [{ type: "doc", description: "<id>" }]`, and the page names the same id
 with `[description](shot:<id>)`. `bun run docs:shots` clears the images, runs every
-capture test once per variant in `docshots.config.ts` (desktop, mobile) and writes
-`<id>-<variant>.webp` into `public/docs/test-output/`, which is ignored by Git. **`bun run build` runs it first**, which is why the gate needs
+capture test once per variant in `docshots.config.ts` (desktop and mobile) and writes
+one WebP per project, `<id>-<variant>.webp`, into `public/docs/test-output/`, which is
+ignored by Git. **`bun run build` runs it first**, which is why the gate needs
 Chromium installed.
 
 The capture is taken in `afterEach` only when the test passed, with animations
 disabled, the caret hidden, fonts settled and the project's own device scale, so a
-failed assertion writes nothing. A test narrows itself with a `doc-viewport` annotation and crops a phone frame
-with `doc-crop`. The reference and the test are held together by
-`src/lib/docshots/references.test.ts`: every `shot:` has a `doc` annotation, and
-every annotated test is shown. The mock is the published FOSS
-library: `bun run docs:library` refreshes `tests/e2e/docs-library/` from it, and
-every other run is offline. `bun run build:quick` skips the capture run for a
-site-only loop. [Writing docs](writing-docs.md#screenshots) is the authoring rule.
+failed assertion writes nothing. `src/lib/docshots/references.test.ts` holds the two
+halves together: every `shot:` has a `doc` annotation, and every annotated test is
+shown by a page. The mock is the published FOSS library: `bun run docs:library`
+refreshes `tests/e2e/docs-library/` from it, and every other run is offline.
+`bun run build:quick` skips the capture run for a site-only loop. [Writing
+docs](writing-docs.md#screenshots) is the authoring rule: which variants a shot is
+captured in, how a frame is narrowed, and how a test drives its screen.
 
 ## The documentation gate
 

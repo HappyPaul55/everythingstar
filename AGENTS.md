@@ -36,6 +36,7 @@ are fetched by the browser from a URL the player gave it.
 | a provider's documents | [Libraries](docs/charters/libraries.md) |
 | a chart, a take, an export | [Charter](docs/developers/charter.md) |
 | making a chart, as a player | [Making a chart](docs/charters/editing-a-chart.md) |
+| a note, a chord, a sustain | [Note types](docs/charters/note-types.md) |
 
 ## The vocabulary is exact
 

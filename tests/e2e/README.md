@@ -9,9 +9,22 @@ against the dev server, `tests/e2e/fixture.ts` answers every external document, 
 
 `tests/e2e/docs/` holds one spec per documentation screenshot. It imports `test`
 from `../support` and carries `annotation: [{ type: "doc", description: "<id>" }]`;
-the page names the same id with `[description](shot:<id>)`. `bun run docs:shots`
-runs them; `bun run build` runs that first. `src/lib/docshots/references.test.ts`
-fails when a page and a test disagree.
+the page names the same id with `[description](shot:<id>)`. Every shot is taken on
+**desktop and mobile by default** — `docshots.config.ts` runs the suite once per
+variant — so the guide shows the screen a player uses and the phone it is checked
+on; `doc-viewport` is for a variant a screen genuinely does not support, and
+`doc-crop` keeps the foot of a phone frame that is mostly runway.
+
+The specs share their journeys with the behavioural suite: `docs-screens.ts` for the
+player pages, `docs-charts.ts` for the duet and lyrics fixture, `note-guide.ts` for
+the note-types page, and `helpers.ts` underneath all of them. Coverage is the whole
+game rather than the player pages alone — the welcome, menu and options; playlists
+and import; Listen and the results; pause and both practice screens; typing and the
+duet; the keyboard, gamepad and MIDI controllers; and the charter's picker, editor
+and charts.
+
+`bun run docs:shots` runs them; `bun run build` runs that first.
+`src/lib/docshots/references.test.ts` fails when a page and a test disagree.
 
 ## The rule
 
@@ -60,7 +73,7 @@ things that need a page.
 `pwa.spec.ts` and `play-style.spec.ts` also run under `playwright.pwa.config.ts`
 (`bun run test:pwa`) against a production build: the first installs the worker and
 reloads offline, the second proves the built CSS kept its layer order. The dev
-suite is 54 tests in 27 files.
+suite is 56 tests in 28 files.
 
 ## What moved out, and why
 

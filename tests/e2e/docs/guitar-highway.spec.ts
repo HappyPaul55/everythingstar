@@ -5,7 +5,6 @@ test(
   {
     annotation: [
       { type: "doc", description: "guitar-highway" },
-      { type: "doc-viewport", description: "desktop" },
     ],
   },
   async ({ context, page }) => {

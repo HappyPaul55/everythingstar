@@ -1,7 +1,7 @@
 ---
 title: Project map
 description: "Where everything lives: every module, what it owns, and the seam it sits behind — the file-by-file map of the game, the site and the scripts."
-updated: "2026-10-30"
+updated: "2026-10-31"
 order: 2
 ---
 
@@ -50,10 +50,13 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   list `docshots.config.ts` declares, and the automatic fixture that reads a
   test's `doc` annotation, takes the WebP in the test's teardown and writes it to
   `public/docs/test-output/`.
-- `tests/e2e/docs/*.spec.ts` — the capture tests, one file per shot, with
-  `annotation: [{ type: "doc", description: "<id>" }]`. The page names the id
-  with `[description](shot:<id>)`; `bun run docs:shots` runs them and
-  `bun run build` runs that first.
+- `tests/e2e/docs/*.spec.ts` — the capture tests, one spec per shot, each taken on
+  desktop and mobile, with `annotation: [{ type: "doc", description: "<id>" }]`. The
+  page names the id with `[description](shot:<id>)`; `bun run docs:shots` runs them
+  and `bun run build` runs that first. They cover the whole guide, not only the
+  player pages: the welcome, menu and options; playlists and import; Listen and the
+  results; pause and practice; typing, the duet and the controllers; and the
+  charter's picker, editor and charts.
 - `src/lib/docs/shots.ts` — the satteri link visitor that replaces a `shot:`
   paragraph with a `<figure>`, the `<img>` for each variant file that exists and
   one `<details>` per screen. `references.test.ts` holds the page and the test
@@ -64,8 +67,12 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   of the published EverythingStar FOSS playlist (real titles, artists, offers, cover
   art at 96×96) served under the URL a fresh install seeds, with documents and charts
   generated per song. `bun run docs:library` refreshes it; it never runs in a gate.
-- `tests/e2e/note-guide.ts` — the note-types page's own charts: one short song per
-  note type, at the seeded URL, so a capture shows the note its prose names.
+- `tests/e2e/note-guide.ts` — the [note-types page](../charters/note-types.md)'s own
+  charts: one short song per note type, at the seeded URL, so a capture shows the
+  note its prose names.
+- `tests/e2e/docs-charts.ts` — the captures' **duet and lyrics fixture**: a song two
+  melody players share, and one with timed lines, so the duet, typing and lyrics
+  captures share one chart and one journey.
 - `src/pages/docs/index.astro` + `src/pages/docs/[...slug].astro` — the hub and a page
   per sectioned document; `src/pages/[...legal].astro` builds the notices at the site
   root; `src/layouts/DocsLayout.astro` and `LegalLayout.astro` are their frames.

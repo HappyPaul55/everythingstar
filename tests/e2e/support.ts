@@ -26,5 +26,6 @@ export const test = base.extend<{ docShot: void }>({
 export * from "./fixture";
 export * from "./docs-library";
 export * from "./docs-screens";
+export * from "./docs-charts";
 export * from "./note-guide";
 export * from "./helpers";

@@ -292,7 +292,9 @@
   .practice-readout {
     position: absolute;
     z-index: 3;
-    top: calc(0.55rem + env(safe-area-inset-top, 0px));
+    /* Under the corner's fullscreen chip: the read-out is a status strip, and the
+       one control that has to stay reachable owns the top-right corner. */
+    top: calc(3.15rem + env(safe-area-inset-top, 0px));
     right: clamp(0.6rem, 2vmin, 1.6rem);
     display: flex;
     flex-wrap: wrap;
@@ -320,6 +322,13 @@
   }
   .practice-readout__section {
     color: var(--color-yellow);
+  }
+  /* A phone's score rail is a compact row at the top, so the read-out goes below
+     it rather than over the score and combo it is sitting above. */
+  @media (max-width: 40rem) {
+    .practice-readout {
+      top: calc(5.4rem + env(safe-area-inset-top, 0px));
+    }
   }
 
   /* --- Backdrop ---
@@ -545,7 +554,10 @@
   .lyrics-view__part {
     display: flex;
     flex-direction: column;
-    gap: 0.4cqmin;
+    /* A rising line starts half a line lower (see `.is-rising`); the gap has to
+       hold that shift or it lands on the line below. The line's own font is
+       7cqmin here (5cqmin in a duet), so 3.6cqmin clears both. */
+    gap: 3.6cqmin;
   }
   .lyrics-view__tag {
     font-family: var(--font-mono);
@@ -2851,7 +2863,9 @@
     .menu__nav {
       align-self: center;
       display: flex;
+      flex-direction: column;
       align-items: center;
+      gap: 0.35rem;
       width: min(28rem, calc(100% - 1rem));
     }
     .menu {

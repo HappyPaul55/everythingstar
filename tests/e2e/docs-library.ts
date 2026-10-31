@@ -202,10 +202,30 @@ function chartBody(chart: ChartRef, entry: Entry) {
   return lanesChart(entry, chart.laneCount ?? 4, chart.difficulty === "easy" ? 520 : 360);
 }
 
-function responses(): Record<string, unknown> {
-  const routes: Record<string, unknown> = { [DOCS_PLAYLIST_URL]: PLAYLIST };
+/**
+ * One song shortened for a capture that has to reach the end of a run.
+ *
+ * The published songs are minutes long, which is right for a jukebox and a
+ * highway but not for a results screen: the capture would spend the whole test
+ * listening to it. The title, artist and art stay the record's; only the length,
+ * and the charts generated from it, are the fixture's.
+ */
+interface DocsFixtureOptions {
+  shortSongId?: string;
+  shortDurationMs?: number;
+}
 
-  for (const entry of PLAYLIST.songs) {
+function responses(options: DocsFixtureOptions = {}): Record<string, unknown> {
+  const songs = PLAYLIST.songs.map((entry) =>
+    entry.id === options.shortSongId
+      ? { ...entry, durationMs: options.shortDurationMs ?? 8_000 }
+      : entry,
+  );
+  const routes: Record<string, unknown> = {
+    [DOCS_PLAYLIST_URL]: { ...PLAYLIST, songs },
+  };
+
+  for (const entry of songs) {
     if (entry.art) {
       routes[new URL(entry.art, DOCS_PLAYLIST_URL).href] = cover(entry.id);
     }
@@ -236,6 +256,9 @@ function cover(id: string): FixtureFile {
  * `@public` — read through `tests/e2e/support.ts`, one level away from knip's
  * entry specs.
  */
-export async function installDocsFixtures(context: BrowserContext): Promise<string[]> {
-  return installRoutes(context, responses());
+export async function installDocsFixtures(
+  context: BrowserContext,
+  options: DocsFixtureOptions = {},
+): Promise<string[]> {
+  return installRoutes(context, responses(options));
 }
