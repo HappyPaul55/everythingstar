@@ -14,10 +14,9 @@ import { defineConfig, devices } from "@playwright/test";
 const PORT = Number(process.env.PLAYWRIGHT_PWA_PORT ?? 4322);
 
 /**
- * CI's build job has already built `dist/` once, with the real documentation
- * captures. Set `PLAYWRIGHT_PWA_BUILT=1` there and this config only serves that
- * build. A local `test:pwa` still builds a throwaway copy, so it needs no capture
- * run.
+ * CI's package job has already joined the build to the documentation captures.
+ * Set `PLAYWRIGHT_PWA_BUILT=1` there and this config only serves that package. A
+ * local `test:pwa` still builds a throwaway copy, so it needs no capture run.
  */
 const PREBUILT = process.env.PLAYWRIGHT_PWA_BUILT === "1";
 

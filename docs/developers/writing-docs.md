@@ -8,7 +8,7 @@ order: 5
 The documentation is Markdown in `docs/` at the root of the repository. GitHub shows
 the files; this site builds a page from each one. Nothing is duplicated and nothing is
 generated into `docs/` — a correction made for one reader is made for both. The one
-exception is `docs/screenshots/`, which a build fills with captures and Git ignores.
+exception is `public/docs/test-output/`, which the capture run fills and Git ignores.
 
 ## Where a page goes
 
@@ -102,7 +102,10 @@ test(
 - Two annotations narrow a shot without code, and both are the exception:
   - `{ type: "doc-viewport", description: "mobile" }` — only for a variant a
     screen genuinely does not support: `phone-pads` is a phone picture by
-    definition. Never use it to save a run or because one shape is easier.
+    definition. Declare the same variant in `docshots.config.ts`'s `shots` map;
+    `references.test.ts` fails if the annotation and the map disagree. The page
+    still writes its image tag before the capture exists; the build does not wait
+    for the browser.
   - `{ type: "doc-crop", description: "mobile:bottom 40%" }` — keep the foot of a
     phone frame that is mostly runway. A highway is mostly runway, so a phone note
     is the note, the hit line and the pads.
@@ -113,8 +116,9 @@ test(
   (`tests/e2e/docs-screens.ts`), the duet and lyrics fixtures
   (`tests/e2e/docs-charts.ts`), `captureNoteType` (`tests/e2e/note-guide.ts`),
   and the rest, all on `helpers.ts`. It asserts the screen arrived.
-- The page shows one `<details>` per variant that exists; one variant needs no
-  selector.
+- The page shows one `<details>` per configured variant; one variant needs no
+  selector. The image may not exist yet when the build runs — the e2e capture and
+  `check:docs` close that gap.
 - Use `/app` (the game alone) rather than `/play` (the site shell around it).
 - The fixture is the **published FOSS library**, not an invented one:
   `installDocsFixtures` serves a snapshot of its playlist and cover art, so the
@@ -123,7 +127,8 @@ test(
 - GitHub shows the link text rather than the picture — the page is the site's.
 
 [Testing](testing.md#documentation-captures) runs the captures, writes one WebP per
-variant and holds the references and the tests together.
+variant, bundles them into the built site and holds the references and the tests
+together.
 
 ## Adding a page
 

@@ -1,10 +1,15 @@
 /**
  * A page's shot reference, rendered.
  *
- * The page says `[the description](shot:jukebox "caption")`; this looks for the
- * files the test wrote — `<id>-desktop.webp`, `<id>-mobile.webp` in the capture
- * directory — and replaces the paragraph with the figure: one `<details>` per
- * variant that exists, and a plain image for a shot taken in one shape only.
+ * The page says `[the description](shot:jukebox "caption")`; this replaces the
+ * paragraph with the figure: one `<details>` per configured variant, and a plain
+ * image for a shot taken in one shape only.
+ *
+ * The build runs **before** the capture tests in CI, so it cannot ask whether the
+ * WebP exists. It writes the tags for the variants `docshots.config.ts` promises;
+ * the e2e shards fill those files, and `scripts/check-docs.ts` fails if one is
+ * missing. A dev server or the PWA's throwaway build still gets a placeholder
+ * when nothing has been captured yet.
  *
  * The test lives in `tests/e2e/docs` with `annotation: [{ type: "doc",
  * description: "jukebox" }]`; there is no manifest and no generated code. The
@@ -41,11 +46,17 @@ function label(name: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
-/** The files this shot has, in the config's variant order. */
+/** The variants this shot promises, in the config's order. */
+function variantsOf(id: string): VariantImage[] {
+  const names = docshots.shots?.[id] ?? Object.keys(docshots.variants);
+  return names.map((name) => ({ name, file: `${id}-${name}.webp` }));
+}
+
+/** The variants already on disk, for a dev server or a throwaway build. */
 function filesOf(root: string, id: string): VariantImage[] {
-  return Object.keys(docshots.variants)
-    .map((name) => ({ name, file: `${id}-${name}.webp` }))
-    .filter((entry) => existsSync(join(root, docshots.outDir, entry.file)));
+  return variantsOf(id).filter((entry) =>
+    existsSync(join(root, docshots.outDir, entry.file)),
+  );
 }
 
 /** Where a file in `public/` is served from. */
@@ -130,22 +141,19 @@ export function docsShots({
       const docPath = fileURLToPath(fileURL);
       if (!docIdFromPath(docPath)) return;
 
-      const variants = filesOf(root, id);
-      if (variants.length === 0) {
-        if (allowPlaceholder) {
-          ctx.replaceNode(parent, {
-            type: "html",
-            value: `<p class="doc-shot doc-shot--missing"><strong>Screenshot not generated.</strong> Run <code>bun run docs:shots</code>.</p>`,
-          });
-        } else {
-          ctx.report({
-            message: `shot:${id} has no capture — run \`bun run docs:shots\``,
-            severity: "error",
-          });
-        }
+      const existing = filesOf(root, id);
+      if (existing.length === 0 && allowPlaceholder) {
+        ctx.replaceNode(parent, {
+          type: "html",
+          value: `<p class="doc-shot doc-shot--missing"><strong>Screenshot not generated.</strong> Run <code>bun run docs:shots</code>.</p>`,
+        });
         return;
       }
 
+      // A build renders every promised variant even before the captures exist;
+      // the e2e run fills them and `check:docs` proves the files arrived. A dev
+      // server still renders only what is on disk.
+      const variants = allowPlaceholder ? existing : variantsOf(id);
       ctx.replaceNode(parent, frame(variants, alt, node.title ?? undefined));
     },
   };

@@ -6,11 +6,10 @@ order: 13
 ---
 
 `bun run verify` is the gate, and the one command that runs it locally. CI runs the same
-checks as parallel `unit` and `build` jobs, plus the **browser suite** as three shards;
-the required checks are `verify` and `e2e`. The build captures the documentation's
-screenshots with a real browser on the way (see
-[Documentation captures](#documentation-captures)). The rule for all of them is the
-same: a check belongs where it is cheapest and where it can actually see the regression.
+checks in a pipeline: one `build`, a `unit` job and three browser shards, then a
+`package` job that joins the build to the screenshots the shards took; the required
+checks are `verify` and `e2e`. The rule for all of them is the same: a check belongs
+where it is cheapest and where it can actually see the regression.
 
 ## The commands
 
@@ -18,8 +17,9 @@ same: a check belongs where it is cheapest and where it can actually see the reg
 bun install
 bun run dev              # dev server on http://localhost:4321
 bun run build            # static build into dist/ (captures the docs screenshots first)
-bun run build:quick      # the same build, reusing the captures already on disk
+bun run build:quick      # the static build with whatever captures are on disk
 bun run docs:shots       # capture the documentation's screenshots (Playwright)
+bun run docs:bundle      # copy captures from public/ into a built dist/
 bun run preview          # serve the built site
 bun run check            # astro check — the app's type gate
 bun run lint             # oxlint — the lint gate
@@ -45,10 +45,12 @@ bun run cards            # render the social cards from og-card.html
 
 Verify every change with `bun run verify`: lint, knip, `astro check`, the tests'
 typecheck, the unit tests, the build, the PWA gate, the docs gate, the size budget and the
-release archives, in that order. CI runs the same checks as a fast `unit` job, one
-`build` job and three browser shards. The `build` job's `dist/` is the build the PWA
-test is served; there is no second build. The local command remains one sequence, so a
-checkout needs nothing more than Bun and Chromium.
+release archives, in that order. CI splits the same checks into a fast `unit` job, one
+`build` job and three browser shards, then a `package` job. The build runs first with
+the documentation's `<img>` tags but no images; the shards fill the images,
+`docs:bundle` puts them into `dist/`, and the package runs `check:docs` and the PWA
+test against that same build. The local command remains one sequence, so a checkout
+needs nothing more than Bun and Chromium.
 
 Every script that calls Astro says `bun --bun astro …`: without `--bun` Bun hands the
 bin to the machine's Node through its shebang, and Astro then refuses to run on a Node
@@ -63,7 +65,8 @@ out of `astro check`, and the test config includes them with the runner's types.
   `_headers`, and the sitemap against the pages that say they are indexable.
 - **`check:docs`** — a built page per Markdown file in `docs/`, each with the site shell
   and a canonical, in the sitemap, shipping no island and absent from the offline
-  shell; plus the privacy notice, which the installed game must still carry.
+  shell; every screenshot the page names present in `dist/`; plus the privacy notice,
+  which the installed game must still carry.
 - **`budget`** — `dist/_astro` JavaScript, the **initial `/play` graph** raw and
   gzipped, `dist/` as a whole and `public/audio`, and a walk of the initial graph that
   fails if a source-translator marker has leaked into it.
@@ -85,12 +88,14 @@ not in a bigger cap.
 ## Browser tests
 
 `bun run test:e2e` drives the real island in headless Chromium through Playwright
-(`playwright.config.ts`, specs in `tests/e2e/`), starting `bun run dev` itself. It is
-not part of `bun test`: the unit suite is `*.test.ts` under `src/`, and `bunfig.toml`
-keeps `tests/e2e/**` out of Bun's discovery. Locally the suite runs on one worker. In
-CI it is split into three shards, and each shard uses every core but one, never fewer
-than two, with a single retry per test. A red shard is a red `e2e` check: the aggregate
-job exists so the ruleset still has one check to require when the shard count changes.
+(`playwright.config.ts`, specs in `tests/e2e/`), starting `bun run dev` itself. The
+`desktop` and `mobile` projects are the documentation captures, so the same run both
+validates the app and writes the images the build names. It is not part of `bun test`:
+the unit suite is `*.test.ts` under `src/`, and `bunfig.toml` keeps `tests/e2e/**` out
+of Bun's discovery. Locally the suite runs on one worker. In CI it is split into three
+shards, and each shard uses every core but one, never fewer than two, with a single
+retry per test. A red shard is a red `e2e` check: the aggregate job exists so the
+ruleset still has one check to require when the shard count changes.
 
 [`tests/e2e/README.md`](https://github.com/HappyPaul55/everythingstar/blob/main/tests/e2e/README.md)
 carries the suite's rule and inventory: **a browser test is kept only when no cheaper
@@ -109,21 +114,28 @@ fullscreen, so Escape reaches the game rather than the browser's own way out.
 
 A documentation screenshot is a Playwright test in `tests/e2e/docs` with
 `annotation: [{ type: "doc", description: "<id>" }]`, and the page names the same id
-with `[description](shot:<id>)`. `bun run docs:shots` clears the images, runs every
-capture test once per variant in `docshots.config.ts` (desktop and mobile) and writes
-one WebP per project, `<id>-<variant>.webp`, into `public/docs/test-output/`, which is
-ignored by Git. **`bun run build` runs it first**, which is why the gate needs
-Chromium installed.
+with `[description](shot:<id>)`. The `desktop` and `mobile` projects in
+`playwright.config.ts` run every capture test once per variant and write one WebP per
+project, `<id>-<variant>.webp`, into `public/docs/test-output/`, which is ignored by
+Git. `bun run docs:shots` is the focused form: it clears the images and runs only those
+two projects. `bun run build` runs it before Astro for a local full build.
+
+CI splits the two halves. The **build** runs first and writes the `<img>` tags for the
+variants `docshots.config.ts` promises, even before a WebP exists. The e2e shards then
+take the pictures; `bun run docs:bundle` copies them into `dist/`, and `check:docs`
+fails if a page names an image that is not there. A `phone-pads`-style exception is
+declared in `docshots.config.ts` and checked against the test annotation by
+`references.test.ts`.
 
 The capture is taken in `afterEach` only when the test passed, with animations
 disabled, the caret hidden, fonts settled and the project's own device scale, so a
 failed assertion writes nothing. `src/lib/docshots/references.test.ts` holds the two
-halves together: every `shot:` has a `doc` annotation, and every annotated test is
-shown by a page. The mock is the published FOSS library: `bun run docs:library`
-refreshes `tests/e2e/docs-library/` from it, and every other run is offline.
-`bun run build:quick` skips the capture run for a site-only loop. [Writing
-docs](writing-docs.md#screenshots) is the authoring rule: which variants a shot is
-captured in, how a frame is narrowed, and how a test drives its screen.
+halves together: every `shot:` has a `doc` annotation, every annotated test is shown by
+a page, and a narrowed shot is declared. The mock is the published FOSS library:
+`bun run docs:library` refreshes `tests/e2e/docs-library/` from it, and every other run
+is offline. [Writing docs](writing-docs.md#screenshots) is the authoring rule: which
+variants a shot is captured in, how a frame is narrowed, and how a test drives its
+screen.
 
 ## The documentation gate
 

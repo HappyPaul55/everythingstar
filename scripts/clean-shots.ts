@@ -6,7 +6,7 @@
  * more fails the build instead of showing a picture from yesterday.
  *
  * A one-shot loop does not use this script: run the spec directly
- * (`playwright test tests/e2e/docs/jukebox.spec.ts --config playwright.docs.config.ts`).
+ * (`playwright test tests/e2e/docs/jukebox.spec.ts --project=desktop --project=mobile`).
  */
 import { rmSync } from "node:fs";
 

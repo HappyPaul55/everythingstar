@@ -10,9 +10,10 @@ against the dev server, `tests/e2e/fixture.ts` answers every external document, 
 `tests/e2e/docs/` holds one spec per documentation screenshot. It imports `test`
 from `../support` and carries `annotation: [{ type: "doc", description: "<id>" }]`;
 the page names the same id with `[description](shot:<id>)`. Every shot is taken on
-**desktop and mobile by default** — `docshots.config.ts` runs the suite once per
-variant — so the guide shows the screen a player uses and the phone it is checked
-on; `doc-viewport` is for a variant a screen genuinely does not support, and
+**desktop and mobile by default** — the projects of the same names in
+`playwright.config.ts` run the suite once per variant — so the guide shows the screen
+a player uses and the phone it is checked on; `doc-viewport` is for a variant a screen
+genuinely does not support, declared in `docshots.config.ts`'s `shots` map, and
 `doc-crop` keeps the foot of a phone frame that is mostly runway.
 
 The specs share their journeys with the behavioural suite: `docs-screens.ts` for the
@@ -23,8 +24,10 @@ and import; Listen and the results; pause and both practice screens; typing and 
 duet; the keyboard, gamepad and MIDI controllers; and the charter's picker, editor
 and charts.
 
-`bun run docs:shots` runs them; `bun run build` runs that first.
-`src/lib/docshots/references.test.ts` fails when a page and a test disagree.
+`bun run test:e2e` runs them with the behavioural suite; `bun run docs:shots` is the
+focused capture run. The build writes the image tags first, the shards fill the WebPs,
+and the package step copies them into `dist/`. `src/lib/docshots/references.test.ts`
+fails when a page and a test disagree, or when a narrowed shot and its config entry do.
 
 ## The rule
 
@@ -66,14 +69,15 @@ things that need a page.
 | `sng.spec.ts` | 1 | one package fetched once for the preview and the band |
 | `stage-entrance.spec.ts` | 1 | the room arriving before the highways, in two beats |
 | `stage-safe-area.spec.ts` | 1 | safe-area insets keeping the score rail on screen |
-| `stem-sync.spec.ts` | 1 | a multitrack song's media-element clocks through misses, a minute-long pause and a resume — with every `currentTime` write timestamped, so the seek storm's burst is visible and no runner load can argue with it |
+| `stem-sync.spec.ts` | 1 | a multitrack song's media-element clocks through misses, a ten-second pause and a resume — with every `currentTime` write timestamped, so the seek storm's burst is visible and no runner load can argue with it |
 | `tap.spec.ts` | 1 | two fingers, a real `PointerEvent` timestamp, and a column-sized target |
 | `welcome.spec.ts` | 1 | the wordmark renaming at two shapes, the Star held in place, and the name kept until the wordmark is hovered |
 
 `pwa.spec.ts` and `play-style.spec.ts` also run under `playwright.pwa.config.ts`
 (`bun run test:pwa`) against a production build: the first installs the worker and
 reloads offline, the second proves the built CSS kept its layer order. The dev
-suite is 56 tests in 28 files.
+behavioural suite is 56 tests in 28 files; the capture projects add one run per shot
+per configured variant.
 
 ## What moved out, and why
 

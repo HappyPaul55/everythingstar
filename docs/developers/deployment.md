@@ -1,7 +1,7 @@
 ---
 title: Deployment and releases
 description: "How a build reaches Cloudflare, why GitHub records the deployment, how the live site is watched, and what a release tag has to agree with."
-updated: "2026-10-30"
+updated: "2026-10-31"
 order: 16
 ---
 
@@ -11,20 +11,20 @@ verifies.**
 
 ## What a deploy is
 
-`.github/workflows/deploy.yml` runs on every push to `main` and by hand. It installs
-with a frozen lockfile, runs `bun run verify`, and `bunx wrangler deploy` uploads the
-`dist/` that `verify` built as static assets — configured by `wrangler.jsonc` (`name:
+`.github/workflows/deploy.yml` waits for a successful **CI** run on `main` and downloads
+the `site-dist` artifact that CI packaged; a manual dispatch instead builds and verifies
+the checkout itself, which is the rollback path. `bunx wrangler deploy` uploads that
+`dist/` as static assets — configured by `wrangler.jsonc` (`name:
 client-everythingstar-happypaul55-com`, `assets.directory: ./dist`, **no `main`**). There
 is no Worker script, no `/api/*`, no binding and no database in this project. Every
 runtime document — a playlist, its songs, charts and audio — is fetched by the browser
 from the URL the player gave it (see [Playlist API](playlist-api.md)), which is what lets
 a provider live in its own project.
 
-The build runs on the GitHub runner because `bun run build` runs `docs:shots`, which
-captures the documentation screenshots with Playwright: the machine that builds must
-have a browser, and this one already installs Chromium. Building once here and pushing
-the result also means Cloudflare does not rebuild the same commit, so there is one
-pipeline instead of two that could disagree.
+CI builds once. The `build` job writes the documentation's image tags before the
+captures exist; the e2e shards take the screenshots, and the `package` job joins the two
+into `site-dist`. The deploy workflow therefore moves an agreed package rather than
+building a second time, and Cloudflare does not rebuild the same commit either.
 
 - **The domain.** Production is `everythingstar.happypaul55.com`, and a push to `main`
   is the only automatic deploy. `workers_dev` and `preview_urls` are `false` and stay
@@ -51,10 +51,9 @@ pipeline instead of two that could disagree.
 ## The record
 
 The job declares the `production` environment, which is what creates the GitHub
-Deployment entry and its live URL. Because the job builds what it deploys, it no longer
-waits for CI or for a separate Cloudflare build: `bun run verify` is the gate and
-`wrangler deploy` is the deploy, in one run. It takes roughly as long as `verify`, plus
-the upload and the smoke test. The environment is created on the first run.
+Deployment entry and its live URL. A normal deploy waits for CI to finish green, then
+downloads `site-dist`; it does not run `verify` or rebuild. A manual dispatch builds and
+verifies the checkout, then deploys that. The environment is created on the first run.
 
 When the upload finishes, the job smokes the live origin (`scripts/smoke.ts`) with the
 version this checkout produced (`bun scripts/version.ts`) and fails the deployment when

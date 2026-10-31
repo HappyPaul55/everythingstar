@@ -23,11 +23,14 @@
  */
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import docshots from "../docshots.config";
 import { DOCS_ROOT, docHref } from "../src/lib/docs/paths";
 
 const ROOT = process.cwd();
 const DIST = join(ROOT, "dist");
 const SITE = "https://everythingstar.happypaul55.com";
+const SHOT_URL = `/${docshots.outDir.replace(/^public\//, "")}/`;
+const SHOT_DIR = join(DIST, docshots.outDir.replace(/^public\//, ""));
 const failures: string[] = [];
 
 function check(label: string, ok: boolean, detail = ""): void {
@@ -81,10 +84,16 @@ function fileFor(path: string): string {
 
 console.log("\ndocumentation pages");
 
+const shotFiles = new Set<string>();
+
 for (const page of built) {
   const html = read(page.file);
   check(`${page.path} is built`, html !== null);
   if (!html) continue;
+
+  for (const match of html.matchAll(new RegExp(`${SHOT_URL}([a-z0-9-]+\\.webp)`, "g"))) {
+    shotFiles.add(match[1]!);
+  }
 
   check(
     `${page.path} is a paper page`,
@@ -129,6 +138,21 @@ for (const page of built) {
       targetHtml === null ? "the target page is not built" : `no id="${hash}" on that page`,
     );
   }
+}
+
+console.log("\ndocumentation screenshots");
+
+check(
+  "the pages name at least one screenshot",
+  shotFiles.size > 0,
+  "every shot reference was a placeholder",
+);
+for (const file of [...shotFiles].sort()) {
+  check(
+    `${SHOT_URL}${file} is in the build`,
+    existsSync(join(SHOT_DIR, file)),
+    "the e2e capture did not produce this file",
+  );
 }
 
 console.log("\nthe game's own notice");
