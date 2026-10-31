@@ -1,30 +1,38 @@
 ---
 title: Deployment and releases
 description: "How a build reaches Cloudflare, why GitHub records the deployment, how the live site is watched, and what a release tag has to agree with."
-updated: "2026-10-28"
+updated: "2026-10-30"
 order: 16
 ---
 
 The live site is `https://everythingstar.happypaul55.com`. A deploy is static files and
-nothing else: **Cloudflare deploys, GitHub records and verifies.**
+nothing else: **GitHub Actions builds and uploads, Cloudflare serves, GitHub records and
+verifies.**
 
 ## What a deploy is
 
-`bun run build` writes `dist/`, and Cloudflare Workers Builds uploads it as static
-assets — configured by `wrangler.jsonc` (`name:
+`.github/workflows/deploy.yml` runs on every push to `main` and by hand. It installs
+with a frozen lockfile, runs `bun run verify`, and `bunx wrangler deploy` uploads the
+`dist/` that `verify` built as static assets — configured by `wrangler.jsonc` (`name:
 client-everythingstar-happypaul55-com`, `assets.directory: ./dist`, **no `main`**). There
 is no Worker script, no `/api/*`, no binding and no database in this project. Every
 runtime document — a playlist, its songs, charts and audio — is fetched by the browser
 from the URL the player gave it (see [Playlist API](playlist-api.md)), which is what lets
 a provider live in its own project.
 
-- **The domain.** Production is `everythingstar.happypaul55.com`; branch previews are
-  served from `<branch>.everythingstar.happypaul55.com` through that custom domain, so
-  `workers_dev` and `preview_urls` are `false` and stay false. The empty `previews: {}`
-  block is required by `wrangler preview`, which a branch build runs. Keep
-  `astro.config.mjs` (`site`), `src/content/site/settings.json` (`url`) and
-  `public/robots.txt` in step if the domain ever changes.
-- **The worker is built after Astro.** `bun run build` also runs
+The build runs on the GitHub runner because `bun run build` runs `docs:shots`, which
+captures the documentation screenshots with Playwright: the machine that builds must
+have a browser, and this one already installs Chromium. Building once here and pushing
+the result also means Cloudflare does not rebuild the same commit, so there is one
+pipeline instead of two that could disagree.
+
+- **The domain.** Production is `everythingstar.happypaul55.com`, and a push to `main`
+  is the only automatic deploy. `workers_dev` and `preview_urls` are `false` and stay
+  false, so a deploy never exposes the workers.dev route or a version-preview URL.
+  Branch previews went with Workers Builds. Keep `astro.config.mjs` (`site`),
+  `src/content/site/settings.json` (`url`) and `public/robots.txt` in step if the
+  domain ever changes.
+- **The service worker is built after Astro.** `bun run build` also runs
   `scripts/build-sw.ts`, which names the build's hashed chunks in the precache list.
   `public/_headers` serves `sw.js` no-cache; without that line a browser keeps an old
   worker.
@@ -35,26 +43,29 @@ a provider live in its own project.
   redeploy, and confirm `https://everythingstar.happypaul55.com/open` opens the app on a
   device. The `everythingstar://` scheme works with any certificate.
 - **Rolling back** is Cloudflare's: Workers & Pages → the worker → Deployments →
-  Version history → roll back. Then run `gh workflow run deploy.yml` so the record
-  matches what is live.
+  Version history → roll back. The site serves that version until the next push to
+  `main` deploys over it. To make the record and the smoke test describe the rollback,
+  dispatch the workflow at that build's ref — `gh workflow run deploy.yml --ref vX.Y.Z`;
+  a plain `gh workflow run deploy.yml` would build and deploy the head of `main` again.
 
 ## The record
 
-Workers Builds builds `main` on every push and posts a `Workers Builds:` check run, but
-never a GitHub Deployment — so `.github/workflows/deploy.yml` supplies one. The job
-declares the `production` environment (which is what creates the entry), waits for
-`verify`, `e2e` and the Cloudflare run on that exact SHA
-(`scripts/wait-for-deploy.ts`), then smokes the live origin (`scripts/smoke.ts`) and
-fails the deployment when the site is not right. It can sit "in progress" for 10–15
-minutes; that is the wait, not a hang.
+The job declares the `production` environment, which is what creates the GitHub
+Deployment entry and its live URL. Because the job builds what it deploys, it no longer
+waits for CI or for a separate Cloudflare build: `bun run verify` is the gate and
+`wrangler deploy` is the deploy, in one run. It takes roughly as long as `verify`, plus
+the upload and the smoke test. The environment is created on the first run.
 
-**A burst of merges is the case that shapes it.** Only the newest commit is the head of
-`main`, and Cloudflare coalesces the burst into the build that matters, so an older
-commit may never get a `Workers Builds:` check at all. Such a run is **recorded, not
-verified** — it exits as soon as `main` has moved on, smoke tests without asserting the
-build identity, and says which commit owns production now. There is deliberately no
-concurrency group: serialising the records would cancel the queued ones, and a merge
-with no record is worse than a second job.
+When the upload finishes, the job smokes the live origin (`scripts/smoke.ts`) with the
+version this checkout produced (`bun scripts/version.ts`) and fails the deployment when
+the site is not right. The build-identity check retries while an edge cache catches up;
+the other checks are immediate. There is deliberately no concurrency group: a burst of
+merges must each deploy, the last one wins, and no merge is left without a record.
+
+**Two facts live in the dashboard, not in this repository.** The workflow reads the
+repository secrets `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit) and
+`CLOUDFLARE_ACCOUNT_ID`, and Workers Builds must be disconnected in the Cloudflare
+dashboard so it does not build and deploy the same commit a second time.
 
 **The live site is checked when it is not deploying.**
 `.github/workflows/production-check.yml` runs `scripts/smoke.ts` daily and on demand,

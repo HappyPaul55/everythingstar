@@ -80,7 +80,10 @@ microphone, or the machine); a **layout** is what that controller's controls mea
 - **Accessibility is a constraint.** Focus rings, reduced motion, the skip link, 44 px
   targets, native dialogs and a pad that drives real focus. Do not regress them.
 - **The documentation is part of the change.** A rule that changes is a doc page that
-  changes; [Writing docs](docs/developers/writing-docs.md) is the system.
+  changes; [Writing docs](docs/developers/writing-docs.md) is the system. A screenshot
+  is a Playwright test in `tests/e2e/docs` and a `[description](shot:<id>)` reference
+  in the page; `bun run docs:shots` makes the images, and neither they nor
+  `.docshots/` are committed.
 
 ## Commands
 
@@ -90,7 +93,10 @@ bun run dev              # http://localhost:4321; the game is /play
 bun run check            # astro check (the app's type gate)
 bun run test             # unit tests
 bun run test:e2e         # Playwright, starts the dev server
-bun run build            # static build into dist/, then dist/sw.js
+bun run build            # captures the docs screenshots, then builds into dist/ and dist/sw.js
+bun run build:quick      # the same build, reusing the captures already on disk
+bun run docs:shots       # capture the documentation's screenshots (Playwright)
+bun run docs:library     # refresh the capture fixture from the published FOSS library
 bun run verify           # everything CI runs
 bun run version          # v<package.json>+<sha>
 bun run import --from <dir> --to <dir>     # a folder of charts into a library
@@ -102,13 +108,13 @@ bun run check:release    # every archive holds its plan, and both formats agree
 
 ## Deployment
 
-Cloudflare static assets via Workers Builds (`bun run build` → `bunx wrangler deploy`),
-configured by `wrangler.jsonc`; `dist/` and nothing else. GitHub records the deployment
-(`.github/workflows/deploy.yml`), watches the live site daily
-(`production-check.yml`), and refuses a release tag that disagrees with `package.json` or
-is not on `main` — a tag builds that commit and attaches the six archives (`game`,
-`arcade` and `website`, each zip and tar.gz) to the GitHub Release. `main` is PR-only,
-actions are pinned to commit shas, and the full contract is
+Cloudflare static assets, built and uploaded by GitHub Actions on every push to `main`
+(`bun run verify` → `bunx wrangler deploy`), configured by `wrangler.jsonc`; `dist/` and
+nothing else. GitHub records the deployment (`.github/workflows/deploy.yml`), watches
+the live site daily (`production-check.yml`), and refuses a release tag that disagrees
+with `package.json` or is not on `main` — a tag builds that commit and attaches the six
+archives (`game`, `arcade` and `website`, each zip and tar.gz) to the GitHub Release.
+`main` is PR-only, actions are pinned to commit shas, and the full contract is
 [Deployment and releases](docs/developers/deployment.md).
 
 ## Working notes

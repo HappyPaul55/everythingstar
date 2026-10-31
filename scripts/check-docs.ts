@@ -100,6 +100,12 @@ for (const page of built) {
   }
   check(`${page.path} ships no island`, !html.includes("astro-island"));
   check(`${page.path} carries no component URL`, !html.includes("component-url="));
+  // A shot reference with no image is a placeholder; a production build throws
+  // before it can write one, so this catches a page built some other way.
+  // The class name is quoted so the stylesheet's own `.doc-shot--missing` rule,
+  // which is inlined into every page, is not mistaken for the placeholder.
+  const placeholder = html.match(/.{0,160}class="doc-shot doc-shot--missing".{0,160}/s);
+  check(`${page.path} has every capture`, !placeholder, placeholder?.[0] ?? "");
   check(`${page.path} is in the sitemap`, sitemapPaths.has(page.path));
   // The notices are the only documentation the installed game carries: its own
   // privacy notice must open with no network. Everything else is site-only.

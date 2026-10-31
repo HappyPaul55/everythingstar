@@ -1,0 +1,738 @@
+{
+  "schemaVersion": 1,
+  "name": "EverythingStar FOSS",
+  "description": "Ultrastar songs converted with separated stems.",
+  "songs": [
+    {
+      "id": "jonathan-coulton-code-monkey",
+      "song": "Jonathan Coulton - Code Monkey/song.json",
+      "title": "Code Monkey",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - Code Monkey/album.jpg",
+      "durationMs": 189973,
+      "previewStartMs": 23000,
+      "offer": {
+        "instruments": [
+          {
+            "role": "guitar",
+            "difficulties": [
+              "easy",
+              "normal",
+              "hard",
+              "expert"
+            ]
+          },
+          {
+            "role": "bass",
+            "difficulties": [
+              "easy",
+              "normal",
+              "hard",
+              "expert"
+            ]
+          },
+          {
+            "role": "drums",
+            "difficulties": [
+              "easy",
+              "normal",
+              "hard",
+              "expert"
+            ]
+          }
+        ],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "fairy-bot-orchestra-heaven-can-t-wait",
+      "song": "Fairy Bot Orchestra - Heaven can't wait/song.json",
+      "title": "Heaven can't wait",
+      "artist": {
+        "id": "fairy-bot-orchestra",
+        "name": "Fairy Bot Orchestra"
+      },
+      "art": "Fairy Bot Orchestra - Heaven can't wait/album.jpg",
+      "durationMs": 188953,
+      "previewStartMs": 56686,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-a-talk-with-george",
+      "song": "Jonathan Coulton - A Talk with George/song.json",
+      "title": "A Talk with George",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - A Talk with George/album.png",
+      "durationMs": 184189,
+      "previewStartMs": 55257,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-better",
+      "song": "Jonathan Coulton - Better/song.json",
+      "title": "Better",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - Better/album.jpg",
+      "durationMs": 194612,
+      "previewStartMs": 58384,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-big-bad-world-one",
+      "song": "Jonathan Coulton - Big Bad World One/song.json",
+      "title": "Big Bad World One",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - Big Bad World One/album.png",
+      "durationMs": 170475,
+      "previewStartMs": 51143,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-chiron-beta-prime",
+      "song": "Jonathan Coulton - Chiron Beta Prime/song.json",
+      "title": "Chiron Beta Prime",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - Chiron Beta Prime/album.png",
+      "durationMs": 170684,
+      "previewStartMs": 51205,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-creepy-doll",
+      "song": "Jonathan Coulton - Creepy Doll/song.json",
+      "title": "Creepy Doll",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - Creepy Doll/album.png",
+      "durationMs": 240144,
+      "previewStartMs": 72043,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-dance-soterios-johnson-dance",
+      "song": "Jonathan Coulton - Dance, Soterios Johnson, Dance/song.json",
+      "title": "Dance, Soterios Johnson, Dance",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - Dance, Soterios Johnson, Dance/album.png",
+      "durationMs": 231367,
+      "previewStartMs": 69410,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-first-of-may",
+      "song": "Jonathan Coulton - First of May/song.json",
+      "title": "First of May",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - First of May/album.png",
+      "durationMs": 250488,
+      "previewStartMs": 75146,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-flickr",
+      "song": "Jonathan Coulton - Flickr/song.json",
+      "title": "Flickr",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - Flickr/album.png",
+      "durationMs": 167967,
+      "previewStartMs": 50390,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-furry-old-lobster",
+      "song": "Jonathan Coulton - Furry Old Lobster/song.json",
+      "title": "Furry Old Lobster",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - Furry Old Lobster/album.png",
+      "durationMs": 122122,
+      "previewStartMs": 36637,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-i-crush-everything",
+      "song": "Jonathan Coulton - I Crush Everything/song.json",
+      "title": "I Crush Everything",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - I Crush Everything/album.png",
+      "durationMs": 282880,
+      "previewStartMs": 84864,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-i-feel-fantastic",
+      "song": "Jonathan Coulton - I Feel Fantastic/song.json",
+      "title": "I Feel Fantastic",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - I Feel Fantastic/album.jpg",
+      "durationMs": 183066,
+      "previewStartMs": 54920,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-i-m-your-moon",
+      "song": "Jonathan Coulton - I'm Your Moon/song.json",
+      "title": "I'm Your Moon",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - I'm Your Moon/album.png",
+      "durationMs": 192653,
+      "previewStartMs": 57796,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-ikea",
+      "song": "Jonathan Coulton - Ikea/song.json",
+      "title": "Ikea",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - Ikea/album.png",
+      "durationMs": 183589,
+      "previewStartMs": 55077,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-monkey-shines",
+      "song": "Jonathan Coulton - Monkey Shines/song.json",
+      "title": "Monkey Shines",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - Monkey Shines/album.jpg",
+      "durationMs": 51069,
+      "previewStartMs": 20000,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-mr-fancy-pants",
+      "song": "Jonathan Coulton - Mr. Fancy Pants/song.json",
+      "title": "Mr. Fancy Pants",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - Mr. Fancy Pants/album.png",
+      "durationMs": 79517,
+      "previewStartMs": 23855,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-my-beige-bear",
+      "song": "Jonathan Coulton - My Beige Bear/song.json",
+      "title": "My Beige Bear",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - My Beige Bear/album.jpg",
+      "durationMs": 197773,
+      "previewStartMs": 59332,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-not-about-you",
+      "song": "Jonathan Coulton - Not About You/song.json",
+      "title": "Not About You",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - Not About You/album.png",
+      "durationMs": 132467,
+      "previewStartMs": 39740,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-re-your-brains",
+      "song": "Jonathan Coulton - Re- Your Brains/song.json",
+      "title": "Re: Your Brains",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - Re- Your Brains/album.png",
+      "durationMs": 272823,
+      "previewStartMs": 81847,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-shop-vac",
+      "song": "Jonathan Coulton - Shop Vac/song.json",
+      "title": "Shop Vac",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - Shop Vac/album.png",
+      "durationMs": 211409,
+      "previewStartMs": 63423,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-skullcrusher-mountain",
+      "song": "Jonathan Coulton - Skullcrusher Mountain/song.json",
+      "title": "Skullcrusher Mountain",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - Skullcrusher Mountain/album.png",
+      "durationMs": 256444,
+      "previewStartMs": 76933,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-that-spells-dna",
+      "song": "Jonathan Coulton - That Spells DNA/song.json",
+      "title": "That Spells DNA",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - That Spells DNA/album.jpg",
+      "durationMs": 191060,
+      "previewStartMs": 57318,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-the-future-soon",
+      "song": "Jonathan Coulton - The Future Soon/song.json",
+      "title": "The Future Soon",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - The Future Soon/album.png",
+      "durationMs": 228885,
+      "previewStartMs": 68666,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "jonathan-coulton-when-you-go",
+      "song": "Jonathan Coulton - When You Go/song.json",
+      "title": "When You Go",
+      "artist": {
+        "id": "jonathan-coulton",
+        "name": "Jonathan Coulton"
+      },
+      "art": "Jonathan Coulton - When You Go/album.png",
+      "durationMs": 233247,
+      "previewStartMs": 69974,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "joshua-morin-on-the-run",
+      "song": "Joshua Morin - On the run/song.json",
+      "title": "On the run",
+      "artist": {
+        "id": "joshua-morin",
+        "name": "Joshua Morin"
+      },
+      "art": "Joshua Morin - On the run/album.jpg",
+      "durationMs": 288289,
+      "previewStartMs": 86487,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "shearer-69",
+      "song": "Shearer - 69/song.json",
+      "title": "69",
+      "artist": {
+        "id": "shearer",
+        "name": "Shearer"
+      },
+      "art": "Shearer - 69/album.jpg",
+      "durationMs": 185731,
+      "previewStartMs": 55721,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "shearer-can-t-stop-it",
+      "song": "Shearer - Can't stop it/song.json",
+      "title": "Can't stop it",
+      "artist": {
+        "id": "shearer",
+        "name": "Shearer"
+      },
+      "art": "Shearer - Can't stop it/album.jpg",
+      "durationMs": 169509,
+      "previewStartMs": 50856,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "shearer-consequence-of-dawn",
+      "song": "Shearer - Consequence Of Dawn/song.json",
+      "title": "Consequence Of Dawn",
+      "artist": {
+        "id": "shearer",
+        "name": "Shearer"
+      },
+      "art": "Shearer - Consequence Of Dawn/album.jpg",
+      "durationMs": 248587,
+      "previewStartMs": 74576,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "shearer-in-my-hand",
+      "song": "Shearer - In My Hand/song.json",
+      "title": "In My Hand",
+      "artist": {
+        "id": "shearer",
+        "name": "Shearer"
+      },
+      "art": "Shearer - In My Hand/album.jpg",
+      "durationMs": 238341,
+      "previewStartMs": 71398,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "shearer-man-song",
+      "song": "Shearer - Man Song/song.json",
+      "title": "Man Song",
+      "artist": {
+        "id": "shearer",
+        "name": "Shearer"
+      },
+      "art": "Shearer - Man Song/album.jpg",
+      "durationMs": 225959,
+      "previewStartMs": 67789,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "shearer-stay-with-me",
+      "song": "Shearer - Stay with me/song.json",
+      "title": "Stay with me",
+      "artist": {
+        "id": "shearer",
+        "name": "Shearer"
+      },
+      "art": "Shearer - Stay with me/album.jpg",
+      "durationMs": 210960,
+      "previewStartMs": 63288,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "silver-note-chasing-marks",
+      "song": "Silver Note - Chasing Marks/song.json",
+      "title": "Chasing Marks",
+      "artist": {
+        "id": "silver-note",
+        "name": "Silver Note"
+      },
+      "art": "Silver Note - Chasing Marks/album.png",
+      "durationMs": 194926,
+      "previewStartMs": 58478,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "silver-note-sonic-rainboom-vip",
+      "song": "Silver Note - Sonic Rainboom VIP/song.json",
+      "title": "Sonic Rainboom VIP",
+      "artist": {
+        "id": "silver-note",
+        "name": "Silver Note"
+      },
+      "art": "Silver Note - Sonic Rainboom VIP/album.png",
+      "durationMs": 210155,
+      "previewStartMs": 63048,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "steven-dunston-northern-star",
+      "song": "Steven Dunston - Northern Star/song.json",
+      "title": "Northern Star",
+      "artist": {
+        "id": "steven-dunston",
+        "name": "Steven Dunston"
+      },
+      "art": "Steven Dunston - Northern Star/album.jpg",
+      "durationMs": 190173,
+      "previewStartMs": 57052,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "systemabsturz-verd-chtig",
+      "song": "Systemabsturz - Verdächtig/song.json",
+      "title": "Verdächtig",
+      "artist": {
+        "id": "systemabsturz",
+        "name": "Systemabsturz"
+      },
+      "art": "Systemabsturz - Verdächtig/album.png",
+      "durationMs": 210079,
+      "previewStartMs": 63024,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    },
+    {
+      "id": "wasteland-wailers-dare-master",
+      "song": "Wasteland Wailers - Dare Master/song.json",
+      "title": "Dare Master",
+      "artist": {
+        "id": "wasteland-wailers",
+        "name": "Wasteland Wailers"
+      },
+      "art": "Wasteland Wailers - Dare Master/album.jpg",
+      "durationMs": 298000,
+      "previewStartMs": 89400,
+      "offer": {
+        "instruments": [],
+        "voice": {
+          "chartType": "vocals",
+          "parts": 1
+        }
+      }
+    }
+  ]
+}

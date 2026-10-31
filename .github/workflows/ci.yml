@@ -19,9 +19,10 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    # The gate is about a minute of install and four of checks; anything near these
-    # limits is a hung runner, not a slow test.
-    timeout-minutes: 20
+    # The gate is about a minute of install and four of checks; the documentation
+    # captures add five minutes of browser. Anything near these limits is a hung
+    # runner, not a slow test.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # setup-bun reads the Bun version from package.json's `packageManager`.
@@ -36,6 +37,17 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
+      # The gate builds, and the build captures the documentation screenshots with
+      # Playwright: the browser must be here before `verify`, not only in `e2e`.
+      # The browser build is pinned by @playwright/test in bun.lock; cache the
+      # download, not the system libraries. `--with-deps` installs those.
+      - name: Cache Playwright browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
+      - name: Install Chromium
+        run: bunx playwright install --with-deps chromium
       - run: bun run verify
 
   e2e:

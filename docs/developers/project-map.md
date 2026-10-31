@@ -1,7 +1,7 @@
 ---
 title: Project map
 description: "Where everything lives: every module, what it owns, and the seam it sits behind — the file-by-file map of the game, the site and the scripts."
-updated: "2026-10-28"
+updated: "2026-10-30"
 order: 2
 ---
 
@@ -46,6 +46,26 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   id to its URL (`/docs/...`, or `/privacy` for a notice), relative link rewriting,
   the sidebar's groups and the page's neighbours. Tested beside them: `paths.test.ts`,
   `nav.test.ts`, and `content.test.ts` for the source's own links and frontmatter.
+- `src/lib/docshots/config.ts` + `capture.ts` — the capture side: the variant
+  list `docshots.config.ts` declares, and the automatic fixture that reads a
+  test's `doc` annotation, takes the WebP in the test's teardown and writes it to
+  `public/docs/test-output/`.
+- `tests/e2e/docs/*.spec.ts` — the capture tests, one file per shot, with
+  `annotation: [{ type: "doc", description: "<id>" }]`. The page names the id
+  with `[description](shot:<id>)`; `bun run docs:shots` runs them and
+  `bun run build` runs that first.
+- `src/lib/docs/shots.ts` — the satteri link visitor that replaces a `shot:`
+  paragraph with a `<figure>`, the `<img>` for each variant file that exists and
+  one `<details>` per screen. `references.test.ts` holds the page and the test
+  together.
+- `public/docs/test-output/` — **generated, ignored by Git**: the captures, served
+  as written. [Writing docs](writing-docs.md#screenshots) is the rule.
+- `tests/e2e/docs-library/` + `docs-library.ts` — the captures' **mock**: a snapshot
+  of the published EverythingStar FOSS playlist (real titles, artists, offers, cover
+  art at 96×96) served under the URL a fresh install seeds, with documents and charts
+  generated per song. `bun run docs:library` refreshes it; it never runs in a gate.
+- `tests/e2e/note-guide.ts` — the note-types page's own charts: one short song per
+  note type, at the seeded URL, so a capture shows the note its prose names.
 - `src/pages/docs/index.astro` + `src/pages/docs/[...slug].astro` — the hub and a page
   per sectioned document; `src/pages/[...legal].astro` builds the notices at the site
   root; `src/layouts/DocsLayout.astro` and `LegalLayout.astro` are their frames.
@@ -486,11 +506,11 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   scale and the fonts) and the shell components (`.spray-*`, `.hazard`,
   `.comment`, `.mark`, `.sticker`, the nav), plus the print and reduced-motion
   layers.
-- `wrangler.jsonc` — the Cloudflare deploy: the project name and
-  `assets.directory: ./dist`, with **no `main` and no `run_worker_first`**, so a
-  deploy uploads static files and nothing else. An empty `previews` block is what
-  a Workers Builds branch preview requires (`wrangler preview`); assets and
-  compatibility stay at the top level. A provider is its own project.
+- `wrangler.jsonc` — the Cloudflare upload: the Worker name and
+  `assets.directory: ./dist`, with **no `main` and no `run_worker_first`**, so
+  `bunx wrangler deploy` uploads static files and nothing else. `workers_dev` and
+  `preview_urls` are off, and the empty `previews` block is inert now that Workers
+  Builds is disconnected. A provider is its own project.
 - `scripts/generate-icons.mjs`, `scripts/fetch-fonts.mjs`, `scripts/check-budget.ts`,
   `scripts/og-card.html`, `scripts/render-cards.ts`, `scripts/check-docs.ts` — icon set,
   self-hosted fonts, the dist/audio size caps, the social cards' source layout and

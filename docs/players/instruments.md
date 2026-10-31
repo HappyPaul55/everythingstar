@@ -1,13 +1,13 @@
 ---
 title: Instruments
 description: "Playing a highway in EverythingStar: columns, note kinds, the whammy and star power, drums, misses and how difficulty works."
-updated: "2026-10-28"
+updated: "2026-10-30"
 order: 3
 ---
 
 An instrument is played on a **highway**: a scrolling board of notes that arrive at a line near the bottom. Each player has their own **panel**, with their highway in the middle, their score on the left and their star power meter on the right. Guitar, bass, simple keys and drums all use the same highway; what changes is the chart on it and the controls in your hands.
 
-![A lone guitar highway: five columns of notes above the hit line, with score, combo and multiplier down the left.](../screenshots/desktop-guitar.webp)
+[A lone guitar highway: five columns of notes above the hit line, with score, combo and multiplier down the left.](shot:guitar-highway)
 
 ## Columns and the hit line
 

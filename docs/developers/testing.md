@@ -1,20 +1,23 @@
 ---
 title: Testing
-description: "The gates a change has to pass: the unit suite, the browser suite and its rule, the build gates, and what only a real browser can prove."
-updated: "2026-10-28"
+description: "The gates a change has to pass: the unit suite, the browser suite and its rule, the documentation captures, the build gates, and what only a real browser can prove."
+updated: "2026-10-30"
 order: 13
 ---
 
-`bun run verify` is the gate CI runs, and the browser suite is the one thing it cannot
-do. The rule for both is the same: a check belongs where it is cheapest and where it
-can actually see the regression.
+`bun run verify` is the gate CI runs. It builds the documentation's screenshots with a
+real browser on the way (see [Documentation captures](#documentation-captures)), but the
+**browser suite** is still the one thing it does not run. The rule for all of them is the
+same: a check belongs where it is cheapest and where it can actually see the regression.
 
 ## The commands
 
 ```bash
 bun install
 bun run dev              # dev server on http://localhost:4321
-bun run build            # static build into dist/
+bun run build            # static build into dist/ (captures the docs screenshots first)
+bun run build:quick      # the same build, reusing the captures already on disk
+bun run docs:shots       # capture the documentation's screenshots (Playwright)
 bun run preview          # serve the built site
 bun run check            # astro check — the app's type gate
 bun run lint             # oxlint — the lint gate
@@ -67,11 +70,12 @@ out of `astro check`, and the test config includes them with the runner's types.
 The budget was measured on 2026-10-28: 644 KiB of `_astro` JS, an initial graph of
 560 KiB raw / 182 KiB gzipped, 11.2 MiB in `dist/` before the docs and 8.8 MiB of
 audio; the docs added ~3 MiB of pages, each carrying the inlined site CSS. The caps sit
-just above those numbers — 650 KiB, 566 KiB, 190 KiB, 16 MiB, 10 MiB — and the lower
-whole-build cap was raised when the documentation landed, because a prose page is
-upload and first-visit weight but not code. The **initial graph is the number to
-watch**: the next feature-sized byte belongs behind a lazy boundary, not in a bigger
-cap.
+just above those numbers — 650 KiB, 566 KiB, 190 KiB, 18 MiB, 10 MiB — and the lower
+whole-build cap was raised when the documentation landed, then again for the
+note-types page's twenty-four captures (twelve examples on desktop and mobile),
+because a prose page is upload and first-visit weight but not code. The **initial graph
+is the number to watch**: the next feature-sized byte belongs behind a lazy boundary,
+not in a bigger cap.
 
 ## Browser tests
 
@@ -93,6 +97,25 @@ game already asks for; every other external request is aborted and recorded. Use
 `context.route` (not an app hook) for any new network dependency, and keep each test on
 a fresh context so it starts at the welcome. The test browser refuses native
 fullscreen, so Escape reaches the game rather than the browser's own way out.
+
+## Documentation captures
+
+A documentation screenshot is a Playwright test in `tests/e2e/docs` with
+`annotation: [{ type: "doc", description: "<id>" }]`, and the page names the same id
+with `[description](shot:<id>)`. `bun run docs:shots` clears the images, runs every
+capture test once per variant in `docshots.config.ts` (desktop, mobile) and writes
+`<id>-<variant>.webp` into `public/docs/test-output/`, which is ignored by Git. **`bun run build` runs it first**, which is why the gate needs
+Chromium installed.
+
+The capture is taken in `afterEach` only when the test passed, with animations
+disabled, the caret hidden, fonts settled and the project's own device scale, so a
+failed assertion writes nothing. A test narrows itself with a `doc-viewport` annotation and crops a phone frame
+with `doc-crop`. The reference and the test are held together by
+`src/lib/docshots/references.test.ts`: every `shot:` has a `doc` annotation, and
+every annotated test is shown. The mock is the published FOSS
+library: `bun run docs:library` refreshes `tests/e2e/docs-library/` from it, and
+every other run is offline. `bun run build:quick` skips the capture run for a
+site-only loop. [Writing docs](writing-docs.md#screenshots) is the authoring rule.
 
 ## The documentation gate
 

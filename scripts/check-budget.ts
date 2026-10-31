@@ -32,10 +32,12 @@
  *
  * The whole-build cap was raised to 16 MiB when the documentation landed: ~40
  * prose pages, each carrying the inlined site CSS, plus the screenshots the guide
- * reuses. That is content rather than code — it does not touch the initial graph
- * or the audio — but it is still upload and first-visit weight, so the cap is a
- * limit rather than a target. Every documentation page is plain HTML with no
- * island, and `check-docs.ts` proves it.
+ * reuses. It moved to 18 MiB with the note-types page, whose twenty-four captures
+ * (twelve examples on two screens) are the guide's own pictures. That is content
+ * rather than code — it does not touch the initial graph or the audio — but it is
+ * still upload and first-visit weight, so the cap is a limit rather than a target.
+ * Every documentation page is plain HTML with no island, and `check-docs.ts`
+ * proves it.
  *
  * The script will not measure a build it cannot find: `dist/_astro`, `dist/`,
  * `public/audio` and `play.html` are each required before any number is read, and
@@ -184,7 +186,7 @@ const checks: Check[] = [
   },
   { label: "initial /play raw", actual: initialRaw, limit: 566 * KIB },
   { label: "initial /play gzip", actual: initialGzip, limit: 190 * KIB },
-  { label: "dist/ total", actual: sizeOf(DIST), limit: 16 * MIB },
+  { label: "dist/ total", actual: sizeOf(DIST), limit: 18 * MIB },
   { label: "public/audio", actual: sizeOf(join(ROOT, "public", "audio")), limit: 10 * MIB },
 ];
 

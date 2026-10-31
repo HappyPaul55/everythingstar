@@ -23,8 +23,10 @@ const PORT = Number(process.env.PLAYWRIGHT_PORT ?? 4321);
 export default defineConfig({
   testDir: "./tests/e2e",
   // The worker spec needs a production build and `astro preview`; it has its own
-  // config (`playwright.pwa.config.ts`) and command.
-  testIgnore: ["**/pwa.spec.ts"],
+  // config (`playwright.pwa.config.ts`) and command. The documentation's capture
+  // tests have their own config too (`playwright.docs.config.ts`): they take the
+  // screenshots the build needs.
+  testIgnore: ["**/pwa.spec.ts", "**/docs/**"],
   fullyParallel: false,
   // One worker is the quiet local run. In CI the count follows the runner: every
   // core but one, because the suite is CPU-bound and a single worker spends most

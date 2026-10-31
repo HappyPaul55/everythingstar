@@ -47,5 +47,10 @@ playwright-report/
 # Local cache used by scripts and the dev server
 .cache/
 
+# Documentation captures: built by `bun run docs:shots` on every build, never
+# committed. `public/` is served verbatim, so the folder is part of `dist/` and
+# not of the source.
+public/docs/test-output/
+
 # Local binaries / downloads (never part of the site)
 *.exe

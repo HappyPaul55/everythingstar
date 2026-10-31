@@ -1,13 +1,14 @@
 ---
 title: Writing docs
-description: "How this documentation is written and built: one Markdown source for GitHub and the site, the frontmatter, the link rules, the four sections and the checks."
-updated: "2026-10-28"
+description: "How this documentation is written and built: one Markdown source for GitHub and the site, the frontmatter, the link rules, the four sections, the screenshot tests and the checks."
+updated: "2026-10-30"
 order: 5
 ---
 
 The documentation is Markdown in `docs/` at the root of the repository. GitHub shows
 the files; this site builds a page from each one. Nothing is duplicated and nothing is
-generated into `docs/` — a correction made for one reader is made for both.
+generated into `docs/` — a correction made for one reader is made for both. The one
+exception is `docs/screenshots/`, which a build fills with captures and Git ignores.
 
 ## Where a page goes
 
@@ -30,8 +31,8 @@ is the one place that rule lives.
 ```yaml
 ---
 title: Writing docs
-description: "How this documentation is written and built: one Markdown source for GitHub and the site, the frontmatter, the link rules, the four sections and the checks."
-updated: "2026-10-28"
+description: "How this documentation is written and built: one Markdown source for GitHub and the site, the frontmatter, the link rules, the four sections, the screenshot tests and the checks."
+updated: "2026-10-30"
 order: 5
 ---
 ```
@@ -58,10 +59,9 @@ with a missing or malformed field does not reach the build.
   (`https://everythingstar.happypaul55.com/play`) or the repository
   (`https://github.com/HappyPaul55/everythingstar/blob/main/SECURITY.md`). A relative
   link to a root file works on GitHub and not on the site, so it is not used.
-- Images are relative to the page and live in `docs/screenshots/`:
-  `![The jukebox, A–Z index and now-playing panel.](../screenshots/desktop-jukebox.webp)`.
-  Astro copies and optimises them; GitHub shows the source file. A new screenshot is a
-  new file there.
+- A screenshot is a **test** in `tests/e2e/docs`, not a file: the page names its id
+  with `[description](shot:<id>)`. See [Screenshots](#screenshots) below. Nothing
+  under `docs/screenshots/` is committed.
 - `<kbd>` is the one raw tag the content uses, for a key: `<kbd>Space</kbd>`.
   Everything else is Markdown — no MDX, no components, no scripts.
 - Tables and fenced code blocks (with a language) are styled by the layout. Keep a
@@ -69,6 +69,58 @@ with a missing or malformed field does not reach the build.
 - British English, sentence case, plain words, "you". Say what happens, what is
   optional and what it costs. If a thing is not built, say so rather than describing
   what it will do.
+
+## Screenshots
+
+A picture of the game is a Playwright test that carries a `doc` annotation, and
+the page names the same id:
+
+```markdown
+[The jukebox: an A–Z index down the side, song rows with their length and offers, and the now-playing panel on the right.](shot:jukebox "The jukebox on a desktop")
+```
+
+```ts
+import { captureJukebox, test } from "../support";
+
+test(
+  "the jukebox shows its index, rows and now-playing panel",
+  { annotation: [{ type: "doc", description: "jukebox" }] },
+  async ({ context, page }) => {
+    await captureJukebox(context, page);
+  },
+);
+```
+
+- The link **text is the alt** and is required; the link **title is the caption**
+  and is optional; `shot:jukebox` is the id.
+- The `doc` annotation is the only thing added to the test. An automatic fixture
+  in `tests/e2e/support.ts` reads it and takes the WebP **only when the test
+  passed**, once per Playwright project — `desktop` and `mobile` from
+  `docshots.config.ts`.
+- Two more annotations narrow a shot without code:
+  - `{ type: "doc-viewport", description: "desktop" }` — capture it only there
+    (the jukebox on a phone opens the now-playing panel as a sheet).
+  - `{ type: "doc-crop", description: "mobile:bottom 40%" }` — keep the foot of
+    the phone frame. A highway is mostly runway, so a phone note is the note, the
+    hit line and the pads.
+- The test drives the screen — `captureJukebox`, `captureGuitarHighway`,
+  `captureBandScreen`, `captureSinger`, `capturePhonePads`
+  (`tests/e2e/docs-screens.ts`) or `captureNoteType` (`tests/e2e/note-guide.ts`)
+  — and asserts it arrived.
+- The files land in `public/docs/test-output/<id>-<variant>.webp`, ignored by Git
+  and served as written. The page shows one `<details>` per variant that exists;
+  one variant needs no selector.
+- `bun run docs:shots` clears the captures, runs every test in `tests/e2e/docs`;
+  `bun run build` runs it first. `bun run build:quick` reuses the images already
+  on disk, and a one-shot loop runs the spec directly with the docs config.
+- Two checks in `bun test` hold the halves together: every `shot:` reference has
+  a `doc` annotation, and every annotated test is shown by a page.
+- Use `/app` (the game alone) rather than `/play` (the site shell around it).
+- The fixture is the **published FOSS library**, not an invented one:
+  `installDocsFixtures` serves a snapshot of its playlist and cover art, so the
+  jukebox, the band and the stage show real songs. Code Monkey is the one song
+  with guitar, bass, drums and vocals, so the stage captures use it.
+- GitHub shows the link text rather than the picture — the page is the site's.
 
 ## Adding a page
 

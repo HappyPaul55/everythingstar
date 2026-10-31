@@ -1,13 +1,13 @@
 ---
 title: Songs and playlists
 description: "The jukebox: finding a song, previews, playlists and folders, imported files, .sng packages and downloads for offline play."
-updated: "2026-10-28"
+updated: "2026-10-30"
 order: 2
 ---
 
 A song in EverythingStar is a document — a title, an artist, a length, the parts it offers and the audio to play — reached through a **playlist**. The jukebox is where you find one, and the Playlists dialog is where the songs come from.
 
-![The jukebox: an A–Z index down the side, song rows with their length and offers, and the now-playing panel on the right.](../screenshots/desktop-jukebox.webp)
+[The jukebox: an A–Z index down the side, song rows with their length and offers, and the now-playing panel on the right.](shot:jukebox)
 
 ## Finding a song
 

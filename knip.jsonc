@@ -4,7 +4,10 @@
   "entry": [
     "src/pages/**/*.astro",
     "scripts/**/*.{ts,mjs}",
-    "tests/e2e/**/*.spec.ts"
+    "tests/e2e/**/*.spec.ts",
+    // The capture config is read by a command, not imported by anything knip can
+    // follow. The Playwright configs are found as configs on their own.
+    "docshots.config.ts"
   ],
   "project": [
     "src/**/*.{ts,tsx,astro,css}",
