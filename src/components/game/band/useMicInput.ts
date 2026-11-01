@@ -174,7 +174,11 @@ export function useMicInput({ enabled }: MicOptions): MicInput {
     midiRef.current = null;
     detector.reset();
     setStatus((current) =>
-      current === "listening" || current === "requesting" ? "idle" : current,
+      // A device that failed is not a decision the player made: the next run tries
+      // again. A refusal is a decision, and it stays refused.
+      current === "listening" || current === "requesting" || current === "error"
+        ? "idle"
+        : current,
     );
   }, [detector]);
 
