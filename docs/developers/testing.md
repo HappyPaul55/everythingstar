@@ -153,27 +153,40 @@ screen.
 
 ## The cost of a frame
 
-A change that touches the stage's drawing is measured on the same fixture rather
-than argued about: four guitar panels on the docs library, eight seconds after the
-entrance, with Chrome DevTools' CPU throttled 4x (`Emulation.setCPUThrottlingRate`
-on a CDP session). The run records `TaskDuration`, `ScriptDuration`, `LayoutCount`,
-`RecalcStyleCount`, `JSHeapUsedSize` and rAF deltas. Headless Chromium caps rAF at
-about 15 fps, so **frame rate is not the number to compare**; CPU time and layout
-and style counts are.
+A change that touches the stage's drawing is measured on the **production build**:
+`bun run perf` builds and serves it with `astro preview`, drives four guitar panels
+on the docs library eight seconds after the entrance, throttles the CPU 4x through a
+CDP session, and records `TaskDuration`, `ScriptDuration`, `LayoutCount`,
+`RecalcStyleCount`, `JSHeapUsedSize` and rAF deltas. The dev server is not a
+substitute — its JSX dev runtime made the same run show ~5 s of script where the
+production build shows ~1 s, and the top of that profile was `jsxDEV`, not the game.
+Measure the build players run.
 
-The note-view pass moved the same eight seconds from **6.1 s to 4.2–5.3 s of
-script**, **95 to 34–43 layouts** and frame p50 from 150 ms to 84–117 ms across
-three post-change runs; the heap moved within noise. Re-run it before and after a drawing change; a change that is not visible in
-these numbers is not worth the rewrite. Its numbers go in the commit that changes
-the drawing.
+The numbers after this round: four guitars **1.0–1.3 s of script** in 8 s at 4x,
+55–73 layouts, frame p50 **50 ms**; a singer with the fake microphone **1.0–1.2 s**,
+**60 fps**. The remaining four-panel cost is compositing: the same run in **Flat**
+view reaches ~60 fps (p50 16.7 ms), while a two-player 3D band on a 390x844 viewport
+runs 36–40 fps at 4x. That is a visual choice, so the default stays perspective and
+the lighter view is written down for players ([Options](../players/options.md)) rather
+than switched on their behalf.
+
+`BENCH_SCENARIO=singer|guitars`, `BENCH_VIEW=3d|flat`, `BENCH_SEATS`,
+`BENCH_WIDTH`/`BENCH_HEIGHT`, `BENCH_RATE` and `BENCH_PROFILE=1` (a CDP CPU profile,
+top functions) select the measurement. Headless Chromium caps rAF, so compare CPU and
+layout counts and relative frame intervals, not absolute fps.
+
+What moved this round: hiding the drifting lights while the stage is up (they are
+invisible under its opaque backdrop) took the four-panel interval **67 → 50 ms**; the
+pitch detector at **30 Hz** and the singer advance at **20 Hz** cut singer script
+**~35 %** (1.6–1.7 s → 1.0–1.2 s at 4x) while staying at 60 fps. Throttling the lane
+advance measured as noise and was reverted; the song-art blur was A/B'd and made no
+difference.
 
 `tests/perf/dom-writes.spec.ts` answers the other question — *where* the writes go.
 In a four-panel run over three seconds it measured **four track-transform writes
 per frame** (one per highway), ~66 note mounts and ~43 class changes, and no
 per-note movement at all: the highway layer is already the "bar", and a bar
-container would be a second layer to move rather than a cheaper one. Mounts and
-state classes are the remaining per-note work, and the next optimisation should be
-aimed there, not at movement.
+container would be a second layer to move rather than a cheaper one.
 
 ## The front load is 20 MB
 
