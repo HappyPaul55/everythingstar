@@ -1,6 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import { withLocale } from "../../i18n/react";
-import { DEFAULT_BACKDROP } from "../../lib/game/band/media";
+import { DEFAULT_BACKDROP, DEFAULT_BACKDROP_SRCSET } from "../../lib/game/band/media";
 import { readAttractConfig, type AttractConfig } from "../../lib/game/attract";
 import { BackdropFlares } from "./band/BackdropFlares";
 import { BandStage } from "./band/BandStage";
@@ -128,11 +128,22 @@ function GameApp({ credits, attract = false }: Props) {
     <div className="band" ref={session.bandRef}>
       {/* The room the menus sit in: the game's own artwork. A run paints the song's
           own back over the top of it, so this is what "no song" looks like. */}
-      <div
-        className="band__backdrop"
-        aria-hidden="true"
-        style={{ backgroundImage: `url(${DEFAULT_BACKDROP})` }}
-      />
+      <div className="band__backdrop" aria-hidden="true">
+        {/* A native source set, not a CSS background: the browser fetches the
+            width its screen actually needs, and the largest is only paid by a
+            large retina display. */}
+        <img
+          className="band__backdrop-image"
+          src={DEFAULT_BACKDROP}
+          srcSet={DEFAULT_BACKDROP_SRCSET}
+          sizes="100vw"
+          alt=""
+          width={2048}
+          height={1152}
+          fetchPriority="high"
+          decoding="async"
+        />
+      </div>
       {/* The room's lights, drifting over it. Decorative, and still under
           `prefers-reduced-motion`. Set aside while a song's own video plays, and
           not drawn at all when the drifting-lights setting is off. */}

@@ -77,8 +77,8 @@ out of `astro check`, and the test config includes them with the runner's types.
   formats agree, and every root-absolute URL its entry page names is inside it. See
   [Deployment and releases](deployment.md#the-release-archives).
 
-The budget was measured on 2026-11-01: 708 KiB of `_astro` JS, an initial graph of
-577 KiB raw / 186 KiB gzipped across 22 files, 17.9 MiB in `dist/` and 8.8 MiB of
+The budget was measured on 2026-11-01: 709 KiB of `_astro` JS, an initial graph of
+578 KiB raw / 186 KiB gzipped across 22 files, 17.8 MiB in `dist/` and 8.8 MiB of
 audio. The caps sit just above those numbers — 710 KiB, 580 KiB, 190 KiB, 20 MiB,
 10 MiB. The **whole-build cap is the one that keeps moving**, raised when the
 documentation landed and again for its pictures: the [note-types page](../charters/note-types.md)
@@ -149,6 +149,32 @@ a page, and a narrowed shot is declared. The mock is the published FOSS library:
 is offline. [Writing docs](writing-docs.md#screenshots) is the authoring rule: which
 variants a shot is captured in, how a frame is narrowed, and how a test drives its
 screen.
+
+## The cost of a frame
+
+A change that touches the stage's drawing is measured on the same fixture rather
+than argued about: four guitar panels on the docs library, eight seconds after the
+entrance, with Chrome DevTools' CPU throttled 4x (`Emulation.setCPUThrottlingRate`
+on a CDP session). The run records `TaskDuration`, `ScriptDuration`, `LayoutCount`,
+`RecalcStyleCount`, `JSHeapUsedSize` and rAF deltas. Headless Chromium caps rAF at
+about 15 fps, so **frame rate is not the number to compare**; CPU time and layout
+and style counts are.
+
+The note-view pass moved the same eight seconds from **6.1 s to 4.2–5.3 s of
+script**, **95 to 34–43 layouts** and frame p50 from 150 ms to 84–117 ms across
+three post-change runs; the heap moved within noise. Re-run it before and after a drawing change; a change that is not visible in
+these numbers is not worth the rewrite. The harness is a throwaway Playwright spec
+(the fixture and the CDP session are the whole of it); its numbers go in the commit
+that changes the drawing.
+
+## The front load is 20 MB
+
+The game may warm and precache **up to 20 MB** before the welcome admits the player,
+and an installed game may keep up to 20 MB offline. A startup load is expected; a
+stall after it is not. Spend the budget on one deliberate preload rather than a lazy
+fetch on a press that then stutters — and do not add work to a frame that is already
+moving. The backdrop and the one-shot cues are front-loaded; the song's own stems are
+still fetched per song and behind the band's Play gate.
 
 ## The installed game's update
 

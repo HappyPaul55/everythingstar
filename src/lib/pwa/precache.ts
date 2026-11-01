@@ -29,7 +29,11 @@ export const PAGE_FILES = [
 const EXTRA = [
   "/manifest.webmanifest",
   "/audio/sounds.json",
-  "/images/background_1.jpg",
+  // Every width of the room: a phone and a retina laptop ask for different files,
+  // and an install that kept one would draw the wrong edge offline.
+  "/images/background_1-960.webp",
+  "/images/background_1-1600.webp",
+  "/images/background_1-2048.webp",
 ];
 
 /**

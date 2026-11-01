@@ -3,4 +3,4 @@
 # discovers `*.spec.ts`, so keep them out of `bun test`. `.docshots/` holds the
 # generated capture specs, which are Playwright's too.
 [test]
-pathIgnorePatterns = ["tests/e2e/**", ".docshots/**"]
+pathIgnorePatterns = ["tests/e2e/**", "tests/perf/**", ".docshots/**"]

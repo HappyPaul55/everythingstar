@@ -14,6 +14,7 @@ import {
   playheadEnded,
 } from "../../../lib/game/band/clockRange";
 import { SEEK_GUARD_MS, sourcePlayhead } from "../../../lib/game/band/playhead";
+import { padsPresent } from "./gamepads";
 import { SOURCE_STALL_SOFT_MS, SOURCE_STALL_MS, sourceStalled } from "../../../lib/game/band/stall";
 
 /**
@@ -131,6 +132,8 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
   const fpsRef = useRef(0);
   /** Bumped by every deliberate move of the playhead; see `seekSerialRef`. */
   const seekSerialRef = useRef(0);
+  /** The last seek generation the subscribers were told about. */
+  const notifiedSeekRef = useRef(0);
   // It starts standing still: the screen machine says when a run begins, so the
   // stage does not play behind the welcome and the menu.
   const playingRef = useRef(false);
@@ -264,11 +267,19 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
           setEnded(true);
         }
       }
-      // Subscribers run whether or not it is playing, so a seek while paused
-      // still repaints. The playhead has just been read: remember when, so
-      // `timeOf` can carry an event's own timestamp on from here.
+      // The playhead has just been read: remember when, so `timeOf` can carry an
+      // event's own timestamp on from here.
       sampledAtRef.current = now;
-      for (const subscriber of subscribers.current) subscriber();
+      // A tick is for **motion**. On the menus, on a pause and on the results
+      // nothing is moving, and the panels were still re-rendering at 12.5 Hz behind
+      // the pause for no player to see. The exceptions are a seek (a paused bar
+      // must still move when the transport is moved) and a connected pad (the menu
+      // is driven by the poll on this clock).
+      const seeked = seekSerialRef.current !== notifiedSeekRef.current;
+      if (playingRef.current || seeked || padsPresent()) {
+        for (const subscriber of subscribers.current) subscriber();
+        notifiedSeekRef.current = seekSerialRef.current;
+      }
     };
 
     frame = requestAnimationFrame(step);

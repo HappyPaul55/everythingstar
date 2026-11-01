@@ -32,6 +32,7 @@ import {
 import type { Track } from "../../../lib/game/track";
 import { isRunScreen, type Screen } from "../../../lib/game/screens";
 import { useMicInput, type MicInput } from "./useMicInput";
+import { padsPresent } from "./gamepads";
 import { useMidiInput, type MidiInput, type MidiMessage } from "./useMidiInput";
 import { useClock } from "./StageClock";
 
@@ -204,6 +205,8 @@ export function StageControlsProvider({ setup, track, screen, children }: Props)
   /** Panels told to let go of their own fingers, because no release is coming. */
   const fingersUp = useRef(new Set<() => void>());
   const padButtons = useRef(new Map<number, boolean[]>());
+  /** Whether the last poll saw a pad, so a disconnect gets one release frame. */
+  const hadPads = useRef(false);
   /** Which way each pad's axes were held at the last look, for hysteresis. */
   const padAxes = useRef(new Map<number, readonly (0 | 1 | -1)[]>());
   /** Whether each MIDI control change is down, keyed by channel and controller. */
@@ -478,6 +481,9 @@ export function StageControlsProvider({ setup, track, screen, children }: Props)
   // to whoever asks, so the frame the stage already runs is where they are read.
   useEffect(() => {
     return clock.subscribe(() => {
+      // Skip the browser poll while nothing is attached. The frame after a
+      // disconnect still runs: that is the one that lets the seat go.
+      if (!padsPresent() && !hadPads.current) return;
       const gamepads = navigator.getGamepads?.() ?? [];
       const live: Gamepad[] = [];
       const found: PadInfo[] = [];
@@ -489,6 +495,7 @@ export function StageControlsProvider({ setup, track, screen, children }: Props)
       // A pad that went away is forgotten before the ones still here are read, so
       // a pad that reconnects at the same index is not diffed against the old
       // pad's last look. An empty poll therefore forgets every pad.
+      hadPads.current = live.length > 0;
       const connected = live.map((pad) => pad.index);
       // A pad that left may be the one a seat was holding. Only that seat is let
       // go: releasing every seat dropped a sustain on a keyboard or another pad,
