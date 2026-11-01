@@ -70,6 +70,12 @@ const STEMS: Record<string, Buffer> = {
   "/audio/guitar.wav": wav(220, 30),
   "/audio/bass.wav": wav(110, 30),
   "/audio/drums.wav": wav(440, 30),
+  // A Rock Band-shaped folder falls back to per-part stems: seven elements, not
+  // three. The chart only seats a guitar; the other stems are the mix.
+  "/audio/keys.wav": wav(330, 30),
+  "/audio/vocals.wav": wav(165, 30),
+  "/audio/rhythm.wav": wav(247, 30),
+  "/audio/lead.wav": wav(294, 30),
 };
 
 export interface StemServer {
@@ -157,11 +163,12 @@ export function songDoc(base: string, withStems = true): unknown {
     previewStartMs: 0,
     audio: {
       source: "stems",
-      stems: withStems ? ["guitar", "bass", "drums"].map((name) => ({
+      stems: withStems ? ["guitar", "bass", "drums", "keys", "vocals", "rhythm", "lead"].map((name) => ({
         id: `stem_${name}`,
         name: name[0]!.toUpperCase() + name.slice(1),
         url: `${base}/audio/${name}.wav`,
-        instrument: name,
+        instrument:
+          name === "rhythm" ? "rhythm_guitar" : name === "lead" ? "lead_guitar" : name,
         defaultGainDb: 0,
         offsetMs: 0,
       })) : [],

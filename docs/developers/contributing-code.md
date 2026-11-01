@@ -24,7 +24,7 @@ order: 11
    controls mean. "Lane" is not a synonym for any of these.
 4. **All copy goes through `t()` or `localePath()`.** English ships alone today, but
    a hard-coded string is a future refactor, not a shortcut. The dictionary is
-   `src/i18n/ui/en.ts`.
+   `src/i18n/ui/en.game.ts` (or `en.site.ts`/`en.charter.ts` for that surface).
 5. **Accessibility is a constraint.** Focus rings, reduced motion, 44px targets, a
    skip link, native `<dialog>`s for overlays, and one focus cursor shared by the
    keyboard, the screen reader and a gamepad. A change that regresses one of these

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { withLocale } from "../../i18n/react";
+import { enCharter } from "../../i18n/ui/en.charter";
 import { DEFAULT_PLAYLIST } from "../../lib/game/defaultPlaylist";
 import { DEFAULT_SETTINGS, loadSettings, type Settings } from "../../lib/game/settings";
 import type { Song } from "../../lib/game/song";
@@ -137,4 +138,4 @@ function CharterApp() {
   );
 }
 
-export default withLocale(CharterApp);
+export default withLocale(CharterApp, enCharter);

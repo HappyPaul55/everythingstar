@@ -65,7 +65,8 @@
 
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { graphUrl, initialGraph, namedEntries } from "./initial-graph";
+import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 
@@ -102,51 +103,9 @@ function format(bytes: number): string {
     : `${(bytes / KIB).toFixed(0)} KiB`;
 }
 
-/**
- * Every JavaScript file `/play` fetches before the island can mount.
- *
- * Astro writes an island as `component-url` + `renderer-url`, so those are the
- * entries beside the ordinary `<script type="module">` and `modulepreload` tags;
- * following the **static** imports from each one gives the first download. A
- * dynamic `import()` is deliberately not followed: it is the thing being kept out.
- */
+/** The first download, shared with the preload writer. */
 function initialPlayFiles(): string[] {
-  const htmlPath = join(DIST, "play.html");
-  const html = readFileSync(htmlPath, "utf8");
-  const entries = new Set<string>();
-  const take = (url: string) => {
-    if (url.startsWith("/_astro/")) entries.add(join(DIST, url.slice(1)));
-  };
-  for (const match of html.matchAll(/<script[^>]*type="module"[^>]*src="([^"]+)"/g)) {
-    take(match[1] ?? "");
-  }
-  for (const match of html.matchAll(/<link[^>]*rel="modulepreload"[^>]*href="([^"]+)"/g)) {
-    take(match[1] ?? "");
-  }
-  for (const match of html.matchAll(/(?:component-url|renderer-url)="([^"]+)"/g)) {
-    take(match[1] ?? "");
-  }
-
-  const seen = new Set<string>();
-  const visit = (file: string) => {
-    if (seen.has(file) || !existsSync(file)) return;
-    seen.add(file);
-    const body = readFileSync(file, "utf8");
-    for (const match of body.matchAll(/\bfrom\s*"([^"]+)"/g)) {
-      const specifier = match[1] ?? "";
-      if (specifier.startsWith(".")) visit(join(dirname(file), specifier));
-    }
-    // A **side-effect** import — `import "./parse.js"` — has no `from`, and a
-    // minifier writes it as `import"./parse.js"`. It is part of the initial graph
-    // all the same: skipping it left those bytes out of both caps and out of the
-    // parser-marker scan.
-    for (const match of body.matchAll(/\bimport\s*"([^"]+)"/g)) {
-      const specifier = match[1] ?? "";
-      if (specifier.startsWith(".")) visit(join(dirname(file), specifier));
-    }
-  };
-  for (const file of entries) visit(file);
-  return [...seen].sort();
+  return initialGraph(DIST, join(DIST, "play.html"));
 }
 
 /**
@@ -250,6 +209,32 @@ if (leaked.length > 0) {
 } else {
   console.log(
     `  ${"lazy parsers".padEnd(18)} ${parserChunks.length} chunk(s) outside /play's first download (${initial.length} initial JS files)`,
+  );
+}
+
+// Every file in the first download should be announced before the entry script
+// runs: the page's own entries by `src`/`component-url`, the rest by a modulepreload.
+const playHtml = readFileSync(join(DIST, "play.html"), "utf8");
+const announced = new Set(
+  [...playHtml.matchAll(/<link[^>]*rel="modulepreload"[^>]*href="([^"]+)"/g)].map(
+    (match) => match[1] ?? "",
+  ),
+);
+const named = new Set(namedEntries(playHtml));
+const unannounced = initial.filter((file) => {
+  const url = graphUrl(DIST, file);
+  return !announced.has(url) && !named.has(url);
+});
+if (unannounced.length > 0) {
+  console.error(
+    `  ${"initial graph".padEnd(18)} FAIL: ${unannounced
+      .map((file) => file.slice(DIST.length + 1))
+      .join(", ")} is neither a page entry nor preloaded`,
+  );
+  over = true;
+} else {
+  console.log(
+    `  ${"initial graph".padEnd(18)} ${initial.length} file(s), all announced (${announced.size} preloaded)`,
   );
 }
 

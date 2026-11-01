@@ -180,6 +180,14 @@ if (headersText) {
 
   check("_headers never caches the worker", cacheFor("/sw.js").includes("no-cache"));
   check(
+    "_headers lets the room be remembered for a week",
+    cacheFor("/images/*").includes("max-age=604800"),
+  );
+  check(
+    "_headers lets the sound library be remembered for a week",
+    cacheFor("/audio/*").includes("max-age=604800"),
+  );
+  check(
     "_headers never caches the manifest",
     cacheFor("/manifest.webmanifest").includes("no-cache"),
   );

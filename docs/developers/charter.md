@@ -76,9 +76,10 @@ band. It still uses the game's layouts: `keyAction`, `padAction`, `padAxisAction
 stamped with `clock.timeOf`, exactly as judging is, and the project audio-lag setting
 is not applied twice. The stems play at the player's own master and music levels and
 with their `audioLagMs`, the same values a run uses, so recording by ear lands where
-the player hears it; the metronome follows the master × effects level and closes its
-own `AudioContext` when the workspace goes (a charter is remounted per song, and a
-leaked context goes silent after a handful).
+the player hears it; the metronome follows the master × effects level, disconnects
+each click's oscillator and gain when it ends, and closes its own `AudioContext` when
+the workspace goes (a charter is remounted per song, and a leaked context goes silent
+after a handful).
 
 While a take is armed the recording layout owns the keyboard; the editor's shortcuts
 step aside. Escape stops the take. A take can **replace** the span it covered or

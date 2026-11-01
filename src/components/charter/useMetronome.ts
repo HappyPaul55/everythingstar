@@ -70,6 +70,13 @@ export function useMetronome(grid: CharterGrid, enabled: boolean): void {
         );
         gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
         oscillator.connect(gain).connect(ctx.destination);
+        // A stopped oscillator is silent but stays wired into `destination` for
+        // the life of the context; a 4-minute pass at 120 bpm leaves thousands of
+        // them. The engine's one-shots already disconnect on end.
+        oscillator.onended = () => {
+          oscillator.disconnect();
+          gain.disconnect();
+        };
         oscillator.start(now);
         oscillator.stop(now + 0.05);
       } catch {

@@ -71,7 +71,7 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   lazy dialog still mounts as
   a native `<dialog>` with `useModal`, and its opener keeps `aria-haspopup="dialog"`, so
   Escape and focus return are unchanged. **The initial `/play` graph is the number that
-  matters** — 577 KiB raw / 186 KiB gzipped across 22 files — and
+  matters** — 572 KiB raw / 185 KiB gzipped across 22 files — and
   `scripts/check-budget.ts` gates the initial raw and gzipped sizes directly, and fails
   if a translator marker appears in it. Do not lazy-load the main screens: a flash on every navigation costs more than
   the bytes it saves.
@@ -1731,6 +1731,11 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   loop skips the subscriber pass on menus, a pause and the results unless the
   transport was seeked or a pad is connected (the menu's pad poll rides the same
   loop), so a paused stage is not re-rendering four highways for nobody to see.
+- **One cadence per panel.** The highway reads the run's published `atMs`; a second
+  `useClockMs` ran a frame out of phase and rendered every panel twice per window. A
+  read-out that moves every frame writes a transform (the pitch cursor, the power
+  meter), never `top`/`height`, and the scroll layer is re-seated by its layout effect
+  only after a **window** commit.
 - **A note re-renders when its own state changes, not when the clock ticks.** The
   highway re-renders at 12.5 Hz so notes can turn live, but `HighwayNote` is memoised
   on the note's identity, state, hold, hint and box: ninety mounted notes per panel,
@@ -1760,7 +1765,9 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   `advanceRun` treats a time at or before zero as the start rather than a rewind.
   A frame timestamp can land a hair before the previous one, and a negative time
   heading into the rewind path would recurse for ever.
-- **Only the window is mounted.** `notesInWindow` keeps a couple of seconds
+- **Only the window is mounted.** `notesInWindow` walks the window plus the chart's
+  longest note (cached per chart), not the whole array; a sustain that began before
+  the window is still kept. It keeps a couple of seconds
   either side of the playhead in the DOM (about 14 notes per panel) whatever the
   song's length. Keep it that way: mounting a whole chart is what this design
   exists to avoid. Two rules are not optional, though: a **sustain stays mounted

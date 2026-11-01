@@ -141,7 +141,7 @@ together.
    shell, and that every relative link and image resolves.
 
 A new **section** is rarer: add it to `DOC_SECTIONS` in `src/lib/docs/paths.ts`, its
-label and lede in `src/i18n/ui/en.ts` and `src/lib/docs/sections.ts`, and (if it is not
+label and lede in `src/i18n/ui/en.site.ts` and `src/lib/docs/sections.ts`, and (if it is not
 served under `/docs/`) the rule in `docHref`. Then add one page so the sidebar has
 somewhere to land.
 

@@ -5,20 +5,29 @@ import {
   type ComponentType,
   type ReactNode,
 } from "react";
-import { translate, type MessageKey, type Translate } from "./index";
+import { translateGameMessages, type Translate } from "./game";
 import { DEFAULT_LOCALE, type Locale } from "./locales";
+import { enGame } from "./ui/en.game";
 
 const LocaleContext = createContext<Locale>(DEFAULT_LOCALE);
+/** The dictionary an island was given; the game's own unless a root says otherwise. */
+const MessagesContext = createContext<Readonly<Record<string, string>>>(enGame);
 
 /** Provide a locale to everything rendered below it. */
 function I18nProvider({
   locale,
+  messages,
   children,
 }: {
   locale: Locale;
+  messages: Readonly<Record<string, string>>;
   children: ReactNode;
 }) {
-  return <LocaleContext.Provider value={locale}>{children}</LocaleContext.Provider>;
+  return (
+    <LocaleContext.Provider value={locale}>
+      <MessagesContext.Provider value={messages}>{children}</MessagesContext.Provider>
+    </LocaleContext.Provider>
+  );
 }
 
 /** The locale the surrounding island was given. */
@@ -28,11 +37,12 @@ export function useLocale(): Locale {
 
 /** A `t` bound to the surrounding locale. */
 export function useT(): Translate {
-  const locale = useLocale();
+  const messages = useContext(MessagesContext);
   return useMemo(
-    () => (key: MessageKey, vars?: Record<string, string | number>) =>
-      translate(locale, key, vars),
-    [locale],
+    () =>
+      (key, vars) =>
+        translateGameMessages(messages, key, vars),
+    [messages],
   );
 }
 
@@ -46,13 +56,14 @@ export function useT(): Translate {
  */
 export function withLocale<P extends object>(
   Inner: ComponentType<P>,
+  messages: Readonly<Record<string, string>> = enGame,
 ): ComponentType<P & { locale?: Locale }> {
   function LocalizedIsland({
     locale = DEFAULT_LOCALE,
     ...props
   }: P & { locale?: Locale }) {
     return (
-      <I18nProvider locale={locale}>
+      <I18nProvider locale={locale} messages={messages}>
         <Inner {...(props as P)} />
       </I18nProvider>
     );
