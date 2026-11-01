@@ -65,8 +65,8 @@ out of `astro check`, and the test config includes them with the runner's types.
   `_headers`, and the sitemap against the pages that say they are indexable.
 - **`check:docs`** — a built page per Markdown file in `docs/`, each with the site shell
   and a canonical, in the sitemap, shipping no island and absent from the offline
-  shell; every screenshot the page names present in `dist/`; plus the privacy notice,
-  which the installed game must still carry.
+  shell; every screenshot the page names present in `dist/`; plus the privacy, terms
+  and accessibility notices, which the installed game must still carry.
 - **`budget`** — `dist/_astro` JavaScript, the **initial `/play` graph** raw and
   gzipped, `dist/` as a whole and `public/audio`, and a walk of the initial graph that
   fails if a source-translator marker has leaked into it.
@@ -147,6 +147,18 @@ a page, and a narrowed shot is declared. The mock is the published FOSS library:
 is offline. [Writing docs](writing-docs.md#screenshots) is the authoring rule: which
 variants a shot is captured in, how a frame is narrowed, and how a test drives its
 screen.
+
+## The installed game's update
+
+`test:pwa` proves a **first** install: the worker takes the page, the shell cache holds
+the pages and cues, and a reload with no network still draws the welcome. The
+generation after that is `src/lib/pwa/worker.test.ts`: a new build precaches into its
+own shell cache, the previous generation stays for the page still running, a third
+build lets the oldest go, and a navigation is served the new build's page. What that
+does not cover is the real browser wiring between two `dist/` trees (`skipWaiting`,
+`clients.claim` and the registration's own update check), which needs a second build
+served in one test; the module's contract is what a regression would break, and it is
+pinned.
 
 ## The documentation gate
 
