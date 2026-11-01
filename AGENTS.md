@@ -56,8 +56,9 @@ what that controller's controls mean.
 
 - **`bun run verify` is the gate.** Lint, knip, `astro check`, the tests' typecheck, the
   unit tests, the build, the PWA and docs checks, the budget — in that order. CI runs
-  one `build`, a `unit` job and four browser shards, then a `package` job that joins
-  the build to the screenshots the shards took; `verify` and `e2e` are the required
+  one `build` (plus the installed-game test), a `unit` job, three behavioural browser
+  shards and two capture jobs, then a `package` job that joins the build to the
+  screenshots the captures took; `verify` and `e2e` are the required
   checks. `bun run test:e2e` is the browser suite. Use **Bun**, never npm/npx.
 - **Pure logic lives in `src/lib/game/**` with a colocated `*.test.ts`.** Components
   render; they do not decide. A rule that needs testing goes in a module, not in JSX.
@@ -85,7 +86,7 @@ what that controller's controls mean.
 - **The documentation is part of the change.** A rule that changes is a doc page that
   changes; [Writing docs](docs/developers/writing-docs.md) is the system. A screenshot
   is a Playwright test in `tests/e2e/docs` and a `[description](shot:<id>)` reference
-  in the page; the e2e shards make the images, `bun run docs:bundle` puts them in the
+  in the page; the capture jobs make the images, `bun run docs:bundle` puts them in the
   build, and neither they nor `.docshots/` are committed.
 
 ## Commands

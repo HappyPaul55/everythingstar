@@ -104,8 +104,9 @@ of truth, and the capture projects add one run per shot per configured variant.
 
 ## Flakes
 
-CI runs the suite as four shards, one retry per test, and one worker per core but one
-(never fewer than two) inside each shard; a local run is one worker and no retries.
+CI runs the behavioural suite as three shards and the captures as one job per variant,
+one retry per test, and one worker per core but one (never fewer than two) inside each
+job; a local run is one worker and no retries.
 `failOnFlakyTests` fails the job when a test passes only on its retry, so
 **a test that needs its retry is a test to fix** — the retry is a diagnosis, not a
 pass. Timing assertions must watch a signal that lasts (the practice loop's score
