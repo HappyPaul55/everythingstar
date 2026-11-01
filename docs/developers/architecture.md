@@ -169,9 +169,11 @@ fallback, not a stop an ordinary run makes.
   could only leave a song by finishing it.
 - **The sound can be lost without the run being lost.** A source that is registered
   but never answers (every stem failed, a refused video) no longer holds the playhead
-  at 0:00: after `SOURCE_STALL_MS` the frame clock takes over, the run plays and ends
-  normally, and a line under the progress bar says there is no sound. The picture lag,
-  the note speed and the judging are unchanged.
+  at 0:00. A hard failure is given up on after `SOURCE_STALL_MS` (1.5 s), a source
+  that is merely slow after `SOURCE_STALL_SOFT_MS` (6 s) — a seek is not a broken
+  song. The frame clock then takes over, the run plays and ends normally, and a line
+  under the progress bar says there is no sound. A source that arrives late is seated
+  on the playhead. The picture lag, the note speed and the judging are unchanged.
 - **Results** — the band score, its **stars and average multiplier**, and how the
   run went (the notes hit of what was judged, the accuracy, the best combo), then
   **a card per player** in band order — what they took, at what level, their score,

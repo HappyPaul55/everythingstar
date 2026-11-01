@@ -2017,14 +2017,20 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   `![…](/docs/test-output/…)`, and do not commit the folder. The Astro dev toolbar
   is disabled in `astro.config.mjs` for the same reason: it is a floating overlay
   at the foot of every page, and the captures run against the dev server.
-- **A sound that never answers must not hold the run.** `StageClock` waits for a
-  registered source while it is buffering — right for a moment, fatal for a run. A
-  folder whose every stem failed and a refused YouTube player both used to leave the
-  playhead at 0:00 for ever, with no message and no results. After
-  `SOURCE_STALL_MS` (1.5 s) the **frame clock** takes over, the run ends normally,
-  and the stage says the sound is gone (`StageNotice`). The source stays registered,
-  so a stem that arrives late becomes the clock again. Any new clock source needs the
-  same answer to "what if it never speaks?".
+- **A sound that never answers must not hold the run — and a sound that is only
+  slow must not be abandoned.** `StageClock` waits for a registered source while it
+  is buffering — right for a moment, fatal for a run. A folder whose every stem
+  failed and a refused YouTube player both used to leave the playhead at 0:00 for
+  ever, with no message and no results. Silence has **two windows**: a source that
+  says it has failed (every stem errored, the video refused) is given up on at
+  `SOURCE_STALL_MS` (1.5 s), and one that is merely slow — a seek in flight, a buffer
+  refilling — at `SOURCE_STALL_SOFT_MS` (6 s). Giving up earlier advances the
+  playhead through sound that is still coming and judges the notes in between as
+  misses. The frame clock then takes over, the run ends normally and the stage says
+  the sound is gone (`StageNotice`); the source stays registered, and when it
+  returns it is **seated on the playhead** rather than freezing the highway until it
+  catches up. A cleanup's `followSource(null)` must not clear a loss already
+  declared, or the notice flickers and the playhead creeps.
 - **A failed read is not an empty answer.** The library's trim compares the index
   with the cache store's keys. Folding a failed `getAllKeys` into `[]` made every
   record look like an orphan, and one transient IndexedDB error could delete the

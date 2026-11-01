@@ -217,6 +217,18 @@
       var(--stage-gutter, 16px)
       calc(var(--stage-gutter, 16px) + env(safe-area-inset-left, 0px));
   }
+  /* A coarse pointer gets a Pause chip beside Fullscreen in the stage corner. Both
+     are 44 px targets, so the stage reserves a strip at the top for them: without
+     it the score rail on a lone player's phone runs underneath the chips. The
+     layout measures the content box, so the highway gives the strip up rather than
+     being covered. */
+  @media (pointer: coarse) {
+    .band__stage {
+      padding-top: calc(
+        var(--stage-gutter, 16px) + env(safe-area-inset-top, 0px) + 3.1rem
+      );
+    }
+  }
   .band__overlay {
     position: absolute;
     inset: 0;
