@@ -21,7 +21,7 @@
  *
  * The file is otherwise the build's own output; nothing here is fetched.
  */
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { docHref } from "../src/lib/docs/paths";
 
@@ -236,6 +236,30 @@ if (sw) {
     shellProblem,
   );
   check("the worker serves the offline bucket", sw.includes("everythingstar-offline-v1"));
+
+  // The front-load budget the game is allowed: up to 20 MiB installed. It is
+  // deliberately generous — a startup load is normal — but it must be a number the
+  // build owns, not an accident of a new asset.
+  const listed = sw.match(/precacheUrls:\[(.*?)\]/s)?.[1] ?? "";
+  const urls = [...listed.matchAll(/"([^"]+)"/g)].map((entry) => entry[1] ?? "");
+  let bytes = 0;
+  const missing: string[] = [];
+  for (const url of urls) {
+    const file = join(DIST, url);
+    if (!existsSync(file)) {
+      missing.push(url);
+      continue;
+    }
+    bytes += statSync(file).size;
+  }
+  const mib = bytes / (1024 * 1024);
+  check(
+    "the install payload is under 20 MiB",
+    urls.length > 0 && bytes <= 20 * 1024 * 1024,
+    `${mib.toFixed(1)} MiB`,
+  );
+  check("every precached file exists", missing.length === 0, missing.join(", "));
+  console.log(`  install payload: ${mib.toFixed(1)} MiB / 20 MiB (${urls.length} files)`);
 }
 
 for (const page of ["app.html", "arcade.html", "embed.html", "open.html"]) {

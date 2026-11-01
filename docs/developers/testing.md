@@ -63,8 +63,9 @@ out of `astro check`, and the test config includes them with the runner's types.
 
 ## What the build gates read
 
-- **`check:pwa`** — the manifest, the built worker's precache, the game-only entries and
-  `_headers`, and the sitemap against the pages that say they are indexable.
+- **`check:pwa`** — the manifest, the built worker's precache (including its total
+  against the 20 MiB install budget), the game-only entries and `_headers`, and the
+  sitemap against the pages that say they are indexable.
 - **`check:docs`** — a built page per Markdown file in `docs/`, each with the site shell
   and a canonical, in the sitemap, shipping no island and absent from the offline
   shell; every screenshot the page names present in `dist/`; plus the privacy, terms
