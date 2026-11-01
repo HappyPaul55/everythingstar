@@ -1,5 +1,6 @@
 import { useId, useState } from "react";
 import { useT } from "../../../i18n/react";
+import { useCoarsePointer } from "../band/useCoarsePointer";
 import {
   isMelodyKind,
   type BandSetup,
@@ -80,6 +81,7 @@ export function PauseMenu({
   setup,
 }: Props) {
   const t = useT();
+  const coarse = useCoarsePointer();
   const clock = useClock();
   const [choosing, setChoosing] = useState<Choosing>(null);
   /** The plan "Practice this section" seeded, read once at the press. */
@@ -286,7 +288,9 @@ export function PauseMenu({
             {t("screen.quit")}
           </button>
         </div>
-        <p className="screen__hint">{t("screen.pauseHint")}</p>
+        <p className="screen__hint">
+          {t(coarse ? "screen.pauseTouchHint" : "screen.pauseHint")}
+        </p>
       </NativeDialog>
       {choosing ? (
         <PracticeDialog

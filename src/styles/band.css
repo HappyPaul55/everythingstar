@@ -173,6 +173,21 @@
     .band [data-nav-focus] {
       outline: 3px solid CanvasText;
     }
+    /* A pressed tile, the current song and the current letter are only a fill in
+       colour; forced colours removes the fill, so give them an outline. */
+    .band [aria-pressed="true"],
+    .band [aria-current="true"],
+    .band .song-row.is-active {
+      outline: 2px solid Highlight;
+      outline-offset: 2px;
+    }
+    .band .melody-word.is-done {
+      text-decoration: underline;
+      text-underline-offset: 0.15em;
+    }
+    .band .melody-word.is-missed {
+      text-decoration: line-through;
+    }
   }
   /* A focus moved by code because the screen changed is not the mouse's focus.
      When the pointer is what is driving, do not paint a second active control. */
@@ -2169,7 +2184,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: clamp(0.6rem, 2vmin, 1.6rem);
+    /* A page is drawn under the notch and the home indicator in the installed
+       game (`viewport-fit=cover`); the padding is the safe area, or the gutter
+       when there is none. */
+    padding:
+      max(clamp(0.6rem, 2vmin, 1.6rem), env(safe-area-inset-top, 0px))
+      max(clamp(0.6rem, 2vmin, 1.6rem), env(safe-area-inset-right, 0px))
+      max(clamp(0.6rem, 2vmin, 1.6rem), env(safe-area-inset-bottom, 0px))
+      max(clamp(0.6rem, 2vmin, 1.6rem), env(safe-area-inset-left, 0px));
     overflow: auto;
     pointer-events: auto;
     /* A page is a **scrim over the room**, not a sheet of ink: the backdrop is what
@@ -2194,7 +2216,11 @@
       radial-gradient(120% 90% at 15% 10%, rgba(255, 212, 0, 0.16), transparent 62%),
       radial-gradient(80% 70% at 92% 100%, rgba(34, 224, 255, 0.08), transparent 62%),
       linear-gradient(180deg, rgba(10, 11, 8, 0.5), rgba(10, 11, 8, 0.74));
-    overflow: hidden;
+    /* At 400% zoom (or large text) the poster is taller than the screen. It scrolls
+       rather than clipping the only way into the game; `safe center` keeps the top
+       reachable instead of centring the overflow out of view. */
+    align-items: safe center;
+    overflow: auto;
   }
   /* The way in is the game's **poster**: a hazard-taped marquee over the room. It is
      one of the two screens that *is* a single thing, so it keeps the centred card —
@@ -2654,7 +2680,8 @@
      wordmark, a strip of hazard tape and the strapline — over the room's own glow,
      so the two screens read as the same show. */
   .screen--menu {
-    overflow: hidden;
+    align-items: safe center;
+    overflow: auto;
     padding: clamp(0.35rem, 2vmin, 1.6rem);
     background:
       radial-gradient(120% 90% at 12% 8%, rgba(255, 212, 0, 0.15), transparent 62%),
@@ -4529,6 +4556,14 @@
   }
   /* A box whose player the song has nothing for — the same shape as a level button,
      so the space it sits in reads as part of the box rather than a note about it. */
+  .slot__mic {
+    margin: 0.15rem 0 0;
+    padding: 0.2rem 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    line-height: 1.4;
+    color: var(--color-yellow);
+  }
   .slot__aside {
     padding: 0.2rem 0.35rem;
     font-family: var(--font-mono);
@@ -4659,7 +4694,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: clamp(0.6rem, 2vmin, 1.6rem);
+    padding:
+      max(clamp(0.6rem, 2vmin, 1.6rem), env(safe-area-inset-top, 0px))
+      max(clamp(0.6rem, 2vmin, 1.6rem), env(safe-area-inset-right, 0px))
+      max(clamp(0.6rem, 2vmin, 1.6rem), env(safe-area-inset-bottom, 0px))
+      max(clamp(0.6rem, 2vmin, 1.6rem), env(safe-area-inset-left, 0px));
     overflow: auto;
     pointer-events: auto;
     background: rgba(10, 11, 8, 0.78);
@@ -4672,7 +4711,11 @@
     max-width: none;
     max-height: none;
     margin: 0;
-    padding: clamp(0.6rem, 2vmin, 1.6rem);
+    padding:
+      max(clamp(0.6rem, 2vmin, 1.6rem), env(safe-area-inset-top, 0px))
+      max(clamp(0.6rem, 2vmin, 1.6rem), env(safe-area-inset-right, 0px))
+      max(clamp(0.6rem, 2vmin, 1.6rem), env(safe-area-inset-bottom, 0px))
+      max(clamp(0.6rem, 2vmin, 1.6rem), env(safe-area-inset-left, 0px));
     border: 0;
     color: var(--color-cream);
     background: transparent;

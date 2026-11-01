@@ -7,6 +7,7 @@ import { useAudio } from "../audio/StageAudio";
 import { partKeyOf } from "../../../lib/game/audio/parts";
 import { controllerLabels } from "../../../lib/game/controls/plan";
 import { Highway } from "./Highway";
+import { useCoarsePointer } from "./useCoarsePointer";
 import { useFirstRunHint } from "./useFirstRunHint";
 import { InfoRail } from "./InfoRail";
 import { usePartMute } from "./PartAudio";
@@ -44,6 +45,7 @@ interface Props {
 
 export function PlayerPanel({ player, width, height, view, noteStyle, noteSpeed, visualLagMs, tap, haptics, bare = false }: Props) {
   const t = useT();
+  const coarse = useCoarsePointer();
   const { track, seed } = useSong();
   const { play } = useAudio();
   // Who is playing this panel is the control plan's to say, because it is what
@@ -56,13 +58,16 @@ export function PlayerPanel({ player, width, height, view, noteStyle, noteSpeed,
   // The first few notes carry their own controls, read from this seat's **resolved**
   // mapping — a second keyboard player's `H J K L ;`, a pad's buttons, a MIDI kit's
   // notes. A machine seat has no hands to teach, so it gets none.
-  const labels = auto || !seatControl ? null : controllerLabels(seatControl);
+  //
+  // A coarse pointer with tap on is played by **tapping the pads**, so the keys a
+  // keyboard would use are not the player's controls; the lesson says that instead
+  // (`Highway`'s own coach), and no key caps are drawn.
+  const touch = tap && coarse && !auto;
+  const labels = auto || !seatControl || touch ? null : controllerLabels(seatControl);
   // Each **seat** gets the lesson once. Player 3 still gets it when Players 1 and
   // 2 have already played; it is not one browser-wide first run.
-  const firstRun = useFirstRunHint(
-    player.seat,
-    labels !== null && (chart?.notes.length ?? 0) > 0,
-  );
+  const lesson = (labels !== null || touch) && (chart?.notes.length ?? 0) > 0;
+  const firstRun = useFirstRunHint(player.seat, lesson);
   const name = player.name ?? t("band.player", { n: player.seat + 1 });
   // What the chart says the seat is: a lead and a rhythm guitar are both guitars,
   // and the panel says which one this is.
@@ -163,6 +168,7 @@ export function PlayerPanel({ player, width, height, view, noteStyle, noteSpeed,
           run={run}
           held={held}
           labels={labels}
+          touch={touch}
           firstRun={firstRun}
           view={view}
           noteStyle={noteStyle}

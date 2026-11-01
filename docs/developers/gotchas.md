@@ -1990,6 +1990,16 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
 - **Accessibility is a constraint, not a nice-to-have.** Focus rings, reduced
   motion, the skip link, the `<details>` mobile menu and 44px targets are all
   deliberate; do not regress them. Decorative layers are `aria-hidden`.
+- **A permission is asked at the choice, never at Play, and a lesson is shaped like
+  the device.** The microphone is requested by choosing **Vocals**; a remembered
+  singer who never granted it is played by the machine, and the seat says so. Play
+  turning a run into a browser permission prompt is the surprise a new player cannot
+  read. A coarse pointer with Tap on plays with pads, so its first notes name the pad
+  rather than a key, the pause names **Resume** rather than Escape, and the band's
+  hint names tapping rather than one keyboard. Under `forced-colors` a chosen tile is
+  an **outline** and a typed word keeps a shape: a fill is not a state the OS leaves
+  visible. The poster screens scroll when zoom makes them taller than the window —
+  the only way in must never be clipped.
 - **Fonts are self-hosted** in `public/fonts/` and declared in `global.css`;
   `bun run fonts` re-downloads them. `BaseLayout` preloads the display font.
 - **Icons are generated** with the `favicons` package (`bun run icons`) from

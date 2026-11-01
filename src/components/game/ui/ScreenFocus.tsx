@@ -26,10 +26,16 @@ export function ScreenFocus({ screen, song }: Props) {
   // from the row the player just pressed. `previous` is what makes a branch a
   // round trip: coming back from Options lands on Options, not on Quick Play.
   const lastScreen = useRef<Screen | null>(null);
+  // The label is read at the moment the screen changes. A song picked in the
+  // jukebox is announced by the row that has focus, not by re-announcing the
+  // screen title over it; the band and the results name their song because they
+  // are new screens.
+  const songRef = useRef(song);
+  songRef.current = song;
 
   useEffect(() => {
-    setAnnouncement(screenLabel(screen, song, t));
-  }, [screen, song?.id, t]);
+    setAnnouncement(screenLabel(screen, songRef.current, t));
+  }, [screen, t]);
 
   useEffect(() => {
     if (lastScreen.current === screen) return;
@@ -91,7 +97,9 @@ function screenLabel(screen: Screen, song: Song | null, t: ReturnType<typeof use
     case "countdown":
       return t("screen.ready");
     case "playing":
-      return t("play.heading");
+      return song
+        ? `${t("screen.playingNow")}: ${song.title}`
+        : t("screen.playingNow");
     case "paused":
       return t("screen.paused");
     case "results":
