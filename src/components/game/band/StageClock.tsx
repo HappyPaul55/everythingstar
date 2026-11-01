@@ -134,6 +134,8 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
   const seekSerialRef = useRef(0);
   /** The last seek generation the subscribers were told about. */
   const notifiedSeekRef = useRef(0);
+  /** One last tick owed to the end of a run, or to the sound finishing it. */
+  const notifyRef = useRef(false);
   // It starts standing still: the screen machine says when a run begins, so the
   // stage does not play behind the welcome and the menu.
   const playingRef = useRef(false);
@@ -265,6 +267,10 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
           playingRef.current = false;
           setPlaying(false);
           setEnded(true);
+          // The frame that ends a run still has subscribers to tell: practice owns
+          // its end and the screen machine ends the run on this signal, and both are
+          // subscriptions. Only the frames **after** it are quiet.
+          notifyRef.current = true;
         }
       }
       // The playhead has just been read: remember when, so `timeOf` can carry an
@@ -276,9 +282,10 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
       // must still move when the transport is moved) and a connected pad (the menu
       // is driven by the poll on this clock).
       const seeked = seekSerialRef.current !== notifiedSeekRef.current;
-      if (playingRef.current || seeked || padsPresent()) {
+      if (playingRef.current || seeked || notifyRef.current || padsPresent()) {
         for (const subscriber of subscribers.current) subscriber();
         notifiedSeekRef.current = seekSerialRef.current;
+        notifyRef.current = false;
       }
     };
 
@@ -399,6 +406,7 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
         setPlaying(false);
         setEnded(true);
         sampledAtRef.current = performance.now();
+        notifyRef.current = true;
       },
       sourceLost,
     }),
