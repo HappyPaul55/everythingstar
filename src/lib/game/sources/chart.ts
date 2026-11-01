@@ -19,6 +19,7 @@
  */
 
 import {
+  boundNotes,
   strums,
   type ChartPhrase,
   type Difficulty,
@@ -373,13 +374,17 @@ function readChartNotes(
       if (endMs > startMs) phrases.push({ startMs, endMs });
     }
   }
-  notes.sort((a, b) => a.timeMs - b.timeMs);
-  if (notes.length === 0) return null;
-  if (strummed && notes[0].kind === "hopo") notes[0] = { ...notes[0], kind: "strum" };
+  // Bound before the length is read from them: see `boundNotes`. A hold is clamped
+  // and a note past any song is dropped, so one bad tick cannot cost the whole chart
+  // (the reader has no problems list of its own; the caller names what it can).
+  const bounded = boundNotes(notes);
+  bounded.sort((a, b) => a.timeMs - b.timeMs);
+  if (bounded.length === 0) return null;
+  if (strummed && bounded[0].kind === "hopo") bounded[0] = { ...bounded[0], kind: "strum" };
 
-  const highest = notes.reduce((max, note) => (note.column === null ? max : Math.max(max, note.column)), -1);
+  const highest = bounded.reduce((max, note) => (note.column === null ? max : Math.max(max, note.column)), -1);
   let columns = highest + 1;
-  if (notes.some((note) => note.column === null)) columns = Math.max(columns, part.width);
+  if (bounded.some((note) => note.column === null)) columns = Math.max(columns, part.width);
   // A drum highway always has a pedal column, used or not: six columns is what a
   // kit is, and the band's learn flow asks a drummer for six controls.
   if (part.instrument === "drums") columns = Math.max(part.width, columns);
@@ -391,7 +396,7 @@ function readChartNotes(
     columns,
     ...(bpm > 0 ? { bpm } : {}),
     ...(phrases.length > 0 ? { phrases } : {}),
-    notes: notes.map((note, index) => ({
+    notes: bounded.map((note, index) => ({
       ...note,
       id: `${part.role ?? part.instrument}-${difficulty}-${index}`,
     })),

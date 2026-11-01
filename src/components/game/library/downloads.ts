@@ -31,7 +31,7 @@ import type { SourceSongDoc } from "../../../lib/game/source";
 import { fetchableUrl } from "../../../lib/game/url";
 import { OFFLINE_CACHE } from "../../../lib/pwa/cache";
 import { isSngUrl } from "./sngUrl";
-import { fetchResponse, responseFailure } from "./store";
+import { fetchResponse, responseBytes, responseFailure } from "./store";
 
 /**
  * The Cache Storage bucket the service worker reads.
@@ -155,21 +155,18 @@ const recordListeners = new Set<() => void>();
  * here all along subscribed to.
  */
 /**
- * How many bytes a response actually is.
+ * How many bytes a response actually carried.
  *
  * `Content-Length` is a hint: a chunked response has none, and a host that gzips
  * declares the compressed size. The manager used to show "0 MB" beside a 20 MB
- * song. When the header is there it wins (no extra copy of a stem); when it is not,
- * the body is measured on a clone.
+ * song. The header wins when it is there; otherwise the count the bounded stream
+ * kept is the answer — no clone, no second copy of a 128 MB stem, and it still
+ * works after the body has been read (a document is parsed before it is measured).
  */
-async function bodySize(response: Response): Promise<number> {
+function bodySize(response: Response): number {
   const declared = Number(response.headers.get("content-length") ?? 0);
   if (Number.isFinite(declared) && declared > 0) return declared;
-  try {
-    return (await response.clone().blob()).size;
-  } catch {
-    return 0;
-  }
+  return responseBytes(response) ?? 0;
 }
 
 export function downloadState(): OfflineJobState {
@@ -642,11 +639,12 @@ export async function downloadSong(
         idleMs: options.idleMs,
       });
 
-      const length = await bodySize(response);
+      // The bytes are counted as the cache writes them, so this is read **after**
+      // the put; before it, a body with no `Content-Length` would still be zero.
       await cache.put(url, response);
       urls.add(url);
       if (!alreadyCached) written.add(url);
-      bytes += length;
+      bytes += bodySize(response);
     } catch (error) {
       if (error instanceof OfflineError) throw error;
       if (options.signal?.aborted) throw new OfflineError("cancelled");
@@ -680,7 +678,7 @@ export async function downloadSong(
       const cachedDoc = response.clone();
       const body: unknown = await response.json();
       const alreadyCached = await cache.match(url, { ignoreVary: true });
-      const length = await bodySize(response);
+      const length = bodySize(response);
       await cache.put(url, cachedDoc);
       urls.add(url);
       if (!alreadyCached) written.add(url);

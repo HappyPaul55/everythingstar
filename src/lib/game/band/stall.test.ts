@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { SOURCE_STALL_MS, sourceStalled } from "./stall";
+import { SOURCE_STALL_MS, SOURCE_STALL_SOFT_MS, sourceStalled } from "./stall";
 
 describe("sourceStalled", () => {
   test("the first silent frame starts the window and does not give up", () => {
@@ -26,5 +26,19 @@ describe("sourceStalled", () => {
 
   test("a zero limit gives up at once, for a caller that means it", () => {
     expect(sourceStalled(null, 5, 0)).toEqual({ since: 5, stalled: true });
+  });
+});
+
+describe("the two windows", () => {
+  test("a source that failed is given up on sooner than a slow one", () => {
+    const failed = sourceStalled(0, SOURCE_STALL_MS, SOURCE_STALL_MS);
+    const slow = sourceStalled(0, SOURCE_STALL_MS, SOURCE_STALL_SOFT_MS);
+    expect(failed.stalled).toBe(true);
+    expect(slow.stalled).toBe(false);
+    expect(SOURCE_STALL_SOFT_MS).toBeGreaterThan(SOURCE_STALL_MS);
+  });
+
+  test("a slow source is given up on at the long window", () => {
+    expect(sourceStalled(0, SOURCE_STALL_SOFT_MS, SOURCE_STALL_SOFT_MS).stalled).toBe(true);
   });
 });

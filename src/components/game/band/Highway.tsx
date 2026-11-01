@@ -422,11 +422,12 @@ export function Highway({
     if (previous === undefined) return;
     const column = columnAt(event);
     if (column === previous) return;
-    pointers.current.set(event.pointerId, column);
     // A glide on a stage that is not moving is not a note: nothing would judge it,
-    // and the pad would show a hand the run never took. The pointer is still
-    // remembered, so its release is the ordinary one.
+    // and the pad would show a hand the run never took. The pointer is **not**
+    // re-pointed either — a finger that was already on a pad when the run paused
+    // must release that pad, not the one it happens to be over when it lifts.
     if (!clock.playing) return;
+    pointers.current.set(event.pointerId, column);
     // Another finger may still be on the column this one left. The glide is the
     // same either way; only the pad's own light differs.
     const fromStillHeld = [...pointers.current.values()].includes(previous);

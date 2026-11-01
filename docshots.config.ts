@@ -25,5 +25,6 @@ export default defineDocshots({
   // the build runs ahead of the captures; it just does not ask for a desktop one.
   shots: {
     "phone-pads": ["mobile"],
+    "stage-pause": ["mobile"],
   },
 });

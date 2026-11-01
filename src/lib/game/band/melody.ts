@@ -20,7 +20,7 @@
  * lands — so it carries no bars at all.
  */
 
-import type { MelodyLine, MelodyNote } from "../track";
+import type { MelodyLine, MelodyNote, NoteState } from "../track";
 
 /** The shortest a bar is drawn, so a quick word still reads as a note. */
 export const MIN_BAR_MS = 280;
@@ -163,7 +163,9 @@ export function rollNotes(notes: readonly MelodyNote[]): RollNote[] {
     const key = notePlace(note);
     const already = drawn.get(key);
     if (already) {
-      already.parts.push(note.part);
+      // A part can appear twice on one place when a chart has more voices than the
+      // roll has colours; the bar is shared by **parts**, so it is listed once.
+      if (!already.parts.includes(note.part)) already.parts.push(note.part);
       continue;
     }
     const entry: RollNote = { note, parts: [note.part] };
@@ -171,6 +173,32 @@ export function rollNotes(notes: readonly MelodyNote[]): RollNote[] {
     out.push(entry);
   }
   return out;
+}
+
+/**
+ * The verdict of one bar, from every singer on it.
+ *
+ * A shared note has one entry per part, and each singer gets their own verdict: a
+ * bar is a hit only when every voice hit, and a miss only when every voice missed.
+ * One of each is `mixed`. A part can appear twice on one place (a chart with more
+ * voices than the roll has colours collapses the extra parts onto the last one), so
+ * the verdict is taken **per part** — that is one singer with one verdict, not a
+ * duet with two.
+ */
+export function placeVerdict(
+  sung: readonly MelodyNote[] | undefined,
+  nowMs: number,
+  verdicts: ReadonlyMap<string, { hit: boolean }>,
+  judged: (note: MelodyNote) => number,
+): NoteState {
+  if (!sung || sung.length === 0) return "pending";
+  const byPart = new Map(sung.map((note) => [note.part, note]));
+  const voices = [...byPart.values()];
+  if (voices.some((note) => nowMs <= judged(note))) return "live";
+  const hits = voices.filter((note) => verdicts.get(note.id)?.hit).length;
+  if (hits === voices.length) return "hit";
+  if (hits === 0) return "miss";
+  return "mixed";
 }
 
 /**

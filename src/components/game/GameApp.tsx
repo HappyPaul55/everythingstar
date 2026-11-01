@@ -229,10 +229,12 @@ function GameApp({ credits, attract = false }: Props) {
             screen and nothing else, so its corner is set aside. */}
         {!session.attract || attractConfig?.chrome ? (
           <div className="stage-corner">
-            {coarse && session.screen === "playing" ? (
-              <StagePause onPause={() => session.dispatch("pause")} />
-            ) : null}
-            <StageFullscreen fullscreen={session.fullscreen} />
+            <div className="stage-corner__row">
+              {coarse && session.screen === "playing" ? (
+                <StagePause onPause={() => session.dispatch("pause")} />
+              ) : null}
+              <StageFullscreen fullscreen={session.fullscreen} />
+            </div>
             {session.dev ? (
               <Suspense fallback={null}>
                 <BandControls

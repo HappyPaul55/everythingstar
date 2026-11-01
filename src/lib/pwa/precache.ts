@@ -21,6 +21,8 @@ export const PAGE_FILES = [
   "open.html",
   "index.html",
   "privacy.html",
+  "terms.html",
+  "accessibility.html",
 ] as const;
 
 /** Files every install needs even though no page's head names them. */

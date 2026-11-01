@@ -98,13 +98,13 @@ export function Credits({ sounds, site, onBack }: Props) {
               the microphone and MIDI prompts depend on. */}
           {row(
             t("screen.creditNotices"),
-            <>
+            <span className="credit__links">
               <a href={localePath(locale, "/privacy")}>{t("nav.privacy")}</a>
-              {" · "}
+              <span aria-hidden="true">·</span>
               <a href={localePath(locale, "/terms")}>{t("nav.terms")}</a>
-              {" · "}
+              <span aria-hidden="true">·</span>
               <a href={localePath(locale, "/accessibility")}>{t("nav.accessibility")}</a>
-            </>,
+            </span>,
           )}
         </ul>
       </div>

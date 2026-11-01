@@ -124,6 +124,24 @@ export async function capturePhonePads(context: BrowserContext, page: Page): Pro
   expectNoExternalRequests(leaked);
 }
 
+/**
+ * A phone's run, with the **Pause** chip in the stage corner.
+ *
+ * A phone has no Escape key, so the chip is the only way into the pause; it is
+ * drawn only for a coarse pointer, which makes this a phone picture by definition
+ * (`doc-viewport: mobile`). The run has to be moving for it to be there.
+ */
+export async function captureStagePause(context: BrowserContext, page: Page): Promise<void> {
+  const leaked = await startPlayerCapture(context, page);
+  await openDocsBand(page);
+  await seatPlayers(page, 1);
+  await setSlot(page, 1, "Guitar");
+  await startDocsRun(page);
+  await waitForPlaying(page);
+  await expect(page.getByRole("button", { name: "Pause", exact: true })).toBeVisible();
+  expectNoExternalRequests(leaked);
+}
+
 /* --------------------------------------------------- the loop, screen by screen */
 
 /**

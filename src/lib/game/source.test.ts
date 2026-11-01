@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   chartProblems,
   MAX_NOTE_LENGTH_MS,
+  MAX_SONG_MS,
   type LaneChart,
   type LaneNote,
   type MelodyChart,
@@ -906,6 +907,53 @@ describe("readChart", () => {
     const melody = read.melody as MelodyChart;
     expect(melody.lines[0].words.map((word) => word.text)).toEqual(["first", "second"]);
     expect(melody.lines[0].words.map((word) => word.timeMs)).toEqual([1100, 1900]);
+  });
+
+  test("a line past any song is dropped, so it cannot stretch the track", () => {
+    const read = readChart(
+      {
+        schemaVersion: 1,
+        chartType: "lyrics",
+        rows: 6,
+        parts: 1,
+        lines: [
+          {
+            timeMs: 0,
+            endMs: 1000,
+            parts: [{ part: 0, offset: 0 }],
+            words: [{ text: "here", timeMs: 0 }],
+          },
+          {
+            timeMs: 1e12,
+            endMs: 1e12 + 5000,
+            parts: [{ part: 0, offset: 0 }],
+            words: [{ text: "never", timeMs: 0 }],
+          },
+        ],
+        notes: [],
+      },
+      laneChart({ chartType: "lyrics", difficulty: null }),
+      "words",
+    );
+    expect(read.problems).toEqual([
+      "c_lead_gtr_expert: a line past the end of any song",
+    ]);
+    const melody = read.melody as MelodyChart;
+    expect(melody.lines).toHaveLength(1);
+    expect(melody.lines[0].words.map((word) => word.text)).toEqual(["here"]);
+    const doc = readSongDoc(
+      {
+        schemaVersion: 1,
+        id: "long",
+        title: "Long",
+        durationMs: 0,
+        audio: { source: "stems" },
+        parts: [],
+      },
+      SONG_URL,
+    ).doc!;
+    const built = assembleTrack(doc, [], melody);
+    expect(built.track.durationMs).toBeLessThanOrEqual(MAX_SONG_MS + SONG_TAIL_MS);
   });
 
   test("a line that ends before it starts is repaired, not trusted", () => {

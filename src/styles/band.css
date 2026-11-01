@@ -217,6 +217,18 @@
       var(--stage-gutter, 16px)
       calc(var(--stage-gutter, 16px) + env(safe-area-inset-left, 0px));
   }
+  /* A coarse pointer gets a Pause chip beside Fullscreen in the stage corner. Both
+     are 44 px targets, so the stage reserves a strip at the top for them: without
+     it the score rail on a lone player's phone runs underneath the chips. The
+     layout measures the content box, so the highway gives the strip up rather than
+     being covered. */
+  @media (pointer: coarse) {
+    .band__stage {
+      padding-top: calc(
+        var(--stage-gutter, 16px) + env(safe-area-inset-top, 0px) + 3.1rem
+      );
+    }
+  }
   .band__overlay {
     position: absolute;
     inset: 0;
@@ -3205,6 +3217,14 @@
     text-decoration: underline;
     text-underline-offset: 0.15em;
   }
+  /* Several links on one credit row — the notices — read as one sentence rather
+     than one per line: `.credit__who` is a column, so they are wrapped as one. */
+  .credit__links {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.15rem 0.35rem;
+  }
   .credit__note {
     grid-column: 2;
     font-family: var(--font-mono);
@@ -5433,6 +5453,14 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+    gap: 0.3rem;
+  }
+  /* The stage's own chips side by side. A phone adds a Pause beside Fullscreen, and
+     a second chip in the column would push the practice read-out under it — the
+     read-out is placed for a corner one chip tall. */
+  .stage-corner__row {
+    display: flex;
+    align-items: flex-start;
     gap: 0.3rem;
   }
 

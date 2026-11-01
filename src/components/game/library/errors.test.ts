@@ -43,7 +43,7 @@ describe("errorMessage", () => {
       'Unexpected token \'<\', "<!DOCTYPE " is not valid JSON',
     );
     expect(errorMessage(html, "fallback")).toBe(
-      "that address answered with something that is not a playlist",
+      "that address answered with something this game could not read",
     );
   });
 });

@@ -506,6 +506,8 @@ export const en = {
   "charter.recordMode": "Record mode",
   "charter.armed": "Recording",
   "charter.takeEmpty": "The take heard nothing. Press a fret and strum, or try again.",
+  "charter.takeGone":
+    "The chart this take was played on was removed, so the take was not added.",
   "charter.takeAdded": "{count} notes added",
   "charter.quantize": "Quantize",
   "charter.quantizeTake": "Quantize takes",

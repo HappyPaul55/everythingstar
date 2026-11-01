@@ -26,9 +26,10 @@ const UNREACHABLE_SENTENCE =
  *
  * V8's own `Unexpected token '<', "<!DOCTYPE "…` names the internals and quotes a
  * piece of somebody else's page; none of that helps a player, and the fix is the
- * same sentence.
+ * same sentence. It is deliberately **not** "playlist": the same reader parses a
+ * song document and a chart.
  */
-const NOT_A_DOCUMENT = "that address answered with something that is not a playlist";
+const NOT_A_DOCUMENT = "that address answered with something this game could not read";
 
 /**
  * The one sentence for a request that never reached its host, or null when this is

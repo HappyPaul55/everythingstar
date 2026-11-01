@@ -14,7 +14,7 @@ import {
   playheadEnded,
 } from "../../../lib/game/band/clockRange";
 import { SEEK_GUARD_MS, sourcePlayhead } from "../../../lib/game/band/playhead";
-import { sourceStalled } from "../../../lib/game/band/stall";
+import { SOURCE_STALL_SOFT_MS, SOURCE_STALL_MS, sourceStalled } from "../../../lib/game/band/stall";
 
 /**
  * The stage clock: one animation frame loop for the whole stage, and the
@@ -95,6 +95,13 @@ export interface StageClock {
   followSource: (
     read: (() => number | null) | null,
     seek?: ((timeMs: number) => void) | null,
+    /**
+     * Whether the source has **failed** rather than merely not arrived yet: every
+     * stem errored, the video was refused. A failure gives up at
+     * `SOURCE_STALL_MS`; a source that is only slow gets `SOURCE_STALL_SOFT_MS`,
+     * because a seek or a buffer is not a broken song.
+     */
+    failed?: (() => boolean) | null,
   ) => void;
   /** The song ran out, said by the **sound** rather than by the playhead's reach. */
   finish: () => void;
@@ -137,6 +144,14 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
   const sourceRef = useRef<(() => number | null) | null>(null);
   /** How to move that sound when the transport is seeked. */
   const sourceSeekRef = useRef<((timeMs: number) => void) | null>(null);
+  /** Whether the source says it has failed, rather than being slow to arrive. */
+  const sourceFailedRef = useRef<(() => boolean) | null>(null);
+  /**
+   * The last **non-null** reader registered. A cleanup registers `null`, and
+   * re-registering the same reader must not look like a new song — otherwise every
+   * clock value change would clear a declared loss.
+   */
+  const lastReaderRef = useRef<(() => number | null) | null>(null);
   /**
    * When the playhead was last moved **deliberately** (a seek, a restart, a play
    * from the end), as a `performance.now()` moment. The source read is guarded for
@@ -186,10 +201,18 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
           // running ahead of a song nobody can hear.
           const at = source();
           if (at !== null) {
-            stalledSinceRef.current = null;
+            // The sound is back after we had given up on it. It is behind the
+            // playhead by however long it was silent, so seat it on the playhead
+            // once rather than letting the monotonic read freeze the highway until
+            // the music catches up (which it never does — it is the slow side).
             if (sourceLostRef.current) {
               sourceLostRef.current = false;
               setSourceLost(false);
+              sourceSeekRef.current?.(timeRef.current);
+              seekedAtRef.current = now;
+              stalledSinceRef.current = null;
+            } else {
+              stalledSinceRef.current = null;
             }
             const next = clampPlayhead(at, durationMs);
             // The stem the clock is read from can change mid-run, and the new one
@@ -202,11 +225,18 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
             timeRef.current = sourcePlayhead(next, timeRef.current, guard);
           } else {
             // A source that never answers would hold the run at 0:00 for ever: no
-            // music, no notes, no results. A file still loading has a reason to be
-            // quiet for a moment; after the stall limit the frame clock takes
-            // over, and the stage says the sound is gone. The source stays
-            // registered, so a stem that does arrive resumes being the clock.
-            const stall = sourceStalled(stalledSinceRef.current, now);
+            // music, no notes, no results. A file that is merely buffering gets the
+            // long grace (`SOURCE_STALL_SOFT_MS`) — a seek in flight is not a broken
+            // song — while a source that says it has failed gets the short one. The
+            // frame clock then takes over and the stage says the sound is gone; the
+            // source stays registered, so a stem that does arrive seats itself on
+            // the playhead above.
+            const hard = sourceFailedRef.current?.() ?? false;
+            const stall = sourceStalled(
+              stalledSinceRef.current,
+              now,
+              hard ? SOURCE_STALL_MS : SOURCE_STALL_SOFT_MS,
+            );
             stalledSinceRef.current = stall.since;
             if (stall.stalled) {
               if (!sourceLostRef.current) {
@@ -335,11 +365,14 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
         // would be undone by the next frame's read from the audio element.
         sourceSeekRef.current?.(timeRef.current);
       },
-      followSource: (read, seek) => {
-        // Pointing at a different reader is pointing at different sound: the
-        // stall it was given belongs to the old one. Registering the same reader
-        // again (which a re-render does) changes nothing.
-        if (sourceRef.current !== read) {
+      followSource: (read, seek, failed) => {
+        // A **different** reader is different sound: the stall it was given belongs
+        // to the old one. Registering the same reader again — which a render or an
+        // effect re-run does — changes nothing. A `null` is a cleanup and must not
+        // undo a loss the frame loop has already declared, or the notice would
+        // flicker every time the clock's value changes.
+        if (read !== null && lastReaderRef.current !== read) {
+          lastReaderRef.current = read;
           stalledSinceRef.current = null;
           if (sourceLostRef.current) {
             sourceLostRef.current = false;
@@ -348,6 +381,7 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
         }
         sourceRef.current = read;
         sourceSeekRef.current = seek ?? null;
+        sourceFailedRef.current = read ? (failed ?? null) : null;
       },
       finish: () => {
         playingRef.current = false;

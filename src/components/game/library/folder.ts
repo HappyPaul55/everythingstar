@@ -869,6 +869,14 @@ function forgetFolder(id: string): void {
   for (const url of sngFilesByUrl.keys()) {
     if (url.startsWith(`folder://${id}/`)) sngFilesByUrl.delete(url);
   }
+  // The member bytes are keyed by the same URL: a picked folder's id comes from
+  // its name, so closing and re-picking a same-named folder reuses the id. Keeping
+  // the bytes would serve the old cover or stem from a package that was replaced.
+  for (const [url, bytes] of sngEntries) {
+    if (!url.startsWith(`folder://${id}/`)) continue;
+    sngEntries.delete(url);
+    sngEntryTotal -= bytes.length;
+  }
   for (const dir of previewClipNames.keys()) {
     if (dir.startsWith(`folder://${id}/`)) previewClipNames.delete(dir);
   }

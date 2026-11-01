@@ -15,6 +15,7 @@
  */
 
 import {
+  boundNotes,
   chartProblems,
   cleanSlides,
   DIFFICULTIES,
@@ -24,6 +25,7 @@ import {
   MAX_NOTE_LENGTH_MS,
   MAX_NOTE_TIME_MS,
   MAX_PARTS,
+  MAX_SONG_MS,
   nearestDifficulty,
   slideProblems,
   strums,
@@ -931,14 +933,23 @@ function readMelody(
       }
     }
     const lineStart = Math.max(0, at + offset);
+    if (!Number.isFinite(lineStart) || lineStart > MAX_NOTE_TIME_MS) {
+      problems.push(`${chart.id}: a line past the end of any song`);
+      continue;
+    }
     const statedEnd = (num(entry.endMs) ?? at) + offset;
     lines.push({
       timeMs: lineStart,
       // A line may not end before it starts, or hours after any song: the views
-      // and the typist's deadline both read `endMs` as a moment.
-      endMs: Math.min(
-        MAX_NOTE_TIME_MS,
-        Math.max(lineStart, Number.isFinite(statedEnd) ? statedEnd : lineStart),
+      // and the typist's deadline both read `endMs` as a moment. The order matters:
+      // clamping to the ceiling first and *then* to the start is what keeps a line
+      // at the ceiling from ending before it begins.
+      endMs: Math.max(
+        lineStart,
+        Math.min(
+          MAX_NOTE_TIME_MS,
+          Number.isFinite(statedEnd) ? statedEnd : lineStart,
+        ),
       ),
       freeform: flag(entry.freeform),
       parts: [...lineParts].map(([part, partOffset]) => ({ part, offset: partOffset })),
@@ -1120,8 +1131,14 @@ export function trackDuration(
   lanes: readonly LaneChart[],
   melody: MelodyChart | null,
 ): number {
-  if (Number.isFinite(doc.durationMs) && doc.durationMs > 0) return doc.durationMs;
-  const content = contentDuration(lanes, melody);
+  // The backstop behind every reader: a length is never allowed past what a track
+  // can be, whether it came from a stated duration or from notes. A translucent
+  // tempo map used to produce a "208-day song" whose playhead and last-note gate
+  // could never arrive.
+  if (Number.isFinite(doc.durationMs) && doc.durationMs > 0) {
+    return Math.min(doc.durationMs, MAX_SONG_MS);
+  }
+  const content = Math.min(contentDuration(lanes, melody), MAX_SONG_MS);
   return content > 0 ? content + SONG_TAIL_MS : 0;
 }
 
@@ -1155,6 +1172,30 @@ function laneProblems(chart: LaneChart): string[] {
   }
 }
 
+/**
+ * A melody whose notes and lines the stage can actually draw.
+ *
+ * The JSON reader bounds its own; this is the seam every source passes through, so
+ * a MIDI voice or a lyric sheet with a bad tempo cannot stretch the roll (or the
+ * track's length) to the ceiling. A line starts where it says, ends where it says but
+ * never before it starts and never past the ceiling, and a word past the ceiling is
+ * dropped with its line.
+ */
+function boundedMelody(melody: MelodyChart): MelodyChart {
+  const notes = fitMelodyTurns(boundNotes(melody.notes));
+  const lines = melody.lines
+    .filter((line) => line.timeMs >= 0 && line.timeMs <= MAX_NOTE_TIME_MS)
+    .map((line) => ({
+      ...line,
+      endMs: Math.max(line.timeMs, Math.min(MAX_NOTE_TIME_MS, line.endMs)),
+      words: line.words.filter(
+        (word) => word.timeMs >= 0 && word.timeMs <= MAX_NOTE_TIME_MS,
+      ),
+    }))
+    .filter((line) => line.words.length > 0);
+  return { ...melody, notes, lines };
+}
+
 /** The track a run plays: what a song document and its read charts add up to. */
 export function assembleTrack(
   doc: SourceSongDoc,
@@ -1173,9 +1214,7 @@ export function assembleTrack(
   // the short one came and went. The one seam every source passes through fits each
   // part's notes into their turns, so neither the fetch nor the folder path can
   // hand the stage overlapping notes.
-  const words = melody
-    ? { ...melody, notes: fitMelodyTurns(melody.notes) }
-    : EMPTY_MELODY;
+  const words = melody ? boundedMelody(melody) : EMPTY_MELODY;
   return {
     track: {
       id: doc.id,

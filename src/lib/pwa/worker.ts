@@ -351,26 +351,34 @@ function isShellPath(pathname: string): boolean {
  * answer when it has one; the extension is the fallback.
  */
 function isJson(request: Request, cached?: Response): boolean {
-  const type = cached?.headers.get("content-type")?.toLowerCase() ?? "";
-  if (type) return type.includes("json");
+  let path = "";
   try {
-    return new URL(request.url).pathname.toLowerCase().endsWith(".json");
+    path = new URL(request.url).pathname.toLowerCase();
   } catch {
-    return false;
+    // A URL the browser cannot parse is not a document we keep.
   }
+  // A `.json` path is network-first whatever the cached type says: that is how a
+  // copy poisoned by the old worker can be replaced. The type then covers a
+  // service that answers `/search?q=…`, and **`text/plain` is a document** —
+  // `raw.githubusercontent.com` serves the seeded playlist and its song documents
+  // that way.
+  if (path.endsWith(".json")) return true;
+  const type = cached?.headers.get("content-type")?.toLowerCase() ?? "";
+  return type.includes("json") || type.startsWith("text/plain");
 }
 
 /**
  * Would storing this response replace a document with a document?
  *
  * A `200` is not enough: a hotel's captive portal, a host's incident page and a
- * provider's error page are all `200 text/html`. A JSON content type is trusted; a
- * response with none is read (on a clone) to see whether it parses.
+ * provider's error page are all `200 text/html`. A JSON type is trusted, a plain
+ * text one (GitHub raw) or a missing one is read on a clone to see whether it
+ * parses, and anything else — HTML, an image, audio — is refused without reading.
  */
 async function looksJson(response: Response): Promise<boolean> {
   const type = (response.headers.get("content-type") ?? "").toLowerCase();
   if (type.includes("json")) return true;
-  if (type) return false;
+  if (type && !type.startsWith("text/plain")) return false;
   try {
     await response.clone().json();
     return true;
@@ -393,6 +401,12 @@ const PAGES: ReadonlyMap<string, string> = new Map([
   ["/open.html", "/open.html"],
   ["/privacy", "/privacy.html"],
   ["/privacy.html", "/privacy.html"],
+  // The installed game's Credits links all three notices, and the shell has to be
+  // able to answer them with no network.
+  ["/terms", "/terms.html"],
+  ["/terms.html", "/terms.html"],
+  ["/accessibility", "/accessibility.html"],
+  ["/accessibility.html", "/accessibility.html"],
 ]);
 
 /** The cached file for a page path, or null when the path is not a known page. */

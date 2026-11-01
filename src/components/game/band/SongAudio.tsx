@@ -346,10 +346,17 @@ export function SongAudio({
     fruitless.current = [];
     seating.current = null;
     // The last song's local files are not this song's: let their URLs go now
-    // rather than carrying a few stems' bytes into the next run.
-    for (const url of objectUrls.current) URL.revokeObjectURL(url);
+    // rather than carrying a few stems' bytes into the next run. The elements that
+    // use them are unmounted by `setSources([])` on the next render, so the revoke
+    // is deferred: an element still holding a revoked URL fires `error`, and that
+    // would count against the **new** song's stems.
+    setSources([]);
+    const old = [...objectUrls.current];
     objectUrls.current.clear();
     localUrls.current.clear();
+    setTimeout(() => {
+      for (const url of old) URL.revokeObjectURL(url);
+    }, 0);
     setAttempt(0);
   }, [doc]);
 
@@ -405,11 +412,18 @@ export function SongAudio({
       const stillWanted = new Set(
         wantedRef.current.filter((file) => isLocalUrl(file.url)).map((file) => file.url),
       );
+      const dropped: string[] = [];
       for (const [key, url] of localUrls.current) {
         if (stillWanted.has(key)) continue;
         localUrls.current.delete(key);
         objectUrls.current.delete(url);
-        URL.revokeObjectURL(url);
+        dropped.push(url);
+      }
+      // After the commit that removes the elements, not before: see the doc effect.
+      if (dropped.length > 0) {
+        setTimeout(() => {
+          for (const url of dropped) URL.revokeObjectURL(url);
+        }, 0);
       }
       box.current?.setAttribute("data-unreadable", String(unreadable));
       // A file the browser would not hand over is settled: the loader must not
@@ -563,6 +577,18 @@ export function SongAudio({
       const at = selectSource();
       return at ? at.currentTime * 1000 - lagRef.current : null;
     };
+    /**
+     * Every stem has errored, so the sound is not late — it is never coming. The
+     * clock gives up on that at the short window; a stem that is only buffering
+     * gets the long one.
+     */
+    const failed = (): boolean => {
+      const nodes = elements.current;
+      return (
+        nodes.some((element) => element !== null) &&
+        nodes.every((element) => element !== null && element.error !== null)
+      );
+    };
     // The clock's seek has to reach the sound as well, or the next frame reads
     // the old position straight back and the scrubber snaps home.
     const seek = (timeMs: number) => {
@@ -585,7 +611,7 @@ export function SongAudio({
         }
       });
     };
-    live.followSource(read, seek);
+    live.followSource(read, seek, failed);
     // A seek can happen before the stems exist — a practice count-in moves to its
     // section while the files are still being read — and the elements would then
     // start at 0, so the run plays from the top of the song. Put them where the
