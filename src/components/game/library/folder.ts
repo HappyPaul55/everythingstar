@@ -222,9 +222,6 @@ async function availableBytes(): Promise<number | null> {
 }
 
 /** Is a song read from a folder rather than fetched? */
-export function isLocalUrl(url: string): boolean {
-  return url.startsWith("folder://");
-}
 
 /**
  * Ask for a folder and read what is in it.
@@ -880,6 +877,10 @@ function forgetFolder(id: string): void {
   for (const dir of previewClipNames.keys()) {
     if (dir.startsWith(`folder://${id}/`)) previewClipNames.delete(dir);
   }
+}
+
+export function isLocalUrl(url: string): boolean {
+  return url.startsWith("folder://");
 }
 
 /** The directory an import lives in, reopened on restore. */

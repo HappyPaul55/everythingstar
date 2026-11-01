@@ -199,7 +199,9 @@ hides the site shell and the browser's chrome, and gives the game alone.
 
 The stage is two regions over a full-bleed backdrop — **the game's own artwork by
 default**, and a song's video, or its art blurred, when there is one — with a scrim to
-keep the regions readable:
+keep the regions readable. The room's artwork is a source set (960/1600/2048 WebP,
+picked by the browser for the screen and pixel density); a phone pays 66 KiB for it
+rather than the 671 KiB JPEG it replaced.
 
 - **Melody region** (full viewport width) — where whoever is on the words plays. It
   shows one of two views, **never both**, and the song's pitch plus who is singing decides

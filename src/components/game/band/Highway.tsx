@@ -1,4 +1,5 @@
 import {
+  memo,
   useEffect,
   useMemo,
   useRef,
@@ -198,6 +199,69 @@ function ArrowMark({ glyph, className }: { glyph: ArrowGlyph; className: string 
     </svg>
   );
 }
+
+/**
+ * One note, memoised on the only things that change while the song moves.
+ *
+ * The highway re-renders at 12.5 Hz so a note can turn live as it reaches the
+ * line, but ninety notes are mounted per panel and only the handful inside the
+ * hit window change on any tick. The parent still computes the cheap boxes; this
+ * component skips the spans, the glyph and the class string when the note's
+ * state, hold or hint is unchanged. On four panels that is the difference
+ * between reconciling a thousand spans a frame and reconciling the eight that
+ * matter.
+ */
+interface HighwayNoteProps {
+  note: LaneNote;
+  state: NoteState;
+  held: boolean;
+  hammered: boolean;
+  kick: boolean;
+  glyph: ArrowGlyph | null;
+  hint: string | null;
+  left: number;
+  width: number;
+  top: number;
+  height: number;
+}
+
+const HighwayNote = memo(function HighwayNote({
+  note,
+  state,
+  held,
+  hammered,
+  kick,
+  glyph,
+  hint,
+  left,
+  width,
+  top,
+  height,
+}: HighwayNoteProps) {
+  const classes = noteClasses(note, { state, hammered, held, kick });
+  const style: CSSProperties = {
+    left: `${left}%`,
+    width: `${width}%`,
+    top: `${top}%`,
+    height: `${height}%`,
+  };
+  return (
+    <span
+      className={classes.join(" ")}
+      style={style}
+      data-note={note.id}
+    >
+      <span className="highway__face" aria-hidden="true">
+        {glyph ? <ArrowMark glyph={glyph} className="highway__glyph" /> : null}
+      </span>
+      {hint ? (
+        <span className="highway__key" aria-hidden="true">
+          {hint}
+        </span>
+      ) : null}
+    </span>
+  );
+});
 
 export function Highway({
   chart,
@@ -651,45 +715,25 @@ export function Highway({
             // tail is the hold, so it stays while the fret is down and goes when it
             // is let go. Nothing is left behind sliding out of the line.
             if (state === "hit" && !holding) return null;
-            const classes = noteClasses(note, {
-              state,
-              hammered: hammered(note),
-              held: holding,
-              kick: isKick(note, chart.instrument),
-            });
-            const glyph = noteGlyph(
-              noteStyle,
-              chart.instrument,
-              note.column,
-              columns,
-            );
             // An open note is drawn across the whole highway; any other note takes
             // its own column, so the two notes of a chord stand side by side.
             const across = noteColumnBox(note.column, columns);
             const { top, height } = box(note);
-            const key = keyFor(note);
-            const style: CSSProperties = {
-              left: `${across.left}%`,
-              width: `${across.width}%`,
-              top: `${top}%`,
-              height: `${height}%`,
-            };
             return (
-              <span
+              <HighwayNote
                 key={note.id}
-                className={classes.join(" ")}
-                style={style}
-                data-note={note.id}
-              >
-                <span className="highway__face" aria-hidden="true">
-                  {glyph ? <ArrowMark glyph={glyph} className="highway__glyph" /> : null}
-                </span>
-                {key ? (
-                  <span className="highway__key" aria-hidden="true">
-                    {key}
-                  </span>
-                ) : null}
-              </span>
+                note={note}
+                state={state}
+                held={holding}
+                hammered={hammered(note)}
+                kick={isKick(note, chart.instrument)}
+                glyph={noteGlyph(noteStyle, chart.instrument, note.column, columns)}
+                hint={keyFor(note)}
+                left={across.left}
+                width={across.width}
+                top={top}
+                height={height}
+              />
             );
           })}
         </div>

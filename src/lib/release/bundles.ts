@@ -18,7 +18,7 @@
  * Two rules are load-bearing and are why this is pure and tested:
  *
  * - **Every path is root-absolute.** Astro writes `/_astro/…`, and the island
- *   fetches `/audio/sounds.json`, `/images/background_1.jpg` and `/fonts/…` at
+ *   fetches `/audio/sounds.json`, `/images/background_1-1600.webp` and `/fonts/…` at
  *   runtime. A standalone folder is therefore served at an origin's **root**, not
  *   opened from disk and not mounted under a path. Rewriting the references would
  *   mean rewriting built HTML, inlined CSS and JS chunk specifiers, which is a
@@ -80,7 +80,7 @@ export const BUILD_NOTE_NAME = "BUILD.txt";
  * carries them anyway; this list is here so the **check** can say so, because an
  * archive without them draws a silent, black game and no listing would notice.
  */
-const RUNTIME_FILES = ["audio/sounds.json", "images/background_1.jpg"];
+const RUNTIME_FILES = ["audio/sounds.json", "images/background_1-1600.webp"];
 
 /**
  * A page a standalone archive carries beside its entry.

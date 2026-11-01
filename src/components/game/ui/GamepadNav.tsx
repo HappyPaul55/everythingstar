@@ -6,6 +6,7 @@ import { nextFocus, type Direction, type FocusRect } from "../../../lib/game/ui/
 import { pageIndex } from "../../../lib/game/ui/paging";
 import { useClock } from "../band/StageClock";
 import { useStageControls } from "../band/StageControls";
+import { padsPresent } from "../band/gamepads";
 import {
   activeRoot,
   clearNavFocus,
@@ -127,6 +128,8 @@ export function GamepadNav({ screen, dispatch }: Props) {
 
   useEffect(() => {
     return clock.subscribe(() => {
+      // The menu needs no browser poll while no pad is attached.
+      if (!padsPresent()) return;
       const gamepads = navigator.getGamepads?.() ?? [];
       const live: Gamepad[] = [];
       for (const pad of gamepads) {

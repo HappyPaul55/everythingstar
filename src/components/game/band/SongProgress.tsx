@@ -25,7 +25,11 @@ export function SongProgress() {
       const share =
         clock.durationMs > 0 ? clock.timeRef.current / clock.durationMs : 0;
       const percent = Math.max(0, Math.min(100, share * 100));
-      if (fill.current) fill.current.style.width = `${percent}%`;
+      // A transform, not a width: the bar is a compositor job and never makes the
+      // layout of the stage above it recalculate.
+      if (fill.current) {
+        fill.current.style.transform = `scaleX(${Math.max(0, Math.min(1, share))})`;
+      }
       // The fill moves every frame; the accessible value does not need to. Writing
       // it at 60 Hz is churn in the accessibility tree for a number nobody can read
       // at that rate, so it follows the rounded percent.

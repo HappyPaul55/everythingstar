@@ -23,7 +23,20 @@ export type StageMedia =
  * It is the room, not the subject — the songs are the subject — so it is the same every
  * time, and a run paints its own over the top of it.
  */
-export const DEFAULT_BACKDROP = "/images/background_1.jpg";
+export const DEFAULT_BACKDROP = "/images/background_1-1600.webp";
+
+/**
+ * The room in the widths it was cut at.
+ *
+ * The browser picks by viewport and pixel density (`sizes="100vw"`): a phone
+ * takes 66 KiB, a laptop 203 KiB, a large retina screen 382 KiB, against the
+ * 671 KiB JPEG this replaced. The bed is the same picture at every size.
+ */
+export const DEFAULT_BACKDROP_SRCSET = [
+  "/images/background_1-960.webp 960w",
+  "/images/background_1-1600.webp 1600w",
+  "/images/background_1-2048.webp 2048w",
+].join(", ");
 
 /**
  * The backdrop a **run** plays against: the song's own video, or its art, or ours.

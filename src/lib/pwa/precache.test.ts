@@ -36,9 +36,9 @@ describe("assetRefs", () => {
       '<a href="https://example.com/playlist.json">x</a>',
       '<a href="//cdn.example.com/x.js">y</a>',
       '<a href="/play">a page</a>',
-      '<img src="/images/background_1.jpg">',
+      '<img src="/images/background_1-960.webp">',
     ].join("");
-    expect(assetRefs(html)).toEqual(["/images/background_1.jpg"]);
+    expect(assetRefs(html)).toEqual(["/images/background_1-960.webp"]);
   });
 });
 
@@ -80,7 +80,9 @@ describe("precacheUrls", () => {
       "/play.html",
       "/manifest.webmanifest",
       "/audio/sounds.json",
-      "/images/background_1.jpg",
+      "/images/background_1-960.webp",
+      "/images/background_1-1600.webp",
+      "/images/background_1-2048.webp",
       "/audio/background_1.ogg",
       "/audio/background_4.ogg",
       "/audio/click_1.ogg",

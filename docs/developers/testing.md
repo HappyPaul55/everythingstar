@@ -6,8 +6,9 @@ order: 13
 ---
 
 `bun run verify` is the gate, and the one command that runs it locally. CI runs the same
-checks in a pipeline: one `build`, a `unit` job and four browser shards, then a
-`package` job that joins the build to the screenshots the shards took; the required
+checks in a pipeline: one `build` (which also runs the installed-game test against
+that build), a `unit` job, three behavioural browser shards and two capture jobs, then
+a `package` job that joins the build to the screenshots the captures took; the required
 checks are `verify` and `e2e`. The rule for all of them is the same: a check belongs
 where it is cheapest and where it can actually see the regression.
 
@@ -46,8 +47,9 @@ bun run cards            # render the social cards from og-card.html
 Verify every change with `bun run verify`: lint, knip, `astro check`, the tests'
 typecheck, the unit tests, the build, the PWA gate, the docs gate, the size budget and the
 release archives, in that order. CI splits the same checks into a fast `unit` job, one
-`build` job and four browser shards, then a `package` job. The build runs first with
-the documentation's `<img>` tags but no images; the shards fill the images,
+`build` job (plus the installed-game test), three behavioural browser shards and two
+capture jobs, then a `package` job. The build runs first with the documentation's
+`<img>` tags but no images; the captures fill the images,
 `docs:bundle` puts them into `dist/`, and the package runs `check:docs` and the PWA
 test against that same build. The local command remains one sequence, so a checkout
 needs nothing more than Bun and Chromium.
@@ -61,8 +63,9 @@ out of `astro check`, and the test config includes them with the runner's types.
 
 ## What the build gates read
 
-- **`check:pwa`** — the manifest, the built worker's precache, the game-only entries and
-  `_headers`, and the sitemap against the pages that say they are indexable.
+- **`check:pwa`** — the manifest, the built worker's precache (including its total
+  against the 20 MiB install budget), the game-only entries and `_headers`, and the
+  sitemap against the pages that say they are indexable.
 - **`check:docs`** — a built page per Markdown file in `docs/`, each with the site shell
   and a canonical, in the sitemap, shipping no island and absent from the offline
   shell; every screenshot the page names present in `dist/`; plus the privacy, terms
@@ -75,8 +78,8 @@ out of `astro check`, and the test config includes them with the runner's types.
   formats agree, and every root-absolute URL its entry page names is inside it. See
   [Deployment and releases](deployment.md#the-release-archives).
 
-The budget was measured on 2026-11-01: 708 KiB of `_astro` JS, an initial graph of
-577 KiB raw / 186 KiB gzipped across 22 files, 17.9 MiB in `dist/` and 8.8 MiB of
+The budget was measured on 2026-11-01: 709 KiB of `_astro` JS, an initial graph of
+578 KiB raw / 186 KiB gzipped across 22 files, 17.8 MiB in `dist/` and 8.8 MiB of
 audio. The caps sit just above those numbers — 710 KiB, 580 KiB, 190 KiB, 20 MiB,
 10 MiB. The **whole-build cap is the one that keeps moving**, raised when the
 documentation landed and again for its pictures: the [note-types page](../charters/note-types.md)
@@ -147,6 +150,32 @@ a page, and a narrowed shot is declared. The mock is the published FOSS library:
 is offline. [Writing docs](writing-docs.md#screenshots) is the authoring rule: which
 variants a shot is captured in, how a frame is narrowed, and how a test drives its
 screen.
+
+## The cost of a frame
+
+A change that touches the stage's drawing is measured on the same fixture rather
+than argued about: four guitar panels on the docs library, eight seconds after the
+entrance, with Chrome DevTools' CPU throttled 4x (`Emulation.setCPUThrottlingRate`
+on a CDP session). The run records `TaskDuration`, `ScriptDuration`, `LayoutCount`,
+`RecalcStyleCount`, `JSHeapUsedSize` and rAF deltas. Headless Chromium caps rAF at
+about 15 fps, so **frame rate is not the number to compare**; CPU time and layout
+and style counts are.
+
+The note-view pass moved the same eight seconds from **6.1 s to 4.2–5.3 s of
+script**, **95 to 34–43 layouts** and frame p50 from 150 ms to 84–117 ms across
+three post-change runs; the heap moved within noise. Re-run it before and after a drawing change; a change that is not visible in
+these numbers is not worth the rewrite. The harness is a throwaway Playwright spec
+(the fixture and the CDP session are the whole of it); its numbers go in the commit
+that changes the drawing.
+
+## The front load is 20 MB
+
+The game may warm and precache **up to 20 MB** before the welcome admits the player,
+and an installed game may keep up to 20 MB offline. A startup load is expected; a
+stall after it is not. Spend the budget on one deliberate preload rather than a lazy
+fetch on a press that then stutters — and do not add work to a frame that is already
+moving. The backdrop and the one-shot cues are front-loaded; the song's own stems are
+still fetched per song and behind the band's Play gate.
 
 ## The installed game's update
 

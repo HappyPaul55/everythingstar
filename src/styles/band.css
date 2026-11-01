@@ -309,10 +309,13 @@
   }
   .song-progress__fill {
     display: block;
-    width: 0;
+    width: 100%;
     height: 100%;
     background: var(--color-yellow);
     box-shadow: 0 0 12px rgba(255, 212, 0, 0.45);
+    transform: scaleX(0);
+    transform-origin: left center;
+    will-change: transform;
   }
   /* A practice run's read-out, under the progress bar: the stretch, its speed and
      whether it loops. It is a read-out, so it never takes a pointer. */
@@ -365,10 +368,15 @@
     position: absolute;
     inset: 0;
     z-index: 0;
+    overflow: hidden;
     background-color: var(--color-ink);
-    background-position: center;
-    background-size: cover;
-    background-repeat: no-repeat;
+  }
+  .band__backdrop-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
   }
   .stage-bg {
     position: absolute;

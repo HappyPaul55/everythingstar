@@ -30,7 +30,9 @@ const DIST_FILES = [
   "fonts/space-mono-latin-400.woff2",
   "icons/android-chrome-192x192.png",
   "icons/favicon.ico",
-  "images/background_1.jpg",
+  "images/background_1-960.webp",
+  "images/background_1-1600.webp",
+  "images/background_1-2048.webp",
   "index.html",
   "manifest.webmanifest",
   "og-image.png",
@@ -67,7 +69,9 @@ describe("planBundle", () => {
       "fonts/space-mono-latin-400.woff2",
       "icons/android-chrome-192x192.png",
       "icons/favicon.ico",
-      "images/background_1.jpg",
+      "images/background_1-1600.webp",
+      "images/background_1-2048.webp",
+      "images/background_1-960.webp",
     ]);
   });
 
@@ -177,7 +181,7 @@ describe("bundleProblems", () => {
     '<link rel="icon" href="/icons/favicon.ico">',
     '<link rel="manifest" href="/manifest.webmanifest">',
     '<script type="module" src="/_astro/GameApp.abc.js"></script>',
-    '<img src="/images/background_1.jpg">',
+    '<img src="/images/background_1-960.webp">',
   ].join("");
 
   const good = {

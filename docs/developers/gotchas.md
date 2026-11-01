@@ -815,7 +815,7 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   `StageMedia` and `backdropFor(song, video)`: a run plays against **the song's own
   video, then its art, then the game's own artwork** — and the menus always sit in the
   game's own artwork (`.band__backdrop`), which a run paints over. `DEFAULT_BACKDROP` is
-  that artwork (`/images/background_1.jpg`) and it is the *room*, not the subject, so it
+  that artwork (`/images/background_1-1600.webp`, in three widths) and it is the *room*, not the subject, so it
   is the same every time. A song's **art is blurred** into a back (square and often
   small, unblurred it is a picture pulled out of shape), and the dev panel's video
   switch skips *the song's* video rather than the backdrop — a song with nothing of its
@@ -1720,7 +1720,15 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   `requestAnimationFrame` loop per component, and do not put the playhead in
   React state. **Even the FPS read-out is counted by that loop** (`clock.fpsRef`,
   read through `useFps`): a second frame loop to watch the first is cost spent on
-  watching, and it showed up as such in the profiler.
+  watching, and it showed up as such in the profiler. **A tick is for motion**: the
+  loop skips the subscriber pass on menus, a pause and the results unless the
+  transport was seeked or a pad is connected (the menu's pad poll rides the same
+  loop), so a paused stage is not re-rendering four highways for nobody to see.
+- **A note re-renders when its own state changes, not when the clock ticks.** The
+  highway re-renders at 12.5 Hz so notes can turn live, but `HighwayNote` is memoised
+  on the note's identity, state, hold, hint and box: ninety mounted notes per panel,
+  of which the handful inside the hit window change. Before the memo, four panels
+  reconciled roughly a thousand spans a frame; after it, the few that matter.
 - **Highways scroll by transform, never by re-positioning notes.** A highway's
   notes are mounted at fixed percentages of the axis and one translated layer
   carries them, so a frame is a single style write. `axisPercent` places,

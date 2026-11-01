@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import type { BandSetup } from "../../lib/game/band/types";
 import type { Screen } from "../../lib/game/screens";
 import type { Track } from "../../lib/game/track";
@@ -13,6 +13,7 @@ import { SongAudioStatusProvider } from "./band/SongAudioStatus";
 import { SongProvider } from "./band/SongContext";
 import { StageClockProvider } from "./band/StageClock";
 import { StageControlsProvider } from "./band/StageControls";
+import { watchGamepads } from "./band/gamepads";
 
 /**
  * The providers every screen shares, in one place.
@@ -68,6 +69,10 @@ export function GameProviders({
   audio,
   children,
 }: Props) {
+  // One watcher for the whole island: the menu and the transport both ask whether
+  // a pad exists, and neither should poll the browser to find out.
+  useEffect(() => watchGamepads(), []);
+
   return (
     <RunModeProvider perfect={perfect}>
       <StageAudioProvider
