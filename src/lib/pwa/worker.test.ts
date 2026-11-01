@@ -103,13 +103,20 @@ function responseAt(
   return response;
 }
 
-function build(options: { caches?: FakeCaches; net?: Network; shell?: string } = {}) {
+function build(
+  options: {
+    caches?: FakeCaches;
+    net?: Network;
+    shell?: string;
+    urls?: readonly string[];
+  } = {},
+) {
   const caches = options.caches ?? new FakeCaches();
   const net = options.net ?? offline();
   const worker = createWorker({
     origin: ORIGIN,
     shellCache: options.shell ?? SHELL,
-    precacheUrls: [],
+    precacheUrls: options.urls ?? [],
     caches,
     fetch: (request) => net.fetch(request),
   });
@@ -710,6 +717,57 @@ describe("pruneShells", () => {
     expect(names).toContain(SHELL);
     expect(names).toContain(OLDER);
     expect(names).not.toContain(OLDEST);
+    expect(names).toContain(OFFLINE_CACHE);
+  });
+});
+
+describe("a new build", () => {
+  const NEWER = `${SHELL_CACHE_PREFIX}20261027T120000000Z-v2`;
+  const NEWEST = `${SHELL_CACHE_PREFIX}20261028T120000000Z-v2`;
+  const urls = ["/app.html", "/open.html", "/_astro/chunk.js"] as const;
+
+  /** A network that stamps the build's name into every body. */
+  const stamp = (buildName: string): Network =>
+    network((request) => responseAt(request.url, `${buildName}:${new URL(request.url).pathname}`));
+
+  test("installing a build fills its own shell, and the next one takes over", async () => {
+    const caches = new FakeCaches();
+
+    const first = build({ caches, shell: SHELL, urls, net: stamp("one") });
+    await first.worker.precache();
+    await first.worker.pruneShells();
+
+    const second = build({ caches, shell: NEWER, urls, net: stamp("two") });
+    await second.worker.precache();
+    await second.worker.pruneShells();
+
+    const installed = await caches.open(NEWER);
+    expect(await (await installed.match(`${ORIGIN}/app.html`))!.text()).toBe("two:/app.html");
+    // The page still running from the previous build can lazily import its chunks.
+    expect(await caches.open(SHELL).then((cache) => cache.match(`${ORIGIN}/_astro/chunk.js`))).toBeTruthy();
+    // And a navigation is the new build's page.
+    const request = new Request(`${ORIGIN}/app`);
+    Object.defineProperty(request, "mode", { value: "navigate" });
+    const response = await second.worker.respond({ request, waitUntil: () => {} });
+    expect(await response?.text()).toBe("two:/app.html");
+  });
+
+  test("a third build lets the oldest generation go, and never the songs", async () => {
+    const caches = new FakeCaches();
+    await caches.open(OFFLINE_CACHE);
+    for (const [name, buildName] of [
+      [SHELL, "one"],
+      [NEWER, "two"],
+      [NEWEST, "three"],
+    ] as const) {
+      const worker = build({ caches, shell: name, urls, net: stamp(buildName) });
+      await worker.worker.precache();
+      await worker.worker.pruneShells();
+    }
+    const names = await caches.keys();
+    expect(names).toContain(NEWEST);
+    expect(names).toContain(NEWER);
+    expect(names).not.toContain(SHELL);
     expect(names).toContain(OFFLINE_CACHE);
   });
 });
