@@ -104,31 +104,26 @@ jobs:
             key: behaviour-1
             project: chromium
             shard: 1/3
-            workers: 3
             docshots: "false"
           - name: behaviour 2/3
             key: behaviour-2
             project: chromium
             shard: 2/3
-            workers: 3
             docshots: "false"
           - name: behaviour 3/3
             key: behaviour-3
             project: chromium
             shard: 3/3
-            workers: 3
             docshots: "false"
           - name: captures desktop
             key: captures-desktop
             project: desktop
             shard: 1/1
-            workers: 4
             docshots: "true"
           - name: captures mobile
             key: captures-mobile
             project: mobile
             shard: 1/1
-            workers: 4
             docshots: "true"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -156,7 +151,7 @@ jobs:
       # The dev server has no service worker to intercept the routes the specs
       # answer, so neither job needs a built site; the build that names the capture
       # images is the package job's, not this suite's target.
-      - run: bun run test:e2e --project=${{ matrix.project }} --shard=${{ matrix.shard }} --workers=${{ matrix.workers }}
+      - run: bun run test:e2e --project=${{ matrix.project }} --shard=${{ matrix.shard }}
       # The capture jobs are the other half of the build. Their two sets are kept
       # apart and the package job merges them.
       - name: Upload the documentation captures
