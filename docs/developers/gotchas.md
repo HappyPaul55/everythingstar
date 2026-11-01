@@ -71,7 +71,7 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   lazy dialog still mounts as
   a native `<dialog>` with `useModal`, and its opener keeps `aria-haspopup="dialog"`, so
   Escape and focus return are unchanged. **The initial `/play` graph is the number that
-  matters** — 577 KiB raw / 186 KiB gzipped across 21 files — and
+  matters** — 577 KiB raw / 186 KiB gzipped across 22 files — and
   `scripts/check-budget.ts` gates the initial raw and gzipped sizes directly, and fails
   if a translator marker appears in it. Do not lazy-load the main screens: a flash on every navigation costs more than
   the bytes it saves.

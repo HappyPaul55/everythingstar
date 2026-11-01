@@ -307,6 +307,11 @@ export async function installRoutes(
   context: BrowserContext,
   responses: Record<string, unknown>,
   seen?: (url: string) => void,
+  /**
+   * Hosts a spec means to leave unanswered (a stem that must fail). They are
+   * aborted like any unknown host, but not recorded as a leak.
+   */
+  allowed: readonly RegExp[] = [],
 ): Promise<string[]> {
   const leaked: string[] = [];
   await context.route("**/*", async (route) => {
@@ -345,9 +350,17 @@ export async function installRoutes(
       });
       return;
     }
+    if (allowed.some((pattern) => pattern.test(url))) {
+      await route.abort();
+      return;
+    }
     leaked.push(url);
     await route.abort();
   });
+  // Registered here, not only by `installFixtures`: a spec that routes directly
+  // (a custom playlist, a failing host) gets the same automatic check instead of
+  // silently aborting something it did not expect.
+  leakLists.set(context, leaked);
   return leaked;
 }
 

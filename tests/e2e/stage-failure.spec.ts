@@ -147,11 +147,17 @@ test("a run whose only stem never arrives plays on, says so, and ends", async ({
 }) => {
   // No `installFixtures` here: this spec answers the seeded playlist itself, so the
   // stem URL is simply not in the table and the router aborts it.
-  await installRoutes(context, {
-    [PLAYLIST_URL]: PLAYLIST,
-    [SONG_DOC]: SONG,
-    [CHART]: CHART_BODY,
-  });
+  await installRoutes(
+    context,
+    {
+      [PLAYLIST_URL]: PLAYLIST,
+      [SONG_DOC]: SONG,
+      [CHART]: CHART_BODY,
+    },
+    undefined,
+    // The run's whole point is a stem whose host never answers.
+    [/^https:\/\/nowhere\.example\.test\//],
+  );
 
   await disableFullscreen(page);
   await enterGame(page);

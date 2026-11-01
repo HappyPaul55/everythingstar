@@ -530,5 +530,6 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   `scripts/og-card.html`, `scripts/render-cards.ts`, `scripts/check-docs.ts` — icon set,
   self-hosted fonts, the dist/audio size caps, the social cards' source layout and
   renderer, and the documentation gate.
-- `.github/workflows/ci.yml` — CI installs with a frozen lockfile and runs
-  `bun run verify`.
+- `.github/workflows/ci.yml` — CI installs with a frozen lockfile and splits the
+  checks across `build`, `unit`, four browser shards and `package`; the `verify` job
+  joins them into the one required check.
