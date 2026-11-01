@@ -289,13 +289,20 @@ export function createWorker(options: WorkerOptions): Worker {
     const cached = await cache.match(request, { ignoreVary: true });
     if (!cached) return fetch(request);
 
-    if (request.method === "GET" && isJson(request)) {
+    if (request.method === "GET" && isJson(request, cached)) {
       try {
         const fresh = await fetch(request);
-        // A refreshed document is still the answer when the bucket is full: this
-        // is a cache write, not part of the request succeeding.
-        if (fresh.ok) await putBestEffort(cache, request, fresh);
-        return fresh;
+        // A captive portal answers 200 with its own page, and a provider's 5xx is
+        // not a document either. Overwriting the saved song with it leaves the
+        // record saying "Downloaded ✓" over a file nobody can play — and
+        // re-pressing Download does nothing, because the record already exists.
+        if (fresh.ok && (await looksJson(fresh))) {
+          // A refreshed document is still the answer when the bucket is full.
+          await putBestEffort(cache, request, fresh);
+          return fresh;
+        }
+        // Anything else keeps the copy the player already has.
+        return fromCache(request, cached);
       } catch {
         return fromCache(request, cached);
       }
@@ -335,9 +342,38 @@ function isShellPath(pathname: string): boolean {
   );
 }
 
-function isJson(request: Request): boolean {
+/**
+ * Is this request one of the saved **documents** the worker keeps fresh?
+ *
+ * The path used to decide, and a provider is free to serve a document from
+ * `/search?q=…` or `/songs/abc`: those were then cached forever, so a fix never
+ * reached a player who had saved one song. The cached response's own type is the
+ * answer when it has one; the extension is the fallback.
+ */
+function isJson(request: Request, cached?: Response): boolean {
+  const type = cached?.headers.get("content-type")?.toLowerCase() ?? "";
+  if (type) return type.includes("json");
   try {
     return new URL(request.url).pathname.toLowerCase().endsWith(".json");
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Would storing this response replace a document with a document?
+ *
+ * A `200` is not enough: a hotel's captive portal, a host's incident page and a
+ * provider's error page are all `200 text/html`. A JSON content type is trusted; a
+ * response with none is read (on a clone) to see whether it parses.
+ */
+async function looksJson(response: Response): Promise<boolean> {
+  const type = (response.headers.get("content-type") ?? "").toLowerCase();
+  if (type.includes("json")) return true;
+  if (type) return false;
+  try {
+    await response.clone().json();
+    return true;
   } catch {
     return false;
   }

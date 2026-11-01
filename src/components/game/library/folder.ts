@@ -20,6 +20,7 @@
  */
 
 import { decodeText } from "../../../lib/game/sources/bytes";
+import { MAX_PACKAGE_BYTES } from "../../../lib/game/fetchLimits";
 import {
   ART_NAMES,
   AUDIO_NAMES,
@@ -1262,6 +1263,35 @@ async function localSng(url: string): Promise<LocalSng | null> {
 }
 
 /**
+ * Members already read out of a package, kept for the visit.
+ *
+ * A jukebox row asks for its cover on every pass, and a package member is read and
+ * unmasked from the file each time: two copies of the member per request, for the
+ * same bytes. The cache is bounded, because a package may hold stems tens of
+ * megabytes long and holding all of them would be worse than reading one twice.
+ */
+const sngEntries = new Map<string, Uint8Array>();
+let sngEntryTotal = 0;
+const SNG_ENTRY_CACHE_BYTES = 32 * 1024 * 1024;
+
+function rememberSngEntry(url: string, bytes: Uint8Array): Uint8Array {
+  // A member larger than the whole budget is handed back uncached: caching it would
+  // evict everything and still be over the line.
+  if (bytes.length > SNG_ENTRY_CACHE_BYTES) return bytes;
+  const previous = sngEntries.get(url);
+  if (previous) sngEntryTotal -= previous.length;
+  sngEntries.set(url, bytes);
+  sngEntryTotal += bytes.length;
+  // Insertion order is oldest first, so a full cache drops what was read longest ago.
+  for (const [key, value] of sngEntries) {
+    if (sngEntryTotal <= SNG_ENTRY_CACHE_BYTES) break;
+    sngEntries.delete(key);
+    sngEntryTotal -= value.length;
+  }
+  return bytes;
+}
+
+/**
  * A local file as a URL the browser can actually load.
  *
  * A `folder://` reference is meaningless to an `<img>` or an `<audio>`, so anything
@@ -1277,9 +1307,17 @@ export async function localObjectUrl(url: string): Promise<string | null> {
     if (!local) return null;
     const entry = local.header.files.find((file) => file.name === entryName);
     if (!entry) return null;
+    // The same ceiling as a package fetched from a provider. A local file has no
+    // download to check, so this is the only place the member's size is bounded.
+    if (entry.length > MAX_PACKAGE_BYTES) return null;
+    const cached = sngEntries.get(url);
+    if (cached) {
+      return URL.createObjectURL(sngBlob(cached, mimeForSng(entry.name)));
+    }
     const { readSngEntryFromFile } = await sngReader();
     const bytes = await readSngEntryFromFile(local.file, local.header, entry);
     if (!bytes) return null;
+    rememberSngEntry(url, bytes);
     // The reader unmasks into a fresh array, so it is already exactly the member's
     // bytes; `sngBlob` hands the view straight to the Blob rather than slicing a
     // second copy of a stem that may be tens of megabytes.

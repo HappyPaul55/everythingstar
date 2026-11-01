@@ -271,7 +271,11 @@ async function writeEntry(key: string, entry: CacheEntry, meta: CacheMeta): Prom
 async function trimCache(): Promise<void> {
   const metas = (await readAll<CacheMeta>(CACHE_META_STORE)).filter(isMeta);
   if (metas.length === 0) return;
-  const bodies = new Set(await keysIn(CACHE_STORE));
+  // A failed key read is not an empty cache: every record would look like an
+  // orphan, and the trim would delete the bodies *and* their index.
+  const keys = await keysIn(CACHE_STORE);
+  if (keys === null) return;
+  const bodies = new Set(keys);
   const live = metas.filter((meta) => bodies.has(meta.key));
   const byUrl = new Map(live.map((meta) => [meta.url, meta]));
   // Each key to drop, with the `at` the snapshot judged it by: the delete re-reads
@@ -348,7 +352,9 @@ async function sweepCache(): Promise<void> {
   if (swept) return;
   swept = true;
   await ensureIndex();
-  const stale = (await keysIn(CACHE_STORE)).filter((key) => !isCacheKey(key));
+  const keys = await keysIn(CACHE_STORE);
+  if (keys === null) return;
+  const stale = keys.filter((key) => !isCacheKey(key));
   if (stale.length > 0) await removeEntries(stale);
 }
 
@@ -375,6 +381,9 @@ function ensureIndex(): Promise<void> {
 async function indexOnce(): Promise<void> {
   const bodies = await keysIn(CACHE_STORE);
   const metas = await keysIn(CACHE_META_STORE);
+  // Either read failing means "not a cache to rebuild": the rebuild would look
+  // exactly like an empty one.
+  if (bodies === null || metas === null) return;
   const current = bodies.filter(isCacheKey);
   const currentSet = new Set(current);
   const same =
@@ -1050,12 +1059,20 @@ async function readAll<T>(store: string): Promise<T[]> {
   return all ?? [];
 }
 
-/** A store's keys — never its values. Used to compare the index with the cache. */
-async function keysIn(store: string): Promise<string[]> {
+/**
+ * A store's keys — never its values. Used to compare the index with the cache.
+ *
+ * `null` says the read did not happen. It used to fold a failed read into `[]`,
+ * and the trim then saw every body as an orphan and deleted the whole offline
+ * cache — up to 48 MB of playlists, songs and charts — on one transient
+ * IndexedDB failure.
+ */
+async function keysIn(store: string): Promise<string[] | null> {
   const keys = await inStore<IDBValidKey[]>(store, "readonly", (objectStore) =>
     objectStore.getAllKeys() as IDBRequest<IDBValidKey[]>,
   );
-  return (keys ?? []).filter((key): key is string => typeof key === "string");
+  if (keys === null) return null;
+  return keys.filter((key): key is string => typeof key === "string");
 }
 
 /**

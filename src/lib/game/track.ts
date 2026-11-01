@@ -490,6 +490,48 @@ function spanProblems(
 }
 
 /**
+ * Note times grouped by column and sorted, so "is anything in this column between
+ * those two moments?" is a binary search rather than a scan of the whole chart.
+ *
+ * A slide asks that question twice. `notes.some(...)` for each link made validating
+ * a chart quadratic, and a chart is a file somebody else wrote: 8 000 notes took
+ * over a second, and an 8 MB document — the documented fetch cap, which holds
+ * around 100 000 notes — would freeze the tab for minutes before the first frame.
+ */
+function columnTimes(notes: readonly LaneNote[]): Map<number, number[]> {
+  const out = new Map<number, number[]>();
+  for (const note of notes) {
+    if (note.column === null) continue;
+    const times = out.get(note.column);
+    if (times) times.push(note.timeMs);
+    else out.set(note.column, [note.timeMs]);
+  }
+  for (const times of out.values()) times.sort((a, b) => a - b);
+  return out;
+}
+
+/** Is there a note in `column` strictly after `afterMs` and before `beforeMs`? */
+function betweenColumns(
+  index: ReadonlyMap<number, number[]>,
+  column: number,
+  afterMs: number,
+  beforeMs: number,
+): boolean {
+  const times = index.get(column);
+  if (!times || times.length === 0) return false;
+  // The first note strictly after the window's start; anything at or past the
+  // window's end is outside it.
+  let low = 0;
+  let high = times.length;
+  while (low < high) {
+    const mid = (low + high) >> 1;
+    if (times[mid] <= afterMs) low = mid + 1;
+    else high = mid;
+  }
+  return low < times.length && times[low] < beforeMs;
+}
+
+/**
  * Why a slide from `note` to `target` cannot be played, or `null` when it can.
  *
  * `claimed` is the targets a link already owns, in chart order: a target can be
@@ -511,7 +553,7 @@ function spanProblems(
 function slideFault(
   note: LaneNote,
   target: LaneNote | undefined,
-  notes: readonly LaneNote[],
+  columns: ReadonlyMap<number, number[]>,
   claimed: ReadonlySet<string>,
 ): string | null {
   if (!target) return `note ${note.id} slides to a note that is not in the chart`;
@@ -526,19 +568,10 @@ function slideFault(
   if (target.column === note.column) {
     return `note ${note.id} slides along its own column`;
   }
-  const between = (column: number, afterMs: number) =>
-    notes.some(
-      (other) =>
-        other.id !== note.id &&
-        other.id !== target.id &&
-        other.column === column &&
-        other.timeMs > afterMs &&
-        other.timeMs < target.timeMs,
-    );
-  if (between(note.column, note.timeMs)) {
+  if (betweenColumns(columns, note.column, note.timeMs, target.timeMs)) {
     return `note ${note.id} slides past a note in its own column`;
   }
-  if (between(target.column, endMs)) {
+  if (betweenColumns(columns, target.column, endMs, target.timeMs)) {
     return `note ${note.id} slides past a note in the target's column`;
   }
   if (claimed.has(target.id)) {
@@ -555,11 +588,12 @@ function slideFault(
 export function slideProblems(notes: readonly LaneNote[]): string[] {
   const byId = new Map<string, LaneNote>();
   for (const note of notes) byId.set(note.id, note);
+  const columns = columnTimes(notes);
   const claimed = new Set<string>();
   const problems: string[] = [];
   for (const note of notes) {
     if (!note.slideTo) continue;
-    const fault = slideFault(note, byId.get(note.slideTo), notes, claimed);
+    const fault = slideFault(note, byId.get(note.slideTo), columns, claimed);
     if (fault) problems.push(fault);
     else claimed.add(note.slideTo);
   }
@@ -577,6 +611,7 @@ export function slideProblems(notes: readonly LaneNote[]): string[] {
 export function cleanSlides(notes: readonly LaneNote[]): LaneNote[] {
   const byId = new Map<string, LaneNote>();
   for (const note of notes) byId.set(note.id, note);
+  const columns = columnTimes(notes);
   const claimed = new Set<string>();
   let changed = false;
   const cleaned: LaneNote[] = [];
@@ -585,7 +620,7 @@ export function cleanSlides(notes: readonly LaneNote[]): LaneNote[] {
       cleaned.push(note);
       continue;
     }
-    const fault = slideFault(note, byId.get(note.slideTo), notes, claimed);
+    const fault = slideFault(note, byId.get(note.slideTo), columns, claimed);
     if (fault) {
       changed = true;
       const { slideTo: _stale, ...rest } = note;

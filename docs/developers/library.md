@@ -30,6 +30,10 @@ index existed rebuilds it **once**, on the first cache use after the upgrade, by
 reading the cache store a single time; after that the two stores' keys agree and no
 full read happens. A body from an older shape is dropped there (and its record with
 it), and a record whose body has gone is removed the next time the cache trims.
+**A read that failed is not a cache to empty**: the trim compares the index with the
+cache store's *keys*, and a failed key read used to look like an empty cache — so
+every record became an orphan and one transient IndexedDB error could delete all
+48 MB of it. A failed key read now leaves both stores alone.
 The rules are the same and the cap is **48 MB**: playlists are still kept last and
 the oldest chart or song goes first.
 
@@ -82,6 +86,13 @@ with, or one that found a song's chart but not its stems — is repaired from th
 itself on the way in, so it comes back playable rather than as a list nobody can press
 Play on (or one that plays silence).
 
+A **`.sng` member** — a cover, a stem, a chart inside a package — is read and unmasked
+out of the file when something asks for it, and the result is kept for the visit in a
+**32 MB** cache (`localObjectUrl`), because a jukebox asks for the same cover on every
+pass. A member is also held to the same **128 MB** package ceiling as a downloaded one:
+a local package has no download to check, so the member's own length is the only
+bound. Without it a 2 GB container could ask the tab for 2 GB of array.
+
 A browser with **no directory picker** imports instead: the Playlists dialog's
 **Import files** and **Import a folder** inputs (and dropping files or a folder on the
 dialog) copy what was chosen into **`imports/<id>/` in the browser's Origin Private File
@@ -103,6 +114,16 @@ or the app's worker — serves it back to the media elements, including the byte
 seek asks for, so a cold start with no network still lists the library and plays the
 saved song. JSON is network-first when a network exists (the cached copy is the offline
 fallback), while stems and art are cache-first — a saved audio file is a pinned object.
+**A refresh only replaces a document with a document**: a `200` is not enough, because a
+hotel's captive portal and a host's incident page are both `200` with an HTML body, and
+storing one over a saved song leaves a record saying *Downloaded ✓* over a file nobody
+can play (re-pressing Download then does nothing, because the record already exists). A
+response whose content type is JSON is stored; one with a type that is not is ignored and
+the saved copy is served; one with no type is read to see whether it parses. A provider's
+`4xx`/`5xx` serves the saved copy too. The **path is not what makes a document**: a
+service may answer `/search?q=…` or `/songs/abc`, so the cached response's own
+content-type decides whether it is kept fresh, with the `.json` extension only as a
+fallback.
 A download is a single **page-wide job**: it keeps running when the player walks from the
 jukebox to the band, a screen that mounts mid-download sees it already in progress, and
 the Downloads dialog offers **Cancel**. It is also all or nothing: a cancelled, failed or

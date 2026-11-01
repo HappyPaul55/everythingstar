@@ -230,6 +230,26 @@ describe("slides", () => {
     ).toEqual([]);
   });
 
+  test("a note exactly at either end of a glide is not in its way", () => {
+    // The window is strictly between: a note sharing the source's moment is a
+    // chord, and one sharing the target's arrives with the target.
+    expect(
+      slideProblems([
+        note({ id: "a", timeMs: 1000, column: 0, slideTo: "b" }),
+        note({ id: "x", timeMs: 1000, column: 1 }),
+        note({ id: "b", timeMs: 1600, column: 2 }),
+        note({ id: "y", timeMs: 1600, column: 2 }),
+      ]),
+    ).toEqual([]);
+    expect(
+      slideProblems([
+        note({ id: "a", timeMs: 1000, column: 0, slideTo: "b" }),
+        note({ id: "x", timeMs: 1300, column: 0 }),
+        note({ id: "b", timeMs: 1600, column: 2 }),
+      ]),
+    ).toContain("note a slides past a note in its own column");
+  });
+
   test("the source's end is where the glide begins, so a held tail counts", () => {
     // The sustain ends at 1800; the target at 1600 is inside it.
     expect(

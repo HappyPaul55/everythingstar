@@ -215,17 +215,41 @@ function readTempo(
   changes.sort((a, b) => a.tick - b.tick);
   if (changes.length === 0) changes.push({ tick: 0, usPerBeat: 500_000 });
   const opening = changes[0].usPerBeat;
-  const toMs = (tick: number) => {
+  // The clock is a **breakpoint table**, built once: every note asks where its tick
+  // falls, and walking the whole tempo map per call made reading a chart quadratic
+  // in its tempo changes (a 400 KB file with 2 000 of them already cost 600 ms).
+  // `at[i]` is the time at `changes[i].tick`, computed with the tempo that applies
+  // before it; the segment after it uses its own.
+  const at: number[] = [];
+  {
     let ms = 0;
     let last = 0;
     let usPerBeat = opening;
     for (const change of changes) {
-      if (change.tick >= tick) break;
       ms += ((change.tick - last) * usPerBeat) / resolution / 1000;
       last = change.tick;
+      at.push(ms);
       usPerBeat = change.usPerBeat;
     }
-    return ms + ((tick - last) * usPerBeat) / resolution / 1000;
+  }
+  const toMs = (tick: number): number => {
+    // The last change at or before this tick. At equality the answer is the
+    // breakpoint itself, so `<=` and `<` agree; the search just has to be binary.
+    let low = 0;
+    let high = changes.length - 1;
+    let found = -1;
+    while (low <= high) {
+      const mid = (low + high) >> 1;
+      if (changes[mid].tick <= tick) {
+        found = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    if (found < 0) return (tick * opening) / resolution / 1000;
+    const change = changes[found];
+    return at[found] + ((tick - change.tick) * change.usPerBeat) / resolution / 1000;
   };
   return { toMs, bpm: Math.round((60_000_000 / opening) * 100) / 100 };
 }
