@@ -164,9 +164,16 @@ and style counts are.
 The note-view pass moved the same eight seconds from **6.1 s to 4.2–5.3 s of
 script**, **95 to 34–43 layouts** and frame p50 from 150 ms to 84–117 ms across
 three post-change runs; the heap moved within noise. Re-run it before and after a drawing change; a change that is not visible in
-these numbers is not worth the rewrite. The harness is a throwaway Playwright spec
-(the fixture and the CDP session are the whole of it); its numbers go in the commit
-that changes the drawing.
+these numbers is not worth the rewrite. Its numbers go in the commit that changes
+the drawing.
+
+`tests/perf/dom-writes.spec.ts` answers the other question — *where* the writes go.
+In a four-panel run over three seconds it measured **four track-transform writes
+per frame** (one per highway), ~66 note mounts and ~43 class changes, and no
+per-note movement at all: the highway layer is already the "bar", and a bar
+container would be a second layer to move rather than a cheaper one. Mounts and
+state classes are the remaining per-note work, and the next optimisation should be
+aimed there, not at movement.
 
 ## The front load is 20 MB
 
