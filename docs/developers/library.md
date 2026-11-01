@@ -118,12 +118,14 @@ fallback), while stems and art are cache-first — a saved audio file is a pinne
 hotel's captive portal and a host's incident page are both `200` with an HTML body, and
 storing one over a saved song leaves a record saying *Downloaded ✓* over a file nobody
 can play (re-pressing Download then does nothing, because the record already exists). A
-response whose content type is JSON is stored; one with a type that is not is ignored and
-the saved copy is served; one with no type is read to see whether it parses. A provider's
-`4xx`/`5xx` serves the saved copy too. The **path is not what makes a document**: a
-service may answer `/search?q=…` or `/songs/abc`, so the cached response's own
-content-type decides whether it is kept fresh, with the `.json` extension only as a
-fallback.
+JSON content type is trusted; `text/plain` (which is how
+`raw.githubusercontent.com` serves the seeded playlist and its documents) and a missing
+type are read on a clone to see whether they parse; anything else — HTML, an image,
+audio — is refused and the saved copy is served. A provider's `4xx`/`5xx` serves the
+saved copy too. The **path alone is not the decision**: a `.json` path is network-first
+whatever the cached type says (so an old poisoned copy can be replaced), and a service
+that answers `/search?q=…` or `/songs/abc` is judged by the cached response's own
+content type.
 A download is a single **page-wide job**: it keeps running when the player walks from the
 jukebox to the band, a screen that mounts mid-download sees it already in progress, and
 the Downloads dialog offers **Cancel**. It is also all or nothing: a cancelled, failed or

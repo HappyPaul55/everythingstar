@@ -539,6 +539,52 @@ describe("saved", () => {
     expect(await response.json()).toEqual({ revision: 2 });
     expect(await read(bucket, path)).toBe('{"revision":2}');
   });
+
+  test("a text/plain document is refreshed, because that is how GitHub raw serves one", async () => {
+    // The seeded FOSS playlist and its documents come from raw.githubusercontent.com,
+    // which answers every `.json` as `text/plain; charset=utf-8`.
+    const caches = new FakeCaches();
+    const bucket = await caches.open(OFFLINE_CACHE);
+    await bucket.put(
+      url,
+      new Response('{"revision":1}', {
+        headers: { "content-type": "text/plain; charset=utf-8" },
+      }),
+    );
+
+    const net = network(
+      () =>
+        new Response('{"revision":2}', {
+          headers: { "content-type": "text/plain; charset=utf-8" },
+        }),
+    );
+    const { worker } = build({ caches, net });
+
+    const response = await worker.saved(new Request(url));
+    expect(await response.json()).toEqual({ revision: 2 });
+    expect(await read(bucket, url)).toBe('{"revision":2}');
+  });
+
+  test("a text/plain body that is not JSON keeps the saved copy", async () => {
+    const caches = new FakeCaches();
+    const bucket = await caches.open(OFFLINE_CACHE);
+    await bucket.put(
+      url,
+      new Response('{"revision":1}', { headers: { "content-type": "application/json" } }),
+    );
+
+    const net = network(
+      () =>
+        new Response("<!DOCTYPE html><title>Sign in</title>", {
+          headers: { "content-type": "text/plain" },
+        }),
+    );
+    const { worker } = build({ caches, net });
+
+    const response = await worker.saved(new Request(url));
+    expect(await response.json()).toEqual({ revision: 1 });
+    expect(await read(bucket, url)).toBe('{"revision":1}');
+  });
 });
 
 /* -------------------------------------------------------------- fromCache */

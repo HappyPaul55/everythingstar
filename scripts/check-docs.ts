@@ -155,18 +155,20 @@ for (const file of [...shotFiles].sort()) {
   );
 }
 
-console.log("\nthe game's own notice");
+console.log("\nthe game's own notices");
 
-check(
-  "the privacy notice is still a page",
-  existsSync(join(DIST, "privacy.html")),
-  "dist/privacy.html is the notice the installed game opens offline",
-);
-check(
-  "the notice is still precached by the game",
-  sw.includes('"/privacy.html"'),
-  "an offline install must still have the privacy notice",
-);
+for (const notice of ["privacy", "terms", "accessibility"]) {
+  check(
+    `the ${notice} notice is still a page`,
+    existsSync(join(DIST, `${notice}.html`)),
+    `dist/${notice}.html is the notice the installed game opens offline`,
+  );
+  check(
+    `the ${notice} notice is still precached by the game`,
+    sw.includes(`"/${notice}.html"`),
+    `an offline install must still have the ${notice} notice`,
+  );
+}
 
 if (failures.length > 0) {
   console.error(`\n${failures.length} documentation check(s) failed:`);

@@ -136,8 +136,12 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
   const future = useRef<Snapshot[]>([]);
   const gridRef = useRef(grid);
   gridRef.current = grid;
-  /** The chart a take was armed on, so clicking another pane cannot retarget it. */
-  const recordingKey = useRef<string | null>(null);
+  /**
+   * The chart a take was armed on, **the chart itself**: another pane, a hidden
+   * pane, a new chart or an undo can all move `active` while the take runs, and the
+   * events must be converted against the instrument and columns they were played on.
+   */
+  const recordingChart = useRef<CharterChart | null>(null);
   /** The latest stopRecording, for a pane change that has to end the take first. */
   const stopTake = useRef<() => void>(() => undefined);
 
@@ -203,12 +207,13 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
       // A take belongs to the pane it was armed on. Switching panes mid-take used
       // to keep recording and then convert the events against the new chart, in
       // its instrument and its columns; the take ends here, where it was played.
-      if (record.recording) stopTake.current();
+      // Pressing a pane that is already active is not a switch.
+      if (key !== activeKey && record.recording) stopTake.current();
       setActiveKey(key);
       setSelection(new Set());
       setVisible((current) => (current.includes(key) ? current : current.length < 8 ? [...current, key] : current));
     },
-    [charts, record.recording],
+    [activeKey, charts, record.recording],
   );
 
   const toggleVisible = useCallback(
@@ -408,7 +413,7 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
     const at = clock.ended || clock.timeRef.current >= duration - 1
       ? 0
       : snapMs(clock.timeRef.current, grid);
-    recordingKey.current = active.key;
+    recordingChart.current = active;
     setStartedAt(at);
     setStatus(null);
     clock.seek(at);
@@ -419,15 +424,18 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
   const stopRecording = useCallback(() => {
     if (!record.recording) return;
     // The chart the take was armed on, not whichever pane is active now.
-    const key = recordingKey.current;
-    recordingKey.current = null;
-    const target = key
-      ? (chartsRef.current.find((chart) => chart.key === key) ?? null)
-      : null;
+    const target = recordingChart.current;
+    recordingChart.current = null;
     const events = record.stop();
     const end = Math.max(startedAt, Math.round(clock.timeRef.current));
     clock.pause();
     if (!target) return;
+    // Undo can take the armed chart away while the take runs: the notes have
+    // nowhere to land, and saying so is better than discarding them silently.
+    if (!chartsRef.current.some((chart) => chart.key === target.key)) {
+      setStatus(t("charter.takeGone"));
+      return;
+    }
     const take = takeNotes(events, target, {
       startMs: startedAt,
       endMs: end,
@@ -453,6 +461,18 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
   useEffect(() => {
     stopTake.current = stopRecording;
   }, [stopRecording]);
+
+  /**
+   * Any route that changes the armed pane — a click, hiding it, a new chart, undo —
+   * ends the take there. One rule, rather than a call beside every `setActiveKey`.
+   */
+  const activeKeyNow = active?.key ?? null;
+  const previousActive = useRef(activeKeyNow);
+  useEffect(() => {
+    if (previousActive.current === activeKeyNow) return;
+    previousActive.current = activeKeyNow;
+    if (record.recording) stopTake.current();
+  }, [activeKeyNow, record.recording]);
 
   // The song reaching its end stops a take rather than leaving a record armed on a
   // stopped transport.

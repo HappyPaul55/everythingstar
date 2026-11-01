@@ -11,6 +11,8 @@ import {
   fetchBounded,
   fetchBytes,
   fetchJson,
+  fetchResponse,
+  responseBytes,
   loadSources,
   readCache,
   writeCache,
@@ -625,5 +627,24 @@ describe("the cache's storage", () => {
     // The next read asks the network again rather than showing the null for ever.
     await expect(cachedJson(url, "song")).resolves.toBeNull();
     expect(calls).toHaveLength(2);
+  });
+});
+
+describe("responseBytes", () => {
+  test("counts a body as it is read, with no Content-Length to trust", async () => {
+    stub(() => new Response("hello"));
+    const response = await fetchResponse("https://example.test/stem.ogg", {
+      fresh: true,
+      limit: 1024,
+      what: "stem",
+    });
+    // Nothing is known until it is read: a chunked host says nothing in advance.
+    expect(responseBytes(response)).toBe(0);
+    expect(await response.text()).toBe("hello");
+    expect(responseBytes(response)).toBe(5);
+  });
+
+  test("a response that never went through the bounded fetch has no count", () => {
+    expect(responseBytes(new Response("hello"))).toBeNull();
   });
 });

@@ -555,6 +555,12 @@ export async function fetchBounded(
  * rejection the consumer reports, which some browsers turn into a bare `TypeError`.
  */
 const bodyFailures = new WeakMap<Response, () => Error | null>();
+const bodySizes = new WeakMap<Response, () => number>();
+
+/** How many bytes a response's body actually carried, or null when it has none. */
+export function responseBytes(response: Response): number | null {
+  return bodySizes.get(response)?.() ?? null;
+}
 
 export function responseFailure(response: Response): Error | null {
   return bodyFailures.get(response)?.() ?? null;
@@ -623,6 +629,10 @@ export async function fetchResponse(
     }
 
     let failure: Error | null = null;
+    // The bytes actually read, kept beside the response: `Content-Length` is a
+    // hint a chunked or gzipped host does not give, and a download manager that
+    // reports "0 MB" is worse than one that counts as it goes.
+    const size = { total: 0 };
     const body = boundedBody(
       response.body,
       request.limit,
@@ -634,6 +644,7 @@ export async function fetchResponse(
         failure ??= error;
       },
       idleMs,
+      size,
     );
     const answer = new Response(body, {
       status: response.status,
@@ -641,6 +652,7 @@ export async function fetchResponse(
       headers: response.headers,
     });
     bodyFailures.set(answer, () => failure);
+    bodySizes.set(answer, () => size.total);
     return answer;
   } catch (error) {
     release();
@@ -666,6 +678,7 @@ function boundedBody(
   release: () => void,
   failed: (error: Error) => void,
   idleMs: number,
+  size: { total: number },
 ): ReadableStream<Uint8Array> {
   const reader = source.getReader();
   const timeout = () => new Error(`${what} timed out, so it was not read.`);
@@ -701,6 +714,7 @@ function boundedBody(
         }
         if (!value || value.byteLength === 0) return;
         total += value.byteLength;
+        size.total = total;
         if (total > limit) {
           await reader.cancel().catch(() => undefined);
           const error = tooLarge(what, limit);
