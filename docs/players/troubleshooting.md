@@ -103,7 +103,7 @@ An import copies files into the browser's storage, bounded on purpose:
 
 ## The microphone prompt, or no vocal scoring
 
-- **The prompt appears when Vocals is chosen**, or at **Play** if a singer was remembered. It is never asked on page load.
+- **The prompt appears when Vocals is chosen**, never at Play. A remembered singer who never granted it is played by the machine, and the seat says the microphone was refused. It is never asked on page load.
 - **Declining is allowed.** The seat becomes the machine, the score rail says `auto`, and the run goes on unscored. To score, allow the microphone and start again.
 - **Check the browser's site settings** if permission was refused: allow the microphone, then choose Vocals or press Play again.
 - **Check the system input.** A microphone muted in the operating system, a headset with a hardware mute, or the wrong device all read as a singer who never arrives.

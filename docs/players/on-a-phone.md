@@ -37,6 +37,8 @@ Tap the pad under a note as it lands, and the note plays. A tap counts as a fret
 
 Tapping is **Options → Tap the pads**, on by default. Turn it off and the pads are markers again; keys and a gamepad work either way. Typing wants a physical keyboard — the game never draws one — so instruments and singing are the phone's own ways to play.
 
+The first notes of a touch run name the **pad** under them, not a key; there is no strum to find and no letter to look for. The pause says **Resume**, not Escape. Choosing **Vocals** is what asks for the microphone: until it is allowed, the machine sings that seat and the box says so, so pressing Play never turns into a permission prompt.
+
 ## Pausing, and leaving a run
 
 A phone has no Escape key, so while a song is playing a **Pause** chip sits in the stage's top corner beside Fullscreen. It opens the pause: resume, start again, practise a stretch, change the note speed or audio lag, or leave the stage. On a desktop the chip is not drawn — Escape and a pad's Start are the ways in.

@@ -196,38 +196,62 @@ export function useCharterRecord(
   // keypress is.
   useEffect(() => {
     if (!recording || controller.on !== "midi") return;
-    return midi.listen((message: MidiMessage) => {
-      const current = seatRef.current;
-      if (!current) return;
-      const data = message.data;
-      if (data.length < 3) return;
-      const status = data[0] ?? 0;
-      const command = status & 0xf0;
-      const number = data[1] ?? 0;
-      const value = data[2] ?? 0;
-      if (command === 0xb0) {
-        const action = midiAction(current, { cc: number });
+    // The frets this take is holding, so a kit unplugged mid-hold produces an
+    // ordinary release rather than a sustain to the end of the take. `record.ts`
+    // closes every note still open at the stop, which would invent the hold.
+    const held = new Set<number>();
+    const releaseHeld = () => {
+      if (held.size === 0) return;
+      const at = clock.timeRef.current;
+      for (const column of held) {
+        push({
+          action: { type: "fret", column },
+          down: false,
+          repeat: false,
+          timeMs: at,
+        });
+      }
+      held.clear();
+    };
+    return midi.listen(
+      (message: MidiMessage) => {
+        const current = seatRef.current;
+        if (!current) return;
+        const data = message.data;
+        if (data.length < 3) return;
+        const status = data[0] ?? 0;
+        const command = status & 0xf0;
+        const number = data[1] ?? 0;
+        const value = data[2] ?? 0;
+        if (command === 0xb0) {
+          const action = midiAction(current, { cc: number });
+          if (!action) return;
+          const down = value >= 64;
+          push({
+            action,
+            down,
+            repeat: false,
+            timeMs: clock.timeOf(message.timeStamp),
+          });
+          return;
+        }
+        if (command !== 0x90 && command !== 0x80) return;
+        const down = command === 0x90 && value > 0;
+        const action = midiAction(current, number);
         if (!action) return;
-        const down = value >= 64;
+        if (action.type === "fret") {
+          if (down) held.add(action.column);
+          else held.delete(action.column);
+        }
         push({
           action,
           down,
           repeat: false,
           timeMs: clock.timeOf(message.timeStamp),
         });
-        return;
-      }
-      if (command !== 0x90 && command !== 0x80) return;
-      const down = command === 0x90 && value > 0;
-      const action = midiAction(current, number);
-      if (!action) return;
-      push({
-        action,
-        down,
-        repeat: false,
-        timeMs: clock.timeOf(message.timeStamp),
-      });
-    });
+      },
+      releaseHeld,
+    );
   }, [recording, controller, midi, clock, push]);
 
   const requestMidi = useCallback(async () => {

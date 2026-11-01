@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useT } from "../../../i18n/react";
+import { useCoarsePointer } from "../band/useCoarsePointer";
 import {
   MAX_PLAYERS,
   isMelodyKind,
@@ -89,6 +90,7 @@ const FIRST_ROW = 4;
 
 export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, onBack, fullscreen, phone }: Props) {
   const t = useT();
+  const coarse = useCoarsePointer();
   const { mic } = useStageControls();
   /**
    * The song's own files, preloading behind this screen.
@@ -103,8 +105,6 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
   const preload = useSongAudioPreload();
   /** Play was pressed and the run is waiting for charts, sound, or both. */
   const [starting, setStarting] = useState(false);
-  /** The microphone's permission prompt is in the way of the start. */
-  const [micPending, setMicPending] = useState(false);
   /**
    * The wait passed its grace. The band is still loading, but the player can say
    * "start anyway" rather than being trapped on a spinner.
@@ -130,19 +130,19 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
   // A run begins the moment both halves are in hand. This is the whole loader: the
   // press only starts the wait, and the wait itself starts the run.
   useEffect(() => {
-    if (!starting || micPending || !ready) return;
+    if (!starting || !ready) return;
     startNow();
-  }, [starting, micPending, ready, startNow]);
+  }, [starting, ready, startNow]);
 
   // A stem that never arrives is a wait that needs an exit. The rule is a
   // **delay**, not a readiness answer: when it passes, the button offers to play
   // anyway and the player decides. It is the **sound** that earns the exit; a
   // chart still in flight is the loader's own tolerant wait.
   useEffect(() => {
-    if (!starting || micPending || !audioWaiting) return;
+    if (!starting || !audioWaiting) return;
     const timer = window.setTimeout(() => setGiveUp(true), PRELOAD_GRACE_MS);
     return () => window.clearTimeout(timer);
-  }, [starting, micPending, audioWaiting]);
+  }, [starting, audioWaiting]);
 
   // The wait is no longer the sound's (a chart started loading, or the stems all
   // arrived): the exit stops being offered.
@@ -186,14 +186,6 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
   // that has both must get Rhythm back when they return from a lead-only song, so a
   // resolution the song forced is not a choice to remember.
   const hasPitch = songHasPitch(offered);
-  const singerOnStage =
-    hasPitch &&
-    playedPlan.slots.some(
-      (slot) =>
-        slot.active !== false &&
-        isMelodyKind(slot.kind) &&
-        slot.wordsMode !== "type",
-    );
   const [expanded, setExpanded] = useState(false);
   /** Which player's controller is being set up, if any. */
   const [setting, setSetting] = useState<number | null>(null);
@@ -437,6 +429,14 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
             : null}
         </div>
 
+        {/* A singer whose microphone was refused is played by the machine; the box
+            says so rather than leaving "the machine is singing" to be discovered. */}
+        {hasPitch && isMelodyKind(slot.kind) && mic.permission === "denied" ? (
+          <p className="slot__mic" role="status">
+            {t("band.micRefusedHint")}
+          </p>
+        ) : null}
+
         {/* How hard, as far as this song is concerned — under a rule, because what
             a player takes and how hard they take it are two decisions. */}
         <div className="slot__foot">
@@ -575,15 +575,10 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
               // A mobile browser ignores `preload` until something plays; this is
               // the press that may make it fetch, so ask inside the gesture.
               preload.prime();
-              // A remembered Vocals slot never went through the Vocals button on
-              // this visit; Play is the gesture that can still ask before the run.
-              if (singerOnStage && mic.permission !== "granted") {
-                setGiveUp(false);
-                setStarting(true);
-                setMicPending(true);
-                void askForMic(false, () => setMicPending(false));
-                return;
-              }
+              // The microphone is asked for by **choosing Vocals**, not by pressing
+              // Play: a remembered singer who never granted it is played by the
+              // machine, and the band says so. A permission prompt at the first Play
+              // was the one surprise a new player could not read.
               if (ready) {
                 startNow();
                 return;
@@ -606,7 +601,9 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
             ? t("screen.bandListenHint")
             : nothingPlays
               ? t("screen.bandNothing")
-              : t("screen.handsHint")}
+              : coarse
+                ? t("screen.handsTouchHint")
+                : t("screen.handsHint")}
         </p>
       </div>
 

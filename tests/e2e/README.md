@@ -45,22 +45,26 @@ things that need a page.
 
 | spec | tests | what only a browser can see |
 | --- | --- | --- |
-| `a11y.spec.ts` | 7 | axe scans of the paper pages (including the docs hub and a doc page) and the game's screens, pause, Practice and results |
+| `a11y.spec.ts` | 10 | axe scans of the paper pages (including the docs hub and a doc page) and the game's screens, pause, Practice and results; the stage's song name, a forced-colours choice and a small viewport |
 | `arcade.spec.ts` | 2 | the attract demo's machine run; the homepage's same-origin, silent iframe window and the frame link a keyboard can follow |
 | `band.spec.ts` | 2 | a phone's one-box-a-row band and its missing second row, against the desk's four |
+| `band-ready.spec.ts` | 1 | a difficulty change's chart fetch held open: Play does not start the run until the chart it will judge answers |
 | `brag-card.spec.ts` | 1 | a kept run's card as a Blob image and the SVG the browser really downloads |
 | `bundle.spec.ts` | 2 | the **dev** module graph (no translator is fetched while browsing); a lazy dialog is still native |
+| `charter.spec.ts` | 1 | open a song, edit it, record a take and download a Clone Hero chart |
 | `comfort.spec.ts` | 2 | the Screen Wake Lock asked for on a run, released on a pause and re-asked on a resume; a miss reaching `navigator.vibrate` and the pad actuator of the seat holding one |
+| `fullscreen.spec.ts` | 1 | entering the stage takes the whole screen and the shell stands aside; leaving it during a run pauses where the song was |
 | `import.spec.ts` | 2 | a copy into OPFS that survives a reload; the directory input's file list |
 | `intent.spec.ts` | 4 | `?playlist=` / `?song=` read from the address, confirmed, added, and stripped |
 | `jukebox-window.spec.ts` | 1 | a 2,000-song list windowed in the DOM |
 | `keyboard.spec.ts` | 1 | a `keydown`'s own timestamp projected onto the song clock; a chord |
 | `keys-view.spec.ts` | 2 | the words riding the pitch roll's own translated layer, and a lyrics-only song with no roll |
-| `loop.spec.ts` | 8 | the screen machine end to end, the pause's quick panel, the practice loop, Listen, the search field's Escape, jukebox focus, a breakpoint, portrait rails |
+| `loop.spec.ts` | 9 | the screen machine end to end, the pause's quick panel, the practice loop, Listen, the search field's Escape, jukebox focus, a breakpoint, portrait rails |
 | `menu.spec.ts` | 2 | the menu's two branches, Escape as back, both calibration dialogs |
+| `mic-ask.spec.ts` | 2 | Play makes no `getUserMedia` call for a remembered singer; choosing Vocals does, and a refusal is said in the seat |
 | `midi.spec.ts` | 3 | Web MIDI as an event route, learning a mapping, a refusal that changes nothing |
 | `note-style.spec.ts` | 1 | the setting reaching the highway's drawing |
-| `pad.spec.ts` | 1 | a gamepad cursor over a stack of dialogs (the browser's poll) |
+| `pad.spec.ts` | 2 | a gamepad cursor over a stack of dialogs (the browser's poll), and Start as the pause's own toggle |
 | `play-frame.spec.ts` | 2 | the header and the stage sharing the first viewport, at two sizes |
 | `play-style.spec.ts` | 1 | the CSS layer order, read from computed styles (dev **and** the built preview) |
 | `preload.spec.ts` | 2 | the band's Play button waiting for a stem that is still arriving, then starting without the load page; a ready band skipping it |
@@ -69,16 +73,17 @@ things that need a page.
 | `sng.spec.ts` | 1 | one package fetched once for the preview and the band |
 | `slide.spec.ts` | 2 | a real glide between two pads (pointerdown/move/up) landing the linked target, and a tap on that target paying the note without the glide |
 | `stage-entrance.spec.ts` | 1 | the room arriving before the highways, in two beats |
+| `stage-failure.spec.ts` | 3 | a touch stage's Pause chip (and none on a mouse stage), and a run whose only stem never arrives still playing, saying so and ending |
 | `stage-safe-area.spec.ts` | 1 | safe-area insets keeping the score rail on screen |
 | `stem-sync.spec.ts` | 1 | a multitrack song's media-element clocks through misses, a ten-second pause and a resume — with every `currentTime` write timestamped, so the seek storm's burst is visible and no runner load can argue with it |
-| `tap.spec.ts` | 1 | two fingers, a real `PointerEvent` timestamp, and a column-sized target |
+| `tap.spec.ts` | 2 | two fingers, a real `PointerEvent` timestamp, and a column-sized target; a phone's first lesson teaching the pads rather than a keyboard |
 | `welcome.spec.ts` | 1 | the wordmark renaming at two shapes, the Star held in place, and the name kept until the wordmark is hovered |
 
 `pwa.spec.ts` and `play-style.spec.ts` also run under `playwright.pwa.config.ts`
 (`bun run test:pwa`) against a production build: the first installs the worker and
-reloads offline, the second proves the built CSS kept its layer order. The dev
-behavioural suite is 56 tests in 28 files; the capture projects add one run per shot
-per configured variant.
+reloads offline, the second proves the built CSS kept its layer order. The table is
+the behavioural suite; `bunx playwright test --list --project=chromium` is its source
+of truth, and the capture projects add one run per shot per configured variant.
 
 ## What moved out, and why
 
@@ -101,8 +106,9 @@ per configured variant.
 
 CI runs the suite as four shards, one retry per test, and one worker per core but one
 (never fewer than two) inside each shard; a local run is one worker and no retries.
-**A test that needs its retry is a test to fix** — the retry is a safety net, not a
-plan. Timing assertions must watch a signal that lasts (the practice loop's score
+`failOnFlakyTests` fails the job when a test passes only on its retry, so
+**a test that needs its retry is a test to fix** — the retry is a diagnosis, not a
+pass. Timing assertions must watch a signal that lasts (the practice loop's score
 **drop**, not a transient zero).
 
 ## Running a subset

@@ -4,6 +4,7 @@ import { makeBand } from "../band/types";
 import type { BandPlan, BandSlot, PlayerKind } from "../band/types";
 import type { InstrumentKind, Track } from "../track";
 import { keyLayoutFromSteps, keysFor, learnSteps, padLayoutFromSteps, type Controller, type MidiLayout } from "./layout";
+import type { SeatControl } from "./plan";
 import {
   claimsOf,
   conflictsOf,
@@ -18,6 +19,7 @@ import {
   padAction,
   padAxisAction,
   seatControlReadout,
+  seatsOnLostPads,
   type ControlPlan,
 } from "./plan";
 
@@ -1084,5 +1086,19 @@ describe("what a seat plays with, as one line", () => {
     // caller's to name.
     expect(seatControlReadout(t, plan.seats, 7, true)).toBe("auto");
     expect(seatControlReadout(t, plan.seats, 7, false)).toBe("—");
+  });
+});
+
+describe("seatsOnLostPads", () => {
+  test("only the hand the lost pad was holding is let go", () => {
+    const seats: SeatControl[] = [
+      { seat: 0, kind: "guitar", channel: "lanes", columns: 5, controller: { on: "pad", index: 0 } },
+      { seat: 1, kind: "bass", channel: "lanes", columns: 5, controller: { on: "pad", index: 1 } },
+      { seat: 2, kind: "guitar", channel: "lanes", columns: 5, controller: { on: "keyboard", layout: 0 } },
+      { seat: 3, kind: "keys", channel: "lanes", columns: 5, controller: { on: "midi" } },
+    ];
+    expect(seatsOnLostPads(seats, [1]).map((seat) => seat.seat)).toEqual([1]);
+    expect(seatsOnLostPads(seats, [0, 1]).map((seat) => seat.seat)).toEqual([0, 1]);
+    expect(seatsOnLostPads(seats, [])).toEqual([]);
   });
 });

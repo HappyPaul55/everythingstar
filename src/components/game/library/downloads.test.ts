@@ -604,6 +604,20 @@ describe("downloadSong", () => {
     expect(listOffline()[0].song.id).toBe("test-song");
   });
 
+  test("a missing preview costs the clip, not the download", async () => {
+    const { cache } = installEnvironment();
+    stubFetch(
+      happyHost({ failing: (url) => url === "https://songs.example/preview.ogg" }),
+    );
+
+    const entry = await downloadSong(song());
+
+    // The charts and stems are what a run needs; the jukebox clip is optional.
+    expect(cache.entries.has("https://songs.example/preview.ogg")).toBe(false);
+    expect(entry.urls).not.toContain("https://songs.example/preview.ogg");
+    expect(listOffline().map((listed) => listed.song.id)).toEqual(["test-song"]);
+  });
+
   test("a downloaded on-demand song comes back into a fresh library read", async () => {
     installEnvironment();
     stubFetch(happyHost());

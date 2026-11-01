@@ -22,8 +22,6 @@
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { decodeText } from "../../src/lib/game/sources/bytes";
-import { readChartText } from "../../src/lib/game/sources/chart";
-import { detectSource } from "../../src/lib/game/sources/detect";
 import {
   ART_NAMES,
   AUDIO_NAMES,
@@ -32,11 +30,8 @@ import {
   folderAttribution,
   INI_NAMES,
 } from "../../src/lib/game/sources/files";
-import { readGameMidi } from "../../src/lib/game/sources/ghmidi";
 import { readIni } from "../../src/lib/game/sources/ini";
-import { readLyricText } from "../../src/lib/game/sources/lyrics";
-import { readStepMania } from "../../src/lib/game/sources/stepmania";
-import { readUltraStar } from "../../src/lib/game/sources/ultrastar";
+import { parseSource } from "../../src/lib/game/sources/parse";
 import type { ParsedSource, StemRole } from "../../src/lib/game/sources/types";
 import { writeSource } from "../../src/lib/game/sources/write";
 import { findSongs, type SongFolder } from "./find";
@@ -84,9 +79,7 @@ function attribute(source: ParsedSource, folderName: string): void {
 
 function readSource(folder: SongFolder, root: string, audioBase: string, id: string): ParsedSource {
   const bytes = new Uint8Array(readFileSync(folder.chart));
-  const format = detectSource(bytes, basename(folder.chart));
   const dir = folder.dir;
-  const text = () => decodeText(bytes);
 
   const iniFile = findFile(dir, INI_NAMES);
   const ini = iniFile ? readIni(decodeText(new Uint8Array(readFileSync(iniFile)))) : null;
@@ -99,26 +92,22 @@ function readSource(folder: SongFolder, root: string, audioBase: string, id: str
   }
 
   const fallbackTitle = basename(dir);
-  const flavour =
-    format === "lrc" || format === "srt" || format === "vtt" ? format : undefined;
-  const source = (() => {
-    switch (format) {
-      case "midi":
-        return readGameMidi({ bytes, ini, stems, art, fallbackTitle, id });
-      case "chart":
-        return readChartText({ text: text(), ini, stems, art, fallbackTitle, id });
-      case "ultrastar":
-        return readUltraStar({ text: text(), stems, art, fallbackTitle, id });
-      case "stepmania":
-        return readStepMania({ text: text(), stems, art, fallbackTitle, id });
-      default:
-        return readLyricText({ text: text(), flavour, stems, art, fallbackTitle, id });
-    }
-  })();
   // A jukebox clip is not a stem: it is named in the song document so the jukebox can
   // play it, and nothing mixes it into a run.
   const previewFile = findFile(dir, PREVIEW_NAMES);
-  if (previewFile) source.audio.preview = stemUrl(previewFile, root, audioBase);
+  // One door, exactly as the game has: the importer used to keep its own switch and
+  // send every format it did not name to the lyric reader, which is the "three-second
+  // song with no words" bug the door was introduced to fix.
+  const source = parseSource({
+    bytes,
+    name: basename(folder.chart),
+    ini,
+    stems,
+    art,
+    fallbackTitle,
+    id,
+    preview: previewFile ? stemUrl(previewFile, root, audioBase) : null,
+  });
   attribute(source, fallbackTitle);
   return source;
 }

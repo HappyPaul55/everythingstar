@@ -280,8 +280,8 @@ player who opens the JSON library and never presses Calibrate, opens Downloads, 
 a link or uses `?dev=1` does not pay for any of it.
 
 That matters because `/play` is the page the game starts on: the initial JavaScript
-graph is **577 KiB raw / 186 KiB gzipped across 21 files**. That is the first download
-only; every `_astro` JavaScript chunk in the build totals **705 KiB**, because the lazy
+graph is **577 KiB raw / 186 KiB gzipped across 22 files**. That is the first download
+only; every `_astro` JavaScript chunk in the build totals **708 KiB**, because the lazy
 chunks still ship — they are just not requested first. `scripts/check-budget.ts` walks
 `play.html`'s initial island graph, gates the initial raw and gzipped sizes directly,
 and fails if a translator marker leaks into it, so the split cannot quietly regress.

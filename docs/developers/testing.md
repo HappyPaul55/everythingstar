@@ -75,8 +75,8 @@ out of `astro check`, and the test config includes them with the runner's types.
   formats agree, and every root-absolute URL its entry page names is inside it. See
   [Deployment and releases](deployment.md#the-release-archives).
 
-The budget was measured on 2026-11-01: 705 KiB of `_astro` JS, an initial graph of
-577 KiB raw / 186 KiB gzipped across 21 files, 17.8 MiB in `dist/` and 8.8 MiB of
+The budget was measured on 2026-11-01: 708 KiB of `_astro` JS, an initial graph of
+577 KiB raw / 186 KiB gzipped across 22 files, 17.9 MiB in `dist/` and 8.8 MiB of
 audio. The caps sit just above those numbers — 710 KiB, 580 KiB, 190 KiB, 20 MiB,
 10 MiB. The **whole-build cap is the one that keeps moving**, raised when the
 documentation landed and again for its pictures: the [note-types page](../charters/note-types.md)

@@ -43,9 +43,10 @@ export default defineConfig({
   workers: process.env.CI ? Math.max(2, availableParallelism() - 1) : 1,
   // A loaded runner can lose a race the product does not have: a timing
   // assertion can step over a frame a quiet run would see. One retry tells a
-  // flake from a break; local runs stay honest, and a test that needs two is a
-  // test to fix.
+  // flake from a break, and **a test that needs it fails the job** — the retry is
+  // a diagnostic, not a pass. Local runs stay honest with no retry at all.
   retries: process.env.CI ? 1 : 0,
+  failOnFlakyTests: !!process.env.CI,
   // A committed `test.only` would run one test and exit 0, so CI would go green
   // with the suite gone. Refuse it where it matters.
   forbidOnly: !!process.env.CI,

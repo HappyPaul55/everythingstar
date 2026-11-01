@@ -5,10 +5,12 @@ name: CI
 permissions:
   contents: read
 
-# A superseded pull-request run is cancelled. A push to `main` is not, because that
-# commit is the one the deployment record and its smoke test point at.
+# A superseded pull-request run is cancelled. Every push to `main` gets a group of
+# its own (the commit): a shared group keeps only **one** pending run, so a third
+# quick merge would cancel the second and leave that commit with no deployment
+# record or smoke test. A push is never cancelled in progress.
 concurrency:
-  group: ci-${{ github.head_ref || github.ref }}
+  group: ci-${{ github.event_name == 'pull_request' && github.head_ref || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 on:

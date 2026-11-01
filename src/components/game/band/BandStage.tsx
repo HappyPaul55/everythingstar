@@ -119,7 +119,7 @@ export function BandStage({
       }
       tabIndex={-1}
       role="region"
-      aria-label={t("play.heading")}
+      aria-label={`${t("screen.playingNow")}: ${track.title}`}
       data-nav-default="true"
     >
       <StageBackground media={media} youtube={youtube} dim={backdropDim} />

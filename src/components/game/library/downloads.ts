@@ -65,6 +65,16 @@ export class OfflineError extends Error {
   }
 }
 
+/**
+ * The reason a failure carries, or the generic one for anything else.
+ *
+ * One rule for every catch: a typed quota failure must not be flattened into "the
+ * download failed", which is what the remove and clear paths did.
+ */
+function offlineFailure(error: unknown): OfflineFailure {
+  return error instanceof OfflineError ? error.reason : "failed";
+}
+
 export interface OfflineEntry {
   /** The playlist summary, so the Downloads dialog can draw the song offline. */
   song: Song;
@@ -760,7 +770,12 @@ export async function downloadSong(
     for (const url of pendingDocuments) {
       await put(url, "document", true, "documents");
     }
-    for (const url of pendingAudio) await put(url, "audio", true, "audio");
+    // The jukebox clip is a preview, not part of the song: a missing or broken
+    // one must not fail a download whose charts and stems are all there.
+    const previewUrl = read.doc.audio.preview;
+    for (const url of pendingAudio) {
+      await put(url, "audio", url !== previewUrl, "audio");
+    }
     for (const url of pendingArt) await put(url, "art", false, "art");
 
     return await finish({
@@ -876,7 +891,7 @@ export function startDownload(song: Song): boolean {
         },
       });
     } catch (reason) {
-      const failure = reason instanceof OfflineError ? reason.reason : "failed";
+      const failure = offlineFailure(reason);
       // A cancel is the player's choice, not a failure to report back to them.
       if (failure !== "cancelled") {
         lastError = { songId: song.id, reason: failure };
@@ -967,7 +982,7 @@ export function startPlaylistDownload(
             },
           });
         } catch (reason) {
-          const failure = reason instanceof OfflineError ? reason.reason : "failed";
+          const failure = offlineFailure(reason);
           // The press that cancels is a choice, not a song that failed: the song in
           // flight rolled its own partial files back and the finished ones stay.
           if (failure === "cancelled" || controller.signal.aborted) break;
@@ -1010,8 +1025,8 @@ export function removeDownload(id: string): boolean {
   next.promise = (async () => {
     try {
       await removeOffline(id);
-    } catch {
-      lastError = { songId: id, reason: "failed" };
+    } catch (error) {
+      lastError = { songId: id, reason: offlineFailure(error) };
     } finally {
       if (job === next) {
         job = null;
@@ -1040,8 +1055,8 @@ export function clearDownloads(): boolean {
   next.promise = (async () => {
     try {
       await clearOffline();
-    } catch {
-      lastError = { songId: "", reason: "failed" };
+    } catch (error) {
+      lastError = { songId: "", reason: offlineFailure(error) };
     } finally {
       if (job === next) {
         job = null;

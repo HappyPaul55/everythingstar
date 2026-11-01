@@ -94,6 +94,7 @@ export const en = {
   "screen.playAnyway": "Play anyway",
   "screen.audioFailed": "{name} did not load — that part will be missing.",
   "screen.ready": "Get ready",
+  "screen.playingNow": "Playing",
 
   // The menu, and the two branches off it: the board the welcome opens on to
   "screen.menuTitle": "Main menu",
@@ -582,6 +583,8 @@ export const en = {
   "screen.typedFreePlay": "typed — free play",
   "screen.bandNothing": "None of this band has a part in this song. Change who is playing, or pick another song.",
   "screen.handsHint": "One keyboard: the first instrument and the first typist share it; everyone else plays themselves.",
+  "screen.handsTouchHint":
+    "Tap an instrument to take it, then Play when the band is ready.",
   "screen.play": "Play",
   "screen.listen": "Listen",
   "screen.backToSongs": "Back to songs",
@@ -641,6 +644,7 @@ export const en = {
   "screen.restart": "Start again",
   "screen.quit": "Leave the stage",
   "screen.pauseHint": "Escape or Start resumes.",
+  "screen.pauseTouchHint": "Tap Resume to carry on.",
   "stage.noSound":
     "No sound from this song. The stage is still running, and the notes still count.",
   "pause.quick": "Quick settings",
@@ -739,6 +743,7 @@ export const en = {
   "band.column": "Column {n}",
   "band.kick": "Kick pedal",
   "band.strum": "strum",
+  "band.tapHint": "tap the pad under each note",
   "band.fill": "Fill!",
   "band.noChart": "No chart for this instrument",
   "band.playersLabel": "Players",
@@ -755,6 +760,8 @@ export const en = {
   "band.micAsked": "asking",
   "band.micOn": "listening",
   "band.micRefused": "refused - the singers play themselves",
+  "band.micRefusedHint":
+    "The microphone was refused, so the machine sings this part. Tap Vocals to try again.",
   "band.micFailed": "unavailable",
   "band.sounds": "sounds",
   "band.soundsLoading": "reading the manifest…",

@@ -119,14 +119,12 @@ export function writeChart(input: ChartExportInput): ChartExport {
       problems.push(`${chart.key}: hero notes download as ordinary notes (.chart has none)`);
     }
     const difficulty = DIFFICULTY_WORD[chart.difficulty] ?? "Expert";
-    let section = `${difficulty}${word}`;
+    const section = `${difficulty}${word}`;
     // Two charts can want the same section (a roleless guitar and a lead, or two
-    // charts of one kind after a copy). A second one gets the format's other
-    // guitar word; after that it is named rather than silently overwriting.
-    if (used.has(section)) {
-      if (word === "Single") section = `${difficulty}DoubleGuitar`;
-      else if (word === "DoubleGuitar") section = `${difficulty}Single`;
-    }
+    // charts of one kind after a copy). `.chart` has one lead-guitar word: its
+    // `DoubleGuitar` is the *second* lead, not a plain guitar, so renaming the
+    // second to it made a file that read back as one chart. Name the collision
+    // instead of writing something that reads differently.
     if (used.has(section)) {
       problems.push(`${chart.key}: a second ${section} cannot share the file`);
       continue;

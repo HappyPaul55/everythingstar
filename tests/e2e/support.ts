@@ -6,7 +6,7 @@
  * `src/lib/docshots/capture.ts` take the picture on the way out — only when the
  * test passed. Nothing else is added to a test.
  */
-import { test as base } from "@playwright/test";
+import { test as base } from "./base";
 import { captureDoc, docOf } from "../../src/lib/docshots/capture";
 
 export const test = base.extend<{ docShot: void }>({

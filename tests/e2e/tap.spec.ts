@@ -115,3 +115,33 @@ test("two fingers on the hit line play a chord", async ({ context, page }) => {
 
   expect(leaked, "unexpected external requests").toEqual([]);
 });
+
+test("a phone's first lesson teaches the pads, not a keyboard", async ({
+  context,
+  page,
+}) => {
+  const leaked = await installFixtures(context);
+  await disableFullscreen(page);
+  await enterGame(page);
+  await openBand(page, SONG_TITLE);
+
+  // The band tells a phone how to take a seat; "one keyboard" is a desktop fact.
+  await expect(page.locator("#band-hint")).toContainText("Tap an instrument");
+
+  await startRun(page);
+  await waitForPlaying(page);
+
+  // A note carries no key cap, and the coach names the pad rather than a strum.
+  await expect(page.locator(".highway__pad-key")).toHaveCount(0);
+  await expect(page.locator(".highway__coach")).toContainText(
+    "tap the pad under each note",
+  );
+
+  // The pause's own hint is the touch one too: there is no Escape or Start here.
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  const pause = page.getByRole("dialog", { name: "Paused" });
+  await expect(pause).toBeVisible();
+  await expect(pause.locator(".screen__hint")).toHaveText("Tap Resume to carry on.");
+
+  expect(leaked, "unexpected external requests").toEqual([]);
+});

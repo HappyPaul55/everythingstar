@@ -82,9 +82,15 @@ export function useSongTrack(
     let alive = true;
     const abort = new AbortController();
     // Keep what is already loaded for this song: a seat changing is not a reason to
-    // take the charts off the stage and put them back.
+    // take the charts off the stage and put them back. It is still a **load in
+    // flight**, though, and the band must not say its charts are ready while the
+    // next seat's chart is being fetched — Play would start on the old difficulty
+    // and the run would reset when the new chart landed.
+    const previous = shown.current;
     const next: SongLoad =
-      loadedId.current === song.id ? shown.current : { ...IDLE, status: "loading" };
+      loadedId.current === song.id
+        ? { ...previous, status: "loading" }
+        : { ...IDLE, status: "loading" };
     shown.current = next;
     setLoad(next);
     void (async () => {
@@ -100,7 +106,12 @@ export function useSongTrack(
       const retained =
         loadedId.current === song.id && (current.doc !== null || current.track !== null);
       if (!loaded.doc && !loaded.track && retained) {
+        // The seat change failed but the charts on screen still work: keep them
+        // and put the load back to the state it had before this attempt.
         loaded.release?.();
+        const restored: SongLoad = { ...previous, status: "ready" };
+        shown.current = restored;
+        setLoad(restored);
         return;
       }
       // The new load is adopted now, so the one it replaces can let its object URLs

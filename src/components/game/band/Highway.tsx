@@ -90,6 +90,11 @@ interface Props {
    */
   labels?: ControllerLabels | null;
   /**
+   * A coarse pointer with tap on: the pads are the controls, so a note carries no
+   * key name and the coach says "tap the pad" instead of naming a strum.
+   */
+  touch?: boolean;
+  /**
    * Whether this is the player's first run. The labels are a lesson, so a seat
    * that has already had one never sees them again — even if this run is a replay.
    */
@@ -199,6 +204,7 @@ export function Highway({
   run,
   held,
   labels = null,
+  touch = false,
   firstRun = false,
   view,
   noteStyle,
@@ -225,13 +231,13 @@ export function Highway({
     if (run.hits >= KEY_HINT_HITS) setHintsDone(true);
   }, [run.hits]);
   const teach =
-    firstRun && labels !== null && !hintsDone && run.hits < KEY_HINT_HITS;
+    firstRun && (touch || labels !== null) && !hintsDone && run.hits < KEY_HINT_HITS;
   /**
    * The label for a note: its column's control, or the strum for an open note.
    * A dance mat draws its controls as arrows already, so it needs no second name.
    */
   const keyFor = (note: LaneNote): string | null => {
-    if (!teach || !labels || labels.family === "dance") return null;
+    if (!teach || touch || !labels || labels.family === "dance") return null;
     return note.column === null ? labels.strum : labels.frets[note.column] ?? null;
   };
   /**
@@ -793,10 +799,14 @@ export function Highway({
           has no column, and a hopo may not need a strum at all. This is the line's
           own caption for the first few notes, outside the tilted deck so it stays
           flat while the neck recedes. */}
-      {teach && labels?.strum ? (
+      {teach && (touch || labels?.strum) ? (
         <div className="highway__coach" aria-hidden="true">
-          <span className="highway__coach-keys">{labels.strum}</span>
-          <span className="highway__coach-word">{t("band.strum")}</span>
+          {touch ? null : (
+            <span className="highway__coach-keys">{labels?.strum}</span>
+          )}
+          <span className="highway__coach-word">
+            {touch ? t("band.tapHint") : t("band.strum")}
+          </span>
         </div>
       ) : null}
     </div>
