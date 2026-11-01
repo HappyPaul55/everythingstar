@@ -4,14 +4,23 @@
  * A registered source returns `null` while it is buffering, and the playhead
  * waits — right for a moment, fatal for a run. A stem that never arrives, a
  * `.sng` member the browser refuses, a video blocked by a region or an adblocker:
- * none of them will ever answer, and waiting for them holds the song at 0:00 for
- * ever. After `SOURCE_STALL_MS` the frame clock takes over so the run can finish,
- * and the stage says the sound is gone.
+ * none of them will ever answer. The frame clock then takes over so the run can
+ * finish, and the stage says the sound is gone.
+ *
+ * There are **two windows** because silence has two meanings. A source that says it
+ * has **failed** (every stem errored, the player refused the video) gets
+ * `SOURCE_STALL_MS` — there is nothing left to wait for. A source that is merely
+ * slow — a seek in flight, a buffer refilling — gets `SOURCE_STALL_SOFT_MS`, because
+ * giving up on it would advance the playhead through sound that is still coming and
+ * judge the notes in between as misses.
  *
  * Pure, so the boundary is tested without an audio element: `firstSilentAt` is the
  * moment the source first answered `null` this run (`null` when it is answering).
  */
 export const SOURCE_STALL_MS = 1500;
+
+/** The longer window for a source that has not failed — it is only slow. */
+export const SOURCE_STALL_SOFT_MS = 6000;
 
 export interface Stall {
   /** Where the silence began: this call's `nowMs` when it is the first. */

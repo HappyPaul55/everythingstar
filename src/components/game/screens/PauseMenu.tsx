@@ -104,6 +104,15 @@ export function PauseMenu({
    * The honest action is to play the same stretch again.
    */
   const passOver = practice !== null && practiceEnded(practice, clock.timeRef.current);
+  /**
+   * What closing the pause does. At a finished pass it is the same as the primary
+   * button — repeat the stretch — because Escape and a pad's B resume, and a resume
+   * there rewinds a whole-song practice or re-pauses one frame later.
+   */
+  const closeAction = () => {
+    if (passOver && practice) onStartPractice(practice);
+    else onResume();
+  };
 
   /**
    * Practise the stretch the song is in **now**, at the record's speed and without
@@ -126,7 +135,7 @@ export function PauseMenu({
     <>
       <NativeDialog
         title={t("screen.paused")}
-        onClose={onResume}
+        onClose={closeAction}
         className="screen screen--over screen--paused"
         panelClassName="screen__panel screen__panel--centre"
         showHeader={false}
@@ -254,7 +263,7 @@ export function PauseMenu({
               data-dialog-focus
               data-nav-default="true"
               data-sound="select"
-              onClick={() => onStartPractice(practice)}
+              onClick={closeAction}
             >
               {t("practice.repeat")}
             </button>

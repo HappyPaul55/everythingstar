@@ -187,8 +187,10 @@ export function GamepadNav({ screen, dispatch }: Props) {
         if (actions.includes("start")) {
           // Start belongs to an open dialog, not to the screen underneath it: a
           // player choosing a practice stretch must not have the run resumed
-          // under the dialog by the same press.
-          if (topDialog()) continue;
+          // under the dialog by the same press. The pause's **own** dialog is the
+          // exception — Start is its documented toggle, and its only way back.
+          const dialog = topDialog();
+          if (dialog && !dialog.matches(".screen--paused")) continue;
           if (current === "paused") dispatch("resume");
           continue;
         }

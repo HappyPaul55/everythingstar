@@ -151,10 +151,14 @@ export function useMidiInput(): MidiInput {
       input.onmidimessage = forward;
       attached.current.add(input);
     }
-    // An input that has gone away is no longer in the map; let its listener go.
+    // An input that has gone away is no longer in the map; let its listener go. Some
+    // implementations keep a disconnected port in the map (the hook's own list
+    // filter already skips them), so the port's state is checked too: a kit
+    // unplugged mid-hold must produce a release, and no later event will come.
     const gone: MIDIInput[] = [];
     for (const input of attached.current) {
-      if (next.inputs.get(input.id) !== input) gone.push(input);
+      const current = next.inputs.get(input.id);
+      if (current !== input || current.state === "disconnected") gone.push(input);
     }
     for (const input of gone) {
       if (input.onmidimessage === forward) input.onmidimessage = null;

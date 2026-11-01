@@ -58,6 +58,9 @@ export function YouTubeStageAudio({
   const ready = useRef(false);
   const [started, setStarted] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  /** The last problem, for the clock's stale-read predicate (state is async). */
+  const problemRef = useRef<string | null>(null);
+  problemRef.current = problem;
   const smoother = useRef<YouTubeClockState>(startYouTubeClock(0, 0));
   const seekGuard = useRef(0);
   const lag = useRef(lagMs);
@@ -142,10 +145,17 @@ export function YouTubeStageAudio({
 
   // Register before the player exists: the clock must wait for the video rather
   // than count frames while it loads. `read` is null until it is playing.
+  //
+  // The effect deliberately does **not** depend on the clock: its value changes
+  // whenever the clock plays, pauses, ends or declares a loss, and re-registering
+  // on each of those would clear the loss it just declared (the playhead would
+  // advance one frame per stall, and the notice would flicker). The reader is a
+  // stable callback and `clockRef` is current.
   useEffect(() => {
-    clock.followSource(read, seek);
-    return () => clock.followSource(null);
-  }, [clock, read, seek]);
+    const live = clockRef.current;
+    live.followSource(read, seek, () => problemRef.current !== null);
+    return () => live.followSource(null);
+  }, [read, seek]);
 
   useEffect(() => {
     let alive = true;

@@ -5443,6 +5443,14 @@
     align-items: flex-end;
     gap: 0.3rem;
   }
+  /* The stage's own chips side by side. A phone adds a Pause beside Fullscreen, and
+     a second chip in the column would push the practice read-out under it — the
+     read-out is placed for a corner one chip tall. */
+  .stage-corner__row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
 
   /* The way into the whole screen. Product, so it is quiet rather than marked: the
      chip shape of the dev toggle, without the "this is not the game" of it. */

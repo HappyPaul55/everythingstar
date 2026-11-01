@@ -4,7 +4,7 @@ import { SONG_TITLE, disableFullscreen, installFixtures } from "./fixture";
 import { enterGame, installGamepad, pressPadButton, waitForPlaying } from "./helpers";
 
 /**
- * The pad as a menu cursor over a **stack** of dialogs.
+ * The pad as a menu cursor over a **stack** of dialogs, and as the transport.
  *
  * `<dialog>` makes everything behind it inert, but the DOM has no "which one is on
  * top" — so the game keeps its own ordered list (`ui/modalStack.ts`). A Practice
@@ -15,15 +15,7 @@ import { enterGame, installGamepad, pressPadButton, waitForPlaying } from "./hel
  * The pad is a fake one installed before the page's scripts run: the browser's
  * gamepad API is a poll, and the game reads it on its own frame loop.
  */
-test("the pad closes the practice dialog on top, not the pause beneath it", async ({
-  context,
-  page,
-}) => {
-  const leaked = await installFixtures(context);
-  await disableFullscreen(page);
-  await installGamepad(page);
-  await enterGame(page);
-
+async function toRun(page: import("@playwright/test").Page): Promise<void> {
   // A short fixture run with the machine on the second lane, so the run is real.
   await page.getByRole("button", { name: /Quick Play/ }).click();
   const row = page.getByRole("button", { name: new RegExp(SONG_TITLE) });
@@ -33,6 +25,17 @@ test("the pad closes the practice dialog on top, not the pause beneath it", asyn
   await page.getByRole("button", { name: /Player 2 .*join the band/ }).click();
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await waitForPlaying(page);
+}
+
+test("the pad closes the practice dialog on top, not the pause beneath it", async ({
+  context,
+  page,
+}) => {
+  const leaked = await installFixtures(context);
+  await disableFullscreen(page);
+  await installGamepad(page);
+  await enterGame(page);
+  await toRun(page);
 
   // Escape opens the pause; Practice opens its dialog over it.
   await page.keyboard.press("Escape");
@@ -56,4 +59,40 @@ test("the pad closes the practice dialog on top, not the pause beneath it", asyn
   await expect(page.getByRole("region", { name: "Player 1 — Guitar" })).toBeVisible();
 
   expect(leaked, "unexpected external requests").toEqual([]);
+});
+
+test("Start is the pause's toggle, and does nothing through another dialog", async ({
+  context,
+  page,
+}) => {
+  await installFixtures(context);
+  await disableFullscreen(page);
+  await installGamepad(page);
+  await enterGame(page);
+  await toRun(page);
+
+  const pause = page.getByRole("dialog", { name: "Paused" });
+  const screen = page.locator("html");
+
+  // Start pauses, and Start again resumes — the one control that must work
+  // without a pointer. The pause is itself a dialog, so this is also the guard
+  // that Start is not refused by its own dialog.
+  await pressPadButton(page, UI_BUTTON.start);
+  await expect(pause).toBeVisible();
+  await expect(screen).toHaveAttribute("data-screen", "paused");
+  await pressPadButton(page, UI_BUTTON.start);
+  await expect(pause).toBeHidden();
+  await expect(screen).not.toHaveAttribute("data-screen", "paused");
+
+  // Over the Practice dialog, Start belongs to the dialog: the run must not resume
+  // underneath it. (The dialog does not answer Start, so nothing should change.)
+  await pressPadButton(page, UI_BUTTON.start);
+  await expect(pause).toBeVisible();
+  await pause.getByRole("button", { name: "Practice", exact: true }).click();
+  const practice = page.getByRole("dialog", { name: "Practice a stretch" });
+  await expect(practice).toBeVisible();
+  await pressPadButton(page, UI_BUTTON.start);
+  await expect(practice).toBeVisible();
+  await expect(pause).toBeVisible();
+  await expect(screen).toHaveAttribute("data-screen", "paused");
 });
