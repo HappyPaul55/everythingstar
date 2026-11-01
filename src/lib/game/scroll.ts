@@ -97,15 +97,34 @@ export function notesInWindow<T extends Timed>(
   // vanish while the others remain — a chord that comes apart on screen.
   while (first > 0 && notes[first - 1].timeMs === notes[first].timeMs) first -= 1;
   while (last < notes.length && notes[last].timeMs === notes[last - 1].timeMs) last += 1;
+  // A long sustain may start well before `first`. Walk back only as far as the
+  // chart's longest note can reach, not the whole chart; the max is cached per
+  // array so a window step does not rescan a 10k chart.
+  const longest = longestNote(notes);
+  let start = first;
+  while (start > 0 && notes[start - 1].timeMs + longest >= fromMs) start -= 1;
   const mounted: T[] = [];
-  notes.forEach((note, index) => {
+  for (let index = start; index < last; index += 1) {
+    const note = notes[index]!;
     // The neighbourhood the view has always kept, and any span still crossing
     // the window however early it began.
     if ((index >= first && index < last) || overlapsWindow(note, fromMs, toMs)) {
       mounted.push(note);
     }
-  });
+  }
   return mounted;
+}
+
+const LONGEST = new WeakMap<readonly Timed[], number>();
+
+/** The longest note in an array, cached per chart. */
+function longestNote(notes: readonly Timed[]): number {
+  const cached = LONGEST.get(notes);
+  if (cached !== undefined) return cached;
+  let longest = 0;
+  for (const note of notes) longest = Math.max(longest, Math.max(0, note.lengthMs ?? 0));
+  LONGEST.set(notes, longest);
+  return longest;
 }
 
 /** Whether any part of a note — its head or its tail — is inside the window. */

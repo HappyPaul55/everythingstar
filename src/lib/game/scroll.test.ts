@@ -62,6 +62,22 @@ describe("notesInWindow", () => {
     expect(window.map((note) => note.id)).toEqual(["n2", "n3", "n4", "n5", "n6", "n7"]);
   });
 
+  test("keeps a sustain that began before the window, and not a short early note", () => {
+    const spans = [
+      { id: "long", timeMs: 0, lengthMs: 5000 },
+      { id: "early", timeMs: 0, lengthMs: 100 },
+      { id: "mid", timeMs: 3000, lengthMs: 0 },
+      { id: "in", timeMs: 5000, lengthMs: 0 },
+    ];
+    // `mid` is the one-note neighbour the view keeps; `early` is behind it and is
+    // not mounted, while the long sustain is.
+    expect(notesInWindow(spans, 4000, 6000).map((note) => note.id)).toEqual([
+      "long",
+      "mid",
+      "in",
+    ]);
+  });
+
   test("clamps at the start and the end", () => {
     expect(notesInWindow(notes, 0, 1000).map((note) => note.id)).toEqual([
       "n0",

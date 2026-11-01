@@ -106,10 +106,16 @@ export function useScrollTrack({
   // After any render, adopt the window that was just rendered and re-place the
   // layer against it. A layout effect runs after the DOM changes but before the
   // paint, so the notes and their transform always land together.
+  // The clock subscriber below places the layer on every frame. This effect only
+  // has to re-place after a **window** commit, when the notes and the transform
+  // change basis together; running it with no deps re-wrote the transform after
+  // every unrelated render (a pad lighting, a publish).
+  const placeLatest = useRef(placeLayer);
+  placeLatest.current = placeLayer;
   useLayoutEffect(() => {
     rendered.current = window;
-    placeLayer();
-  });
+    placeLatest.current();
+  }, [window]);
 
   useEffect(() => {
     const apply = () => {
