@@ -42,7 +42,9 @@ test("a part pill renames the wordmark, and the Star stays put", async ({
     const enter = page.getByRole("button", { name: "Enter the stage" });
     await expect(enter).toBeEnabled({ timeout: 20_000 });
 
-    const heading = page.getByRole("heading", { name: "EverythingStar" });
+    // `exact`: the page's own `<h1>` is "Play EverythingStar", which a substring
+    // match would also find.
+    const heading = page.getByRole("heading", { name: "EverythingStar", exact: true });
     const prefix = heading.locator(".welcome__word-live");
     const star = heading.locator(".welcome__word--star");
     await expect(prefix).toHaveText("Everything");
