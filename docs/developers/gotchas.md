@@ -1733,7 +1733,11 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   notes are mounted at fixed percentages of the axis and one translated layer
   carries them, so a frame is a single style write. `axisPercent` places,
   `nextAxisOffset` moves — they are the same maths with opposite signs, and a
-  test pins that they cancel.
+  test pins that they cancel. **The layer is the bar**: grouping notes into sliding
+  bar containers would add transforms, not remove them (measured: four track
+  writes a frame for four panels, no per-note movement). The per-note work left is
+  mount/unmount as the window slides and the hit/live class flips, which the
+  memoised `HighwayNote` already limits.
 - **The transform must be measured from the window the DOM is showing.** When the
   mounted window slides, the notes' positions *and* the transform change basis.
   If they are not committed together the notes jerk by the difference — which is
