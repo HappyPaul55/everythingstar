@@ -57,6 +57,14 @@ It is drawing only: chart, clock and hit window are the same at every speed, and
 
 **In perspective** (the default) tilts a highway into the song, so the columns recede and more of what is coming shows. **Flat** keeps every note the same size, face-on. Judging is identical either way.
 
+### If the notes stutter
+
+The perspective view is the heaviest drawing: a four-player band in perspective is
+the case a weaker GPU notices first. **Flat** keeps every note the same size and is
+much lighter, **Drifting lights off** removes the room's animation, and fewer players
+is lighter still. The chart, clock, hit window and judging are identical in every
+view, so this is only about the picture.
+
 ### Note style
 
 **Bars** (the default), **gems** or **arrows** — a skin for the notes. Bars are the flat buttons, gems a rounded head with a tail behind it, and arrows make the glyph the note: four directions on a four-column chart, five panels on a five-column one. Judging never sees it, and the instrument's own glyph still rides on bars and gems.

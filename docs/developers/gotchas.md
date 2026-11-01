@@ -821,7 +821,10 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   switch skips *the song's* video rather than the backdrop — a song with nothing of its
   own falls back rather than going black. **`backdropDim`** is one overlay inside
   `.stage-bg` — above the video or art and its scrim, below every panel and note — so
-  it dims the backdrop and never the notes, panels, text contrast or focus rings.
+  it dims the backdrop and never the notes, panels, text contrast or focus rings. The
+  drifting lights are **hidden while the stage is up**: the stage's own backdrop is
+  opaque over them, and animating lights nobody can see was costing the four-panel
+  frame interval 67 → 50 ms at 4x throttle.
 - **A page is a scrim over the room, not a sheet of ink.** The screens' background is a
   translucent gradient so the artwork shows through, and the surfaces that are *read* —
   the song list above all — carry their own darker fill. If a surface ever needs to be
@@ -1713,6 +1716,10 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   backdrop should read behind the lyrics, so the text carries contrast itself via
   `--on-video-shadow`. The **active word** is the exception — a yellow fill needs
   no halo, so it sets `text-shadow: none`. Do not give the region a panel back.
+- **A dev-server CPU profile is not the game's.** The JSX dev runtime dominated one
+  (about 5 s of script against 1 s in the production build), so `bun run perf` builds
+  and previews the site. Measure the artifact players run; the dev server is for
+  behaviour, not cost.
 - **The stage runs on one frame loop, and nothing re-renders on a frame.**
   `StageClock` owns the loop; a component that follows the playhead subscribes
   and writes to the DOM itself (see `useScrollTrack`). Anything that shows a

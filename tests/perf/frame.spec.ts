@@ -26,23 +26,68 @@ const median = (values: number[]) => {
 test("four-panel frame and task cost", async ({ context, page }) => {
   const seats = Number(process.env.BENCH_SEATS ?? 4);
   const rate = Number(process.env.BENCH_RATE ?? 4);
+  const scenario = process.env.BENCH_SCENARIO ?? "guitars";
+  const profile = process.env.BENCH_PROFILE === "1";
+
+  if (scenario === "singer") {
+    await context.grantPermissions(["microphone"]);
+  }
+  const view = process.env.BENCH_VIEW;
+  if (view) {
+    await page.addInitScript((chosen) => {
+      localStorage.setItem(
+        "everythingstar:settings",
+        JSON.stringify({ view: chosen }),
+      );
+    }, view);
+  }
+  // The worker is the only thing a preview carries that the dev server does not.
+  // This is the installed-game test's subject, not the frame's: a no-op
+  // registration keeps the page on the network and the fixtures answerable.
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: {
+        controller: null,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        register: () => Promise.resolve({ update: () => Promise.resolve() }),
+      },
+    });
+  });
 
   await installDocsFixtures(context);
   await disableFullscreen(page);
   await enterGame(page);
   await openDocsBand(page);
-  await seatPlayers(page, seats);
-  for (let seat = 1; seat <= seats; seat += 1) {
-    await setSlot(page, seat, "Guitar");
+  await seatPlayers(page, 1);
+  if (scenario === "singer") {
+    await setSlot(page, 1, "Vocals");
+  } else {
+    await seatPlayers(page, seats);
+    for (let seat = 1; seat <= seats; seat += 1) {
+      await setSlot(page, seat, "Guitar");
+    }
   }
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await waitForStage(page);
   await waitForPlaying(page);
+  const width = Number(process.env.BENCH_WIDTH ?? 0);
+  const height = Number(process.env.BENCH_HEIGHT ?? 0);
+  if (width > 0 && height > 0) {
+    await page.setViewportSize({ width, height });
+    await page.waitForTimeout(500);
+  }
 
   const cdp = await context.newCDPSession(page);
   await cdp.send("Performance.enable");
   await cdp.send("Emulation.setCPUThrottlingRate", { rate });
   await page.waitForTimeout(1_000);
+  if (profile) {
+    await cdp.send("Profiler.enable");
+    await cdp.send("Profiler.setSamplingInterval", { interval: 1_000 });
+    await cdp.send("Profiler.start");
+  }
 
   const before = await cdp.send("Performance.getMetrics");
   const frames = await page.evaluate(
@@ -61,6 +106,32 @@ test("four-panel frame and task cost", async ({ context, page }) => {
       }),
   );
   const after = await cdp.send("Performance.getMetrics");
+  if (profile) {
+    const { profile: taken } = await cdp.send("Profiler.stop");
+    const nodes = new Map(taken.nodes.map((node) => [node.id, node]));
+    const self = new Map<string, number>();
+    const samples = taken.samples ?? [];
+    const deltas = taken.timeDeltas ?? [];
+    samples.forEach((id, index) => {
+      const node = nodes.get(id);
+      if (!node) return;
+      const frame = node.callFrame;
+      const file = frame.url.split("/").pop() ?? "(inline)";
+      const key = `${frame.functionName || "(anonymous)"} — ${file}:${frame.lineNumber}`;
+      self.set(key, (self.get(key) ?? 0) + (deltas[index] ?? 0));
+    });
+    console.log(
+      "profile:",
+      JSON.stringify(
+        [...self.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 20)
+          .map(([key, micros]) => [key, Math.round(micros / 1000)]),
+        null,
+        2,
+      ),
+    );
+  }
   const value = (snapshot: typeof before, name: string) =>
     snapshot.metrics.find((metric) => metric.name === name)?.value ?? 0;
   const delta = (name: string) => value(after, name) - value(before, name);
@@ -68,6 +139,7 @@ test("four-panel frame and task cost", async ({ context, page }) => {
   console.log(
     JSON.stringify(
       {
+        scenario,
         seats,
         rate,
         frames: frames.length,

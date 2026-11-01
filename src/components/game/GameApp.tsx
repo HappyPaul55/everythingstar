@@ -148,7 +148,11 @@ function GameApp({ credits, attract = false }: Props) {
           `prefers-reduced-motion`. Set aside while a song's own video plays, and
           not drawn at all when the drifting-lights setting is off. */}
       {session.settings.flares ? (
-        <BackdropFlares hidden={session.videoBackdrop} />
+        // The stage paints its own opaque backdrop over the room, so the drifting
+        // lights are invisible under it while a run is up (the entrance, the song
+        // and a pause). Hiding them stops their animations for the whole run
+        // instead of compositing lights nobody can see.
+        <BackdropFlares hidden={session.videoBackdrop || session.stage} />
       ) : null}
       <GameProviders
         screen={session.screen}

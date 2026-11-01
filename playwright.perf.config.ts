@@ -3,8 +3,10 @@ import { defineConfig, devices } from "@playwright/test";
 /**
  * The frame-cost harness: measured, not gated.
  *
- * It drives the real game against the dev server and reads Chrome DevTools'
- * `Performance` metrics under a CPU throttle. It is its own command so a timing
+ * It drives the real game against a **production build** (`astro preview`) and
+ * reads Chrome DevTools' `Performance` metrics under a CPU throttle. The dev
+ * server is not the thing players run: its JSX dev runtime dominated an earlier
+ * profile, so the numbers must come from the build. It is its own command so a timing
  * number never makes a pull request red — the docs explain the method and the
  * numbers live in the commit that changes the drawing. Run it before and after
  * such a change:
@@ -28,12 +30,30 @@ export default defineConfig({
     screenshot: "off",
     video: "off",
   },
-  projects: [{ name: "perf", use: { ...devices["Desktop Chrome"], headless: true } }],
+  projects: [
+    {
+      name: "perf",
+      use: {
+        ...devices["Desktop Chrome"],
+        headless: true,
+        // A fake microphone, so the singing path (and its pitch detector) can be
+        // measured without a device. It is the browser's own fake, not a product
+        // hook: the game still asks for a real permission.
+        launchOptions: {
+          args: [
+            "--use-fake-ui-for-media-stream",
+            "--use-fake-device-for-media-stream",
+          ],
+        },
+      },
+    },
+  ],
   webServer: {
-    command: `bun run dev --host 127.0.0.1 --port ${PORT} --ignore-lock`,
+    command: `DOCSHOTS_PWA=1 bun run build:quick && bun run preview --host 127.0.0.1 --port ${PORT} --ignore-lock`,
     url: `http://127.0.0.1:${PORT}/play`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    // A preview of a stale build is worse than a slow start: always rebuild.
+    reuseExistingServer: false,
+    timeout: 240_000,
     stdout: "pipe",
     stderr: "pipe",
   },

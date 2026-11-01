@@ -201,6 +201,10 @@ export function useSinging({
   }, [parts, source, seed, clockTimeRef, seekSerialRef]);
 
   useEffect(() => {
+    // The roll draws at 12.5 Hz and a note is judged from the trail across its
+    // span, so the pure engine does not need every frame: twenty looks a second is
+    // plenty. A seek still resets at once, below.
+    let lastAdvance = 0;
     return clock.subscribe(() => {
       const now = clockTimeRef.current;
       // A deliberate move of the playhead starts the singers over, seeded at the
@@ -213,6 +217,10 @@ export function useSinging({
         published.current = 0;
         dirty.current = false;
       }
+
+      const at = performance.now();
+      if (at - lastAdvance < 50) return;
+      lastAdvance = at;
 
       const previous = runs.current ?? [];
       const verdictsBefore = verdicts.current?.size ?? 0;

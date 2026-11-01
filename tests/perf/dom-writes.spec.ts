@@ -20,6 +20,21 @@ import {
  */
 test("per-frame DOM writes on the highways", async ({ context, page }) => {
   const seats = Number(process.env.BENCH_SEATS ?? 4);
+  // The worker is the only thing a preview carries that the dev server does not.
+  // This is the installed-game test's subject, not the frame's: a no-op
+  // registration keeps the page on the network and the fixtures answerable.
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "serviceWorker", {
+      configurable: true,
+      value: {
+        controller: null,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        register: () => Promise.resolve({ update: () => Promise.resolve() }),
+      },
+    });
+  });
+
   await installDocsFixtures(context);
   await disableFullscreen(page);
   await enterGame(page);

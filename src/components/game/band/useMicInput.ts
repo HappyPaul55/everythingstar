@@ -299,8 +299,12 @@ export function useMicInput({ enabled }: MicOptions): MicInput {
     }
   }, [supported, stop, trail]);
 
-  // Listening rides the stage's frame loop: one frame, one look at the signal.
+  // Listening rides the stage's frame loop, but the detector does not need every
+  // frame: a note is tens of milliseconds long and the trail is read at 12.5 Hz, so
+  // 30 looks a second is already oversampled. The analyser keeps the latest window,
+  // so skipping a frame loses nothing but work.
   useEffect(() => {
+    let lastLook = 0;
     return clock.subscribe(() => {
       // A deliberate move of the playhead starts the voice over: the trail is
       // stamped in **song** time, so a practice loop back into a section — or a
@@ -323,6 +327,9 @@ export function useMicInput({ enabled }: MicOptions): MicInput {
         midiRef.current = null;
         return;
       }
+      const at = performance.now();
+      if (at - lastLook < 33) return;
+      lastLook = at;
       node.getFloatTimeDomainData(samples);
       // The detector refuses silence and an unconfident analysis itself, so a
       // frame with no note in it records nothing.
