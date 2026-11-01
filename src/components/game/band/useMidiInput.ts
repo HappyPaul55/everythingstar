@@ -67,8 +67,15 @@ export interface MidiInput {
    * Read note and control-change messages from every connected input, including
    * inputs that arrive later. One handler for the whole stage; returns the way to
    * stop listening.
+   *
+   * `onLost` is told when an input disappears while it was being read. A kit that
+   * is unplugged mid-hold sends no release — it has nothing left to send — so the
+   * stage has to let that hand go itself, exactly as it does for a gamepad.
    */
-  listen: (handler: (message: MidiMessage) => void) => () => void;
+  listen: (
+    handler: (message: MidiMessage) => void,
+    onLost?: () => void,
+  ) => () => void;
 }
 
 /** The browser's own Web MIDI, or nothing at all. */
@@ -104,6 +111,8 @@ export function useMidiInput(): MidiInput {
   const access = useRef<MIDIAccess | null>(null);
   /** The one message handler the stage installed, if any. */
   const handler = useRef<((message: MidiMessage) => void) | null>(null);
+  /** What to tell the stage when an input it was reading disappears. */
+  const lost = useRef<(() => void) | null>(null);
   /** The inputs we have attached to, so a re-attach is not a second listener. */
   const attached = useRef(new Set<MIDIInput>());
 
@@ -151,6 +160,8 @@ export function useMidiInput(): MidiInput {
       if (input.onmidimessage === forward) input.onmidimessage = null;
       attached.current.delete(input);
     }
+    // Only the *going* is news: an input arriving is not a hand to let go of.
+    if (gone.length > 0) lost.current?.();
   }, [forward]);
 
   /** Keep the gear's names true and every input listening. */
@@ -213,14 +224,19 @@ export function useMidiInput(): MidiInput {
     [attach, onStateChange, syncPorts],
   );
 
-  const listen = useCallback((next: (message: MidiMessage) => void) => {
-    handler.current = next;
-    attach();
-    return () => {
-      if (handler.current === next) handler.current = null;
-      detachAll();
-    };
-  }, [attach, detachAll]);
+  const listen = useCallback(
+    (next: (message: MidiMessage) => void, onLost?: () => void) => {
+      handler.current = next;
+      lost.current = onLost ?? null;
+      attach();
+      return () => {
+        if (handler.current === next) handler.current = null;
+        lost.current = null;
+        detachAll();
+      };
+    },
+    [attach, detachAll],
+  );
 
   // A stage that goes away takes its access object with it, when the browser lets
   // it. `close()` is not in the spec, so it is asked for rather than assumed.

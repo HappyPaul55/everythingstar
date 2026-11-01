@@ -140,7 +140,11 @@ export function typingConfigFor(
       words.push({
         text: word.text,
         start: word.timeMs,
-        end: line.words[index + 1]?.timeMs ?? line.endMs,
+        // The next word's own start, or the line's end for the last one. A source
+        // that wrote a word out of order, or a line that ends before it starts,
+        // must not give the word an end before its start: the deadline would be in
+        // the past and the word would be dropped the moment it opened.
+        end: Math.max(word.timeMs, line.words[index + 1]?.timeMs ?? line.endMs),
         line: lineIndex,
         hero: word.hero,
       });
@@ -267,10 +271,10 @@ export function wordDeadlineMs(
 ): number {
   const word = config.words[index];
   if (!word) return Number.POSITIVE_INFINITY;
-  if (!endsLine(config, index)) return word.end + WORD_GRACE;
+  if (!endsLine(config, index)) return Math.max(word.start, word.end + WORD_GRACE);
   const next = config.lines[word.line + 1];
   const catchUp = (config.lines[word.line]?.end ?? word.end) + LINE_CATCH_UP;
-  return next ? Math.min(next.start, catchUp) : catchUp;
+  return Math.max(word.start, next ? Math.min(next.start, catchUp) : catchUp);
 }
 
 /**

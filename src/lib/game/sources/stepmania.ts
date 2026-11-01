@@ -244,22 +244,69 @@ function readClock(
   }
   const pauses = parsePairs(stops).sort((a, b) => a[0] - b[0]);
   const opening = changes[0].bpm;
-
-  const toMs = (beat: number): number => {
+  // One breakpoint table and one stop prefix, built once. The clock used to walk
+  // every tempo change **and** every stop for every row of every measure, which is
+  // quadratic in a file somebody else wrote.
+  const at: number[] = [];
+  {
     let ms = offsetMs;
     let lastBeat = 0;
     let bpm = opening;
     for (const change of changes) {
-      if (change.beat >= beat) break;
       ms += (change.beat - lastBeat) * (60_000 / bpm);
       lastBeat = change.beat;
+      at.push(ms);
       bpm = change.bpm;
     }
-    ms += (beat - lastBeat) * (60_000 / bpm);
-    for (const [at, seconds] of pauses) {
-      if (at < beat) ms += seconds * 1000;
+  }
+  /** The total pause before each stop, so a stop is a prefix sum lookup. */
+  const pauseAt: number[] = [];
+  const pauseTotal: number[] = [];
+  {
+    let total = 0;
+    for (const [beat, seconds] of pauses) {
+      total += seconds * 1000;
+      pauseAt.push(beat);
+      pauseTotal.push(total);
     }
-    return ms;
+  }
+  /** Seconds of pause for stops strictly before `beat`. */
+  const pausedBefore = (beat: number): number => {
+    let low = 0;
+    let high = pauseAt.length - 1;
+    let found = -1;
+    while (low <= high) {
+      const mid = (low + high) >> 1;
+      if (pauseAt[mid] < beat) {
+        found = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    return found < 0 ? 0 : pauseTotal[found];
+  };
+
+  const toMs = (beat: number): number => {
+    // The last change at or before the beat; before the first one the opening
+    // tempo runs from the top of the song.
+    let low = 0;
+    let high = changes.length - 1;
+    let found = -1;
+    while (low <= high) {
+      const mid = (low + high) >> 1;
+      if (changes[mid].beat <= beat) {
+        found = mid;
+        low = mid + 1;
+      } else {
+        high = mid - 1;
+      }
+    }
+    const ms =
+      found < 0
+        ? offsetMs + beat * (60_000 / opening)
+        : at[found] + (beat - changes[found].beat) * (60_000 / changes[found].bpm);
+    return ms + pausedBefore(beat);
   };
   return { toMs, bpm: opening };
 }

@@ -15,6 +15,7 @@ import { PracticeReadout } from "./PracticeReadout";
 import { SongProgress } from "./SongProgress";
 import { useSong } from "./SongContext";
 import { StageBackground } from "./StageBackground";
+import { StageNotice } from "./StageNotice";
 import type { StageMedia } from "../../../lib/game/band/media";
 import { useElementSize } from "./useElementSize";
 
@@ -123,6 +124,7 @@ export function BandStage({
     >
       <StageBackground media={media} youtube={youtube} dim={backdropDim} />
       <SongProgress />
+      <StageNotice />
       {practice ? <PracticeReadout plan={practice} track={track} /> : null}
       {melody ? (
         <MelodyRegion

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { useT } from "../../../i18n/react";
+import { localePath } from "../../../i18n/paths";
+import { useLocale, useT } from "../../../i18n/react";
 import type { Sound } from "../../../lib/game/audio/sounds";
 import { ScreenBackButton } from "./ScreenBackButton";
 
@@ -31,6 +32,7 @@ interface Props {
 
 export function Credits({ sounds, site, onBack }: Props) {
   const t = useT();
+  const locale = useLocale();
   const sources = soundCredits(sounds);
   // Every sound in the manifest has a file; a missing one is a *type* nothing has
   // been delivered for yet (`sounds.missing`), which is not a licence anyone owes.
@@ -91,6 +93,19 @@ export function Credits({ sounds, site, onBack }: Props) {
             </a>,
           )}
           {row(t("screen.creditTools"), t("screen.creditToolsWho"))}
+          {/* The installed app has no address bar and the game has no footer: this
+              is the one way to the notices from inside it, and /privacy is the one
+              the microphone and MIDI prompts depend on. */}
+          {row(
+            t("screen.creditNotices"),
+            <>
+              <a href={localePath(locale, "/privacy")}>{t("nav.privacy")}</a>
+              {" · "}
+              <a href={localePath(locale, "/terms")}>{t("nav.terms")}</a>
+              {" · "}
+              <a href={localePath(locale, "/accessibility")}>{t("nav.accessibility")}</a>
+            </>,
+          )}
         </ul>
       </div>
     </div>

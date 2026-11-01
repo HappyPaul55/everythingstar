@@ -1,5 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { chartProblems, type LaneChart, type LaneNote, type MelodyChart } from "./track";
+import {
+  chartProblems,
+  MAX_NOTE_LENGTH_MS,
+  type LaneChart,
+  type LaneNote,
+  type MelodyChart,
+} from "./track";
 import {
   assembleTrack,
   fullMixStems,
@@ -784,6 +790,29 @@ describe("readChart", () => {
     expect(chartProblems(read.lane as LaneChart)).toEqual([]);
   });
 
+  test("a note past the end of any song is dropped rather than stretching the track", () => {
+    const read = readChart(
+      {
+        schemaVersion: 1,
+        chartType: "lanes",
+        columns: 5,
+        notes: [
+          { timeMs: 100, column: 0 },
+          { timeMs: 1e12, column: 1 },
+          { timeMs: 200, column: 2, lengthMs: 1e12 },
+        ],
+      },
+      laneChart(),
+      "guitar",
+    );
+    expect(read.lane?.notes.map((note) => note.column)).toEqual([0, 2]);
+    // The hold is bounded rather than dropped: the note starts where it says.
+    expect(read.lane?.notes[1].lengthMs).toBe(MAX_NOTE_LENGTH_MS);
+    expect(read.problems).toEqual([
+      "c_lead_gtr_expert: a note past the end of any song",
+    ]);
+  });
+
   test("a chart with no known column count bounds nothing", () => {
     // Zero is "unknown" rather than "no columns": a note it cannot place is kept
     // instead of being judged against a bound somebody invented.
@@ -848,6 +877,58 @@ describe("readChart", () => {
     expect(melody.lines[0].words[1].hero).toBe(true);
     expect(melody.notes.map((note) => note.row)).toEqual([3, 4]);
     expect(melody.notes[1].part).toBe(1);
+  });
+
+  test("a line's words are put in time order, whatever the file says", () => {
+    const read = readChart(
+      {
+        schemaVersion: 1,
+        chartType: "lyrics",
+        rows: 6,
+        parts: 1,
+        lines: [
+          {
+            timeMs: 1000,
+            endMs: 3000,
+            parts: [{ part: 0, offset: 0 }],
+            words: [
+              { text: "second", timeMs: 900 },
+              { text: "first", timeMs: 100 },
+            ],
+          },
+        ],
+        notes: [],
+      },
+      laneChart({ chartType: "lyrics", difficulty: null }),
+      "words",
+    );
+    expect(read.problems).toEqual([]);
+    const melody = read.melody as MelodyChart;
+    expect(melody.lines[0].words.map((word) => word.text)).toEqual(["first", "second"]);
+    expect(melody.lines[0].words.map((word) => word.timeMs)).toEqual([1100, 1900]);
+  });
+
+  test("a line that ends before it starts is repaired, not trusted", () => {
+    const read = readChart(
+      {
+        schemaVersion: 1,
+        chartType: "lyrics",
+        rows: 6,
+        parts: 1,
+        lines: [
+          {
+            timeMs: 2000,
+            endMs: 500,
+            parts: [{ part: 0, offset: 0 }],
+            words: [{ text: "now", timeMs: 0 }],
+          },
+        ],
+        notes: [],
+      },
+      laneChart({ chartType: "lyrics", difficulty: null }),
+      "words",
+    );
+    expect(read.melody?.lines[0].endMs).toBe(2000);
   });
 
   test("shares a fourth voice on the last part instead of dropping it", () => {

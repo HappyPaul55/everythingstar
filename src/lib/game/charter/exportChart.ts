@@ -112,6 +112,12 @@ export function writeChart(input: ChartExportInput): ChartExport {
       problems.push(`${chart.key}: ${chart.instrument} is not a .chart instrument`);
       continue;
     }
+    // `.chart` has no hero note: the value is a game extension. Saying so once per
+    // chart is honest; dropping it silently makes the download disagree with what
+    // the player built.
+    if (chart.notes.some((note) => note.hero)) {
+      problems.push(`${chart.key}: hero notes download as ordinary notes (.chart has none)`);
+    }
     const difficulty = DIFFICULTY_WORD[chart.difficulty] ?? "Expert";
     let section = `${difficulty}${word}`;
     // Two charts can want the same section (a roleless guitar and a lead, or two

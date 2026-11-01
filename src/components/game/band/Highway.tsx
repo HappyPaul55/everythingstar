@@ -36,6 +36,7 @@ import {
 import { slideRibbon } from "../../../lib/game/band/slides";
 import { notesInWindow, beatsInWindow } from "../../../lib/game/scroll";
 import { useClock, useClockMs } from "./StageClock";
+import { useStageControls } from "./StageControls";
 import { useScrollTrack } from "./useScrollTrack";
 
 /**
@@ -299,6 +300,7 @@ export function Highway({
     Array.from({ length: columns }, () => false),
   );
   const clock = useClock();
+  const { ports } = useStageControls();
   /** Which pointer is on which column, so two fingers on one pad let go together. */
   const pointers = useRef(new Map<number, number>());
   /**
@@ -324,6 +326,22 @@ export function Highway({
         : Array.from({ length: columns }, () => false),
     );
   }, [columns, onTapUp]);
+
+  // The browser stops reporting a hand for reasons no pointerup announces — the
+  // window blurred, the tab was hidden, the pad was unplugged. The run lets its
+  // frets go through the ordinary queue; the pad's own light has to be told too,
+  // or it stays filled on a fret nobody is holding.
+  useEffect(() => {
+    return ports.onFingersUp(() => {
+      pointers.current.clear();
+      pointerTaps.current.clear();
+      setPressed((current) =>
+        current.length === columns && current.every((lit) => !lit)
+          ? current
+          : Array.from({ length: columns }, () => false),
+      );
+    });
+  }, [ports, columns]);
 
   const holdPad = (pointerId: number, column: number, eventTimeMs?: number) => {
     const wasDown = [...pointers.current.values()].includes(column);
@@ -405,6 +423,10 @@ export function Highway({
     const column = columnAt(event);
     if (column === previous) return;
     pointers.current.set(event.pointerId, column);
+    // A glide on a stage that is not moving is not a note: nothing would judge it,
+    // and the pad would show a hand the run never took. The pointer is still
+    // remembered, so its release is the ordinary one.
+    if (!clock.playing) return;
     // Another finger may still be on the column this one left. The glide is the
     // same either way; only the pad's own light differs.
     const fromStillHeld = [...pointers.current.values()].includes(previous);

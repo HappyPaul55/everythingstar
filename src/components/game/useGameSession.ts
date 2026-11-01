@@ -131,6 +131,8 @@ export interface GameSession {
   focus: boolean;
   /** A phone gets the jukebox's own one-column layout and no default song. */
   phoneLayout: boolean;
+  /** The jukebox was entered from a run, so the song is one already played. */
+  returningToSongs: boolean;
   /** The song the URL or the jukebox asked for, resolved against the library. */
   wantedId: string;
   setWantedId: Dispatch<SetStateAction<string>>;
@@ -196,6 +198,8 @@ export function useGameSession(attract: AttractSession | null = null): GameSessi
   const silent = attract?.silent ?? false;
   const [screen, setScreen] = useState<Screen>("welcome");
   const [phoneLayout, setPhoneLayout] = useState(false);
+  /** The jukebox is being entered from a run, not from the menu. */
+  const [returnedToSongs, setReturnedToSongs] = useState(false);
   const [wantedId, setWantedId] = useState("");
   const [plan, setPlan] = useState<BandPlan>(firstBand);
   const [humans, setHumans] = useState(1);
@@ -465,6 +469,18 @@ export function useGameSession(attract: AttractSession | null = null): GameSessi
   useEffect(() => {
     const previous = previousScreen.current;
     previousScreen.current = screen;
+    // Coming back to the jukebox from a run is returning to a song already chosen;
+    // arriving from the menu is arriving at the top. A phone uses this to reopen the
+    // now-playing panel for the song it just played instead of looking unselected.
+    setReturnedToSongs(
+      screen === "songs" &&
+        (previous === "band" ||
+          previous === "results" ||
+          previous === "loading" ||
+          previous === "countdown" ||
+          previous === "playing" ||
+          previous === "paused"),
+    );
     if (screen !== "countdown") return;
     if (!opensRun(screen, previous)) {
       dispatch("go");
@@ -631,6 +647,7 @@ export function useGameSession(attract: AttractSession | null = null): GameSessi
     silent,
     focus: attractActive ? (attract?.chrome ?? true) : true,
     phoneLayout: compact,
+    returningToSongs: returnedToSongs,
     wantedId,
     setWantedId,
     plan: activePlan,

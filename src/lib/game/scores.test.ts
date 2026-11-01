@@ -6,6 +6,7 @@ import {
   lineupKey,
   loadBoard,
   parseBoard,
+  recentFor,
   replaceBoard,
   shouldSaveRun,
   topFor,
@@ -59,6 +60,24 @@ describe("parseBoard", () => {
   test("drops entries that are not runs", () => {
     const raw = JSON.stringify([run(), { song: "x" }, null, 7]);
     expect(parseBoard(raw)).toHaveLength(1);
+  });
+
+  test("drops a run whose date a screen would print as Invalid Date", () => {
+    const { at: _at, ...undated } = run();
+    const raw = JSON.stringify([run(), undated, run({ at: Number.NaN })]);
+    expect(parseBoard(raw)).toHaveLength(1);
+  });
+
+  test("drops a run with no title, which the history draws", () => {
+    const { title: _title, ...untitled } = run();
+    expect(parseBoard(JSON.stringify([untitled]))).toEqual([]);
+  });
+
+  test("caps a board that grew some other way", () => {
+    const many = Array.from({ length: BOARD_LIMIT + 7 }, (_, index) =>
+      run({ score: index, at: 1_760_000_000_000 + index }),
+    );
+    expect(parseBoard(JSON.stringify(many))).toHaveLength(BOARD_LIMIT);
   });
 });
 
@@ -171,6 +190,33 @@ describe("topFor", () => {
 
   test("an unplayed song has nothing", () => {
     expect(topFor([run()], "brand-new")).toEqual([]);
+  });
+});
+
+describe("recentFor", () => {
+  test("is this song, newest first — not best first", () => {
+    const board = [
+      run({ score: 300, at: 1000 }),
+      run({ score: 10, at: 3000 }),
+      run({ score: 200, at: 2000 }),
+      run({ song: "other-song", score: 900, at: 9000 }),
+    ];
+    expect(recentFor(board, "nine-lives").map((entry) => entry.at)).toEqual([
+      3000, 2000, 1000,
+    ]);
+  });
+
+  test("keeps only the last few, by date", () => {
+    const board = Array.from({ length: 9 }, (_, index) =>
+      run({ score: 90 - index, at: 1000 + index }),
+    );
+    expect(recentFor(board, "nine-lives", 3).map((entry) => entry.at)).toEqual([
+      1008, 1007, 1006,
+    ]);
+  });
+
+  test("an unplayed song has nothing", () => {
+    expect(recentFor([run()], "brand-new")).toEqual([]);
   });
 });
 

@@ -100,6 +100,29 @@ describe("star power", () => {
 });
 
 describe("both judging engines use the same meter", () => {
+  test("a note later in the song fills and drains over its own gap, once", () => {
+    const due = Math.max(SING_GRACE_MS, HIT_WINDOW_MS);
+    const at = 4000;
+    const late: MelodyNote = { ...note, timeMs: at };
+    // Judging a note after its own end must not rewind the run's clock: the fill
+    // lands at the onset and the frame drains to `due` once, not twice.
+    const melody = advanceRun(emptyRun(), [late], at + due, hit);
+    expect(melody.hits).toBe(1);
+    expect(melody.atMs).toBe(at + due);
+    expect(melody.meter).toBe(drainMeter(fillMeter(0), due));
+  });
+
+  test("two frames over one long note drain only the time after it", () => {
+    const at = 4000;
+    const long: MelodyNote = { ...note, timeMs: at, lengthMs: 1000 };
+    const end = at + 1000 + SING_GRACE_MS;
+    const first = advanceRun(emptyRun(), [long], end, hit);
+    const second = advanceRun(first, [long], end + 500, hit);
+    expect(first.hits).toBe(1);
+    expect(second.hits).toBe(1);
+    expect(second.meter).toBe(drainMeter(drainMeter(fillMeter(0), end - at), 500));
+  });
+
   test("one note hit fills it to the same value on the melody and a highway", () => {
     const due = Math.max(SING_GRACE_MS, HIT_WINDOW_MS);
     const melody = advanceRun(emptyRun(), [note], due, hit);

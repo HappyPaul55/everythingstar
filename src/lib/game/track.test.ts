@@ -5,6 +5,8 @@ import {
   cleanSlides,
   difficultiesFor,
   fitMelodyTurns,
+  MAX_NOTE_LENGTH_MS,
+  MAX_NOTE_TIME_MS,
   nearestDifficulty,
   slideProblems,
   type Difficulty,
@@ -183,6 +185,20 @@ describe("slides", () => {
     ).toEqual([]);
   });
 
+  test("a note hours past any song, or held for hours, is refused", () => {
+    expect(
+      chartProblems(lanes(note({ id: "a", timeMs: MAX_NOTE_TIME_MS + 1, column: 0 }))),
+    ).toContain("note a is outside the song's time");
+    expect(
+      chartProblems(
+        lanes(note({ id: "b", timeMs: 1000, lengthMs: MAX_NOTE_LENGTH_MS + 1, column: 0 })),
+      ),
+    ).toContain("note b is held for longer than the game can play");
+    expect(
+      chartProblems(lanes(note({ id: "c", timeMs: 1000, lengthMs: 500, column: 0 }))),
+    ).toEqual([]);
+  });
+
   test("a chord may slide all of its notes, or only some, including a cross", () => {
     const chart_ = lanes(
       note({ id: "a", timeMs: 1000, column: 0, slideTo: "c" }),
@@ -212,6 +228,26 @@ describe("slides", () => {
         ),
       ),
     ).toEqual([]);
+  });
+
+  test("a note exactly at either end of a glide is not in its way", () => {
+    // The window is strictly between: a note sharing the source's moment is a
+    // chord, and one sharing the target's arrives with the target.
+    expect(
+      slideProblems([
+        note({ id: "a", timeMs: 1000, column: 0, slideTo: "b" }),
+        note({ id: "x", timeMs: 1000, column: 1 }),
+        note({ id: "b", timeMs: 1600, column: 2 }),
+        note({ id: "y", timeMs: 1600, column: 2 }),
+      ]),
+    ).toEqual([]);
+    expect(
+      slideProblems([
+        note({ id: "a", timeMs: 1000, column: 0, slideTo: "b" }),
+        note({ id: "x", timeMs: 1300, column: 0 }),
+        note({ id: "b", timeMs: 1600, column: 2 }),
+      ]),
+    ).toContain("note a slides past a note in its own column");
   });
 
   test("the source's end is where the glide begins, so a held tail counts", () => {

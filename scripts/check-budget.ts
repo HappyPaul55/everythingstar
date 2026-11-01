@@ -45,6 +45,13 @@
  * first download because a chart and a highway are the game. The gzipped graph kept
  * its headroom, and the total stayed inside the whole-payload cap.
  *
+ * The next measured build (2026-11-01) added the run's failure paths: a pause chip
+ * for a touch screen, the no-sound fallback and its notice, the pad/MIDI releases,
+ * the charter's own settings and the accessibility pass. That is **577 KiB raw /
+ * 186 KiB gzipped across 21 files** and **705 KiB** of `_astro` JS — real features
+ * in the first download, not a lazy chunk moved out of place. The raw cap moved
+ * 572 → 580 and the whole-payload cap 700 → 710; the gzip kept its 190.
+ *
  * The script will not measure a build it cannot find: `dist/_astro`, `dist/`,
  * `public/audio` and `play.html` are each required before any number is read, and
  * a `play.html` with no initial JS is a failure rather than a zero.
@@ -129,6 +136,14 @@ function initialPlayFiles(): string[] {
       const specifier = match[1] ?? "";
       if (specifier.startsWith(".")) visit(join(dirname(file), specifier));
     }
+    // A **side-effect** import — `import "./parse.js"` — has no `from`, and a
+    // minifier writes it as `import"./parse.js"`. It is part of the initial graph
+    // all the same: skipping it left those bytes out of both caps and out of the
+    // parser-marker scan.
+    for (const match of body.matchAll(/\bimport\s*"([^"]+)"/g)) {
+      const specifier = match[1] ?? "";
+      if (specifier.startsWith(".")) visit(join(dirname(file), specifier));
+    }
   };
   for (const file of entries) visit(file);
   return [...seen].sort();
@@ -188,9 +203,9 @@ const checks: Check[] = [
   {
     label: "dist/_astro JS",
     actual: sizeOf(join(DIST, "_astro"), (file) => file.endsWith(".js")),
-    limit: 700 * KIB,
+    limit: 710 * KIB,
   },
-  { label: "initial /play raw", actual: initialRaw, limit: 572 * KIB },
+  { label: "initial /play raw", actual: initialRaw, limit: 580 * KIB },
   { label: "initial /play gzip", actual: initialGzip, limit: 190 * KIB },
   { label: "dist/ total", actual: sizeOf(DIST), limit: 20 * MIB },
   { label: "public/audio", actual: sizeOf(join(ROOT, "public", "audio")), limit: 10 * MIB },

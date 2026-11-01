@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./base";
 import { SONG_TITLE, disableFullscreen, installFixtures } from "./fixture";
 import { enterGame, openBand, startRun, waitForPlaying } from "./helpers";
 

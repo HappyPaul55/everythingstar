@@ -472,6 +472,73 @@ describe("saved", () => {
     expect(await response.text()).toBe("streamed");
     expect(net.calls).toEqual([`${ORIGIN}/audio/stem.ogg`]);
   });
+
+  test("a captive portal's page does not replace the saved document", async () => {
+    const caches = new FakeCaches();
+    const bucket = await caches.open(OFFLINE_CACHE);
+    await bucket.put(
+      url,
+      new Response('{"revision":1}', { headers: { "content-type": "application/json" } }),
+    );
+
+    const net = network(
+      () =>
+        new Response("<!DOCTYPE html><title>Sign in</title>", {
+          status: 200,
+          headers: { "content-type": "text/html" },
+        }),
+    );
+    const { worker } = build({ caches, net });
+
+    const response = await worker.saved(new Request(url));
+    expect(await response.json()).toEqual({ revision: 1 });
+    expect(await read(bucket, url)).toBe('{"revision":1}');
+  });
+
+  test("a provider's error keeps the copy the player already has", async () => {
+    const caches = new FakeCaches();
+    const bucket = await caches.open(OFFLINE_CACHE);
+    await bucket.put(
+      url,
+      new Response('{"revision":1}', { headers: { "content-type": "application/json" } }),
+    );
+
+    const net = network(
+      () =>
+        new Response('{"error":"down"}', {
+          status: 503,
+          headers: { "content-type": "application/json" },
+        }),
+    );
+    const { worker } = build({ caches, net });
+
+    const response = await worker.saved(new Request(url));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ revision: 1 });
+    expect(await read(bucket, url)).toBe('{"revision":1}');
+  });
+
+  test("a saved JSON document is refreshed even from a path with no .json", async () => {
+    const path = `${ORIGIN}/songs/abc`;
+    const caches = new FakeCaches();
+    const bucket = await caches.open(OFFLINE_CACHE);
+    await bucket.put(
+      path,
+      new Response('{"revision":1}', { headers: { "content-type": "application/json" } }),
+    );
+
+    const net = network(
+      () =>
+        new Response('{"revision":2}', {
+          headers: { "content-type": "application/json" },
+        }),
+    );
+    const { worker } = build({ caches, net });
+
+    const response = await worker.saved(new Request(path));
+    expect(await response.json()).toEqual({ revision: 2 });
+    expect(await read(bucket, path)).toBe('{"revision":2}');
+  });
 });
 
 /* -------------------------------------------------------------- fromCache */

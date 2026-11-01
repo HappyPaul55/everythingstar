@@ -39,8 +39,27 @@ describe("writing a .chart", () => {
     expect(lane.notes[1].lengthMs).toBe(500);
   });
 
-  test("a role writes the format's other guitar track", () => {
+  test("a hero note is named, because .chart cannot carry one", () => {
     const written = writeChart({
+      title: "Song",
+      artist: "Artist",
+      charts: [
+        chart({
+          notes: [
+            { id: "a", timeMs: 1000, lengthMs: 0, kind: "strum", column: 0, hero: true },
+          ],
+        }),
+      ],
+      grid: DEFAULT_GRID,
+    });
+    expect(written.problems).toEqual([
+      "guitar::expert: hero notes download as ordinary notes (.chart has none)",
+    ]);
+    // It is still written, as the ordinary note the format can hold.
+    expect(written.text).toContain("= N 0 0 0");
+  });
+
+  test("a role writes the format's other guitar track", () => {    const written = writeChart({
       title: "Song",
       artist: "Artist",
       charts: [chart({ role: "rhythm", key: "guitar:rhythm:expert" })],

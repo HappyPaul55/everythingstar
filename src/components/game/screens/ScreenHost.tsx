@@ -89,6 +89,7 @@ const PAGES: Record<PageScreen, PageView> = {
     <Songs
       song={session.song}
       phone={session.phoneLayout}
+      returning={session.returningToSongs}
       library={session.library}
       onSong={session.setWantedId}
       onNext={() => session.dispatch("open")}

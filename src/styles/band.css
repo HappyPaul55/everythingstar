@@ -828,6 +828,18 @@
   .keys__note.is-miss {
     background: var(--color-danger);
   }
+  /* Two singers on one bar, one hit and one miss: keep both part colours, dim it
+     a little, and outline it in the miss colour. Picking one singer's verdict
+     would tell the other player a lie about the note they just sang. */
+  .keys__note.is-mixed {
+    background: linear-gradient(
+      to bottom,
+      var(--part-0) 0 50%,
+      var(--part-1) 50% 100%
+    );
+    opacity: 0.55;
+    box-shadow: inset 0 0 0 2px var(--color-danger);
+  }
   /* Announced while the words being delivered are freeform. */
   .keys__badge {
     position: absolute;
@@ -2247,6 +2259,9 @@
   }
   .welcome__word-sizer {
     visibility: hidden;
+  }
+  .welcome__word-sizer::before {
+    content: attr(data-text);
   }
   .welcome__word-live {
     text-align: right;
@@ -4321,8 +4336,7 @@
     display: flex;
     align-items: center;
     gap: 0.3rem;
-  }
-  .slot__who {
+  }  .slot__who {
     margin-right: auto;
     font-family: var(--font-mono);
     font-size: 0.6rem;
@@ -4332,14 +4346,15 @@
     color: rgba(250, 250, 244, 0.7);
   }
   /* One player's controller settings: the same corner as the way off the stage, so
-     each box carries its own without a word of copy. Both are a small square so
-     they line up whatever is in them. */
+     each box carries its own without a word of copy. Both are a **44 px target**
+     around a small icon: the gear is the only way into a controller and the × is
+     the only way out of its dialog, and a 17 px square is a press a thumb misses. */
   .slot__gear {
     flex: none;
     display: grid;
     place-items: center;
-    width: 1.05rem;
-    height: 1.05rem;
+    width: 44px;
+    height: 44px;
     padding: 0;
     color: rgba(250, 250, 244, 0.5);
     background: transparent;
@@ -4360,8 +4375,8 @@
     flex: none;
     display: grid;
     place-items: center;
-    width: 1.05rem;
-    height: 1.05rem;
+    width: 44px;
+    height: 44px;
     padding: 0;
     font-size: 1.05rem;
     line-height: 1;
@@ -5423,7 +5438,8 @@
 
   /* The way into the whole screen. Product, so it is quiet rather than marked: the
      chip shape of the dev toggle, without the "this is not the game" of it. */
-  .stage-fullscreen {
+  .stage-fullscreen,
+  .stage-pause {
     pointer-events: auto;
     display: inline-flex;
     align-items: center;
@@ -5446,10 +5462,38 @@
   }
   .stage-fullscreen:hover,
   :root:not([data-game-input="pointer"]) .stage-fullscreen:focus-visible,
-  .stage-fullscreen[data-nav-focus] {
+  .stage-fullscreen[data-nav-focus],
+  .stage-pause:hover,
+  :root:not([data-game-input="pointer"]) .stage-pause:focus-visible,
+  .stage-pause[data-nav-focus] {
     color: var(--color-ink);
     background: var(--color-yellow);
     border-color: var(--color-yellow);
+  }
+  /* The stage's own admission that the sound is gone. It sits under the progress
+     bar in the middle, away from the corner's controls, and never takes a press:
+     the run is still going and the pads are underneath it. */
+  .stage-notice {
+    position: absolute;
+    z-index: 4;
+    top: calc(0.7rem + env(safe-area-inset-top, 0px));
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: calc(100% - 2rem);
+    margin: 0;
+    padding: 0.4rem 0.7rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.35;
+    text-align: center;
+    text-transform: uppercase;
+    color: var(--color-cream);
+    background: rgba(12, 13, 10, 0.86);
+    border: 1px solid rgba(250, 250, 244, 0.24);
+    border-radius: var(--radius-inner);
+    pointer-events: none;
   }
   .band-controls {
     display: flex;

@@ -63,9 +63,9 @@ interface HeldDirection {
 
 export function GamepadNav({ screen, dispatch }: Props) {
   const clock = useClock();
-  const { learning } = useStageControls();
+  const { learningDevice } = useStageControls();
   const screenRef = useRef(screen);
-  const learningRef = useRef(learning);
+  const learningRef = useRef(learningDevice);
   /** The previous button state of each pad, for the UI's own edges. */
   const previous = useRef(new Map<number, boolean[]>());
   /** The direction each pad is holding, and its repeat clock. */
@@ -79,8 +79,8 @@ export function GamepadNav({ screen, dispatch }: Props) {
   }, [screen]);
 
   useEffect(() => {
-    learningRef.current = learning;
-  }, [learning]);
+    learningRef.current = learningDevice;
+  }, [learningDevice]);
 
   // A keyboard press or the mouse takes the mode back. Moving the pointer is
   // enough: otherwise a screen's starting control keeps its pad marker while a
@@ -145,9 +145,11 @@ export function GamepadNav({ screen, dispatch }: Props) {
         const before = previous.current.get(pad.index);
         previous.current.set(pad.index, buttons);
 
-        // A controller being learned is not a cursor: every button is the answer
-        // to the question, and nothing is the game's until it stops.
-        if (learningRef.current) {
+        // A **pad** being learned is not a cursor: every button is the answer to
+        // the question, and nothing is the game's until it stops. A keyboard or
+        // MIDI session leaves the pad as a cursor, so B can still cancel it — a
+        // player whose only controller is a pad must not be trapped.
+        if (learningRef.current?.on === "pad") {
           held.current.delete(pad.index);
           continue;
         }
@@ -163,12 +165,16 @@ export function GamepadNav({ screen, dispatch }: Props) {
         if (current === "playing") {
           // The only menu action during a song. Everything else belongs to the
           // players' frets, strums and whammy.
-          if (actions.includes("start")) dispatch("pause");
+          if (actions.includes("start") && !topDialog()) dispatch("pause");
           continue;
         }
 
         if (current === "loading" || current === "countdown") {
-          if (actions.includes("back")) dispatch("quit");
+          // B is a fret on every chart with four or more columns, and a player's
+          // hand is already on them during the entrance. Abandoning the run to the
+          // jukebox from a button that also plays a note is a trap; leaving is
+          // Escape's, or the pause's.
+          if (actions.includes("back") && current === "loading") dispatch("quit");
           continue;
         }
 
@@ -179,6 +185,10 @@ export function GamepadNav({ screen, dispatch }: Props) {
           continue;
         }
         if (actions.includes("start")) {
+          // Start belongs to an open dialog, not to the screen underneath it: a
+          // player choosing a practice stretch must not have the run resumed
+          // under the dialog by the same press.
+          if (topDialog()) continue;
           if (current === "paused") dispatch("resume");
           continue;
         }
@@ -217,7 +227,10 @@ export function GamepadNav({ screen, dispatch }: Props) {
 function activate(): void {
   const active = document.activeElement;
   if (!(active instanceof HTMLElement)) return;
-  if (active instanceof HTMLInputElement || active instanceof HTMLTextAreaElement) return;
+  // A text field keeps its keys, but a checkbox, a range or a select is a control
+  // the pad must be able to press — otherwise the practice Loop box is focusable
+  // and unpressed, which is a cursor with a dead A button.
+  if (isEditable(active)) return;
   active.click();
 }
 

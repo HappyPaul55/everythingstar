@@ -14,6 +14,7 @@
  * them.
  */
 
+import { minMax } from "../math";
 import type { MelodyLine, MelodyNote } from "../track";
 
 /** One syllable as a source gives it: a sung note, its text, and where it starts. */
@@ -94,8 +95,9 @@ export function groupLyrics(
   let rows = options.rows ?? minRows;
   if (hasPitch) {
     const pitches = pitched.map((syllable) => syllable.midi);
-    const low = Math.min(...pitches);
-    const high = Math.max(...pitches);
+    const range = minMax(pitches);
+    const low = range?.min ?? 0;
+    const high = range?.max ?? 0;
     if (options.rootMidi !== undefined) {
       // A roll shared across parts: keep its floor and grow it to fit this part.
       rows = Math.max(rows, high - rootMidi + 1);

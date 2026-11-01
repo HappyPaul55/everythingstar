@@ -66,12 +66,17 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
   description={description}
   path={path}
   breadcrumbs={crumbs}
+  skipHref={section ? "#doc-content" : "#main"}
 >
   <main id="main" tabindex="-1" class="spray-paper docs">
     <Container class={section ? "docs__wrap" : "docs__wrap docs__wrap--plain"}>
       {section ? <DocsSidebar section={section} current={current} /> : null}
 
-      <article class={wide ? "docs__article docs__article--wide" : "docs__article"}>
+      <article
+        id="doc-content"
+        tabindex="-1"
+        class={wide ? "docs__article docs__article--wide" : "docs__article"}
+      >
         <Breadcrumbs items={crumbs.slice(1, -1)} />
         <h1 class="docs__title">{title}</h1>
         <div class="doc">
@@ -97,7 +102,7 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
           previous || next ? (
             <nav class="docs__pager" aria-label={t("docs.nav")}>
               {previous ? (
-                <a class="docs__pager-link" href={docHref(previous.id)}>
+                <a class="docs__pager-link" href={docHref(previous.id, locale)}>
                   <span class="docs__pager-label">{t("docs.previous")}</span>
                   <span class="docs__pager-title">{previous.data.title}</span>
                 </a>
@@ -105,7 +110,7 @@ const toc = headings.filter((heading) => heading.depth === 2 || heading.depth ==
                 <span />
               )}
               {next ? (
-                <a class="docs__pager-link docs__pager-link--next" href={docHref(next.id)}>
+                <a class="docs__pager-link docs__pager-link--next" href={docHref(next.id, locale)}>
                   <span class="docs__pager-label">{t("docs.next")}</span>
                   <span class="docs__pager-title">{next.data.title}</span>
                 </a>

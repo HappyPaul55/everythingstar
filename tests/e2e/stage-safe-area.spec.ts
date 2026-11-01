@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./base";
 import { SONG_TITLE, installFixtures } from "./fixture";
 import { openBand, startRun, waitForPlaying } from "./helpers";
 

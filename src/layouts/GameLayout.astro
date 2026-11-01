@@ -19,8 +19,12 @@ import { HTML_LANG, DEFAULT_LOCALE, type Locale } from "../i18n/locales";
 interface Props {
   /** The document title. */
   title?: string;
-  /** The screen reader's heading; the visual heading is the game's own poster. */
-  heading?: string;
+  /**
+   * The screen reader's heading; the visual heading is the game's own poster.
+   * `null` leaves the document without one, for an island that renders its own
+   * `<h1>` — two top-level headings on one page is not an outline.
+   */
+  heading?: string | null;
   /** The page's locale, which the entries read from their URL. */
   locale?: Locale;
 }
@@ -76,7 +80,7 @@ const {
   </head>
   <body>
     <main id="main">
-      <h1 class="sr-only">{heading}</h1>
+      {heading === null ? null : <h1 class="sr-only">{heading}</h1>}
       <slot />
     </main>
   </body>

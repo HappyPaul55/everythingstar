@@ -542,6 +542,20 @@ describe("readStepMania comments and tempo", () => {
     ]);
   });
 
+  test("a stop delays every later note, and only the later ones", () => {
+    const source = readStepMania({
+      text: stepfile(
+        ["#TITLE:Stopped;", "#BPMS:0.000=120.000;", "#STOPS:4.000=1.000;"],
+        ["1000", "0100", "0010", "0001", ",", "1000", "0100", "0010", "0001"],
+      ),
+    });
+    // 120 bpm: a beat every 500 ms. The one-second stop at beat 4 begins on that
+    // beat, so the note there keeps its time and everything after it is a second late.
+    expect(source.lanes[0].notes.map((note) => note.timeMs)).toEqual([
+      0, 500, 1000, 1500, 2000, 3500, 4000, 4500,
+    ]);
+  });
+
   test("skips a double chart and keeps a single one", () => {
     const source = readStepMania({
       text: [

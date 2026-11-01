@@ -152,9 +152,28 @@ for (const bundle of RELEASE_BUNDLES) {
   );
 
   const dir = mkdtempSync(join(tmpdir(), `everythingstar-${bundle}-`));
+  const tarDir = mkdtempSync(join(tmpdir(), `everythingstar-${bundle}-tar-`));
   try {
     const extracted = run(["unzip", "-q", "-o", zipPath, "-d", dir]);
     check("the zip extracts", extracted.ok, extracted.stderr.trim());
+    const fromTar = run(["tar", "-xzf", tarPath, "-C", tarDir]);
+    check("the tar extracts", fromTar.ok, fromTar.stderr.trim());
+    if (extracted.ok && fromTar.ok) {
+      // The listing says the two hold the same *names*. Comparing the bytes is the
+      // half a corrupted or wrongly written tar could otherwise pass.
+      const differing = zip.filter((name) => {
+        try {
+          return !readFileSync(join(dir, name)).equals(readFileSync(join(tarDir, name)));
+        } catch {
+          return true;
+        }
+      });
+      check(
+        "both formats hold the same bytes",
+        differing.length === 0,
+        differing.slice(0, 3).join("; "),
+      );
+    }
     if (extracted.ok) {
       const html = plan.entry ? readFileSync(join(dir, plan.entry.to), "utf8") : null;
       const manifestFile = join(dir, MANIFEST_NAME);
@@ -172,6 +191,7 @@ for (const bundle of RELEASE_BUNDLES) {
     }
   } finally {
     rmSync(dir, { recursive: true, force: true });
+    rmSync(tarDir, { recursive: true, force: true });
   }
 
   for (const file of [zipPath, tarPath]) {

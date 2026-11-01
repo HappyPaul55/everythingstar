@@ -1,4 +1,5 @@
-import { useT } from "../../../i18n/react";
+import { localePath } from "../../../i18n/paths";
+import { useLocale, useT } from "../../../i18n/react";
 
 interface Props {
   onQuickPlay: () => void;
@@ -19,6 +20,7 @@ interface Props {
  */
 export function Menu({ onQuickPlay, onOptions, onCredits, onBack }: Props) {
   const t = useT();
+  const locale = useLocale();
 
   const item = (
     id: string,
@@ -90,7 +92,7 @@ export function Menu({ onQuickPlay, onOptions, onCredits, onBack }: Props) {
             {item("options", "02", t("screen.options"), t("screen.optionsHint"), onOptions)}
             {item("credits", "03", t("screen.credits"), t("screen.creditsHint"), onCredits)}
           </ul>
-          <a className="menu__charter" href="/charter">
+          <a className="menu__charter" href={localePath(locale, "/charter")}>
             {t("charter.menu")}
           </a>
         </nav>

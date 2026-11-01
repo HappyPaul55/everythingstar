@@ -1,4 +1,12 @@
-import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
 import {
   axisPercent,
   nextAxisOffset,
@@ -93,9 +101,6 @@ export function useScrollTrack({
       reverse,
     );
     layer.style.transform = `translate${axis.toUpperCase()}(${offset}%)`;
-    // The window's own basis, for debugging and tests: with it, a position can
-    // be checked for continuity across a slide.
-    layer.dataset.from = String(rendered.current.fromMs);
   };
 
   // After any render, adopt the window that was just rendered and re-place the
@@ -126,11 +131,18 @@ export function useScrollTrack({
     return clock.subscribe(apply);
   }, [clock, axis, secondsAcross, beforeMs, afterMs, offsetMs]);
 
-  return {
-    ref,
-    fromMs: window.fromMs,
-    toMs: window.toMs,
-    position: (timeMs) =>
-      axisPercent(timeMs, window.fromMs, anchor, secondsAcross, axis === "y"),
-  };
+  // The object is **stable between window steps**: a fresh `position` closure on
+  // every render made every memo that depends on the track recompute on every
+  // publish tick — the highway's slide links rescanned the whole chart ~25 times a
+  // second for an answer that had not changed.
+  const { fromMs, toMs } = window;
+  const position = useCallback(
+    (timeMs: number) => axisPercent(timeMs, fromMs, anchor, secondsAcross, reverse),
+    [fromMs, anchor, secondsAcross, reverse],
+  );
+
+  return useMemo(
+    () => ({ ref, fromMs, toMs, position }),
+    [fromMs, toMs, position],
+  );
 }

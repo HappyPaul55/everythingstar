@@ -37,6 +37,15 @@ describe("errorMessage", () => {
     const abort = new DOMException("The operation was aborted.", "AbortError");
     expect(errorMessage(abort, "fallback")).not.toMatch(UNREACHABLE);
   });
+
+  test("a page that is not a document says so without quoting it", () => {
+    const html = new SyntaxError(
+      'Unexpected token \'<\', "<!DOCTYPE " is not valid JSON',
+    );
+    expect(errorMessage(html, "fallback")).toBe(
+      "that address answered with something that is not a playlist",
+    );
+  });
 });
 
 describe("searchError", () => {

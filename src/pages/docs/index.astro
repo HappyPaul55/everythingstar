@@ -46,7 +46,7 @@ const title = hub.data.title;
           <ul class="docs-hub__list">
             {group.docs.map((doc) => (
               <li>
-                <a class="docs-hub__link" href={docHref(doc.id)}>
+                <a class="docs-hub__link" href={docHref(doc.id, locale)}>
                   <span class="docs-hub__name">{doc.data.title}</span>
                   <span class="docs-hub__description">{doc.data.description}</span>
                 </a>

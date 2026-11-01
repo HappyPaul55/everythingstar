@@ -3,15 +3,16 @@ import type { MessageKey } from "../../../i18n";
 import { useT } from "../../../i18n/react";
 import { lineupPlayers, type BandSetup } from "../../../lib/game/band/types";
 import { COUNT_UP_MS, countUpSteps, countUpValue } from "../../../lib/game/countUp";
+import { INSTRUMENTS, type InstrumentKind } from "../../../lib/game/track";
 import type { Song } from "../../../lib/game/song";
 import { shortDate } from "../../../lib/game/when";
 import {
   bestFor,
   LINEUP_FREE_PLAY,
   lineupKey,
+  recentFor,
   saveRun,
   shouldSaveRun,
-  topFor,
   type SavedRun,
 } from "../../../lib/game/scores";
 import {
@@ -264,7 +265,7 @@ export function Results({
 
   // The history stays the song's own, across lineups: a run is still a run. Its rows
   // say which band played it, so a reader can see why the scores differ.
-  const table = topFor(saved, song.id);
+  const table = recentFor(saved, song.id);
 
   // The sting for how the run went. It is silent until the stings are bought — a
   // type nothing can play is silence, not an error — and the moment one lands it is
@@ -303,7 +304,6 @@ export function Results({
               className="screen__title"
               id="results-title"
               tabIndex={-1}
-              data-nav-default="true"
             >
               {t(failed ? "screen.runOver" : "screen.results")}
             </h2>
@@ -415,6 +415,7 @@ export function Results({
               type="button"
               className="band-btn band-btn--primary"
               data-sound="select"
+              data-nav-default="true"
               onClick={onReplay}
             >
               {t("screen.replay")}
@@ -533,8 +534,15 @@ function LineupText({ lineup }: { lineup: string }) {
       // "Lead guitar · Expert", not "Lead guitar · Guitar · Expert".
       if (kind === "guitar" && (extra === "lead" || extra === "rhythm")) {
         bits.push(t(extra === "lead" ? "band.leadGuitar" : "band.rhythmGuitar"));
+      } else if (kind === "words") {
+        bits.push(t("band.words"));
+      } else if (kind && kind in INSTRUMENTS) {
+        // The instrument's own label key, not `band.keys`: the key it is stored
+        // under is not the key it is drawn with, and "band.keys" used to render as
+        // the raw key for anyone who played simple keys.
+        bits.push(t(INSTRUMENTS[kind as InstrumentKind].labelKey));
       } else if (kind) {
-        bits.push(t(`band.${kind}` as MessageKey));
+        bits.push(kind);
       }
       if (difficulty) {
         bits.push(

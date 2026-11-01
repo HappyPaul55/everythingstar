@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./base";
 import { SONG_TITLE, disableFullscreen, installFixtures } from "./fixture";
 import { enterGame } from "./helpers";
 

@@ -1,7 +1,7 @@
 ---
 title: Charter
 description: "The /charter island: what it loads, how a take becomes notes, why eight charts are visible at once, and what its Download button writes."
-updated: "2026-10-31"
+updated: "2026-11-01"
 order: 21
 ---
 
@@ -46,7 +46,13 @@ follows the song's stems.
   YARG `.chart` file.
 
 Undo is a bounded stack of immutable chart-list snapshots. A recording take is one
-step, not one per note.
+step, not one per note. A snapshot carries the **grid** as well as the charts,
+because every exported tick is measured from the BPM: a mistyped tempo has to be
+undoable like any other edit. A take belongs to the pane it was armed on — changing
+panes ends it there rather than converting its events against whatever chart is
+active when it stops. `.chart` has no hero note, so a hero note is written as an
+ordinary note and the download **says so** in its problems instead of dropping the
+value silently.
 
 ## Eight panes, any number of charts
 
@@ -68,7 +74,11 @@ The charter's input is its own hook (`useCharterRecord`) because a charter is no
 band. It still uses the game's layouts: `keyAction`, `padAction`, `padAxisAction` and
 `midiAction`, so keyboard, gamepad and MIDI mean what they mean in a run. A take is
 stamped with `clock.timeOf`, exactly as judging is, and the project audio-lag setting
-is not applied twice.
+is not applied twice. The stems play at the player's own master and music levels and
+with their `audioLagMs`, the same values a run uses, so recording by ear lands where
+the player hears it; the metronome follows the master × effects level and closes its
+own `AudioContext` when the workspace goes (a charter is remounted per song, and a
+leaked context goes silent after a handful).
 
 While a take is armed the recording layout owns the keyboard; the editor's shortcuts
 step aside. Escape stops the take. A take can **replace** the span it covered or

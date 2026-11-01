@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { withLocale } from "../../i18n/react";
 import { DEFAULT_PLAYLIST } from "../../lib/game/defaultPlaylist";
+import { DEFAULT_SETTINGS, loadSettings, type Settings } from "../../lib/game/settings";
 import type { Song } from "../../lib/game/song";
 import { EMPTY_MELODY } from "../../lib/game/source";
 import type { Track } from "../../lib/game/track";
@@ -27,6 +28,13 @@ function CharterApp() {
   const [loadingSong, setLoadingSong] = useState(false);
   const load = useCharterSong(song);
   const [speed, setSpeed] = useState(1);
+  // The player's own sound settings, read once for the visit. A charter is
+  // somewhere a player records by ear: stems at full scale and a zero lag put every
+  // note they play 100 ms away from what they hear, and a muted game plays the
+  // metronome at full volume.
+  const [settings] = useState<Settings>(() =>
+    typeof window === "undefined" ? DEFAULT_SETTINGS : loadSettings(),
+  );
 
   const open = useCallback((next: Song) => {
     setLoadingSong(true);
@@ -91,9 +99,9 @@ function CharterApp() {
               {audio && load.doc ? (
                 <SongAudio
                   doc={load.doc}
-                  volume={1}
-                  musicLevel={1}
-                  lagMs={0}
+                  volume={settings.volume}
+                  musicLevel={settings.levels.music}
+                  lagMs={settings.audioLagMs}
                   sung={false}
                   rate={speed}
                   practice={speed !== 1}

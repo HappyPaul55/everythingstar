@@ -33,7 +33,7 @@
  * fixture. JSON documents stay on the route (they are a handful of kilobytes).
  */
 import { createServer, type Server } from "node:http";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./base";
 import { waitForPlaying } from "./helpers";
 import { disableFullscreen } from "./fixture";
 

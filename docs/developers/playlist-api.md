@@ -1,7 +1,7 @@
 ---
 title: Playlist API
 description: "The wire contract a playlist library or an on-demand search endpoint implements: the three documents, URL resolution, CORS, timing, and an acceptance checklist."
-updated: "2026-10-31"
+updated: "2026-11-01"
 order: 7
 ---
 
@@ -871,6 +871,10 @@ Rules that matter:
 - **Order does not matter.** The reader sorts by `timeMs`. Do not send note ids; the game
   numbers them after sorting.
 - A note with no `timeMs`, or a negative one, is skipped.
+- **A note has a ceiling.** A note more than six hours into a song is dropped and
+  named as a problem; a `lengthMs` over ten minutes is clamped to ten minutes. The
+  same ceiling bounds a melody line's `endMs`. Without it, one hostile value is a
+  song that never ends and a note held for the rest of the session.
 - A `hopo` only makes sense on a strummed instrument, and the chart says `kind` explicitly.
   The game does not re-derive it.
 - Keep `column` inside the chart's `laneCount`. The reader truncates to an integer and
@@ -941,6 +945,10 @@ A line:
 `15200` and a word at `420`, which is `15620` absolute. Note times, by contrast, are
 **absolute**. This is the other common wiring mistake; the two time bases are deliberately
 different.
+
+**The reader puts a line's words in time order**, so the array may be written in any
+order — and a line whose `endMs` is before its `timeMs` is repaired to end where it
+starts rather than making its last word untypeable.
 
 `line.parts` tells the display who sings the line. A solo line should carry:
 

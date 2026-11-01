@@ -17,6 +17,8 @@ export const en = {
   "nav.play": "Play",
   "nav.docs": "Docs",
   "nav.privacy": "Privacy",
+  "nav.terms": "Terms",
+  "nav.accessibility": "Accessibility",
   "nav.breadcrumb": "Breadcrumb",
   "footer.pages": "Pages",
   "footer.elsewhere": "Elsewhere",
@@ -68,7 +70,7 @@ export const en = {
   "home.statusCta": "Open the play area",
 
   // Play page
-  "play.heading": "The stage",
+  "play.heading": "Play EverythingStar",
 
   // The screens around a run (welcome, songs, band, a run, results —
   // see src/lib/game/screens.ts)
@@ -280,6 +282,7 @@ export const en = {
   "screen.creditLicence": "the licence",
   "screen.creditTools": "the tools",
   "screen.creditToolsWho": "Astro, React, Tailwind and Bun.",
+  "screen.creditNotices": "the notices",
 
   // The jukebox
   "screen.songsTitle": "Pick a song",
@@ -631,10 +634,13 @@ export const en = {
   "screen.mappingNone": "nothing - the machine plays them",
   "screen.mappingPreset": "the preset for their place",
   "screen.paused": "Paused",
+  "screen.pause": "Pause",
   "screen.resume": "Resume",
   "screen.restart": "Start again",
   "screen.quit": "Leave the stage",
   "screen.pauseHint": "Escape or Start resumes.",
+  "stage.noSound":
+    "No sound from this song. The stage is still running, and the notes still count.",
   "pause.quick": "Quick settings",
   "pause.noteSpeed": "Note speed",
   "pause.speedSlower": "Slower",
@@ -650,6 +656,9 @@ export const en = {
   "practice.lede":
     "Start at a section and play it slower. Practice is not scored and never reaches the results, so nothing here goes on the board.",
   "practice.section": "Which stretch",
+  "practice.sectionN": "Section {n}",
+  "practice.phrase": "Phrase {n}",
+  "practice.intro": "Intro",
   "practice.speedLabel": "Speed",
   "practice.speed": "{speed}% speed",
   "practice.loop": "Loop this stretch",
@@ -660,6 +669,7 @@ export const en = {
   "practice.start": "Start practice",
   "practice.cancel": "Cancel",
   "practice.stop": "Stop practice",
+  "practice.repeat": "Repeat this stretch",
   "practice.noSection": "This song has no stretch to practise yet.",
   "practice.wholeSong": "Whole song",
 

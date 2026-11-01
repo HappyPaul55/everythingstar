@@ -9,7 +9,7 @@
  * driver pipe and stall under load, which would test the fixture.
  */
 import { createServer, type Server } from "node:http";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./base";
 import { SONG_TITLE, disableFullscreen, installFixtures } from "./fixture";
 import { enterGame, openBand, waitForPlaying } from "./helpers";
 

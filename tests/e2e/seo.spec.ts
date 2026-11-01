@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./base";
 import { OG_IMAGE_VERSION } from "../../src/lib/seo";
 
 /**

@@ -32,6 +32,12 @@ interface Props {
    * The paper pages keep the ordinary document flow.
    */
   frame?: boolean;
+  /**
+   * What the skip link jumps to. A docs page has its section sidebar inside
+   * `main`, so `#main` lands before a long list of pages; it points at the article
+   * instead.
+   */
+  skipHref?: string;
 }
 
 const {
@@ -41,6 +47,7 @@ const {
   noindex = false,
   breadcrumbs,
   frame = false,
+  skipHref = "#main",
 } = Astro.props;
 
 const siteEntry = await getEntry("site", "main");
@@ -176,7 +183,7 @@ const canonicalPath = path ?? Astro.url.pathname;
     <ServiceWorker />
   </head>
   <body>
-    <a class="skip-link no-print" href="#main">{t("common.skipToContent")}</a>
+    <a class="skip-link no-print" href={skipHref}>{t("common.skipToContent")}</a>
 
     <p class="print-only print-masthead">
       {site.name} · {site.url.replace(/^https?:\/\//, "").replace(/\/$/, "")}

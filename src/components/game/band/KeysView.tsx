@@ -385,15 +385,21 @@ function stateOf(
   note: MelodyNote,
   now: number,
   verdicts: Map<string, { hit: boolean }>,
-  sungByPlace: ReadonlyMap<string, MelodyNote>,
+  sungByPlace: ReadonlyMap<string, MelodyNote[]>,
 ): NoteState {
   if (now < note.timeMs - HIT_WINDOW_MS) return "pending";
   if (now <= judgedAt(note)) return "live";
-  // A shared note has one entry per part; the first sung one is the verdict
-  // that belongs to the bar.
+  // A shared note has one entry per part, and each singer gets their own verdict:
+  // a bar is only a hit when every voice on it hit, and only a miss when every
+  // voice missed. One of each is shown as mixed rather than letting the first
+  // singer in the array speak for the other.
   const sung = sungByPlace.get(notePlace(note));
-  if (!sung) return "pending";
-  return verdicts.get(sung.id)?.hit ? "hit" : "miss";
+  if (!sung || sung.length === 0) return "pending";
+  if (sung.some((one) => now <= judgedAt(one))) return "live";
+  const hits = sung.filter((one) => verdicts.get(one.id)?.hit).length;
+  if (hits === sung.length) return "hit";
+  if (hits === 0) return "miss";
+  return "mixed";
 }
 
 /** Is a freeform word being delivered right now? Pitch is not judged on those. */

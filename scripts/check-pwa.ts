@@ -216,12 +216,15 @@ if (sw) {
   check("the shell includes the app page", sw.includes("/app.html"));
   check("the shell includes the link entry", sw.includes("/open.html"));
   check("the shell includes the sound manifest", sw.includes("/audio/sounds.json"));
-  const listedChunks = new Set(sw.match(/\/_astro\/[A-Za-z0-9_.-]+\.js/g) ?? []);
+  const listedChunks = new Set(sw.match(/\/_astro\/[A-Za-z0-9_./-]+\.js/g) ?? []);
   const astroDir = join(DIST, "_astro");
+  // Recursive: `build-sw.ts` walks subdirectories, so a non-recursive read here
+  // would quietly stop comparing them and could never notice a missing nested
+  // chunk.
   const builtChunks = existsSync(astroDir)
-    ? readdirSync(astroDir)
+    ? readdirSync(astroDir, { recursive: true, encoding: "utf8" })
         .filter((file) => file.endsWith(".js"))
-        .map((file) => `/_astro/${file}`)
+        .map((file) => `/_astro/${file.replace(/\\/g, "/")}`)
     : [];
   const absent = builtChunks.filter((chunk) => !listedChunks.has(chunk));
   let shellProblem = "";

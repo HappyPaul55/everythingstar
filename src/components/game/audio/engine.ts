@@ -701,17 +701,27 @@ export function createEngine(onBed?: (id: string | null) => void): Engine {
         source.connect(gain);
         // A centre cue stays a two-node path; only a placed cue pays for a panner.
         const pan = cue.pan;
+        let panner: StereoPannerNode | null = null;
         if (
           pan !== undefined &&
           pan !== 0 &&
           typeof ctx.createStereoPanner === "function"
         ) {
-          const panner = ctx.createStereoPanner();
+          panner = ctx.createStereoPanner();
           panner.pan.value = Math.max(-1, Math.min(1, pan));
           gain.connect(panner).connect(target);
         } else {
           gain.connect(target);
         }
+        // A one-shot is over when its buffer ends, but the nodes stay wired into
+        // the channel until something disconnects them. A typist generates
+        // thousands of cues a minute; without this every one of them leaves a gain
+        // node (and a panner) on the graph for the life of the page.
+        source.onended = () => {
+          source.disconnect();
+          gain.disconnect();
+          panner?.disconnect();
+        };
         source.start(when);
       }
 
@@ -779,6 +789,11 @@ export function createEngine(onBed?: (id: string | null) => void): Engine {
     const at = context.currentTime;
     const hold = Math.max(DUCK_MIN_S, holdS);
     for (const name of ["music", "ambience"] as const) {
+      // A preview is not the bed: choosing a row is a ducking cue, and ducking the
+      // music channel then holds the preview the player just started at 35% for its
+      // first half second. The bed is paused while a preview plays, so there is
+      // nothing on this channel the duck is for.
+      if (name === "music" && previewing) continue;
       const gain = channels.get(name);
       if (!gain) continue;
       const base = levels[name];

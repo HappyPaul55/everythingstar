@@ -3,6 +3,7 @@ import { useT } from "../../../i18n/react";
 import {
   PRACTICE_SPEEDS,
   clampPractice,
+  practiceLabel,
   type PracticePlan,
   type PracticeSection,
 } from "../../../lib/game/practice";
@@ -68,7 +69,7 @@ export function PracticeDialog({
         <div className="practice-options" role="radiogroup" aria-labelledby={sectionLabel}>
           {sections.map((section, index) => (
             <button
-              key={`${section.startMs}-${section.endMs}-${section.label}`}
+              key={`${section.startMs}-${section.endMs}-${practiceLabel(t, section)}`}
               type="button"
               role="radio"
               aria-checked={chosen === section}
@@ -80,7 +81,7 @@ export function PracticeDialog({
               data-dialog-focus={index === 0 ? true : undefined}
               onClick={() => setStartMs(section.startMs)}
             >
-              {section.label}
+              {practiceLabel(t, section)}
             </button>
           ))}
         </div>

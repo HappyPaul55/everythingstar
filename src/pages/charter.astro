@@ -15,6 +15,6 @@ const locale = localeFromPath(Astro.url.pathname);
 const t = tFor(locale);
 ---
 
-<GameLayout title={t("charter.title")} heading={t("charter.title")} locale={locale}>
+<GameLayout title={t("charter.title")} heading={null} locale={locale}>
   <CharterApp client:load locale={locale} />
 </GameLayout>

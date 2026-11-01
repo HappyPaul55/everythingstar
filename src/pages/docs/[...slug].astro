@@ -35,7 +35,7 @@ const crumbs = [
   { name: t("nav.home"), path: localePath(locale, "/") },
   { name: t("docs.title"), path: localePath(locale, "/docs") },
   { name: t(SECTION_LABELS[section]), path: `${localePath(locale, "/docs")}#${section}` },
-  { name: entry.data.title, path: docHref(entry.id) },
+  { name: entry.data.title, path: docHref(entry.id, locale) },
 ];
 ---
 

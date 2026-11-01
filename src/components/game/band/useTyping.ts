@@ -159,7 +159,10 @@ export function useTyping({
         judged: counts.hits + counts.misses,
         heroHits: state.heroHits,
         unit: "words",
-        typing: typingReport(state) ?? undefined,
+        // A seat the machine types is not a typing report: its keys land inside one
+        // frame, and the span floor turns a long word into hundreds of words a
+        // minute. Only the person with the keyboard is measured.
+        typing: keyboard === index ? (typingReport(state) ?? undefined) : undefined,
       };
       board.report(entry);
     });

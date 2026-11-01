@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./base";
 import {
   FOLDER_SONG_TITLE,
   SNG_SONG_TITLE,
