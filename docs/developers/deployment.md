@@ -57,6 +57,12 @@ after `verify` and `e2e`, downloads `site-dist`, and does not run `verify` or re
 manual dispatch builds and verifies the checkout, then deploys that. The environment is
 created on the first run.
 
+Its `if:` starts with **`always()`** on purpose. `verify` needs the
+pull-request-only `review` job, which is *skipped* on `main`; a job whose dependency was
+skipped does not run on a plain `if:`, so the deploy was silently skipped for a build
+that had passed everything. The condition now checks `needs.verify.result` and
+`needs.e2e.result` explicitly, which is the gate; `always()` only lets it be evaluated.
+
 When the upload finishes, the job smokes the live origin (`scripts/smoke.ts`) with the
 version this checkout produced (`bun scripts/version.ts`) and fails the deployment when
 the site is not right. The build-identity check retries while an edge cache catches up;
