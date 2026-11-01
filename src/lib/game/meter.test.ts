@@ -112,15 +112,33 @@ describe("both judging engines use the same meter", () => {
     expect(melody.meter).toBe(drainMeter(fillMeter(0), due));
   });
 
-  test("two frames over one long note drain only the time after it", () => {
+  test("a second frame past a long note's head does not drain that gap twice", () => {
+    // The regression needs a frame **past the note's head but before its verdict**:
+    // there `atMs` is already ahead of `timeMs`, so the old `judge` rewound it and the
+    // final drain covered the same gap a second time. A single call from zero never
+    // reaches that state.
     const at = 4000;
     const long: MelodyNote = { ...note, timeMs: at, lengthMs: 1000 };
     const end = at + 1000 + SING_GRACE_MS;
-    const first = advanceRun(emptyRun(), [long], end, hit);
+    const first = advanceRun({ ...emptyRun(), meter: 100 }, [long], at + 500, hit);
+    expect(first.hits).toBe(0);
+    expect(first.atMs).toBe(at + 500);
+    const second = advanceRun(first, [long], end, hit);
+    expect(second.hits).toBe(1);
+    expect(second.meter).toBe(
+      drainMeter(fillMeter(drainMeter(100, at + 500)), end - (at + 500)),
+    );
+  });
+
+  test("a frame at the head, then the verdict, drains only the time after it", () => {
+    const at = 4000;
+    const long: MelodyNote = { ...note, timeMs: at, lengthMs: 1000 };
+    const end = at + 1000 + SING_GRACE_MS;
+    const first = advanceRun({ ...emptyRun(), meter: 100 }, [long], end, hit);
     const second = advanceRun(first, [long], end + 500, hit);
     expect(first.hits).toBe(1);
     expect(second.hits).toBe(1);
-    expect(second.meter).toBe(drainMeter(drainMeter(fillMeter(0), end - at), 500));
+    expect(second.meter).toBe(drainMeter(first.meter, 500));
   });
 
   test("one note hit fills it to the same value on the melody and a highway", () => {

@@ -10,6 +10,7 @@ import {
   linesInWindow,
   mountedLines,
   nextOnsets,
+  placeVerdict,
   notePlace,
   rollNotes,
   rowCentre,
@@ -316,5 +317,40 @@ describe("linesInWindow", () => {
       6000,
     );
     expect(window.map((l) => l.timeMs)).toEqual([3000, 8000]);
+  });
+});
+
+describe("placeVerdict", () => {
+  const judged = () => 0;
+  const verdict = (id: string, hit: boolean) => [id, { hit }] as const;
+
+  test("a shared bar needs every voice, and one of each is mixed", () => {
+    const shared = [
+      note({ id: "a", timeMs: 1000, row: 2, part: 0 }),
+      note({ id: "b", timeMs: 1000, row: 2, part: 1 }),
+    ];
+    const hits = new Map([verdict("a", true), verdict("b", true)]);
+    const mixed = new Map([verdict("a", true), verdict("b", false)]);
+    const missed = new Map([verdict("a", false), verdict("b", false)]);
+    expect(placeVerdict(shared, 5000, hits, judged)).toBe("hit");
+    expect(placeVerdict(shared, 5000, mixed, judged)).toBe("mixed");
+    expect(placeVerdict(shared, 5000, missed, judged)).toBe("miss");
+  });
+
+  test("two notes of the same part are one voice, so one cannot make it mixed", () => {
+    // A chart with more voices than the roll has colours collapses two parts onto
+    // the last one; the two notes share a part and are one singer's one bar.
+    const collapsed = [
+      note({ id: "a", timeMs: 1000, row: 2, part: 0 }),
+      note({ id: "b", timeMs: 1000, row: 2, part: 0 }),
+    ];
+    const split = new Map([verdict("a", true), verdict("b", false)]);
+    expect(placeVerdict(collapsed, 5000, split, judged)).not.toBe("mixed");
+  });
+
+  test("nothing sung is neutral, and an undecided note is live", () => {
+    expect(placeVerdict(undefined, 5000, new Map(), judged)).toBe("pending");
+    const one = [note({ id: "a", timeMs: 4000, row: 2, part: 0 })];
+    expect(placeVerdict(one, 1000, new Map(), () => 4999)).toBe("live");
   });
 });

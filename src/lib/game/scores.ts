@@ -134,12 +134,14 @@ export function parseBoard(raw: string | null): SavedRun[] {
 }
 
 /**
- * A stored entry is only trusted for the fields the board actually reads.
+ * A stored entry is only trusted for the fields a saved run has and the screens
+ * draw.
  *
- * The results and the jukebox print the date, the title, the score and how many
- * played; a row missing one of those is not a run a screen can draw, and
- * accepting it used to put "Invalid Date" in the history. `players` is checked
- * because its length is the band size and its labels are the lineup line.
+ * The results and the jukebox print the date, the score and how many played; a row
+ * missing one of those is not a run a screen can draw, and accepting it used to put
+ * "Invalid Date" in the history. `title` and each player's `label` are what this
+ * game writes even where a screen reads the song's own title, so a record without
+ * them is not one of ours. `players` is checked because its length is the band size.
  */
 function isSavedRun(value: unknown): value is SavedRun {
   if (typeof value !== "object" || value === null) return false;

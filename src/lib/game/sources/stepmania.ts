@@ -32,6 +32,7 @@
 import type { Difficulty, LaneChart, LaneNote } from "../track";
 import type { SongVideo } from "../song";
 import type { SourceAudio } from "../source";
+import { boundNotes } from "./common";
 import { audioFromFiles } from "./files";
 import { emptySource, type ParsedSource, type StemRole } from "./types";
 import { SONG_TAIL_MS } from "./duration";
@@ -402,15 +403,20 @@ function readChart(
   if (mines > 0) {
     problems.push(`${block.type} ${difficulty}: ${mines} mines dropped, this game has none`);
   }
-  notes.sort((a, b) => a.timeMs - b.timeMs || (a.column ?? 0) - (b.column ?? 0));
-  if (notes.length === 0) return null;
+  // Before the length is read from them: a tempo map that went wrong is not a song
+  // that lasts a month, and `chartProblems` would drop the chart rather than clamp.
+  const bounded = boundNotes(notes, (note) =>
+    problems.push(`${block.type} ${difficulty}: a note at ${note.timeMs} ms is outside any song`),
+  );
+  bounded.sort((a, b) => a.timeMs - b.timeMs || (a.column ?? 0) - (b.column ?? 0));
+  if (bounded.length === 0) return null;
 
   return {
     instrument: "dance",
     difficulty,
     columns,
     ...(bpm > 0 ? { bpm } : {}),
-    notes,
+    notes: bounded,
   };
 }
 

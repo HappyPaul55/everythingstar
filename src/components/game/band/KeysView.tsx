@@ -11,6 +11,7 @@ import {
   notePlace,
   rollNotes,
   rowCentre,
+  placeVerdict,
   sungNotesByPlace,
 } from "../../../lib/game/band/melody";
 import { activeWordIndex, introProgress, isSounding, judgedAt } from "../../../lib/game/run";
@@ -389,17 +390,7 @@ function stateOf(
 ): NoteState {
   if (now < note.timeMs - HIT_WINDOW_MS) return "pending";
   if (now <= judgedAt(note)) return "live";
-  // A shared note has one entry per part, and each singer gets their own verdict:
-  // a bar is only a hit when every voice on it hit, and only a miss when every
-  // voice missed. One of each is shown as mixed rather than letting the first
-  // singer in the array speak for the other.
-  const sung = sungByPlace.get(notePlace(note));
-  if (!sung || sung.length === 0) return "pending";
-  if (sung.some((one) => now <= judgedAt(one))) return "live";
-  const hits = sung.filter((one) => verdicts.get(one.id)?.hit).length;
-  if (hits === sung.length) return "hit";
-  if (hits === 0) return "miss";
-  return "mixed";
+  return placeVerdict(sungByPlace.get(notePlace(note)), now, verdicts, judgedAt);
 }
 
 /** Is a freeform word being delivered right now? Pitch is not judged on those. */

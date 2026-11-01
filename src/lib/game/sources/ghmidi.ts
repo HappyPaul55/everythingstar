@@ -51,7 +51,7 @@ import { groupLyrics, type Syllable } from "./lyricLines";
 import { type MidiDoc, type MidiTrack, parseMidi } from "./midi";
 import { slug } from "../text";
 import { minMax } from "../math";
-import { mergeSpans, yearOf } from "./common";
+import { boundNotes, mergeSpans, yearOf } from "./common";
 import { emptySource, type ParsedSource, type StemRole } from "./types";
 
 /** The four difficulty bands, by the pitch green sits on. */
@@ -275,17 +275,20 @@ function readBand(
       notes.push({ id: "", timeMs, lengthMs: fret.lengthMs, kind, column: fret.column, hero: false });
     }
   }
-  if (notes.length === 0) return null;
+  // A tempo map or a tick that went wrong is not a song that lasts a month: the
+  // notes are bounded before the chart's length is read from them (see `boundNotes`).
+  const bounded = boundNotes(notes);
+  if (bounded.length === 0) return null;
   // The first note of a chart is always a strum: there is nothing before it to
   // hammer on from, and a chart that says otherwise would be unplayable.
-  if (strummed && notes[0].kind === "hopo") notes[0] = { ...notes[0], kind: "strum" };
+  if (strummed && bounded[0].kind === "hopo") bounded[0] = { ...bounded[0], kind: "strum" };
 
-  const highest = notes.reduce(
+  const highest = bounded.reduce(
     (max, note) => (note.column === null ? max : Math.max(max, note.column)),
     -1,
   );
   let columns = highest + 1;
-  if (notes.some((note) => note.column === null)) columns = Math.max(columns, part.width);
+  if (bounded.some((note) => note.column === null)) columns = Math.max(columns, part.width);
   if (part.sixFret) columns = Math.max(6, columns);
   // A drum highway always has the pedal's column, whether or not this chart uses
   // it: six columns is what a kit is, and the band's learn flow asks for six.
@@ -303,7 +306,7 @@ function readBand(
     ...(bpm > 0 ? { bpm } : {}),
     ...(phrases.length > 0 ? { phrases } : {}),
     ...(fills.length > 0 ? { fills } : {}),
-    notes: notes.map((note, index) => ({
+    notes: bounded.map((note, index) => ({
       ...note,
       id: `${part.role ?? part.instrument}-${band.difficulty}-${index}`,
     })),

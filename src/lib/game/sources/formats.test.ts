@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { chartProblems } from "../track";
+import { chartProblems, MAX_NOTE_LENGTH_MS, MAX_SONG_MS } from "../track";
 import { readChartText } from "./chart";
 import { readUltraStar } from "./ultrastar";
 import { readStepMania } from "./stepmania";
@@ -44,6 +44,59 @@ describe("readChartText (Clone Hero .chart)", () => {
   ].join("\n");
 
   const source = readChartText({ text, fallbackTitle: "fallback" });
+
+  test("bounds a note past any song instead of costing the chart", () => {
+    const read = readChartText({
+      text: [
+        "[Song]",
+        "{",
+        "  Name = Absurd",
+        "  Resolution = 480",
+        "}",
+        "[SyncTrack]",
+        "{",
+        "  0 = B 120000",
+        "}",
+        "[ExpertSingle]",
+        "{",
+        "  960 = N 0 0",
+        "  999999999999 = N 1 0",
+        "}",
+        "",
+      ].join("\n"),
+    });
+    // The reachable note is still there, and the chart is still playable: a bad
+    // tick cannot make the whole instrument disappear.
+    expect(read.lanes[0].notes).toHaveLength(1);
+    expect(chartProblems(read.lanes[0])).toEqual([]);
+    // And its length is not hundreds of days.
+    expect(read.meta.durationMs).toBeLessThanOrEqual(MAX_SONG_MS + 3_000);
+  });
+
+  test("clamps a hold longer than the game can draw, instead of dropping the chart", () => {
+    const read = readChartText({
+      text: [
+        "[Song]",
+        "{",
+        "  Name = Held",
+        "  Resolution = 480",
+        "}",
+        "[SyncTrack]",
+        "{",
+        "  0 = B 120000",
+        "}",
+        "[ExpertSingle]",
+        "{",
+        "  960 = N 0 20000000",
+        "  1440 = N 1 0",
+        "}",
+        "",
+      ].join("\n"),
+    });
+    expect(read.lanes[0].notes).toHaveLength(2);
+    expect(read.lanes[0].notes[0].lengthMs).toBe(MAX_NOTE_LENGTH_MS);
+    expect(chartProblems(read.lanes[0])).toEqual([]);
+  });
 
   test("reads the metadata and the tempo", () => {
     expect(source.meta.title).toBe("Nine Lives");

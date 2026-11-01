@@ -646,6 +646,16 @@ export const MAX_NOTE_TIME_MS = 6 * 60 * 60 * 1000;
 export const MAX_NOTE_LENGTH_MS = 10 * 60 * 1000;
 
 /**
+ * The longest a track may be, whoever computed its length.
+ *
+ * A note can start at the ceiling and be held for another ten minutes, so this is
+ * the sum. `trackDuration` holds every source to it — a reader that computed a
+ * length from a bad tempo map, or a document that states one, cannot make a song
+ * that lasts a month.
+ */
+export const MAX_SONG_MS = MAX_NOTE_TIME_MS + MAX_NOTE_LENGTH_MS;
+
+/**
  * What is wrong with a chart, if anything. An empty list means it is playable —
  * the same rules a source parser will be held to.
  */
