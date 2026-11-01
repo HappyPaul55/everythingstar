@@ -15,6 +15,7 @@
  */
 
 import {
+  boundNotes,
   chartProblems,
   cleanSlides,
   DIFFICULTIES,
@@ -64,7 +65,6 @@ import {
   SCHEMA_VERSION,
   text,
 } from "./read";
-import { boundNotes } from "./sources/common";
 import { contentDuration, SONG_TAIL_MS } from "./sources/duration";
 import {
   FULL_PRESET,

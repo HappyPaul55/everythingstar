@@ -29,10 +29,9 @@
  * they are dropped and named rather than turned into a note nobody should hit.
  */
 
-import type { Difficulty, LaneChart, LaneNote } from "../track";
+import { boundNotes, type Difficulty, type LaneChart, type LaneNote } from "../track";
 import type { SongVideo } from "../song";
 import type { SourceAudio } from "../source";
-import { boundNotes } from "./common";
 import { audioFromFiles } from "./files";
 import { emptySource, type ParsedSource, type StemRole } from "./types";
 import { SONG_TAIL_MS } from "./duration";

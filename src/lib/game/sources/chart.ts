@@ -19,6 +19,7 @@
  */
 
 import {
+  boundNotes,
   strums,
   type ChartPhrase,
   type Difficulty,
@@ -34,7 +35,7 @@ import { audioFromFiles } from "./files";
 import { emptySource, type ParsedSource, type StemRole } from "./types";
 import { SONG_TAIL_MS } from "./duration";
 import { slug } from "../text";
-import { boundNotes, mergeSpans, resolveFileRef, yearOf } from "./common";
+import { mergeSpans, resolveFileRef, yearOf } from "./common";
 
 /** The difficulties, by the word a section starts with. */
 const DIFFICULTY_WORDS: Record<string, Difficulty> = {

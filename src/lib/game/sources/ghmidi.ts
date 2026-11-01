@@ -29,6 +29,7 @@
  */
 
 import {
+  boundNotes,
   KICK_COLUMN,
   MAX_PARTS,
   strums,
@@ -51,7 +52,7 @@ import { groupLyrics, type Syllable } from "./lyricLines";
 import { type MidiDoc, type MidiTrack, parseMidi } from "./midi";
 import { slug } from "../text";
 import { minMax } from "../math";
-import { boundNotes, mergeSpans, yearOf } from "./common";
+import { mergeSpans, yearOf } from "./common";
 import { emptySource, type ParsedSource, type StemRole } from "./types";
 
 /** The four difficulty bands, by the pitch green sits on. */

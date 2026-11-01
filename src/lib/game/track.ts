@@ -656,6 +656,40 @@ export const MAX_NOTE_LENGTH_MS = 10 * 60 * 1000;
 export const MAX_SONG_MS = MAX_NOTE_TIME_MS + MAX_NOTE_LENGTH_MS;
 
 /**
+ * Notes the game can actually draw, from whatever a translator produced.
+ *
+ * A MIDI, `.chart` or StepMania file goes through its own arithmetic: a
+ * pathological tempo map, a truncated length or a hand-edited tick can put a note
+ * hundreds of days into the "song". `chartProblems` would then drop the **whole
+ * chart** — and a duration already computed from the same notes would still be the
+ * absurd value. So the translators bound their notes **before** anything reads
+ * their length. A hold over the ceiling is clamped (the note is still playable); a
+ * start past it is dropped, and the caller may name it.
+ */
+export function boundNotes<T extends { timeMs: number; lengthMs: number }>(
+  notes: readonly T[],
+  dropped: (note: T) => void = () => undefined,
+): T[] {
+  const kept: T[] = [];
+  for (const note of notes) {
+    if (
+      !Number.isFinite(note.timeMs) ||
+      note.timeMs < 0 ||
+      note.timeMs > MAX_NOTE_TIME_MS
+    ) {
+      dropped(note);
+      continue;
+    }
+    kept.push(
+      note.lengthMs > MAX_NOTE_LENGTH_MS
+        ? { ...note, lengthMs: MAX_NOTE_LENGTH_MS }
+        : note,
+    );
+  }
+  return kept;
+}
+
+/**
  * What is wrong with a chart, if anything. An empty list means it is playable —
  * the same rules a source parser will be held to.
  */
