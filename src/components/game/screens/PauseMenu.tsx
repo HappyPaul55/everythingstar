@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { lazy, Suspense, useId, useState } from "react";
 import { useT } from "../../../i18n/react";
 import { useCoarsePointer } from "../band/useCoarsePointer";
 import {
@@ -26,7 +26,15 @@ import type { Song } from "../../../lib/game/song";
 import { useClock } from "../band/StageClock";
 import { NativeDialog } from "../ui/NativeDialog";
 import { StepButton } from "../ui/StepButton";
-import { PracticeDialog } from "./PracticeDialog";
+/**
+ * The practice chooser is a press away, not part of a run's first frame. It is
+ * loaded on that press, like every other dialog that is not the pause itself.
+ */
+const PracticeDialog = lazy(() =>
+  import("./PracticeDialog").then((module) => ({
+    default: module.PracticeDialog,
+  })),
+);
 
 /**
  * The pause: resume where you were, start the song again, practise a stretch, or
@@ -293,13 +301,15 @@ export function PauseMenu({
         </p>
       </NativeDialog>
       {choosing ? (
-        <PracticeDialog
-          sections={sections}
-          initial={choosing === "section" ? seed : practice}
-          durationMs={durationMs}
-          onStart={onStartPractice}
-          onClose={() => setChoosing(null)}
-        />
+        <Suspense fallback={null}>
+          <PracticeDialog
+            sections={sections}
+            initial={choosing === "section" ? seed : practice}
+            durationMs={durationMs}
+            onStart={onStartPractice}
+            onClose={() => setChoosing(null)}
+          />
+        </Suspense>
       ) : null}
     </>
   );
