@@ -7,10 +7,12 @@ import {
   clampPracticeSpeed,
   parsePractice,
   practiceEnded,
+  practiceLabel,
   practiceSections,
   sectionAt,
   type PracticePlan,
 } from "./practice";
+import { translate } from "../../i18n";
 import type { LaneChart, Track } from "./track";
 
 const DURATION = 60_000;
@@ -57,9 +59,9 @@ describe("practiceSections", () => {
       }),
     );
     expect(sections).toEqual([
-      { label: "Verse 1", startMs: 0, endMs: 12_000 },
-      { label: "Chorus", startMs: 12_000, endMs: 30_000 },
-      { label: "Bridge", startMs: 30_000, endMs: DURATION },
+      { kind: "section", label: "Verse 1", index: 1, startMs: 0, endMs: 12_000 },
+      { kind: "section", label: "Chorus", index: 2, startMs: 12_000, endMs: 30_000 },
+      { kind: "section", label: "Bridge", index: 3, startMs: 30_000, endMs: DURATION },
     ]);
   });
 
@@ -73,9 +75,9 @@ describe("practiceSections", () => {
       }),
     );
     expect(sections).toEqual([
-      { label: "Intro", startMs: 0, endMs: 12_000 },
-      { label: "Verse 1", startMs: 12_000, endMs: 30_000 },
-      { label: "Chorus", startMs: 30_000, endMs: DURATION },
+      { kind: "intro", label: "", index: 1, startMs: 0, endMs: 12_000 },
+      { kind: "section", label: "Verse 1", index: 1, startMs: 12_000, endMs: 30_000 },
+      { kind: "section", label: "Chorus", index: 2, startMs: 30_000, endMs: DURATION },
     ]);
   });
 
@@ -88,7 +90,9 @@ describe("practiceSections", () => {
         ],
       }),
     );
-    expect(sections).toEqual([{ label: "All of it", startMs: 0, endMs: DURATION }]);
+    expect(sections).toEqual([
+      { kind: "section", label: "All of it", index: 1, startMs: 0, endMs: DURATION },
+    ]);
   });
 
   test("without sections the first lane chart's phrases are numbered", () => {
@@ -104,8 +108,8 @@ describe("practiceSections", () => {
       }),
     );
     expect(sections).toEqual([
-      { label: "Phrase 1", startMs: 2_000, endMs: 5_000 },
-      { label: "Phrase 2", startMs: 8_000, endMs: 12_000 },
+      { kind: "phrase", label: "", index: 1, startMs: 2_000, endMs: 5_000 },
+      { kind: "phrase", label: "", index: 2, startMs: 8_000, endMs: 12_000 },
     ]);
   });
 
@@ -123,18 +127,18 @@ describe("practiceSections", () => {
       }),
     );
     expect(sections).toEqual([
-      { label: "Phrase 1", startMs: 0, endMs: 4_000 },
-      { label: "Phrase 2", startMs: 55_000, endMs: DURATION },
+      { kind: "phrase", label: "", index: 1, startMs: 0, endMs: 4_000 },
+      { kind: "phrase", label: "", index: 2, startMs: 55_000, endMs: DURATION },
     ]);
   });
 
   test("a song with neither sections nor phrases is the whole song", () => {
     expect(practiceSections(track())).toEqual([
-      { label: "Whole song", startMs: 0, endMs: DURATION },
+      { kind: "whole", label: "", index: 1, startMs: 0, endMs: DURATION },
     ]);
     // Even a one-phrase chart is still one named choice.
     expect(practiceSections(track({ charts: [chart([{ startMs: 1_000, endMs: 2_000 }])] }))).toEqual([
-      { label: "Phrase 1", startMs: 1_000, endMs: 2_000 },
+      { kind: "phrase", label: "", index: 1, startMs: 1_000, endMs: 2_000 },
     ]);
   });
 
@@ -272,5 +276,37 @@ describe("the loop boundary", () => {
     expect(sectionAt(sections, 9_999)?.label).toBe("One");
     expect(sectionAt(sections, 10_000)?.label).toBe("Two");
     expect(sectionAt(sections, DURATION)?.label).toBe("Three");
+  });
+});
+
+describe("practiceLabel", () => {
+  const t: Parameters<typeof practiceLabel>[0] = (key, vars) =>
+    translate("en", key, vars);
+
+  test("a source's own section name is content and stays as written", () => {
+    const [section] = practiceSections(
+      track({ sections: [{ timeMs: 0, name: "Chorus" }] }),
+    );
+    expect(practiceLabel(t, section!)).toBe("Chorus");
+  });
+
+  test("a stretch the game names is written in the player's language", () => {
+    const [intro, first, second] = practiceSections(
+      track({
+        sections: [
+          { timeMs: 10_000, name: "" },
+          { timeMs: 20_000, name: "" },
+        ],
+      }),
+    );
+    expect(practiceLabel(t, intro!)).toBe("Intro");
+    expect(practiceLabel(t, first!)).toBe("Section 1");
+    expect(practiceLabel(t, second!)).toBe("Section 2");
+    const [phrase] = practiceSections(
+      track({ charts: [chart([{ startMs: 1_000, endMs: 2_000 }])] }),
+    );
+    expect(practiceLabel(t, phrase!)).toBe("Phrase 1");
+    const [whole] = practiceSections(track());
+    expect(practiceLabel(t, whole!)).toBe("Whole song");
   });
 });

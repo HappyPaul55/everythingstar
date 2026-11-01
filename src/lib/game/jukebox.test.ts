@@ -58,6 +58,12 @@ describe("letterOf", () => {
     expect(letterOf("(Turn It Up)")).toBe("#");
     expect(letterOf("")).toBe("#");
   });
+
+  test("an accented letter files under the letter it is", () => {
+    expect(letterOf("Écoute")).toBe("E");
+    expect(letterOf("Ñandú")).toBe("N");
+    expect(letterOf("Ça va")).toBe("C");
+  });
 });
 
 describe("groupSongs", () => {

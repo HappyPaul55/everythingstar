@@ -154,6 +154,24 @@ const recordListeners = new Set<() => void>();
  * state, and a reader that mounts late asks the same question a reader that was
  * here all along subscribed to.
  */
+/**
+ * How many bytes a response actually is.
+ *
+ * `Content-Length` is a hint: a chunked response has none, and a host that gzips
+ * declares the compressed size. The manager used to show "0 MB" beside a 20 MB
+ * song. When the header is there it wins (no extra copy of a stem); when it is not,
+ * the body is measured on a clone.
+ */
+async function bodySize(response: Response): Promise<number> {
+  const declared = Number(response.headers.get("content-length") ?? 0);
+  if (Number.isFinite(declared) && declared > 0) return declared;
+  try {
+    return (await response.clone().blob()).size;
+  } catch {
+    return 0;
+  }
+}
+
 export function downloadState(): OfflineJobState {
   // A playlist queue is a song download that happens to know what comes next, so
   // its current song is the `busyId` the now-playing slot already watches.
@@ -604,8 +622,7 @@ export async function downloadSong(
     kind: DownloadKind,
     required: boolean,
     phase: OfflineProgress["phase"],
-  ): Promise<void> => {
-    if (urls.has(url)) {
+  ): Promise<void> => {    if (urls.has(url)) {
       done += 1;
       progress(phase);
       return;
@@ -625,11 +642,11 @@ export async function downloadSong(
         idleMs: options.idleMs,
       });
 
-      const length = Number(response.headers.get("content-length") ?? 0);
+      const length = await bodySize(response);
       await cache.put(url, response);
       urls.add(url);
       if (!alreadyCached) written.add(url);
-      if (Number.isFinite(length) && length > 0) bytes += length;
+      bytes += length;
     } catch (error) {
       if (error instanceof OfflineError) throw error;
       if (options.signal?.aborted) throw new OfflineError("cancelled");
@@ -663,11 +680,11 @@ export async function downloadSong(
       const cachedDoc = response.clone();
       const body: unknown = await response.json();
       const alreadyCached = await cache.match(url, { ignoreVary: true });
-      const length = Number(response.headers.get("content-length") ?? 0);
+      const length = await bodySize(response);
       await cache.put(url, cachedDoc);
       urls.add(url);
       if (!alreadyCached) written.add(url);
-      if (Number.isFinite(length) && length > 0) bytes += length;
+      bytes += length;
       return body;
     } catch (error) {
       if (error instanceof OfflineError) throw error;

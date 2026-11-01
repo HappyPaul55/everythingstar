@@ -100,7 +100,7 @@ export const BOARD_LIMIT = 50;
 const BEST_LIMIT = 5;
 
 /** How many of a song's most recent runs the results screen lists. */
-export const RECENT_LIMIT = 5;
+const RECENT_LIMIT = 5;
 
 /**
  * The scoring model changed from three-point grades to 50-point notes and a ×4

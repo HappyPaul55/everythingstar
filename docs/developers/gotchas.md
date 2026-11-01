@@ -1,7 +1,7 @@
 ---
 title: Gotchas
 description: "The rules that have already been broken once: the vocabulary, the track format, the parsers, the stems, the stage geometry and the local records."
-updated: "2026-10-31"
+updated: "2026-11-01"
 order: 3
 ---
 
@@ -71,7 +71,7 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   lazy dialog still mounts as
   a native `<dialog>` with `useModal`, and its opener keeps `aria-haspopup="dialog"`, so
   Escape and focus return are unchanged. **The initial `/play` graph is the number that
-  matters** — 570 KiB raw / 184 KiB gzipped across 21 files — and
+  matters** — 577 KiB raw / 186 KiB gzipped across 21 files — and
   `scripts/check-budget.ts` gates the initial raw and gzipped sizes directly, and fails
   if a translator marker appears in it. Do not lazy-load the main screens: a flash on every navigation costs more than
   the bytes it saves.
@@ -2017,6 +2017,38 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   `![…](/docs/test-output/…)`, and do not commit the folder. The Astro dev toolbar
   is disabled in `astro.config.mjs` for the same reason: it is a floating overlay
   at the foot of every page, and the captures run against the dev server.
+- **A sound that never answers must not hold the run.** `StageClock` waits for a
+  registered source while it is buffering — right for a moment, fatal for a run. A
+  folder whose every stem failed and a refused YouTube player both used to leave the
+  playhead at 0:00 for ever, with no message and no results. After
+  `SOURCE_STALL_MS` (1.5 s) the **frame clock** takes over, the run ends normally,
+  and the stage says the sound is gone (`StageNotice`). The source stays registered,
+  so a stem that arrives late becomes the clock again. Any new clock source needs the
+  same answer to "what if it never speaks?".
+- **A failed read is not an empty answer.** The library's trim compares the index
+  with the cache store's keys. Folding a failed `getAllKeys` into `[]` made every
+  record look like an orphan, and one transient IndexedDB error could delete the
+  whole 48 MB cache. `keysIn` returns `null` and the trim does nothing. Do not give a
+  "nothing" and a "could not ask" the same value.
+- **A `200` is not a document.** The offline worker keeps a saved document fresh from
+  the network, and a captive portal answers `200 text/html` while a provider's error
+  is a `5xx`. Only a response that is JSON (by content type, or by parsing a clone)
+  may replace a saved copy; anything else serves the copy the player already has.
+  Whether a URL *is* a document comes from the cached response's content type — a
+  service may answer `/search?q=…` — with the `.json` extension only as a fallback.
+- **Every fetched number has a ceiling.** A note at `1e12` ms is a song that never
+  ends and a sustain held for the session; a `Math.min(...notes)` over a large
+  karaoke chart is a `RangeError` that drops the song silently. A note past six hours
+  is dropped and named, a hold over ten minutes is clamped, and a range is found with
+  `minMax` rather than a spread.
+- **A verdict belongs to every player on the note.** Two singers sharing one bar get
+  their own verdicts; the roll draws `is-mixed` rather than letting the first singer
+  speak for both, and the melody meter never rewinds `atMs` to take a verdict (that
+  drained the same gap twice and made a singer's gauge fall on a hit).
+- **A take belongs to the pane it was armed on.** Changing panes mid-take used to
+  keep recording and then convert the events against the new chart's instrument and
+  columns. The pane change ends the take where it was played; the grid is part of the
+  undo snapshot, because every exported tick is measured from the BPM.
 - **This repo has no server, and must not grow one.** `wrangler.jsonc` is
   assets-only: no `main`, no Worker script, no `/api/*` and no bindings.
   Everything the game reads at runtime is fetched by the browser from a URL it

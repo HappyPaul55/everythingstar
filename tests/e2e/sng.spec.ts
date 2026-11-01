@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./base";
 import {
   SNG_SONG_TITLE,
   SONG_ARTIST,

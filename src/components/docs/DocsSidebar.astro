@@ -41,7 +41,7 @@ const pages = groups.find((group) => group.section === section)?.docs ?? [];
         pages.map((page) => (
           <li>
             <a
-              href={docHref(page.id)}
+              href={docHref(page.id, locale)}
               aria-current={page.id === current ? "page" : undefined}
             >
               {page.data.title}

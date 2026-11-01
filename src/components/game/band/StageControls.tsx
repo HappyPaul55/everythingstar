@@ -30,6 +30,7 @@ import {
   type ControlPlan,
 } from "../../../lib/game/controls/plan";
 import type { Track } from "../../../lib/game/track";
+import { isRunScreen, type Screen } from "../../../lib/game/screens";
 import { useMicInput, type MicInput } from "./useMicInput";
 import { useMidiInput, type MidiInput, type MidiMessage } from "./useMidiInput";
 import { useClock } from "./StageClock";
@@ -168,10 +169,12 @@ const StageControlsContext = createContext<StageControls | null>(null);
 interface Props {
   setup: BandSetup;
   track: Track;
+  /** The screen, so a run's leftovers are dropped when it ends. */
+  screen: Screen;
   children: ReactNode;
 }
 
-export function StageControlsProvider({ setup, track, children }: Props) {
+export function StageControlsProvider({ setup, track, screen, children }: Props) {
   const clock = useClock();
   const [pads, setPads] = useState<PadInfo[]>([]);
   const [learningDevice, setLearningDevice] = useState<LearnDevice | null>(null);
@@ -221,6 +224,14 @@ export function StageControlsProvider({ setup, track, children }: Props) {
     if (queue) queue.push(event);
     else queues.current.set(seat, [event]);
   }, []);
+
+  // A run's input is drained on its own frames. Off the stage nothing drains, and
+  // the plan is still built from the band: every arrow and bound letter pressed in
+  // the jukebox used to sit in a seat's queue until the next run applied it. A
+  // release left over from minutes ago is not a press anybody made.
+  useEffect(() => {
+    if (!isRunScreen(screen)) queues.current.clear();
+  }, [screen]);
 
   /**
    * Let every hand go, because the browser has stopped reporting on it.

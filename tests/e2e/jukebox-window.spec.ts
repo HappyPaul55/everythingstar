@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./base";
 import {
   BIG_SONG_COUNT,
   BIG_SONG_TITLES,

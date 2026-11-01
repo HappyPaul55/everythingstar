@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./base";
 import {
   FIXTURE_NOTE_COUNT,
   SNG_SONG_TITLE,
@@ -361,13 +361,19 @@ test("crossing the phone breakpoint on the band screen keeps its song", async ({
   await page.getByRole("button", { name: "Next: your band" }).click();
   const band = page.getByRole("heading", { name: "Who is playing?" });
   await expect(band).toBeVisible();
+  // The band's own line names the song; that is the thing the breakpoint must not
+  // take away, and the old test only checked that a heading was still on screen.
+  const songLine = page.locator(".screen--band .screen__lede");
+  await expect(songLine).toContainText(SONG_TITLE);
 
   // The phone's jukebox is the one screen that wants no default song. Crossing
   // the breakpoint on the band screen must not take the band's song away.
   await page.setViewportSize({ width: 375, height: 720 });
   await expect(band).toBeVisible();
+  await expect(songLine).toContainText(SONG_TITLE);
   await page.setViewportSize({ width: 1280, height: 720 });
   await expect(band).toBeVisible();
+  await expect(songLine).toContainText(SONG_TITLE);
 
   expect(leaked, "unexpected external requests").toEqual([]);
 });

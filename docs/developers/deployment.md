@@ -1,7 +1,7 @@
 ---
 title: Deployment and releases
 description: "How a build reaches Cloudflare, why GitHub records the deployment, how the live site is watched, and what a release tag has to agree with."
-updated: "2026-10-31"
+updated: "2026-11-01"
 order: 16
 ---
 
@@ -81,6 +81,13 @@ repository and nothing else, and it gates nothing.
 **`main` takes pull requests only**, with `verify` and `e2e` green. A ruleset enforces
 it, and a direct push is refused even for the maintainer. A check renamed in `ci.yml`
 must be renamed in the ruleset too, or merges block.
+
+`verify` is the aggregate job, and it requires `unit`, `package`, `workflows` and — on
+a pull request — `review`. The security and workflow-lint jobs were outside both
+required aggregates, so a high-severity dependency or a broken workflow file could fail
+and still merge green; the aggregate now says no to that. `review` is a pull-request job
+and is legitimately *skipped* on `main`, which the aggregate allows; a failure is never
+allowed.
 
 ## Versions and releases
 

@@ -356,10 +356,20 @@ export async function installRoutes(
  *
  * The returned array fills as the page runs; a spec checks it after the loop so
  * an unexpected host (YouTube, a font CDN, a new playlist) is a failure rather
- * than a silent network dependency.
+ * than a silent network dependency. The list is also kept against the context, so
+ * the suite's automatic fixture (`base.ts`) checks it even when a spec forgets to.
  */
+const leakLists = new WeakMap<BrowserContext, string[]>();
+
+/** What `installFixtures` recorded for this context, or undefined when unused. */
+export function leaksFor(context: BrowserContext): string[] | undefined {
+  return leakLists.get(context);
+}
+
 export async function installFixtures(context: BrowserContext): Promise<string[]> {
-  return installRoutes(context, RESPONSES);
+  const leaked = await installRoutes(context, RESPONSES);
+  leakLists.set(context, leaked);
+  return leaked;
 }
 
 /**

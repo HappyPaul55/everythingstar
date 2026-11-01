@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./base";
 import { UI_BUTTON } from "../../src/lib/game/controls/uiPad";
 import { SONG_TITLE, disableFullscreen, installFixtures } from "./fixture";
 import { enterGame, installGamepad, pressPadButton, waitForPlaying } from "./helpers";

@@ -6,6 +6,7 @@ import {
   docSectionOf,
   resolveDocLink,
 } from "./paths";
+import type { Locale } from "../../i18n/locales";
 
 describe("docHref", () => {
   test("the hub is /docs", () => {
@@ -21,6 +22,15 @@ describe("docHref", () => {
   test("a notice keeps a site-root URL", () => {
     expect(docHref("other/privacy")).toBe("/privacy");
     expect(docHref("other/credits")).toBe("/credits");
+  });
+
+  test("a page in another locale is prefixed, like every other internal link", () => {
+    // Only English ships, so the second locale is a cast: the arithmetic is the
+    // point, and it is the same `localePath` every link uses.
+    const de = "de" as Locale;
+    expect(docHref("players/songs", de)).toBe("/de/docs/players/songs");
+    expect(docHref("README", de)).toBe("/de/docs");
+    expect(docHref("other/privacy", de)).toBe("/de/privacy");
   });
 });
 

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./base";
 import {
   FIXTURE_NOTE_COUNT,
   disableFullscreen,

@@ -1,7 +1,7 @@
 ---
 title: Charter
 description: "The /charter island: what it loads, how a take becomes notes, why eight charts are visible at once, and what its Download button writes."
-updated: "2026-10-31"
+updated: "2026-11-01"
 order: 21
 ---
 

@@ -21,6 +21,16 @@ const UNREACHABLE_SENTENCE =
   "the host could not be reached, or it does not allow this page to read it (CORS)";
 
 /**
+ * A page that is not the document it promised — a hotel's sign-in screen, a host's
+ * incident page, an HTML 404.
+ *
+ * V8's own `Unexpected token '<', "<!DOCTYPE "…` names the internals and quotes a
+ * piece of somebody else's page; none of that helps a player, and the fix is the
+ * same sentence.
+ */
+const NOT_A_DOCUMENT = "that address answered with something that is not a playlist";
+
+/**
  * The one sentence for a request that never reached its host, or null when this is
  * a failure that already says what it was.
  *
@@ -35,6 +45,7 @@ export function unreachableMessage(error: unknown): string | null {
 
 export function errorMessage(error: unknown, fallback: string): string {
   if (!(error instanceof Error)) return fallback;
+  if (error instanceof SyntaxError) return NOT_A_DOCUMENT;
   return unreachableMessage(error) ?? error.message;
 }
 

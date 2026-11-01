@@ -12,6 +12,8 @@
  */
 
 import { fileURLToPath } from "node:url";
+import { localePath } from "../../i18n/paths";
+import { DEFAULT_LOCALE, type Locale } from "../../i18n/locales";
 
 /** The four audiences. The folder is the section, so the two cannot drift. */
 export const DOC_SECTIONS = ["players", "charters", "developers", "other"] as const;
@@ -41,10 +43,14 @@ export function docSectionOf(id: string): DocSection | null {
  * bearing; everything else is under `/docs/<section>/…`, so the audience is in
  * the address.
  */
-export function docHref(id: string): string {
-  if (id === DOC_HUB) return "/docs";
-  if (id.startsWith("other/")) return `/${id.slice("other/".length)}`;
-  return `/docs/${id}`;
+export function docHref(id: string, locale: Locale = DEFAULT_LOCALE): string {
+  const base =
+    id === DOC_HUB
+      ? "/docs"
+      : id.startsWith("other/")
+        ? `/${id.slice("other/".length)}`
+        : `/docs/${id}`;
+  return localePath(locale, base);
 }
 
 /** The document id for a file under `docs/`, or null for anything else. */

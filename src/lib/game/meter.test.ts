@@ -113,7 +113,6 @@ describe("both judging engines use the same meter", () => {
   });
 
   test("two frames over one long note drain only the time after it", () => {
-    const due = Math.max(SING_GRACE_MS, HIT_WINDOW_MS);
     const at = 4000;
     const long: MelodyNote = { ...note, timeMs: at, lengthMs: 1000 };
     const end = at + 1000 + SING_GRACE_MS;

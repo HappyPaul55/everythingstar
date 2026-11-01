@@ -1,7 +1,7 @@
 ---
 title: Libraries, scores and local records
 description: "How the library is cached, fetched and saved, what a playlist may reach, and the four records a player owns on this device."
-updated: "2026-10-28"
+updated: "2026-11-01"
 order: 4
 ---
 

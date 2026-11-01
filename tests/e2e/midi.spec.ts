@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./base";
 import {
   FIXTURE_NOTE_COUNT,
   SONG_TITLE,

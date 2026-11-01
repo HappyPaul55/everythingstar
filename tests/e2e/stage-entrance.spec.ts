@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page } from "./base";
 import { SONG_TITLE, disableFullscreen, installFixtures } from "./fixture";
 import { enterGame, openBand, startRun, waitForPlaying } from "./helpers";
 
@@ -50,8 +50,23 @@ test("the room and the score arrive before the highways and the words", async ({
   await expect(page.locator(".band__stage")).toBeFocused();
 
   // The quiet beat: the stage, the progress bar and the score rail are up; the
-  // highway is still translated below the panel and clipped there.
-  await page.waitForTimeout(100);
+  // highway is still translated below the panel and clipped there. Polled rather
+  // than slept through: the state holds for the entrance's lead, and a fixed wait
+  // is a race under a loaded runner.
+  await expect
+    .poll(
+      async () => {
+        const sample = await box(page);
+        return (
+          sample.screen === "countdown" &&
+          sample.panel !== null &&
+          sample.highway !== null &&
+          sample.highway.top >= sample.panel.bottom - 1
+        );
+      },
+      { timeout: 1_000 },
+    )
+    .toBe(true);
   const lead = await box(page);
   expect(lead.screen).toBe("countdown");
   expect(lead.stage).not.toBeNull();
@@ -68,7 +83,20 @@ test("the room and the score arrive before the highways and the words", async ({
   expect(lead.highway.top).toBeGreaterThanOrEqual(lead.panel.bottom - 1);
 
   // The slide has arrived (lead 1.2s + slide 0.65s), and the song has not started.
-  await page.waitForTimeout(2_200);
+  await expect
+    .poll(
+      async () => {
+        const sample = await box(page);
+        if (!sample.panel || !sample.highway) return false;
+        return (
+          sample.screen === "countdown" &&
+          sample.highway.top < sample.panel.bottom &&
+          sample.highway.top >= sample.panel.top
+        );
+      },
+      { timeout: 8_000 },
+    )
+    .toBe(true);
   const arrived = await box(page);
   expect(arrived.screen).toBe("countdown");
   expect(arrived.panel).not.toBeNull();

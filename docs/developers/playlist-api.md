@@ -1,7 +1,7 @@
 ---
 title: Playlist API
 description: "The wire contract a playlist library or an on-demand search endpoint implements: the three documents, URL resolution, CORS, timing, and an acceptance checklist."
-updated: "2026-10-31"
+updated: "2026-11-01"
 order: 7
 ---
 

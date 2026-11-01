@@ -176,17 +176,30 @@ jobs:
   # the ruleset keeps one stable check while the jobs beneath it change.
   verify:
     name: verify
-    needs: [unit, package]
+    needs: [unit, package, workflows, review]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Require the unit and package jobs
+      - name: Require the gates that must pass
         run: |
           if [ "${{ needs.unit.result }}" != "success" ] || [ "${{ needs.package.result }}" != "success" ]; then
             echo "unit=${{ needs.unit.result }} package=${{ needs.package.result }}"
             exit 1
           fi
+          if [ "${{ needs.workflows.result }}" != "success" ]; then
+            echo "workflows=${{ needs.workflows.result }}"
+            exit 1
+          fi
+          # The security review is a pull-request job: skipped on main is fine,
+          # anything else is not.
+          case "${{ needs.review.result }}" in
+            success | skipped) ;;
+            *)
+              echo "review=${{ needs.review.result }}"
+              exit 1
+              ;;
+          esac
 
   # The required `e2e` check is this aggregate, not the matrix job's own name.
   e2e:

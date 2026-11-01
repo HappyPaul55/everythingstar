@@ -71,6 +71,8 @@ const DownloadsDialog = lazy(() =>
 interface Props {
   song: Song | null;
   phone: boolean;
+  /** Entered from a run, so the chosen song is one that was just played. */
+  returning?: boolean;
   library: Library;
   onSong: (id: string) => void;
   onNext: () => void;
@@ -87,6 +89,7 @@ interface Props {
 export function Songs({
   song,
   phone,
+  returning = false,
   library,
   onSong,
   onNext,
@@ -168,7 +171,8 @@ export function Songs({
   /** Empty and staying empty: a search in flight is not "nothing to play". */
   const nothing =
     ready && !library.loading && library.songs.length === 0 && !searching && !answered;
-  const visibleSong = attract ? song : phone && !phonePicked ? null : song;
+  const visibleSong =
+    attract || returning || !phone || phonePicked ? song : null;
 
   /**
    * The list's own orchestration: measuring a heading and a row, the mounted
@@ -321,9 +325,15 @@ export function Songs({
         type="button"
         className="band-btn band-btn--primary band-btn--big jukebox__next"
         aria-label={t("screen.nextBand")}
-        disabled={!song}
-        data-sound="select"
-        onClick={onNext}
+        // A button that does nothing is still pressed: `aria-disabled` keeps it
+        // focusable and says "not now" when a player tries, where `disabled` takes
+        // the control out of the walk and answers with silence.
+        aria-disabled={!song}
+        data-sound={song ? "select" : "refuse"}
+        onClick={() => {
+          if (!song) return;
+          onNext();
+        }}
       >
         <span className="jukebox__next-full">{t("screen.nextBand")}</span>
         <span className="jukebox__next-compact" aria-hidden="true">

@@ -112,10 +112,15 @@ export function Welcome({ onEnter, focus = true }: Props) {
         >
           <span ref={prefixWord} className="welcome__word welcome__word--prefix">
             {/* The sizer is the width of the whole name: it holds the space so a
-                part's word swapped in on hover cannot move the Star beside it. */}
-            <span className="welcome__word-sizer" aria-hidden="true">
-              Everything
-            </span>
+                part's word swapped in on hover cannot move the Star beside it.
+                Its text is drawn by CSS, not carried in the DOM: copied or
+                extracted, the wordmark must read "EverythingStar", not
+                "EverythingEverythingStar". */}
+            <span
+              className="welcome__word-sizer"
+              data-text="Everything"
+              aria-hidden="true"
+            />
             <span className="welcome__word-live">{word ? t(word) : "Everything"}</span>
           </span>
           <wbr />

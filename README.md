@@ -15,7 +15,7 @@ free, no account, no cookies, no trackers, nothing to install. Install it from t
 browser's menu if you would rather have it on your home screen, with its own icon and
 offline play.
 
-![The stage: a guitar highway on a graffiti-arcade backdrop.](docs/screenshots/desktop-guitar.webp)
+![The stage: a guitar highway on a graffiti-arcade backdrop.](https://everythingstar.happypaul55.com/docs/test-output/guitar-highway-desktop.webp)
 
 ## What it is
 
@@ -40,9 +40,9 @@ offline play.
 
 | | |
 | --- | --- |
-| ![Karaoke: a piano roll with the words sliding under its notes.](docs/screenshots/desktop-vocals.webp) | ![The jukebox: an A–Z index, the song list and the now-playing panel.](docs/screenshots/desktop-jukebox.webp) |
+| ![Karaoke: a piano roll with the words sliding under its notes.](https://everythingstar.happypaul55.com/docs/test-output/singer-desktop.webp) | ![The jukebox: an A–Z index, the song list and the now-playing panel.](https://everythingstar.happypaul55.com/docs/test-output/jukebox-desktop.webp) |
 | **Vocals.** A piano roll with the words under its notes, judged on the pitch held across each note. | **The jukebox.** A list you navigate: A–Z index, search, duration and what each song offers. |
-| ![The band screen: one character box per player.](docs/screenshots/desktop-band-screen.webp) | ![A phone playing a guitar highway, the score above it.](docs/screenshots/mobile-guitar.webp) |
+| ![The band screen: one character box per player.](https://everythingstar.happypaul55.com/docs/test-output/band-screen-desktop.webp) | ![A phone playing a guitar highway, the score above it.](https://everythingstar.happypaul55.com/docs/test-output/phone-pads-mobile.webp) |
 | **The band.** One box per player: what they take, how hard, and the controller in their hands. | **On a phone.** The pads are the controls; a lone highway takes the whole width. |
 
 ## Documentation

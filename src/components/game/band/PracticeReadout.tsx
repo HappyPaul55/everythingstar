@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useT } from "../../../i18n/react";
 import {
+  practiceLabel,
   practiceSections,
   sectionAt,
   type PracticePlan,
@@ -24,7 +25,7 @@ export function PracticeReadout({ plan, track }: { plan: PracticePlan; track: Tr
     <p className="practice-readout" role="status">
       <span className="practice-readout__tag">{t("practice.label")}</span>
       <span className="practice-readout__section">
-        {section?.label ?? t("practice.wholeSong")}
+        {section ? practiceLabel(t, section) : t("practice.wholeSong")}
       </span>
       <span>{t("practice.speed", { speed: Math.round(plan.speed * 100) })}</span>
       <span>{t(plan.loop ? "practice.loopOn" : "practice.loopOff")}</span>

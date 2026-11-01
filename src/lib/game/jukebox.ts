@@ -25,9 +25,21 @@ export const INDEX_LETTERS: string[] = [
   ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""),
 ];
 
-/** Which letter a title files under. Anything that is not a letter is "#". */
+/**
+ * Which letter a title files under.
+ *
+ * The first character is folded first: `Écoute` and `Café` file under E and C, the
+ * same rule the search uses, rather than under `#` while the index promises
+ * accents are folded. A digit, a symbol or a script this index has no letter for
+ * is `#`.
+ */
 export function letterOf(title: string): string {
-  const first = title.trim().charAt(0).toUpperCase();
+  const first = title
+    .trim()
+    .normalize("NFD")
+    .replace(/\p{M}+/gu, "")
+    .charAt(0)
+    .toUpperCase();
   return first >= "A" && first <= "Z" ? first : "#";
 }
 

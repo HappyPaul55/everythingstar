@@ -54,3 +54,7 @@ public/docs/test-output/
 
 # Local binaries / downloads (never part of the site)
 *.exe
+
+# Captured by the e2e suite; the README links the deployed copies
+docs/screenshots/
+.docshots/

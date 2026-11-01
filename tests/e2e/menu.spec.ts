@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./base";
 import { disableFullscreen, installFixtures } from "./fixture";
 import { enterGame } from "./helpers";
 

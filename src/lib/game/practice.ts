@@ -19,6 +19,7 @@
  */
 
 import type { Track } from "./track";
+import type { Translate } from "../../i18n";
 import { clamp } from "./math";
 
 /** The slowest a practice run may go. */
@@ -50,9 +51,20 @@ export interface PracticePlan {
   loop: boolean;
 }
 
+/** What a stretch is, so its name can be written in the player's language. */
+export type PracticeKind = "intro" | "section" | "phrase" | "whole";
+
 /** One named stretch a player can choose to practise. */
 export interface PracticeSection {
+  kind: PracticeKind;
+  /**
+   * The source's own name for a section — a song's "Chorus" is content and stays
+   * as it is. Empty for a stretch the game names itself (an intro, a numbered
+   * phrase, the whole song), which `practiceLabel` writes in the player's language.
+   */
   label: string;
+  /** Its place among stretches of its own kind, 1-based, for a numbered name. */
+  index: number;
   startMs: number;
   endMs: number;
 }
@@ -154,14 +166,16 @@ export function practiceSections(track: PracticeTrack): PracticeSection[] {
         // A section marker outside the song is clamped to the song, and a name a
         // source left empty is still a choice worth drawing.
         timeMs: clampTime(section.timeMs, 0, duration),
-        label: section.name.trim() || `Section ${index + 1}`,
+        label: section.name.trim(),
         order: index,
       }))
       .filter((section) => section.timeMs < duration)
       .sort((a, b) => a.timeMs - b.timeMs || a.order - b.order);
     const spans = starts
       .map((section, index) => ({
+        kind: "section" as const,
         label: section.label,
+        index: index + 1,
         startMs: section.timeMs,
         endMs: index + 1 < starts.length ? starts[index + 1].timeMs : duration,
       }))
@@ -170,7 +184,10 @@ export function practiceSections(track: PracticeTrack): PracticeSection[] {
       // The first marker can be anywhere: a bar in, or half a minute in. Either
       // way the song before it is a stretch somebody may want to practise.
       return spans[0].startMs > 0
-        ? [{ label: "Intro", startMs: 0, endMs: spans[0].startMs }, ...spans]
+        ? [
+            { kind: "intro", label: "", index: 1, startMs: 0, endMs: spans[0].startMs },
+            ...spans,
+          ]
         : spans;
     }
   }
@@ -187,14 +204,31 @@ export function practiceSections(track: PracticeTrack): PracticeSection[] {
       .sort((a, b) => a.startMs - b.startMs || a.order - b.order)
       // Numbered after the empty ones are dropped, so the choices read 1..n.
       .map(({ startMs, endMs }, index) => ({
-        label: `Phrase ${index + 1}`,
+        kind: "phrase" as const,
+        label: "",
+        index: index + 1,
         startMs,
         endMs,
       }));
     if (spans.length > 0) return spans;
   }
 
-  return [{ label: "Whole song", startMs: 0, endMs: duration }];
+  return [{ kind: "whole", label: "", index: 1, startMs: 0, endMs: duration }];
+}
+
+/** What a stretch is called, in the player's language; a named section keeps its name. */
+export function practiceLabel(t: Translate, section: PracticeSection): string {
+  if (section.kind === "section") {
+    return section.label || t("practice.sectionN", { n: section.index });
+  }
+  switch (section.kind) {
+    case "intro":
+      return t("practice.intro");
+    case "phrase":
+      return t("practice.phrase", { n: section.index });
+    case "whole":
+      return t("practice.wholeSong");
+  }
 }
 
 /**

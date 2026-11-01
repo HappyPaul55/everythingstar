@@ -22,7 +22,7 @@ function I18nProvider({
 }
 
 /** The locale the surrounding island was given. */
-function useLocale(): Locale {
+export function useLocale(): Locale {
   return useContext(LocaleContext);
 }
 

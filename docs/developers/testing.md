@@ -1,7 +1,7 @@
 ---
 title: Testing
 description: "The gates a change has to pass: the unit suite, the browser suite and its rule, the documentation captures, the build gates, and what only a real browser can prove."
-updated: "2026-10-31"
+updated: "2026-11-01"
 order: 13
 ---
 
@@ -75,9 +75,9 @@ out of `astro check`, and the test config includes them with the runner's types.
   formats agree, and every root-absolute URL its entry page names is inside it. See
   [Deployment and releases](deployment.md#the-release-archives).
 
-The budget was measured on 2026-10-31: 697 KiB of `_astro` JS, an initial graph of
-570 KiB raw / 184 KiB gzipped across 21 files, 17.8 MiB in `dist/` and 8.8 MiB of
-audio. The caps sit just above those numbers — 700 KiB, 572 KiB, 190 KiB, 20 MiB,
+The budget was measured on 2026-11-01: 705 KiB of `_astro` JS, an initial graph of
+577 KiB raw / 186 KiB gzipped across 21 files, 17.8 MiB in `dist/` and 8.8 MiB of
+audio. The caps sit just above those numbers — 710 KiB, 580 KiB, 190 KiB, 20 MiB,
 10 MiB. The **whole-build cap is the one that keeps moving**, raised when the
 documentation landed and again for its pictures: the [note-types page](../charters/note-types.md)
 in charters, then the screens across the loop, the players and the charter, each
@@ -107,7 +107,10 @@ timestamp, a real browser API. Static HTML and build artifacts belong to
 
 The tests are hermetic. `tests/e2e/fixture.ts` answers the seeded FOSS playlist, its
 song document and its chart with a tiny four-second fixture by routing the URLs the
-game already asks for; every other external request is aborted and recorded. Use
+game already asks for; every other external request is aborted and recorded. The
+suite's `test` (`tests/e2e/base.ts`) checks that record after **every** test as an
+automatic fixture, so a spec that forgets to keep the returned list still fails on an
+unexpected host — five specs used to abort one silently and pass. Use
 `context.route` (not an app hook) for any new network dependency, and keep each test on
 a fresh context so it starts at the welcome. The test browser refuses native
 fullscreen, so Escape reaches the game rather than the browser's own way out.
@@ -121,6 +124,12 @@ with `[description](shot:<id>)`. The `desktop` and `mobile` projects in
 project, `<id>-<variant>.webp`, into `public/docs/test-output/`, which is ignored by
 Git. `bun run docs:shots` is the focused form: it clears the images and runs only those
 two projects. `bun run build` runs it before Astro for a local full build.
+
+The **README** cannot use the `shot:` rewrite — GitHub does not run it — so its images
+link the deployed copies at
+`https://everythingstar.happypaul55.com/docs/test-output/<id>-<variant>.webp`.
+`src/lib/docs/readme.test.ts` holds that to the same shots the specs declare, and
+refuses a link back into the old committed `docs/screenshots/` folder.
 
 CI splits the two halves. The **build** runs first and writes the `<img>` tags for the
 variants `docshots.config.ts` promises, even before a WebP exists. The e2e shards then

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./base";
 import { disableFullscreen, installFixtures } from "./fixture";
 
 /** Each part's pill, and the word it puts in the wordmark's place. */

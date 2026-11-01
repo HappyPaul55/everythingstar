@@ -1,7 +1,7 @@
 ---
 title: Architecture
 description: "The loop, the screen machine and the one stage: how EverythingStar is laid out, what is mounted for every screen, and where the seams are."
-updated: "2026-10-31"
+updated: "2026-11-01"
 order: 1
 ---
 
@@ -162,8 +162,16 @@ fallback, not a stop an ordinary run makes.
   There is no 3-2-1 and no count tick; the song starts when the hype and the slide
   have played out **and every stem says it can play through** — the clock does not
   begin counting against silence.
-- **Pause** — Escape, Start, or the pause button: resume, start again, practise a
-  stretch, or leave. A quiet crowd sits under it.
+- **Pause** — Escape, Start, the pause button, or the stage's own chip on a touch
+  screen: resume, start again, practise a stretch, or leave. A quiet crowd sits under
+  it. A **phone** has no Escape key, so a 44 px **Pause** chip sits in the stage
+  corner whenever `(pointer: coarse)` and a song is playing; without it a touch player
+  could only leave a song by finishing it.
+- **The sound can be lost without the run being lost.** A source that is registered
+  but never answers (every stem failed, a refused video) no longer holds the playhead
+  at 0:00: after `SOURCE_STALL_MS` the frame clock takes over, the run plays and ends
+  normally, and a line under the progress bar says there is no sound. The picture lag,
+  the note speed and the judging are unchanged.
 - **Results** — the band score, its **stars and average multiplier**, and how the
   run went (the notes hit of what was judged, the accuracy, the best combo), then
   **a card per player** in band order — what they took, at what level, their score,
@@ -270,8 +278,8 @@ player who opens the JSON library and never presses Calibrate, opens Downloads, 
 a link or uses `?dev=1` does not pay for any of it.
 
 That matters because `/play` is the page the game starts on: the initial JavaScript
-graph is **570 KiB raw / 184 KiB gzipped across 21 files**. That is the first download
-only; every `_astro` JavaScript chunk in the build totals **697 KiB**, because the lazy
+graph is **577 KiB raw / 186 KiB gzipped across 21 files**. That is the first download
+only; every `_astro` JavaScript chunk in the build totals **705 KiB**, because the lazy
 chunks still ship — they are just not requested first. `scripts/check-budget.ts` walks
 `play.html`'s initial island graph, gates the initial raw and gzipped sizes directly,
 and fails if a translator marker leaks into it, so the split cannot quietly regress.

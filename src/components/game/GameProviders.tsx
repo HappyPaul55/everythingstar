@@ -84,7 +84,7 @@ export function GameProviders({
       >
         <SongAudioStatusProvider preload={screen === "band" || screen === "loading"}>
           <StageClockProvider durationMs={track.durationMs}>
-            <StageControlsProvider setup={setup} track={track}>
+            <StageControlsProvider setup={setup} track={track} screen={screen}>
               <SongProvider track={track} seed={seed} doc={doc}>
                 <RunBoardProvider>
                   <PartAudioProvider>{children}</PartAudioProvider>

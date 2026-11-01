@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./base";
 import { DUET_TITLE, WORDS_TITLE, installKeysFixtures } from "./docs-charts";
 import { disableFullscreen } from "./fixture";
 import { enterGame, waitForPlaying, waitForStage } from "./helpers";
@@ -39,9 +39,8 @@ test("a pitched song puts the words on the roll's own layer, sliding with the ba
   expect(await page.locator(".keys__line.is-part-0").count()).toBeGreaterThan(0);
   expect(await page.locator(".keys__line.is-part-1").count()).toBeGreaterThan(0);
 
-  // Give the first line its own moment, so the window carries lines two and
-  // three on screen at once.
-  await page.waitForTimeout(2_500);
+  // The window carries the lines ahead of the playhead, and the assertions below
+  // wait for them; a fixed sleep here only raced the runner.
 
   // A line both parts sing appears in both rows, and a line one part sings is
   // on that part's row alone.
@@ -80,7 +79,11 @@ test("a pitched song puts the words on the roll's own layer, sliding with the ba
     before.notesBottom,
   );
 
-  await page.waitForTimeout(700);
+  // The roll moves on the stage's clock; wait for the transform to change rather
+  // than for a number of milliseconds that a loaded runner may not have moved in.
+  await expect
+    .poll(async () => (await geometry()).track, { timeout: 3_000 })
+    .not.toBe(before.track);
   const after = await geometry();
   expect(after.track).not.toBe(before.track);
   const lineMove = before.lineLeft - after.lineLeft;
