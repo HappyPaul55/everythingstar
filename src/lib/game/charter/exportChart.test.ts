@@ -95,16 +95,20 @@ describe("writing a .chart", () => {
     expect(written.problems[0]).toContain("dance");
   });
 
-  test("two charts of one track do not overwrite each other", () => {
+  test("a roleless guitar and a lead cannot both be the file's Single", () => {
     const written = writeChart({
       title: "Song",
       artist: "Artist",
       charts: [chart(), chart({ role: "lead", key: "guitar:lead:expert" })],
       grid: DEFAULT_GRID,
     });
+    // `.chart` has one lead-guitar word: `DoubleGuitar` is a second lead, not a
+    // plain guitar, so writing it made a file that read back as one chart.
     expect(written.text).toContain("[ExpertSingle]");
-    expect(written.text).toContain("[ExpertDoubleGuitar]");
-    expect(written.problems).toEqual([]);
+    expect(written.text).not.toContain("DoubleGuitar");
+    expect(written.problems).toEqual([
+      "guitar:lead:expert: a second ExpertSingle cannot share the file",
+    ]);
   });
 
   test("a slide is named and dropped, and its notes still export", () => {

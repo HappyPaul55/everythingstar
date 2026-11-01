@@ -82,6 +82,25 @@ export interface ControlPlan {
 }
 
 /**
+ * The seats a lost pad was playing.
+ *
+ * A pad unplugged mid-hold sends no release, so the poll has to let that hand go
+ * — and **only** that hand: releasing every seat drops a sustain on a keyboard or
+ * another pad, and the next poll re-presses whatever a surviving pad still holds.
+ */
+export function seatsOnLostPads(
+  seats: readonly SeatControl[],
+  lost: readonly number[],
+): SeatControl[] {
+  return seats.filter(
+    (seat) =>
+      seat.channel === "lanes" &&
+      seat.controller.on === "pad" &&
+      lost.includes(seat.controller.index),
+  );
+}
+
+/**
  * The controller a seat can actually use, or `undefined` when the one it names is
  * not a controller for what it plays.
  *

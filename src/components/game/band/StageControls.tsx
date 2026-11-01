@@ -13,7 +13,6 @@ import type { ActionEvent } from "../../../lib/game/input";
 import type { Controller } from "../../../lib/game/controls/layout";
 import { isTypingKey, keyCode, midiCcDown, type MidiControl } from "../../../lib/game/controls/layout";
 import {
-  droppedKeys,
   padAxisEdges,
   padAxisState,
   padEdges,
@@ -26,6 +25,7 @@ import {
   midiAction,
   padAction,
   padAxisAction,
+  seatsOnLostPads,
   type Conflict,
   type ControlPlan,
 } from "../../../lib/game/controls/plan";
@@ -257,8 +257,16 @@ export function StageControlsProvider({ setup, track, screen, children }: Props)
         });
       }
     }
-    padButtons.current.clear();
-    padAxes.current.clear();
+    // Latch what each pad is still holding instead of forgetting it. Clearing the
+    // map would make every button a player is still physically holding look like a
+    // fresh press on the next poll — a held strum would be a second strum — and the
+    // synthetic release above is the only release this hand owes.
+    const pads = navigator.getGamepads?.() ?? [];
+    for (const pad of pads) {
+      if (!pad) continue;
+      padButtons.current.set(pad.index, pad.buttons.map((button) => button.pressed));
+      padAxes.current.set(pad.index, padAxisState(pad.axes, undefined));
+    }
     ccHeld.current.clear();
     for (const handler of fingersUp.current) handler();
   }, [push]);
@@ -482,16 +490,18 @@ export function StageControlsProvider({ setup, track, screen, children }: Props)
       // a pad that reconnects at the same index is not diffed against the old
       // pad's last look. An empty poll therefore forgets every pad.
       const connected = live.map((pad) => pad.index);
-      const gone = [
-        ...droppedKeys(padButtons.current, connected),
-        ...droppedKeys(padAxes.current, connected),
-      ];
+      // A pad that left may be the one a seat was holding. Only that seat is let
+      // go: releasing every seat dropped a sustain on a keyboard or another pad,
+      // and the next look then re-pressed whatever a surviving pad was still
+      // holding.
+      const lost = [...padButtons.current.keys()].filter(
+        (index) => !connected.includes(index),
+      );
       retainConnected(padButtons.current, connected);
       retainConnected(padAxes.current, connected);
-      // A pad unplugged mid-hold sends no release — it has nothing left to send —
-      // and a fret left down is a free sustain and a hopo chain that never closes.
-      // The poll sees it go, so the poll is where the hand is let go.
-      if (gone.length > 0) releaseAll();
+      for (const seat of seatsOnLostPads(planRef.current.seats, lost)) {
+        releaseSeat(seat.seat, seat.columns);
+      }
       for (const pad of live) {
         const buttons = pad.buttons.map((button) => button.pressed);
         const before = padButtons.current.get(pad.index);
@@ -569,7 +579,7 @@ export function StageControlsProvider({ setup, track, screen, children }: Props)
       }
       setPads((current) => (samePads(current, found) ? current : found));
     });
-  }, [clock, push, releaseAll]);
+  }, [clock, push, releaseSeat]);
 
   // MIDI is an **event**, not a poll: a message has its own `timeStamp`, and it is
   // projected onto the song clock exactly as a keypress is. The handler is the

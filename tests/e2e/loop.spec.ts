@@ -249,6 +249,41 @@ test("practises a stretch at 80%, loops it, and leaves no score behind", async (
   expect(leaked, "unexpected external requests").toEqual([]);
 });
 
+test("a whole-song practice stops at the song's own end, and asks", async ({
+  context,
+  page,
+}) => {
+  const leaked = await installFixtures(context);
+  await disableFullscreen(page);
+  await enterGame(page);
+
+  await openBand(page, SONG_TITLE);
+  await startRun(page);
+  await waitForPlaying(page);
+
+  // A single pass over the whole song — the stretch whose end **is** the song's
+  // end, so the transport and the practice rule meet on the same frame.
+  await page.keyboard.press("Escape");
+  const pause = page.getByRole("dialog", { name: "Paused" });
+  await expect(pause).toBeVisible();
+  await pause.getByRole("button", { name: "Practice", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Practice a stretch" });
+  await dialog.getByRole("radio", { name: "Whole song" }).click();
+  await expect(dialog.getByRole("checkbox", { name: "Loop this stretch" })).not.toBeChecked();
+  await dialog.getByRole("button", { name: "Start practice" }).click();
+  await waitForStage(page);
+  await waitForPlaying(page);
+
+  // Four seconds later the pass ends: the pause is where the player chooses to
+  // repeat it, not a still frame with no door.
+  await expect(pause).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator("html")).toHaveAttribute("data-screen", "paused");
+  await expect(page.getByRole("heading", { name: "Results" })).toBeHidden();
+  await expect(pause.getByRole("button", { name: "Repeat this stretch" })).toBeVisible();
+
+  expect(leaked, "unexpected external requests").toEqual([]);
+});
+
 test("Listen leaves the board alone: no run, no score, no best", async ({
   context,
   page,

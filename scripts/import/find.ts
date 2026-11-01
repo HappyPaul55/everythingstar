@@ -9,7 +9,8 @@
  */
 
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
+import { detectSource } from "../../src/lib/game/sources/detect";
 import { findChartName } from "../../src/lib/game/sources/files";
 
 export interface SongFolder {
@@ -48,11 +49,10 @@ export function findSongs(root: string): SongFolder[] {
   return found;
 }
 
-/** Does this text open the way an UltraStar file does? */
+/** Does this file open the way an UltraStar file does? The detector's answer, not a second regex. */
 export function looksUltraStar(path: string): boolean {
   try {
-    const head = readFileSync(path, { encoding: "latin1" }).slice(0, 2048);
-    return /^\s*#(TITLE|ARTIST|BPM|MP3|GAP)\s*:/im.test(head);
+    return detectSource(new Uint8Array(readFileSync(path)), basename(path)) === "ultrastar";
   } catch {
     return false;
   }
