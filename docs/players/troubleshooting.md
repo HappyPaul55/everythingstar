@@ -14,6 +14,7 @@ Most problems come down to one of four things: the browser has had no gesture ye
 - **Check the device.** A phone's silent switch, a laptop's mute key, headphones not on your head and a Bluetooth speaker in another room all sound like a broken game.
 - **A singer with the guide vocal off hears no vocal.** That is karaoke working; turn **Guide vocal** on to hear the song's own vocal.
 - **Some songs have no audio.** A notes-only chart folder plays in silence, and a document naming no audio has nothing to play; try another song to tell this from a game-wide problem.
+- **The stage says “No sound from this song”.** The run's audio never arrived (the host refused the file, or the browser blocked it), so the game has fallen back to the clock on its own. The notes still come and are judged, and the run still ends and reaches the results; leave the stage from the pause and try the song again, or another one.
 
 ## One part is missing
 

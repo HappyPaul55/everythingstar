@@ -3205,6 +3205,14 @@
     text-decoration: underline;
     text-underline-offset: 0.15em;
   }
+  /* Several links on one credit row — the notices — read as one sentence rather
+     than one per line: `.credit__who` is a column, so they are wrapped as one. */
+  .credit__links {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.15rem 0.35rem;
+  }
   .credit__note {
     grid-column: 2;
     font-family: var(--font-mono);

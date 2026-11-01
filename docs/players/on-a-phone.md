@@ -37,6 +37,12 @@ Tap the pad under a note as it lands, and the note plays. A tap counts as a fret
 
 Tapping is **Options → Tap the pads**, on by default. Turn it off and the pads are markers again; keys and a gamepad work either way. Typing wants a physical keyboard — the game never draws one — so instruments and singing are the phone's own ways to play.
 
+## Pausing, and leaving a run
+
+A phone has no Escape key, so while a song is playing a **Pause** chip sits in the stage's top corner beside Fullscreen. It opens the pause: resume, start again, practise a stretch, change the note speed or audio lag, or leave the stage. On a desktop the chip is not drawn — Escape and a pad's Start are the ways in.
+
+[The Pause chip in a phone's stage corner, beside Fullscreen, while a guitar run is moving.](shot:stage-pause)
+
 ## Portrait and landscape
 
 The stage re-measures when the phone turns: portrait gives the words and highway more height, and landscape gives a band more width, the better shape for three or four panels. Fullscreen does not lock orientation.
