@@ -24,6 +24,15 @@
 /icons/*
   Cache-Control: public, max-age=604800
 
+# The room's artwork and the sound library. The names are not hashed, but a
+# replaced file changes its ETag; a week matches the fonts. `sounds.json` is still
+# read with `cache: "reload"` where a fresh manifest matters, and the worker owns
+# the offline copy.
+/images/*
+  Cache-Control: public, max-age=604800
+/audio/*
+  Cache-Control: public, max-age=604800
+
 # The service worker is checked, not remembered: a stale one would keep serving
 # an old build.
 /sw.js

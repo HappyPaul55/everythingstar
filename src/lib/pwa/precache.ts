@@ -34,6 +34,12 @@ const EXTRA = [
   "/images/background_1-960.webp",
   "/images/background_1-1600.webp",
   "/images/background_1-2048.webp",
+  // The faces `global.css` names inside `@font-face`; only Permanent Marker is in
+  // a page's markup, so the rest would otherwise arrive after CSS parse and stay
+  // outside the worker's control on the first visit.
+  "/fonts/space-grotesk-latin.woff2",
+  "/fonts/space-mono-latin-400.woff2",
+  "/fonts/space-mono-latin-700.woff2",
 ];
 
 /**

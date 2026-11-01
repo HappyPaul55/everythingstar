@@ -514,9 +514,12 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   computed styles in the dev suite **and** the production-preview suite.
 - `src/lib/{site,button,nav}.ts` — types and pure helpers (`buttonClass` shared
   by `Button.astro`; `siteNav` shared by header and footer and unit-tested).
-- `src/i18n/**` — `locales.ts` (currently only `en`), `ui/en.ts` (the source of
-  truth), `index.ts` (`t`), `astro.ts` (`tFor`, `localeFromPath`), `react.tsx`
-  (`I18nProvider`, `useT`, `withLocale`), `paths.ts` (`localePath`).
+- `src/i18n/**` — `locales.ts` (currently only `en`), `ui/en.game.ts` (the game's
+  dictionary), `ui/en.site.ts` (landing/docs/SEO/privacy), `ui/en.charter.ts` (the
+  charter, merged over the game's shared controls), `ui/en.ts` (the full merge the
+  Astro pages read), `game.ts` (the island's own lookup), `index.ts` (`t`),
+  `astro.ts` (`tFor`, `localeFromPath`), `react.tsx` (`I18nProvider`, `useT`,
+  `withLocale`), `paths.ts` (`localePath`).
 - `src/styles/global.css` — Tailwind v4 `@theme` tokens (colours, the radius
   scale and the fonts) and the shell components (`.spray-*`, `.hazard`,
   `.comment`, `.mark`, `.sticker`, the nav), plus the print and reduced-motion

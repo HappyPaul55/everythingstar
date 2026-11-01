@@ -78,8 +78,8 @@ out of `astro check`, and the test config includes them with the runner's types.
   formats agree, and every root-absolute URL its entry page names is inside it. See
   [Deployment and releases](deployment.md#the-release-archives).
 
-The budget was measured on 2026-11-01: 709 KiB of `_astro` JS, an initial graph of
-578 KiB raw / 186 KiB gzipped across 22 files, 17.8 MiB in `dist/` and 8.8 MiB of
+The budget was measured on 2026-11-01: 707 KiB of `_astro` JS, an initial graph of
+572 KiB raw / 185 KiB gzipped across 22 files, 17.8 MiB in `dist/` and 8.8 MiB of
 audio. The caps sit just above those numbers — 710 KiB, 580 KiB, 190 KiB, 20 MiB,
 10 MiB. The **whole-build cap is the one that keeps moving**, raised when the
 documentation landed and again for its pictures: the [note-types page](../charters/note-types.md)
@@ -173,8 +173,10 @@ than switched on their behalf.
 `BENCH_SCENARIO=singer|guitars`, `BENCH_VIEW=3d|flat`, `BENCH_SEATS`,
 `BENCH_WIDTH`/`BENCH_HEIGHT`, `BENCH_RATE` and `BENCH_PROFILE=1` (a CDP CPU profile,
 top functions) select the frame measurement. `tests/perf/stems.spec.ts` runs a real
-stem-backed song (three WAVs from a local range-capable server); `BENCH_NO_STEMS=1`
-is its no-stem control, on the same chart. Headless Chromium caps rAF, so compare CPU and
+stem-backed song (seven WAVs from a local range-capable server); `BENCH_NO_STEMS=1`
+is its no-stem control, on the same chart. `tests/perf/load.spec.ts` navigates
+`/play` under a Slow 4G profile and reports hydration and the JavaScript resource
+timeline. Headless Chromium caps rAF, so compare CPU and
 layout counts and relative frame intervals, not absolute fps.
 
 What moved this round: hiding the drifting lights while the stage is up (they are
@@ -184,11 +186,17 @@ pitch detector at **30 Hz** and the singer advance at **20 Hz** cut singer scrip
 still the singer's largest function (~358 ms of 8 s at 4x) and the words are ~93 ms,
 so a melody-view memo is not worth the churn.
 
-A stem-backed run and the same chart with no stems were **within noise**: 533–567 ms
-against 465–622 ms of script in 8 s at 4x, with the same frame interval. `SongAudio`'s
-per-frame source read and drift correction are not a cost worth throttling at three
-stems. Throttling the lane advance also measured as noise and was reverted; the
-song-art blur was A/B'd and made no difference.
+A stem-backed run and the same chart with no stems were **within noise**, at three
+stems and again at the seven a Rock Band-shaped folder falls back to: 535–560 ms
+against 521–522 ms of script in 8 s at 4x, with the same frame interval. `SongAudio`'s
+per-frame source read and drift correction are not a cost worth throttling. Throttling
+the lane advance also measured as noise and was reverted; the song-art blur was A/B'd
+and made no difference.
+
+The last drawing pass was mostly noise too: the single highway cadence, the
+scroll-layer dependency fix and the transform writes took layouts **63–73 → 51–54**
+on four panels, but p50 stayed 50 ms (compositing-bound). Removing the 3D deck mask
+and changing the lyric paint were measured and reverted.
 
 `tests/perf/dom-writes.spec.ts` answers the other question — *where* the writes go.
 In a four-panel run over three seconds it measured **four track-transform writes

@@ -148,18 +148,28 @@ export function KeysView({ words, height, track, typing, singing, level, visualL
   // The pitch being heard, placed where it would sit on the roll: the same
   // row maths as a note, so the two line up by construction.
   useEffect(() => {
+    let shown: number | null = null;
     return clock.subscribe(() => {
       const node = cursor.current;
       if (!node) return;
       const midi = mic.midiRef.current;
       if (midi === null) {
-        node.style.opacity = "0";
+        if (shown !== null) {
+          shown = null;
+          node.style.opacity = "0";
+        }
         return;
       }
-      node.style.top = `${rowCentre(midi - melody.rootMidi, rows, ROLL_SHARE)}%`;
+      // A row, in pixels: `top` is a layout property and this used to write it
+      // every frame of a sung run. The cursor is out of flow and already has a
+      // -50% transform, so one translate does the same job on the compositor.
+      const row = rowCentre(midi - melody.rootMidi, rows, ROLL_SHARE);
+      if (row === shown) return;
+      shown = row;
+      node.style.transform = `translateY(${(row / 100) * size.height}px) translateY(-50%)`;
       node.style.opacity = "1";
     });
-  }, [clock, mic, melody.rootMidi, rows]);
+  }, [clock, mic, melody.rootMidi, rows, size.height]);
 
   // The words on the same layer: every line the reader has at a glance, with
   // the span its strip is drawn for. The split is by part (`mountedLines`),

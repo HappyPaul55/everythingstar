@@ -35,7 +35,8 @@ building a second time, and Cloudflare does not rebuild the same commit either.
   domain ever changes.
 - **The service worker is built after Astro.** `bun run build` also runs
   `scripts/build-sw.ts`, which names the build's hashed chunks in the precache list.
-  `public/_headers` serves `sw.js` no-cache; without that line a browser keeps an old
+  `public/_headers` serves `sw.js` no-cache and gives `/images/*` and `/audio/*` a week
+(a replaced file changes its ETag); without the worker line a browser keeps an old
   worker.
 - **Android App Links** are verified by `/.well-known/assetlinks.json` (see
   [Links into the game](deeplinks.md)), published from `public/.well-known/` with the

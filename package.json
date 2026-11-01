@@ -21,8 +21,8 @@
   "scripts": {
     "dev": "DOCSHOTS_DEV=1 bun --bun astro dev",
     "start": "DOCSHOTS_DEV=1 bun --bun astro dev",
-    "build": "bun run docs:shots && bun scripts/clean-content.ts && bun --bun astro build && bun scripts/build-sw.ts",
-    "build:quick": "bun scripts/clean-content.ts && bun --bun astro build && bun scripts/build-sw.ts",
+    "build": "bun run docs:shots && bun scripts/clean-content.ts && bun --bun astro build && bun scripts/preload-initial.ts && bun scripts/build-sw.ts",
+    "build:quick": "bun scripts/clean-content.ts && bun --bun astro build && bun scripts/preload-initial.ts && bun scripts/build-sw.ts",
     "docs:shots": "bun scripts/clean-shots.ts && playwright test --project=desktop --project=mobile",
     "docs:library": "bun scripts/sync-docs-library.ts",
     "docs:bundle": "bun scripts/copy-shots.ts",

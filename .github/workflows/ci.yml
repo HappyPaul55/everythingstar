@@ -68,7 +68,10 @@ jobs:
   # the browser suite is still running.
   unit:
     name: unit
-    needs: build
+    # The cheap checks read nothing the build writes. They used to wait for it only
+    # to sequence; a broken build then hid every lint/type/unit failure behind four
+    # minutes of browser work. Peak stays at nine runners: build, unit, workflows,
+    # review and five browser jobs.
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:

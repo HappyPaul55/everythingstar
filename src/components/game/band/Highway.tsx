@@ -36,7 +36,7 @@ import {
 } from "../../../lib/game/band/notes";
 import { slideRibbon } from "../../../lib/game/band/slides";
 import { notesInWindow, beatsInWindow } from "../../../lib/game/scroll";
-import { useClock, useClockMs } from "./StageClock";
+import { useClock } from "./StageClock";
 import { useStageControls } from "./StageControls";
 import { useScrollTrack } from "./useScrollTrack";
 
@@ -280,7 +280,9 @@ export function Highway({
   onSlide,
 }: Props) {
   const t = useT();
-  const now = useClockMs(80);
+  // The run publishes its own sampled playhead; a second 80 ms `useClockMs` here
+  // ran a frame out of phase and made every panel render twice per window.
+  const now = run.atMs;
   /**
    * The first few notes are a lesson, not a chart: each carries the control that
    * plays it, and the line carries the strum. The moment `run.hits` reaches

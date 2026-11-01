@@ -714,6 +714,7 @@
   .keys__pitch {
     position: absolute;
     z-index: 4;
+    top: 0;
     left: var(--keys-anchor);
     width: clamp(0.45rem, 2.6cqmin, 1.2rem);
     height: clamp(0.45rem, 2.6cqmin, 1.2rem);
@@ -928,6 +929,7 @@
   }
   .melody-score__value {
     font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
     font-size: clamp(0.9rem, 5cqmin, 2.1rem);
     line-height: 1;
     color: var(--color-cream);
@@ -1191,6 +1193,7 @@
      the rail's own cap. The rail is wide enough for six figures at the top size. */
   .panel-stat__value {
     font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
     font-size: clamp(1rem, 7cqmin, 3rem);
     line-height: 0.95;
     letter-spacing: -0.01em;
@@ -1215,6 +1218,8 @@
   }
   .panel-meter__fill {
     width: 100%;
+    height: 100%;
+    transform-origin: bottom;
     border-radius: var(--radius-brand);
     background: linear-gradient(
       to top,

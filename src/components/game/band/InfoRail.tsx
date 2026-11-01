@@ -37,7 +37,10 @@ export function InfoRail({
         aria-valuemax={100}
         aria-valuetext={starActive ? `${level}%, ${star}` : `${level}%`}
       >
-        <span className="panel-meter__fill" style={{ height: `${level}%` }} />
+        <span
+          className="panel-meter__fill"
+          style={{ transform: `scaleY(${level / 100})` }}
+        />
         {starActive ? (
           <span className="panel-meter__star" aria-hidden="true">
             ×2
