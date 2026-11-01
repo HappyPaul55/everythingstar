@@ -303,7 +303,6 @@ export function Results({
               className="screen__title"
               id="results-title"
               tabIndex={-1}
-              data-nav-default="true"
             >
               {t(failed ? "screen.runOver" : "screen.results")}
             </h2>
@@ -415,6 +414,7 @@ export function Results({
               type="button"
               className="band-btn band-btn--primary"
               data-sound="select"
+              data-nav-default="true"
               onClick={onReplay}
             >
               {t("screen.replay")}

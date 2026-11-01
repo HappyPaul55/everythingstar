@@ -5,6 +5,7 @@ import {
   type BandSetup,
 } from "../../../lib/game/band/types";
 import {
+  practiceEnded,
   sectionAt,
   type PracticePlan,
   type PracticeSection,
@@ -96,6 +97,13 @@ export function PauseMenu({
   const fastest = settings.noteSpeed >= NOTE_SPEED_MAX;
   const earliest = settings.audioLagMs <= -LAG_LIMIT_MS;
   const latest = settings.audioLagMs >= LAG_LIMIT_MS;
+  /**
+   * A one-pass practice that reached its end pauses **on** the end. Resume would
+   * then rewind a whole-song practice to the top (the clock's own rule) or play one
+   * frame past the section and pause again — a button that does not do what it says.
+   * The honest action is to play the same stretch again.
+   */
+  const passOver = practice !== null && practiceEnded(practice, clock.timeRef.current);
 
   /**
    * Practise the stretch the song is in **now**, at the record's speed and without
@@ -239,16 +247,29 @@ export function PauseMenu({
           ) : null}
         </div>
         <div className="screen__actions">
-          <button
-            type="button"
-            className="band-btn band-btn--primary"
-            data-dialog-focus
-            data-nav-default="true"
-            data-sound="select"
-            onClick={onResume}
-          >
-            {t("screen.resume")}
-          </button>
+          {passOver && practice ? (
+            <button
+              type="button"
+              className="band-btn band-btn--primary"
+              data-dialog-focus
+              data-nav-default="true"
+              data-sound="select"
+              onClick={() => onStartPractice(practice)}
+            >
+              {t("practice.repeat")}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="band-btn band-btn--primary"
+              data-dialog-focus
+              data-nav-default="true"
+              data-sound="select"
+              onClick={onResume}
+            >
+              {t("screen.resume")}
+            </button>
+          )}
           <button type="button" className="band-btn" onClick={onRestart}>
             {t("screen.restart")}
           </button>

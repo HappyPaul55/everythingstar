@@ -7,6 +7,8 @@ import { BandStage } from "./band/BandStage";
 import { SongAudio } from "./band/SongAudio";
 import { StageDirector } from "./band/StageDirector";
 import { StageFullscreen } from "./band/StageFullscreen";
+import { StagePause } from "./band/StagePause";
+import { useCoarsePointer } from "./band/useCoarsePointer";
 import { useWakeLock } from "./band/useWakeLock";
 import { useAttract } from "./attract/useAttract";
 import { GamepadNav } from "./ui/GamepadNav";
@@ -105,6 +107,9 @@ function GameApp({ credits, attract = false }: Props) {
     onActivate: activateAttract,
     onStop: stopAttract,
   });
+  // A phone has no Escape key: the pause is a control on the stage for it. The
+  // hook says no on the server, so the first paint matches.
+  const coarse = useCoarsePointer();
 
   // The display, for the part of the loop that is a song. The rule is
   // `wakeLock.ts` and the asking is the hook; it is mounted here rather than in a
@@ -224,6 +229,9 @@ function GameApp({ credits, attract = false }: Props) {
             screen and nothing else, so its corner is set aside. */}
         {!session.attract || attractConfig?.chrome ? (
           <div className="stage-corner">
+            {coarse && session.screen === "playing" ? (
+              <StagePause onPause={() => session.dispatch("pause")} />
+            ) : null}
             <StageFullscreen fullscreen={session.fullscreen} />
             {session.dev ? (
               <Suspense fallback={null}>

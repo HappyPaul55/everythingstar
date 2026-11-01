@@ -10,6 +10,7 @@ import {
 } from "react";
 import type { BandSetup } from "../../../lib/game/band/types";
 import type { ActionEvent } from "../../../lib/game/input";
+import type { Controller } from "../../../lib/game/controls/layout";
 import { isTypingKey, keyCode, midiCcDown, type MidiControl } from "../../../lib/game/controls/layout";
 import {
   droppedKeys,
@@ -154,6 +155,12 @@ export interface StageControls {
    * first button pressed is the answer to the question, never a menu press.
    */
   learning: boolean;
+  /**
+   * What is being set up, or null. The pad's menu layer only steps aside for a
+   * **pad** session: a player whose only controller is a pad must still be able to
+   * cancel a keyboard or MIDI session with B.
+   */
+  learningDevice: LearnDevice | null;
 }
 
 const StageControlsContext = createContext<StageControls | null>(null);
@@ -167,7 +174,8 @@ interface Props {
 export function StageControlsProvider({ setup, track, children }: Props) {
   const clock = useClock();
   const [pads, setPads] = useState<PadInfo[]>([]);
-  const [learning, setLearning] = useState(false);
+  const [learningDevice, setLearningDevice] = useState<LearnDevice | null>(null);
+  const learning = learningDevice !== null;
   const plan = useMemo(
     () => controlPlan(track, setup, pads.length),
     [track, setup, pads.length],
@@ -244,6 +252,53 @@ export function StageControlsProvider({ setup, track, children }: Props) {
     for (const handler of fingersUp.current) handler();
   }, [push]);
 
+  /**
+   * Let go of one seat, because the device it was holding has changed under it.
+   *
+   * A pad plugged in mid-run re-seats an automatic seat from the keyboard. The
+   * keydown was routed to that seat; the keyup finds the seat on a pad and is
+   * nobody's, so the fret would stay down for the rest of the run — a free
+   * sustain, a hopo chain that never closes, and every open note missing. The
+   * seat that changed is the one that has to be let go.
+   */
+  const releaseSeat = useCallback(
+    (seat: number, columns: number | null) => {
+      if (columns === null) return;
+      const atMs = clockRef.current.timeRef.current;
+      for (let column = 0; column < columns; column += 1) {
+        push(seat, {
+          action: { type: "fret", column },
+          down: false,
+          repeat: false,
+          timeMs: atMs,
+        });
+      }
+    },
+    [push],
+  );
+
+  // A seat whose controller changed under a held hand is let go, because the
+  // release belongs to the device that went away (see `releaseSeat`).
+  const previousPlan = useRef(plan);
+  useEffect(() => {
+    const before = previousPlan.current;
+    previousPlan.current = plan;
+    if (before === plan) return;
+    for (const seat of before.seats) {
+      if (seat.channel !== "lanes" || seat.columns === null) continue;
+      const now = plan.seats.find((candidate) => candidate.seat === seat.seat);
+      if (
+        now &&
+        now.columns === seat.columns &&
+        sameController(seat.controller, now.controller) &&
+        seat.channel === now.channel
+      ) {
+        continue;
+      }
+      releaseSeat(seat.seat, seat.columns);
+    }
+  }, [plan, releaseSeat]);
+
   const portsRef = useRef<ControlPorts | null>(null);
   if (!portsRef.current) {
     portsRef.current = {
@@ -285,11 +340,11 @@ export function StageControlsProvider({ setup, track, children }: Props) {
     () => ({
       start: (device: LearnDevice, onCapture: (control: LearnControl) => void) => {
         learningRef.current = { device, onCapture };
-        setLearning(true);
+        setLearningDevice(device);
       },
       stop: () => {
         learningRef.current = null;
-        setLearning(false);
+        setLearningDevice(null);
       },
     }),
     [],
@@ -510,7 +565,7 @@ export function StageControlsProvider({ setup, track, children }: Props) {
   // stage's one MIDI listener; `midi.listen` attaches it to every input, including
   // ones connected later, and detaches it when the stage goes.
   useEffect(() => {
-    return midi.listen((message: MidiMessage) => {
+    const onMidi = (message: MidiMessage) => {
       const data = message.data;
       if (data.length < 3) return;
       const status = data[0] ?? 0;
@@ -577,8 +632,9 @@ export function StageControlsProvider({ setup, track, children }: Props) {
         if (!action) continue;
         push(seat.seat, { action, down, repeat: false, timeMs: atMs });
       }
-    });
-  }, [midi.listen, push]);
+    };
+    return midi.listen(onMidi, releaseAll);
+  }, [midi.listen, push, releaseAll]);
 
   // Permission is asked at the Vocals control, not here. The run only opens a
   // stream the player has already allowed; without it the singers play themselves.
@@ -594,13 +650,31 @@ export function StageControlsProvider({ setup, track, children }: Props) {
   }, [sings, clock.playing, mic]);
 
   const value = useMemo<StageControls>(
-    () => ({ ports, plan, conflicts, pads, mic, midi, learn, learning }),
-    [ports, plan, conflicts, pads, mic, midi, learn, learning],
+    () => ({
+      ports,
+      plan,
+      conflicts,
+      pads,
+      mic,
+      midi,
+      learn,
+      learning,
+      learningDevice,
+    }),
+    [ports, plan, conflicts, pads, mic, midi, learn, learning, learningDevice],
   );
 
   return (
     <StageControlsContext.Provider value={value}>{children}</StageControlsContext.Provider>
   );
+}
+
+/** Whether two seats are holding the same device, in the same way. */
+function sameController(a: Controller, b: Controller): boolean {
+  if (a.on !== b.on) return false;
+  if (a.on === "pad" && b.on === "pad") return a.index === b.index;
+  if (a.on === "keyboard" && b.on === "keyboard") return a.layout === b.layout;
+  return true;
 }
 
 /** Whether the same pads are on the other end, so the read-out settles. */

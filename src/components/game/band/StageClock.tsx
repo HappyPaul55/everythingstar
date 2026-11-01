@@ -14,6 +14,7 @@ import {
   playheadEnded,
 } from "../../../lib/game/band/clockRange";
 import { SEEK_GUARD_MS, sourcePlayhead } from "../../../lib/game/band/playhead";
+import { sourceStalled } from "../../../lib/game/band/stall";
 
 /**
  * The stage clock: one animation frame loop for the whole stage, and the
@@ -97,6 +98,12 @@ export interface StageClock {
   ) => void;
   /** The song ran out, said by the **sound** rather than by the playhead's reach. */
   finish: () => void;
+  /**
+   * A registered source has stopped answering: no stem can play, the video was
+   * refused, or the stream never arrived. The playhead has fallen back to the
+   * frame clock so the run can still finish; the stage says so.
+   */
+  sourceLost: boolean;
 }
 
 const ClockContext = createContext<StageClock | null>(null);
@@ -142,6 +149,14 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
   const [playing, setPlaying] = useState(false);
   const [rate, setRateState] = useState(1);
   const [ended, setEnded] = useState(false);
+  /**
+   * When the registered source first answered `null` this run, and whether the
+   * stage has given up waiting for it. Refs, because the frame loop reads them
+   * every frame and only the flip to `true` should render.
+   */
+  const stalledSinceRef = useRef<number | null>(null);
+  const sourceLostRef = useRef(false);
+  const [sourceLost, setSourceLost] = useState(false);
 
   useEffect(() => {
     let frame = 0;
@@ -171,6 +186,11 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
           // running ahead of a song nobody can hear.
           const at = source();
           if (at !== null) {
+            stalledSinceRef.current = null;
+            if (sourceLostRef.current) {
+              sourceLostRef.current = false;
+              setSourceLost(false);
+            }
             const next = clampPlayhead(at, durationMs);
             // The stem the clock is read from can change mid-run, and the new one
             // can be tens of milliseconds behind the old. Assigned directly that
@@ -180,6 +200,24 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
             // from jumping the clock while they catch up.
             const guard = SEEK_GUARD_MS - (now - seekedAtRef.current);
             timeRef.current = sourcePlayhead(next, timeRef.current, guard);
+          } else {
+            // A source that never answers would hold the run at 0:00 for ever: no
+            // music, no notes, no results. A file still loading has a reason to be
+            // quiet for a moment; after the stall limit the frame clock takes
+            // over, and the stage says the sound is gone. The source stays
+            // registered, so a stem that does arrive resumes being the clock.
+            const stall = sourceStalled(stalledSinceRef.current, now);
+            stalledSinceRef.current = stall.since;
+            if (stall.stalled) {
+              if (!sourceLostRef.current) {
+                sourceLostRef.current = true;
+                setSourceLost(true);
+              }
+              timeRef.current = clampPlayhead(
+                timeRef.current + elapsed * rateRef.current,
+                durationMs,
+              );
+            }
           }
         } else {
           // The frame clock advances in **song** time: a practice run at 80%
@@ -218,6 +256,12 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
       sourceSeekRef.current?.(0);
       seekedAtRef.current = performance.now();
       seekSerialRef.current += 1;
+    }
+    // A new start is a new chance for the sound: the stall window begins again.
+    stalledSinceRef.current = null;
+    if (sourceLostRef.current) {
+      sourceLostRef.current = false;
+      setSourceLost(false);
     }
     setEnded(false);
     playingRef.current = true;
@@ -292,6 +336,16 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
         sourceSeekRef.current?.(timeRef.current);
       },
       followSource: (read, seek) => {
+        // Pointing at a different reader is pointing at different sound: the
+        // stall it was given belongs to the old one. Registering the same reader
+        // again (which a re-render does) changes nothing.
+        if (sourceRef.current !== read) {
+          stalledSinceRef.current = null;
+          if (sourceLostRef.current) {
+            sourceLostRef.current = false;
+            setSourceLost(false);
+          }
+        }
         sourceRef.current = read;
         sourceSeekRef.current = seek ?? null;
       },
@@ -301,8 +355,9 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
         setEnded(true);
         sampledAtRef.current = performance.now();
       },
+      sourceLost,
     }),
-    [durationMs, playing, ended, rate],
+    [durationMs, playing, ended, rate, sourceLost],
   );
 
   return <ClockContext.Provider value={value}>{children}</ClockContext.Provider>;

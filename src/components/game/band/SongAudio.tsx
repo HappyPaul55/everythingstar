@@ -168,6 +168,16 @@ export function SongAudio({
   const elements = useRef<(HTMLAudioElement | null)[]>([]);
   /** The container, for the dev read-out's note about a refused `play()`. */
   const box = useRef<HTMLDivElement | null>(null);
+  /**
+   * The object URL made for each local file, and every one this song holds. Kept
+   * across renders so a stem that stays wanted keeps its element — the guide vocal
+   * toggling must not re-read and re-buffer the band.
+   */
+  const localUrls = useRef(new Map<string, string>());
+  const objectUrls = useRef(new Set<string>());
+  /** The latest wanted set, for the effect above to judge a stale file by. */
+  const wantedRef = useRef(wanted);
+  wantedRef.current = wanted;
   /** How many of this song's files have failed to arrive. */
   const broken = useRef(0);
   /** When each stem was last moved on its own clock, so a seek is not fought. */
@@ -335,6 +345,11 @@ export function SongAudio({
     seekDrift.current = [];
     fruitless.current = [];
     seating.current = null;
+    // The last song's local files are not this song's: let their URLs go now
+    // rather than carrying a few stems' bytes into the next run.
+    for (const url of objectUrls.current) URL.revokeObjectURL(url);
+    objectUrls.current.clear();
+    localUrls.current.clear();
     setAttempt(0);
   }, [doc]);
 
@@ -343,9 +358,13 @@ export function SongAudio({
   // difference between a part that is missing from the chart folder and a file the
   // browser was not allowed to open is the difference between a fix and a puzzle, and
   // the dev read-out is where that is said.
+  //
+  // The object URL is **kept per file**, not per render: toggling the guide vocal
+  // changes which stems are wanted, and re-reading a `.sng` member would unmount
+  // every element and re-buffer the whole band mid-run. A file that is still wanted
+  // keeps the same URL, so React keeps the same `<audio>` and the sound never stops.
   useEffect(() => {
     let alive = true;
-    const made: string[] = [];
     void (async () => {
       const resolved: { url: string; stemId: string | null; file: string }[] = [];
       let unreadable = 0;
@@ -354,17 +373,43 @@ export function SongAudio({
           resolved.push(file);
           continue;
         }
-        const objectUrl = await localObjectUrl(file.url);
-        if (objectUrl) {
-          made.push(objectUrl);
-          resolved.push({ url: objectUrl, stemId: file.stemId, file: file.file });
-        } else {
-          unreadable += 1;
+        let objectUrl = localUrls.current.get(file.url);
+        if (!objectUrl) {
+          const madeUrl = await localObjectUrl(file.url);
+          if (!alive) {
+            if (madeUrl) URL.revokeObjectURL(madeUrl);
+            return;
+          }
+          if (!madeUrl) {
+            unreadable += 1;
+            continue;
+          }
+          // A second resolution of the same file may have finished first while
+          // this one was in flight. Keep the first, and let this one go.
+          const settled = localUrls.current.get(file.url);
+          if (settled) {
+            URL.revokeObjectURL(madeUrl);
+            objectUrl = settled;
+          } else {
+            localUrls.current.set(file.url, madeUrl);
+            objectUrls.current.add(madeUrl);
+            objectUrl = madeUrl;
+          }
         }
+        resolved.push({ url: objectUrl, stemId: file.stemId, file: file.file });
       }
-      if (!alive) {
-        for (const url of made) URL.revokeObjectURL(url);
-        return;
+      if (!alive) return;
+      // A file nobody wants any more — the guide vocal, with somebody singing — goes
+      // now rather than at the end of the song. The latest `wanted` is the judge:
+      // a stem this run has not heard of may belong to a newer one.
+      const stillWanted = new Set(
+        wantedRef.current.filter((file) => isLocalUrl(file.url)).map((file) => file.url),
+      );
+      for (const [key, url] of localUrls.current) {
+        if (stillWanted.has(key)) continue;
+        localUrls.current.delete(key);
+        objectUrls.current.delete(url);
+        URL.revokeObjectURL(url);
       }
       box.current?.setAttribute("data-unreadable", String(unreadable));
       // A file the browser would not hand over is settled: the loader must not
@@ -383,10 +428,20 @@ export function SongAudio({
     })();
     return () => {
       alive = false;
-      for (const url of made) URL.revokeObjectURL(url);
-      setSources([]);
     };
   }, [wanted, preload]);
+
+  // Every object URL this song made goes when the stage does, whether or not a
+  // later render still listed it.
+  useEffect(() => {
+    const urls = objectUrls.current;
+    const byFile = localUrls.current;
+    return () => {
+      for (const url of urls) URL.revokeObjectURL(url);
+      urls.clear();
+      byFile.clear();
+    };
+  }, []);
 
   // The band screen's loader is told how many stems the run expects before any
   // element exists — a local song resolves its files a moment later — and then it

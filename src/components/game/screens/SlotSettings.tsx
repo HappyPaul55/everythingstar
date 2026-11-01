@@ -513,15 +513,20 @@ export function SlotSettings({
                   : (seatKeys ?? t("screen.mappingPreset"))}
               </p>
               <div className="config__actions">
-                <button
-                  type="button"
-                  className="band-btn band-btn--primary"
-                  data-sound="select"
-                  ref={learnButton}
-                  onClick={() => begin(learnDevice(controller))}
-                >
-                  {t("screen.learn")}
-                </button>
+                {/* Learning needs a device that is there to answer: a pad that is
+                    not connected cannot be learned, and offering the button anyway
+                    starts a session nothing can complete. */}
+                {missingPad === null ? (
+                  <button
+                    type="button"
+                    className="band-btn band-btn--primary"
+                    data-sound="select"
+                    ref={learnButton}
+                    onClick={() => begin(learnDevice(controller))}
+                  >
+                    {t("screen.learn")}
+                  </button>
+                ) : null}
                 {controller && "keys" in controller && controller.keys ? (
                   <button
                     type="button"

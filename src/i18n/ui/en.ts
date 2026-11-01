@@ -631,10 +631,13 @@ export const en = {
   "screen.mappingNone": "nothing - the machine plays them",
   "screen.mappingPreset": "the preset for their place",
   "screen.paused": "Paused",
+  "screen.pause": "Pause",
   "screen.resume": "Resume",
   "screen.restart": "Start again",
   "screen.quit": "Leave the stage",
   "screen.pauseHint": "Escape or Start resumes.",
+  "stage.noSound":
+    "No sound from this song. The stage is still running, and the notes still count.",
   "pause.quick": "Quick settings",
   "pause.noteSpeed": "Note speed",
   "pause.speedSlower": "Slower",
@@ -660,6 +663,7 @@ export const en = {
   "practice.start": "Start practice",
   "practice.cancel": "Cancel",
   "practice.stop": "Stop practice",
+  "practice.repeat": "Repeat this stretch",
   "practice.noSection": "This song has no stretch to practise yet.",
   "practice.wholeSong": "Whole song",
 
