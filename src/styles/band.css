@@ -828,6 +828,18 @@
   .keys__note.is-miss {
     background: var(--color-danger);
   }
+  /* Two singers on one bar, one hit and one miss: keep both part colours, dim it
+     a little, and outline it in the miss colour. Picking one singer's verdict
+     would tell the other player a lie about the note they just sang. */
+  .keys__note.is-mixed {
+    background: linear-gradient(
+      to bottom,
+      var(--part-0) 0 50%,
+      var(--part-1) 50% 100%
+    );
+    opacity: 0.55;
+    box-shadow: inset 0 0 0 2px var(--color-danger);
+  }
   /* Announced while the words being delivered are freeform. */
   .keys__badge {
     position: absolute;

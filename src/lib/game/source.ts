@@ -21,6 +21,8 @@ import {
   fitMelodyTurns,
   INSTRUMENT_KINDS,
   LANE_ROLES,
+  MAX_NOTE_LENGTH_MS,
+  MAX_NOTE_TIME_MS,
   MAX_PARTS,
   nearestDifficulty,
   slideProblems,
@@ -683,7 +685,10 @@ function readLanes(
       problems.push(`${chart.id}: a note with no time`);
       continue;
     }
-    const lengthMs = Math.max(0, num(entry.lengthMs) ?? 0);
+    const lengthMs = Math.min(
+      MAX_NOTE_LENGTH_MS,
+      Math.max(0, num(entry.lengthMs) ?? 0),
+    );
     const raw = num(entry.column);
     // A null column is the **open** note, which every highway can play. A number
     // outside the chart's own columns is a note that could never be drawn or hit,
@@ -697,8 +702,15 @@ function readLanes(
     // `tap` was an older document's name for an ordinary note on a tapped
     // instrument. It is read as a strum now, which is the same note.
     const toldKind = entry.kind === "tap" ? "strum" : entry.kind;
+    const timeMs = at + offset;
+    if (!Number.isFinite(timeMs) || timeMs > MAX_NOTE_TIME_MS) {
+      // A note hours into a song nobody wrote is a chart that never ends: the
+      // progress bar, the last-note gate and the run's own end all read this time.
+      problems.push(`${chart.id}: a note past the end of any song`);
+      continue;
+    }
     notes.push({
-      timeMs: Math.max(0, at + offset),
+      timeMs: Math.max(0, timeMs),
       lengthMs,
       kind: playableKind(oneOf(toldKind, LANE_KINDS) ?? plain, strummed, plain),
       column,
@@ -890,13 +902,19 @@ function readMelody(
     if (!isObject(entry)) continue;
     const at = num(entry.timeMs);
     if (at === null) continue;
-    const words = list(entry.words).flatMap((word) => {
-      if (!isObject(word)) return [];
-      const text_ = text(word.text);
-      const wordAt = num(word.timeMs);
-      if (text_ === null || wordAt === null) return [];
-      return [{ text: text_, timeMs: at + wordAt, hero: flag(word.hero) }];
-    });
+    const words = list(entry.words)
+      .flatMap((word) => {
+        if (!isObject(word)) return [];
+        const text_ = text(word.text);
+        const wordAt = num(word.timeMs);
+        if (text_ === null || wordAt === null) return [];
+        return [{ text: text_, timeMs: at + wordAt, hero: flag(word.hero) }];
+      })
+      // The order of the array is how every engine reads a word's end (the next
+      // word's start), so a source that wrote them out of order would make each
+      // deadline land before its own word. Sorting fixes the reader rather than
+      // every consumer.
+      .sort((a, b) => a.timeMs - b.timeMs);
     if (words.length === 0) continue;
     // A shared fourth voice must appear once on a line, not twice: the two source
     // parts collapse onto the last colour, and a duplicated entry would draw the
@@ -912,12 +930,22 @@ function readMelody(
         lineParts.set(placed, Math.trunc(num(part.offset) ?? 0));
       }
     }
+    const lineStart = Math.max(0, at + offset);
+    const statedEnd = (num(entry.endMs) ?? at) + offset;
     lines.push({
-      timeMs: Math.max(0, at + offset),
-      endMs: Math.max(0, (num(entry.endMs) ?? at) + offset),
+      timeMs: lineStart,
+      // A line may not end before it starts, or hours after any song: the views
+      // and the typist's deadline both read `endMs` as a moment.
+      endMs: Math.min(
+        MAX_NOTE_TIME_MS,
+        Math.max(lineStart, Number.isFinite(statedEnd) ? statedEnd : lineStart),
+      ),
       freeform: flag(entry.freeform),
       parts: [...lineParts].map(([part, partOffset]) => ({ part, offset: partOffset })),
-      words: words.map((word) => ({ ...word, timeMs: Math.max(0, word.timeMs + offset) })),
+      words: words.map((word) => ({
+        ...word,
+        timeMs: Math.max(0, word.timeMs + offset),
+      })),
     });
   }
   lines.sort((a, b) => a.timeMs - b.timeMs);
@@ -941,9 +969,17 @@ function readMelody(
       problems.push(`${chart.id}: a word above the roll`);
       continue;
     }
+    const timeMs = at + offset;
+    if (!Number.isFinite(timeMs) || timeMs > MAX_NOTE_TIME_MS) {
+      problems.push(`${chart.id}: a word past the end of any song`);
+      continue;
+    }
     notes.push({
-      timeMs: Math.max(0, at + offset),
-      lengthMs: Math.max(0, num(entry.lengthMs) ?? 0),
+      timeMs: Math.max(0, timeMs),
+      lengthMs: Math.min(
+        MAX_NOTE_LENGTH_MS,
+        Math.max(0, num(entry.lengthMs) ?? 0),
+      ),
       part: placed,
       // A `vocals` chart can still contain a freeform word: its row is null, not
       // row 0. Forcing it to the bottom of the roll would turn a spoken word into a

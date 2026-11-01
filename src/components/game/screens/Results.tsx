@@ -9,9 +9,9 @@ import {
   bestFor,
   LINEUP_FREE_PLAY,
   lineupKey,
+  recentFor,
   saveRun,
   shouldSaveRun,
-  topFor,
   type SavedRun,
 } from "../../../lib/game/scores";
 import {
@@ -264,7 +264,7 @@ export function Results({
 
   // The history stays the song's own, across lineups: a run is still a run. Its rows
   // say which band played it, so a reader can see why the scores differ.
-  const table = topFor(saved, song.id);
+  const table = recentFor(saved, song.id);
 
   // The sting for how the run went. It is silent until the stings are bought — a
   // type nothing can play is silence, not an error — and the moment one lands it is

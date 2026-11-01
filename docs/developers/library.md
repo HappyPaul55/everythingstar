@@ -137,8 +137,9 @@ not change it. `bestFor`/`topFor` take an optional lineup; with it only that ban
 runs count, and without it the song-wide best across lineups is still what the
 jukebox shows. An entry saved before lineups were recorded has no key, so it is its
 own group and never matches a specific lineup. The results screen compares the new
-score with the best **for this band** and shows the last few runs song-wide, each row
-naming its lineup. The **band** is remembered the same way
+score with the best **for this band** and shows the last few runs song-wide
+(`recentFor`, newest first), each row naming its lineup. The **band** is remembered
+the same way
 (`src/lib/game/band/store.ts`). There is **no account and no server**: a leaderboard
 is a later addition to the same shape, not a different design. Every run also
 publishes its own totals to a publish-only board (`RunBoard`) that the results screen

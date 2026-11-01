@@ -124,8 +124,13 @@ export function strums(kind: InstrumentKind): boolean {
   return INSTRUMENTS[kind].kit.play === "strum";
 }
 
-/** How a note looks while it is being played. */
-export type NoteState = "pending" | "live" | "hit" | "miss";
+/**
+ * How a note looks while it is being played.
+ *
+ * `mixed` is the melody roll's own: two singers share one bar and one hit while
+ * the other missed. A highway note has one owner, so it never reaches it.
+ */
+export type NoteState = "pending" | "live" | "hit" | "miss" | "mixed";
 
 /** A note on a highway. */
 export interface LaneNote {
@@ -594,6 +599,18 @@ export function cleanSlides(notes: readonly LaneNote[]): LaneNote[] {
 }
 
 /**
+ * How far into a song a note may start, and how long it may be held.
+ *
+ * A fetched document is somebody else's file, and a note at `1e12` is a run that
+ * never ends: the progress bar, the last-note gate and the clock all read that
+ * time. Six hours is longer than any set anybody plays; ten minutes is longer than
+ * any sustain the game draws. The readers clamp to these, and `chartProblems`
+ * refuses a chart that arrived some other way with a note outside them.
+ */
+export const MAX_NOTE_TIME_MS = 6 * 60 * 60 * 1000;
+export const MAX_NOTE_LENGTH_MS = 10 * 60 * 1000;
+
+/**
  * What is wrong with a chart, if anything. An empty list means it is playable —
  * the same rules a source parser will be held to.
  */
@@ -624,6 +641,22 @@ export function chartProblems(chart: LaneChart): string[] {
   chart.notes.forEach((note, index) => {
     if (ids.has(note.id)) problems.push(`duplicate note id ${note.id}`);
     ids.add(note.id);
+    // A time or a hold outside what the game can draw or play is not a note; it is
+    // a document that would make the run endless or freeze a note on the highway.
+    if (
+      !Number.isFinite(note.timeMs) ||
+      note.timeMs < 0 ||
+      note.timeMs > MAX_NOTE_TIME_MS
+    ) {
+      problems.push(`note ${note.id} is outside the song's time`);
+    }
+    if (
+      !Number.isFinite(note.lengthMs) ||
+      note.lengthMs < 0 ||
+      note.lengthMs > MAX_NOTE_LENGTH_MS
+    ) {
+      problems.push(`note ${note.id} is held for longer than the game can play`);
+    }
     if (index > 0 && note.timeMs < chart.notes[index - 1].timeMs) {
       problems.push(`note ${note.id} is out of time order`);
     }

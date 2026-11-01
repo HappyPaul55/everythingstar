@@ -404,6 +404,27 @@ describe("a key arrives between frames", () => {
     expect(typo.results[1]).toBe("pending");
     expect(typo.errorKeys).toBe(1);
   });
+
+  test("a word is never given a deadline before it starts", () => {
+    // A source that wrote a line ending before its last word, or words out of
+    // order, used to make the word dead the moment it opened.
+    const broken: TypingConfig = {
+      words: [{ text: "late", start: 5000, end: 4000, line: 0, hero: false }],
+      lines: [{ start: 5000, end: 4000 }],
+      level: "normal",
+    };
+    expect(wordDeadlineMs(broken, 0)).toBeGreaterThanOrEqual(5000);
+
+    const outOfOrder: TypingConfig = {
+      words: [
+        { text: "b", start: 2000, end: 1000, line: 0, hero: false },
+        { text: "a", start: 1000, end: 2000, line: 0, hero: false },
+      ],
+      lines: [{ start: 1000, end: 2000 }],
+      level: "normal",
+    };
+    expect(wordDeadlineMs(outOfOrder, 0)).toBeGreaterThanOrEqual(2000);
+  });
 });
 
 describe("the typing report", () => {

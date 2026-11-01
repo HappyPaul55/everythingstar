@@ -50,6 +50,7 @@ import { audioFromFiles } from "./files";
 import { groupLyrics, type Syllable } from "./lyricLines";
 import { type MidiDoc, type MidiTrack, parseMidi } from "./midi";
 import { slug } from "../text";
+import { minMax } from "../math";
 import { mergeSpans, yearOf } from "./common";
 import { emptySource, type ParsedSource, type StemRole } from "./types";
 
@@ -502,8 +503,9 @@ function readVoice(doc: MidiDoc, id: string, problems: string[]): MelodyChart | 
   let rows = 6;
   if (hasPitch) {
     const pitches = pitched.map((syllable) => syllable.midi);
-    const low = Math.min(...pitches);
-    const high = Math.max(...pitches);
+    const range = minMax(pitches);
+    const low = range?.min ?? 0;
+    const high = range?.max ?? 0;
     const span = Math.max(1, high - low + 1);
     if (span < rows) {
       rootMidi = low - Math.floor((rows - span) / 2);

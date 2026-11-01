@@ -7,6 +7,7 @@
  * sheet), which is a melody with lines and no notes.
  */
 
+import { minMax } from "../math";
 import { MAX_PARTS, type MelodyChart, type MelodyLine } from "../track";
 import type { GroupedLyrics } from "./lyricLines";
 
@@ -33,8 +34,9 @@ export function melodyOfParts(
   let rootMidi = used[0]?.rootMidi ?? 57;
   let rows = used[0]?.rows ?? 6;
   if (hasPitch && midis.length > 0) {
-    const low = Math.min(...midis);
-    const high = Math.max(...midis);
+    const range = minMax(midis);
+    const low = range?.min ?? 0;
+    const high = range?.max ?? 0;
     const span = Math.max(1, high - low + 1);
     if (span < 6) {
       rootMidi = low - Math.floor((6 - span) / 2);

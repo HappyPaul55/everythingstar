@@ -136,13 +136,13 @@ describe("nextOnsets", () => {
 });
 
 describe("sungNotesByPlace", () => {
-  test("the first sung note at a place is the bar's verdict", () => {
+  test("every sung note at a place is kept, so two verdicts can both be shown", () => {
     const shared = [
       note({ id: "a", timeMs: 1000, row: 2, part: 0 }),
       note({ id: "b", timeMs: 1000, row: 2, part: 1 }),
     ];
     const sung = sungNotesByPlace(shared, new Set([0, 1]));
-    expect(sung.get(notePlace(shared[0]))?.id).toBe("a");
+    expect(sung.get(notePlace(shared[0]))?.map((one) => one.id)).toEqual(["a", "b"]);
     expect(sung.size).toBe(1);
   });
 
@@ -151,7 +151,9 @@ describe("sungNotesByPlace", () => {
       note({ id: "a", timeMs: 1000, row: 2, part: 0 }),
       note({ id: "b", timeMs: 1000, row: 2, part: 1 }),
     ];
-    expect(sungNotesByPlace(shared, new Set([1])).get("1000:2")?.id).toBe("b");
+    expect(sungNotesByPlace(shared, new Set([1])).get("1000:2")?.map((one) => one.id)).toEqual([
+      "b",
+    ]);
     // With no singer at all there is no verdict anywhere.
     expect(sungNotesByPlace(shared, new Set()).size).toBe(0);
   });
@@ -163,9 +165,9 @@ describe("sungNotesByPlace", () => {
       note({ id: "c", timeMs: 1000, row: 3, part: 0 }),
     ];
     const sung = sungNotesByPlace(notes, new Set([0]));
-    expect(sung.get("1000:2")?.id).toBe("a");
-    expect(sung.get("1400:2")?.id).toBe("b");
-    expect(sung.get("1000:3")?.id).toBe("c");
+    expect(sung.get("1000:2")?.map((one) => one.id)).toEqual(["a"]);
+    expect(sung.get("1400:2")?.map((one) => one.id)).toEqual(["b"]);
+    expect(sung.get("1000:3")?.map((one) => one.id)).toEqual(["c"]);
   });
 });
 

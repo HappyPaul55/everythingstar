@@ -99,6 +99,9 @@ export const BOARD_LIMIT = 50;
 /** How many a results screen shows for one song. */
 const BEST_LIMIT = 5;
 
+/** How many of a song's most recent runs the results screen lists. */
+export const RECENT_LIMIT = 5;
+
 /**
  * The scoring model changed from three-point grades to 50-point notes and a ×4
  * streak. The key is versioned so an old board's tiny scores are not compared
@@ -121,21 +124,44 @@ export function parseBoard(raw: string | null): SavedRun[] {
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(isSavedRun);
+    // The board is capped on write and on import; reading one that grew some
+    // other way — a hand-edited file, an older build — caps it here too, so a
+    // screen never has to render thousands of rows.
+    return parsed.filter(isSavedRun).slice(0, BOARD_LIMIT);
   } catch {
     return [];
   }
 }
 
-/** A stored entry is only trusted for the fields the board actually reads. */
+/**
+ * A stored entry is only trusted for the fields the board actually reads.
+ *
+ * The results and the jukebox print the date, the title, the score and how many
+ * played; a row missing one of those is not a run a screen can draw, and
+ * accepting it used to put "Invalid Date" in the history. `players` is checked
+ * because its length is the band size and its labels are the lineup line.
+ */
 function isSavedRun(value: unknown): value is SavedRun {
   if (typeof value !== "object" || value === null) return false;
   const run = value as Partial<SavedRun>;
-  return (
-    typeof run.song === "string" &&
-    typeof run.score === "number" &&
-    typeof run.failed === "boolean" &&
-    Array.isArray(run.players)
+  if (
+    typeof run.song !== "string" ||
+    typeof run.title !== "string" ||
+    typeof run.score !== "number" ||
+    !Number.isFinite(run.score) ||
+    typeof run.failed !== "boolean" ||
+    typeof run.at !== "number" ||
+    !Number.isFinite(run.at) ||
+    !Array.isArray(run.players)
+  ) {
+    return false;
+  }
+  return run.players.every(
+    (player) =>
+      typeof player === "object" &&
+      player !== null &&
+      typeof (player as { label?: unknown }).label === "string" &&
+      typeof (player as { score?: unknown }).score === "number",
   );
 }
 
@@ -186,6 +212,23 @@ export function topFor(
     )
     .sort((a, b) => b.score - a.score)
     .slice(0, cap);
+}
+
+/**
+ * A song's saved runs, **most recent first** — the history the results screen
+ * shows under "your last N on this song". Reading it from `topFor` was the bug:
+ * that sorts by score, so a weak run could be missing from a list that says it
+ * is the last one. Ties keep the board's own order, which is newest first.
+ */
+export function recentFor(
+  board: SavedRun[],
+  song: string,
+  limit = RECENT_LIMIT,
+): SavedRun[] {
+  return board
+    .filter((run) => run.song === song)
+    .sort((a, b) => b.at - a.at)
+    .slice(0, Math.max(0, limit));
 }
 
 /**

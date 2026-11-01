@@ -125,23 +125,26 @@ export function notePlace(note: Pick<MelodyNote, "timeMs" | "row">): string {
 }
 
 /**
- * The note a bar's verdict belongs to, keyed by place (`notePlace`).
+ * The notes a bar's verdict belongs to, keyed by place (`notePlace`).
  *
  * A shared note has one entry per part, and only the parts somebody is actually
  * singing have a verdict — the others must read as neutral rather than missed.
- * The **first sung** entry at a place is the one kept, and it is built once for a
- * whole melody so the roll can read a bar's verdict by place instead of scanning
+ * **Every** sung entry at a place is kept, because two singers on one bar can get
+ * two different verdicts; the roll shows that rather than picking a winner. Built
+ * once for a whole melody so the roll can read a bar by place instead of scanning
  * every note for each bar it draws.
  */
 export function sungNotesByPlace(
   notes: readonly MelodyNote[],
   sungParts: ReadonlySet<number>,
-): Map<string, MelodyNote> {
-  const out = new Map<string, MelodyNote>();
+): Map<string, MelodyNote[]> {
+  const out = new Map<string, MelodyNote[]>();
   for (const note of notes) {
     if (!sungParts.has(note.part)) continue;
     const place = notePlace(note);
-    if (!out.has(place)) out.set(place, note);
+    const already = out.get(place);
+    if (already) already.push(note);
+    else out.set(place, [note]);
   }
   return out;
 }

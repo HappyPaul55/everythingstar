@@ -5,6 +5,8 @@ import {
   cleanSlides,
   difficultiesFor,
   fitMelodyTurns,
+  MAX_NOTE_LENGTH_MS,
+  MAX_NOTE_TIME_MS,
   nearestDifficulty,
   slideProblems,
   type Difficulty,
@@ -180,6 +182,20 @@ describe("slides", () => {
           note({ id: "b", timeMs: 1600, column: 2 }),
         ),
       ),
+    ).toEqual([]);
+  });
+
+  test("a note hours past any song, or held for hours, is refused", () => {
+    expect(
+      chartProblems(lanes(note({ id: "a", timeMs: MAX_NOTE_TIME_MS + 1, column: 0 }))),
+    ).toContain("note a is outside the song's time");
+    expect(
+      chartProblems(
+        lanes(note({ id: "b", timeMs: 1000, lengthMs: MAX_NOTE_LENGTH_MS + 1, column: 0 })),
+      ),
+    ).toContain("note b is held for longer than the game can play");
+    expect(
+      chartProblems(lanes(note({ id: "c", timeMs: 1000, lengthMs: 500, column: 0 }))),
     ).toEqual([]);
   });
 

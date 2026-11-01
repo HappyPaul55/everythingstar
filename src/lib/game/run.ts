@@ -116,13 +116,16 @@ function judge(
   note: MelodyNote,
   verdict: { hit: boolean; offsetMs: number; share?: number },
 ): RunState {
-  const before = drained(state, note.timeMs);
+  // The verdict is taken at the note's onset, but the run's clock never moves
+  // backwards: a note with a length is judged after it has ended, and rewinding
+  // `atMs` to its head would make the next drain cover the same gap a second time.
+  // A singer's gauge would then *fall* on a hit.
+  const before = drained(state, Math.max(state.atMs, note.timeMs));
   const base = { ...before, cursor: before.cursor + 1, judged: before.judged + 1 };
 
   if (!verdict.hit) {
     return {
       ...base,
-      atMs: note.timeMs,
       misses: before.misses + 1,
       combo: 0,
       meter: missMeter(before.meter),
@@ -132,7 +135,6 @@ function judge(
   const combo = before.combo + 1;
   return {
     ...base,
-    atMs: note.timeMs,
     hits: before.hits + 1,
     heroHits: before.heroHits + (note.hero ? 1 : 0),
     combo,
