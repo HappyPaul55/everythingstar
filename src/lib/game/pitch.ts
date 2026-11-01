@@ -219,6 +219,7 @@ export function decimate(
   factor: number,
   sampleRate: number,
   out?: Float32Array,
+  taps?: Float32Array,
 ): Float32Array {
   const step = Math.max(1, Math.floor(factor));
   if (step === 1) {
@@ -232,17 +233,21 @@ export function decimate(
 
   const outLength = Math.floor(buffer.length / step);
   const result = out && out.length >= outLength ? out : new Float32Array(outLength);
-  const taps = lowpassTaps(0.4 * (sampleRate / step), sampleRate);
-  const centre = (taps.length - 1) / 2;
+  // A live detector analyses a frame every ~16 ms, and re-deriving the window is a
+  // fresh `Float32Array` plus 63 windowed-sinc taps (two trig calls each) on the
+  // main thread — per frame, for a filter that never changes. The caller that owns
+  // the stream keeps the table; a one-off call builds it here.
+  const table = taps ?? lowpassTaps(0.4 * (sampleRate / step), sampleRate);
+  const centre = (table.length - 1) / 2;
 
   for (let k = 0; k < outLength; k += 1) {
     const base = k * step - centre;
     let acc = 0;
-    for (let j = 0; j < taps.length; j += 1) {
+    for (let j = 0; j < table.length; j += 1) {
       let index = base + j;
       if (index < 0) index = 0;
       else if (index >= buffer.length) index = buffer.length - 1;
-      acc += taps[j] * buffer[index];
+      acc += table[j] * buffer[index];
     }
     result[k] = acc;
   }
@@ -303,11 +308,19 @@ export function createPitchDetector(
   const resolved = resolveOptions(options);
   const scratch: Scratch = { diff: new Float32Array(0), cmnd: new Float32Array(0) };
   let decimated: Float32Array | null = null;
+  /** The low-pass table for this stream's rate and factor, made once. */
+  let taps: Float32Array | null = null;
+  let tapsKey = "";
 
   const detect = (buffer: Float32Array, sampleRate: number): PitchSample => {
     if (factor === 1) return yin(buffer, sampleRate, resolved, scratch);
     if (!(sampleRate > 0)) return { frequency: null, clarity: 0 };
-    decimated = decimate(buffer, factor, sampleRate, decimated ?? undefined);
+    const key = `${factor}:${sampleRate}`;
+    if (tapsKey !== key) {
+      taps = lowpassTaps(0.4 * (sampleRate / factor), sampleRate);
+      tapsKey = key;
+    }
+    decimated = decimate(buffer, factor, sampleRate, decimated ?? undefined, taps ?? undefined);
     return yin(decimated, sampleRate / factor, resolved, scratch);
   };
 

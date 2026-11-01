@@ -69,6 +69,12 @@ interface Props {
   onGame: () => void;
 }
 
+/** One undo step: the charts **and** the grid, because ticks come from both. */
+interface Snapshot {
+  charts: CharterChart[];
+  grid: CharterGrid;
+}
+
 const HISTORY_LIMIT = 60;
 const ZOOMS = [4, 6, 8, 12, 16] as const;
 const SPEEDS = [1, 0.75, 0.5] as const;
@@ -126,8 +132,14 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
   const [status, setStatus] = useState<string | null>(null);
   const [startedAt, setStartedAt] = useState(0);
   const [exportProblems, setExportProblems] = useState<string[]>([]);
-  const past = useRef<CharterChart[][]>([]);
-  const future = useRef<CharterChart[][]>([]);
+  const past = useRef<Snapshot[]>([]);
+  const future = useRef<Snapshot[]>([]);
+  const gridRef = useRef(grid);
+  gridRef.current = grid;
+  /** The chart a take was armed on, so clicking another pane cannot retarget it. */
+  const recordingKey = useRef<string | null>(null);
+  /** The latest stopRecording, for a pane change that has to end the take first. */
+  const stopTake = useRef<() => void>(() => undefined);
 
   const visibleSet = useMemo(() => new Set(visible), [visible]);
   const active = charts.find((chart) => chart.key === activeKey) ?? charts[0] ?? null;
@@ -139,7 +151,7 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
       const current = chartsRef.current;
       const value = typeof next === "function" ? next(current) : next;
       if (value === current) return;
-      past.current.push(current);
+      past.current.push({ charts: current, grid: gridRef.current });
       if (past.current.length > HISTORY_LIMIT) past.current.shift();
       future.current = [];
       chartsRef.current = value;
@@ -160,35 +172,43 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
   const undo = useCallback(() => {
     const previous = past.current.pop();
     if (!previous) return;
-    future.current.push(chartsRef.current);
-    chartsRef.current = previous;
-    setCharts(previous);
+    future.current.push({ charts: chartsRef.current, grid: gridRef.current });
+    chartsRef.current = previous.charts;
+    setCharts(previous.charts);
+    gridRef.current = previous.grid;
+    setGrid(previous.grid);
     setSelection(new Set());
-    if (!previous.some((chart) => chart.key === activeKey)) {
-      setActiveKey(previous[0]?.key ?? "");
+    if (!previous.charts.some((chart) => chart.key === activeKey)) {
+      setActiveKey(previous.charts[0]?.key ?? "");
     }
   }, [activeKey]);
 
   const redo = useCallback(() => {
     const next = future.current.pop();
     if (!next) return;
-    past.current.push(chartsRef.current);
-    chartsRef.current = next;
-    setCharts(next);
+    past.current.push({ charts: chartsRef.current, grid: gridRef.current });
+    chartsRef.current = next.charts;
+    setCharts(next.charts);
+    gridRef.current = next.grid;
+    setGrid(next.grid);
     setSelection(new Set());
-    if (!next.some((chart) => chart.key === activeKey)) {
-      setActiveKey(next[0]?.key ?? "");
+    if (!next.charts.some((chart) => chart.key === activeKey)) {
+      setActiveKey(next.charts[0]?.key ?? "");
     }
   }, [activeKey]);
 
   const activate = useCallback(
     (key: string) => {
       if (!charts.some((chart) => chart.key === key)) return;
+      // A take belongs to the pane it was armed on. Switching panes mid-take used
+      // to keep recording and then convert the events against the new chart, in
+      // its instrument and its columns; the take ends here, where it was played.
+      if (record.recording) stopTake.current();
       setActiveKey(key);
       setSelection(new Set());
       setVisible((current) => (current.includes(key) ? current : current.length < 8 ? [...current, key] : current));
     },
-    [charts],
+    [charts, record.recording],
   );
 
   const toggleVisible = useCallback(
@@ -388,6 +408,7 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
     const at = clock.ended || clock.timeRef.current >= duration - 1
       ? 0
       : snapMs(clock.timeRef.current, grid);
+    recordingKey.current = active.key;
     setStartedAt(at);
     setStatus(null);
     clock.seek(at);
@@ -396,29 +417,42 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
   }, [active, clock, grid, project.doc?.durationMs, record]);
 
   const stopRecording = useCallback(() => {
-    if (!active || !record.recording) return;
+    if (!record.recording) return;
+    // The chart the take was armed on, not whichever pane is active now.
+    const key = recordingKey.current;
+    recordingKey.current = null;
+    const target = key
+      ? (chartsRef.current.find((chart) => chart.key === key) ?? null)
+      : null;
     const events = record.stop();
     const end = Math.max(startedAt, Math.round(clock.timeRef.current));
-    const take = takeNotes(events, active, {
+    clock.pause();
+    if (!target) return;
+    const take = takeNotes(events, target, {
       startMs: startedAt,
       endMs: end,
       quantize,
       grid,
     });
-    clock.pause();
     if (take.length === 0) {
       setStatus(t("charter.takeEmpty"));
       return;
     }
-    const merged = mergeTake(active.notes, take, {
+    const merged = mergeTake(target.notes, take, {
       startMs: startedAt,
       endMs: end,
       mode: recordMode,
     });
-    update(active.key, (chart) => ({ ...chart, notes: merged }));
+    update(target.key, (chart) => ({ ...chart, notes: merged }));
     setSelection(new Set(take.map((note) => note.id)));
     setStatus(t("charter.takeAdded", { count: take.length }));
-  }, [active, clock, grid, quantize, record, recordMode, startedAt, t, update]);
+  }, [clock, grid, quantize, record, recordMode, startedAt, t, update]);
+
+  // The pane's own activate calls this before switching, because it is declared
+  // above the take's stop.
+  useEffect(() => {
+    stopTake.current = stopRecording;
+  }, [stopRecording]);
 
   // The song reaching its end stops a take rather than leaving a record armed on a
   // stopped transport.
@@ -631,7 +665,21 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
   const columns = shown.length <= 1 ? 1 : shown.length <= 4 ? shown.length : 4;
 
   const changeGrid = (patch: Partial<CharterGrid>) => {
-    setGrid((current) => clampGrid({ ...current, ...patch }));
+    const next = clampGrid({ ...gridRef.current, ...patch });
+    if (
+      next.bpm === gridRef.current.bpm &&
+      next.beatsPerBar === gridRef.current.beatsPerBar &&
+      next.division === gridRef.current.division
+    ) {
+      return;
+    }
+    // The grid is what every exported tick is measured from, so a mistyped BPM has
+    // to be undoable like any other edit.
+    past.current.push({ charts: chartsRef.current, grid: gridRef.current });
+    if (past.current.length > HISTORY_LIMIT) past.current.shift();
+    future.current = [];
+    gridRef.current = next;
+    setGrid(next);
   };
 
   return (

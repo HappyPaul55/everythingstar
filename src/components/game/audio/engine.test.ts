@@ -57,6 +57,8 @@ class FakeBufferSource extends FakeSource {
   started = false;
   /** The context time it was asked to start at, so a group can be compared. */
   startedAt: number | null = null;
+  /** The browser's own end-of-buffer edge. */
+  onended: (() => void) | null = null;
   start(when = 0) {
     this.started = true;
     this.startedAt = when;
@@ -66,9 +68,13 @@ class FakeBufferSource extends FakeSource {
 class FakePanner {
   pan = new FakeParam();
   outputs: unknown[] = [];
+  disconnected = false;
   connect(node: unknown) {
     this.outputs.push(node);
     return node;
+  }
+  disconnect() {
+    this.disconnected = true;
   }
 }
 
@@ -382,6 +388,30 @@ describe("the beds", () => {
     expect(FakeAudio.made[0].paused).toBe(true);
     expect(FakeAudio.made[1].paused).toBe(false);
     expect(FakeAudio.made[2].paused).toBe(false);
+  });
+
+  test("the cue that starts a preview does not duck it", async () => {
+    const engine = createEngine();
+    engine.load([
+      sound({
+        id: "select_1",
+        type: "select",
+        url: "https://example.com/select.ogg",
+        kind: "oneshot",
+      }),
+    ]);
+    await engine.start();
+    engine.preview({ url: "https://example.com/preview.ogg" });
+    // Choosing a row is the cue that starts the preview; it is a ducking type.
+    engine.play("select");
+    await settle();
+
+    const context = FakeContext.made[0];
+    const music = context.gains[1];
+    const dips = music.gain.events.filter(
+      (event) => event.kind === "ramp" && event.value < 0.5,
+    );
+    expect(dips).toHaveLength(0);
   });
 
   test("a bed fades the channel that owns it, not always the music", async () => {
@@ -819,6 +849,34 @@ describe("a group of cues", () => {
     expect(context.panners[1]?.pan.value).toBe(0.25);
     // The centre cue goes source → trim → channel, with no panner in between.
     expect(context.buffers).toHaveLength(3);
+  });
+
+  test("a cue's nodes are let go when it ends, so a long session does not grow", async () => {
+    const engine = createEngine();
+    engine.load([
+      sound({
+        id: "hype_guitar",
+        type: "hype_guitar",
+        url: "https://example.com/guitar.ogg",
+        kind: "oneshot",
+      }),
+    ]);
+    await engine.start();
+    engine.playMany([{ type: "hype_guitar", pan: -0.25 }]);
+    await settle();
+
+    const context = FakeContext.made[0];
+    const source = context.buffers[0];
+    const gain = context.gains[context.gains.length - 1];
+    const panner = context.panners[0];
+    expect(source?.disconnected).toBe(false);
+
+    // The browser's own "the sound is over" edge.
+    source?.onended?.();
+
+    expect(source?.disconnected).toBe(true);
+    expect(gain?.disconnected).toBe(true);
+    expect(panner?.disconnected).toBe(true);
   });
 
   test("a group ducks once, for its longest cue", async () => {
