@@ -172,15 +172,23 @@ than switched on their behalf.
 
 `BENCH_SCENARIO=singer|guitars`, `BENCH_VIEW=3d|flat`, `BENCH_SEATS`,
 `BENCH_WIDTH`/`BENCH_HEIGHT`, `BENCH_RATE` and `BENCH_PROFILE=1` (a CDP CPU profile,
-top functions) select the measurement. Headless Chromium caps rAF, so compare CPU and
+top functions) select the frame measurement. `tests/perf/stems.spec.ts` runs a real
+stem-backed song (three WAVs from a local range-capable server); `BENCH_NO_STEMS=1`
+is its no-stem control, on the same chart. Headless Chromium caps rAF, so compare CPU and
 layout counts and relative frame intervals, not absolute fps.
 
 What moved this round: hiding the drifting lights while the stage is up (they are
 invisible under its opaque backdrop) took the four-panel interval **67 → 50 ms**; the
 pitch detector at **30 Hz** and the singer advance at **20 Hz** cut singer script
-**~35 %** (1.6–1.7 s → 1.0–1.2 s at 4x) while staying at 60 fps. Throttling the lane
-advance measured as noise and was reverted; the song-art blur was A/B'd and made no
-difference.
+**~35 %** (1.6–1.7 s → 1.0–1.2 s at 4x) while staying at 60 fps. The pitch detector is
+still the singer's largest function (~358 ms of 8 s at 4x) and the words are ~93 ms,
+so a melody-view memo is not worth the churn.
+
+A stem-backed run and the same chart with no stems were **within noise**: 533–567 ms
+against 465–622 ms of script in 8 s at 4x, with the same frame interval. `SongAudio`'s
+per-frame source read and drift correction are not a cost worth throttling at three
+stems. Throttling the lane advance also measured as noise and was reverted; the
+song-art blur was A/B'd and made no difference.
 
 `tests/perf/dom-writes.spec.ts` answers the other question — *where* the writes go.
 In a four-panel run over three seconds it measured **four track-transform writes
