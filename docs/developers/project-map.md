@@ -505,17 +505,22 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   `useHaptics` (one seat's buzz and rumble), `useWakeLock` (the display a run holds),
   `useElementSize`, `useFullscreen` and the temporary `BandControls`. `PlayerPanel`
   is instrument-agnostic — the instrument is data — and owns its lane's run.
-- `src/styles/band.css` — the band stage styling (regions, player panel, rails,
-  highway and its note treatments, preview controls). It is imported by
-  `GameLayout` for the game-only entries and by `play.astro` for `/play`, always
-  **after** `global.css` in source. The production bundler can still concatenate
-  `band.css` first, so the file **states Tailwind's layer order itself**
-  (`@layer properties, theme, base, components, utilities;`). Without that,
-  `components` becomes the first layer, Tailwind's preflight (`base`) lands after
-  it, and resets the welcome title, the mode chips and every `.band-btn`. The
-  marketing pages deliberately do not carry this stylesheet, which is why `/play`
-  states the global-then-band pair itself. `tests/e2e/play-style.spec.ts` pins the
-  computed styles in the dev suite **and** the production-preview suite.
+- `src/styles/band.css` — the band stage: the **second Tailwind root**. It is
+  imported by `GameLayout` for the game-only entries and by `play.astro` for
+  `/play`, always **after** `global.css` in source, and it imports only
+  `tailwindcss/utilities.css` with `source(none)` plus `@source` roots for
+  `components/game` and `components/charter`. That scoping is what keeps a game
+  utility out of `global.css`, which every marketing page inlines: without it a
+  class written on the stage is generated into the site's stylesheet and lands on
+  the landing page (measured at 16 KB per page before the split). It still holds
+  the stage's own component CSS — the highway, the melody views, the screens and
+  the backdrop — where a selector is the right tool. The file **states Tailwind's
+  layer order itself** (`@layer properties, theme, base, components, utilities;`):
+  the production bundler can concatenate `band.css` first, and without the
+  statement `components` becomes the first layer, Tailwind's preflight (`base`)
+  lands after it, and resets the welcome title, the mode chips and every
+  `.band-btn`. `tests/e2e/play-style.spec.ts` pins the computed styles in the dev
+  suite **and** the production-preview suite.
 - `src/lib/{site,button,nav}.ts` — types and pure helpers (`buttonClass` shared
   by `Button.astro`; `siteNav` shared by header and footer and unit-tested).
 - `src/i18n/**` — `locales.ts` (currently only `en`), `ui/en.game.ts` (the game's

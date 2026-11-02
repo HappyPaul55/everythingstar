@@ -1,4 +1,8 @@
 @import "tailwindcss";
+/* The stage and the charter are their own Tailwind root (`band.css`): their
+   utilities must not be inlined into every marketing page. */
+@source not "../components/game";
+@source not "../components/charter";
 @import "./theme.css";
 @import "./utilities.css";
 

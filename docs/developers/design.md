@@ -32,12 +32,17 @@ reason a utility cannot answer:
   Markdown: its headings, lists, tables and code blocks have no author-written
   attributes, so there is nothing to hang a utility on. These rules stay in
   `global.css` and take their type roles from the vocabulary with `@apply`.
-- **The stage's renderer** (`src/styles/band.css`). A note's position, its column
-  colour, its state and its scroll are written per frame as inline custom
-  properties by the run loop, and read by a selector that knows the note's kind.
-  That is a renderer, not decoration: it is the one stylesheet where a selector
-  is the right tool, and it is deliberately kept out of every page except `/play`
-  and the game-only entries.
+- **The stage** (`src/styles/band.css`). A note's position, its column colour, its
+  state and its scroll are written per frame as inline custom properties by the
+  run loop and read by a selector that knows the note's kind. That is a renderer,
+  not decoration: the highway, the melody views and the screens keep selectors.
+  What has moved is the surface around them — the player panel and its rails are
+  utilities now — and it is the **second Tailwind root**, scoped to
+  `components/game` and `components/charter`, so a game utility is generated into
+  the stylesheet `/play` carries and never into the one every marketing page
+  inlines. Utilities are not free: converting the panel and its rails cost 1.8 KB
+  of CSS for the region, so the rest of the stage is converted only where the
+  measurement says it earns it.
 
 ### The vocabulary
 

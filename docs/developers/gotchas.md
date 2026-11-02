@@ -2036,6 +2036,30 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   the jukebox's slot), **inner** for a control or an inset (a button, an option
   row, the letter index, a note) and **pill only for a text label** (a chip, a
   tag, a badge). A pill on a small square control is a blob, not a rounding.
+- **The stage is a second Tailwind root, and its `@source` roots are load-bearing.**
+  `global.css` imports Tailwind with `@source not "../components/game"` and
+  `@source not "../components/charter"`; `band.css` imports *only* the utilities
+  with `source(none)` and adds those two back. A utility written in a game
+  component therefore belongs to `band.css` — the stylesheet only `/play` and the
+  game-only entries carry — instead of to `global.css`, which every marketing page
+  inlines. Getting the path wrong is silent: the page still works, and the landing
+  page quietly grows by every stage utility (16 KB per page when this was first
+  tried). The paths are relative to the CSS file, so from `src/styles/` it is
+  `../components/game`, not `../../components/game`.
+- **Inside the second root, a longhand can lose to the shorthand it was meant to
+  override.** `p-[1.4%]` and `max-[40rem]:portrait:px-0` are both utilities, and
+  which one wins is decided inside the root that generated them, not by the order
+  they are written in the class list. The bare panel's portrait layout therefore
+  says `[padding:0.35rem_0_0]` and `[gap:0.4rem_0.7rem]` — the whole property, in
+  one rule — rather than three longhands. The computed-style sampler is what
+  caught it: the page looked right and the padding was 5px.
+- **A utility's selector is long, so the stage is measured, not assumed.** A
+  utility is emitted once, but its class name is repeated in full in the
+  stylesheet (`.\.max-\[40rem\]\:portrait\:\[\&\>div\:nth-child\(1\)\]\:w-\[1\.2rem\]`),
+  and against a terse BEM selector that is a loss for a rule used on one element.
+  Converting the panel and its rails cost 1.8 KB of CSS; the highway would cost
+  more. Convert a stage region only when `bun run budget` and a `/play` CSS
+  measurement say it is worth it.
 - **A utility in the `utilities` layer beats a component rule, and that is the point.**
   The site is utility-first, so a screen's look lives in the markup and the
   stylesheet has no selector to fight it. The consequence bites when a rule in

@@ -18,6 +18,41 @@ import { useLaneRun } from "./useLaneRun";
 import { useHaptics } from "./useHaptics";
 
 /**
+ * The panel's shell. It is a **container** in both axes (`size`, not `inline-size`):
+ * the rails and the note type scale with `cqmin`, so one panel reads the same at
+ * 300px and at 1080px. The one-off square, the frame and the fill are utilities;
+ * the layout of its three parts is `flex` in a row.
+ */
+const PANEL =
+  "player-panel [container-type:size] flex gap-[1%] overflow-hidden rounded-brand border border-[rgba(250,250,244,0.2)] bg-[rgba(12,13,10,0.74)] p-[1.4%]";
+
+/**
+ * A lone lane with the stage to itself drops the frame, and on a portrait phone it
+ * becomes two rows: the score and the meter across the top, the highway the whole
+ * width below. At 390px two rails beside the neck were taking more than a third of
+ * the stage. The grid's areas are named so each part says where it sits.
+ */
+const PANEL_BARE = [
+  "player-panel player-panel--bare",
+  "[container-type:size] flex gap-[1%] overflow-hidden p-[1.4%]",
+  "[border:0] rounded-none bg-transparent",
+  "max-[40rem]:portrait:grid max-[40rem]:portrait:grid-cols-[minmax(0,1fr)_auto]",
+  "max-[40rem]:portrait:grid-rows-[auto_minmax(0,1fr)]",
+  /* Written as the whole property, not as padding/gap longhands: a bare panel's
+     frame is `p-[1.4%] gap-[1%]`, and longhands lost that tie inside this root. */
+  "max-[40rem]:portrait:[gap:0.4rem_0.7rem]",
+  "max-[40rem]:portrait:[padding:0.35rem_0_0]",
+  "max-[40rem]:portrait:[grid-template-areas:'score_info'_'highway_highway']",
+  "max-[40rem]:portrait:[&>div:nth-child(1)]:[grid-area:score]",
+  "max-[40rem]:portrait:[&>div:nth-child(2)]:[grid-area:highway]",
+  "max-[40rem]:portrait:[&>div:nth-child(2)]:mx-0 max-[40rem]:portrait:[&>div:nth-child(2)]:h-full",
+  "max-[40rem]:portrait:[&>div:nth-child(2)]:w-full max-[40rem]:portrait:[&>div:nth-child(2)]:max-w-none",
+  "max-[40rem]:portrait:[&>div:nth-child(3)]:[grid-area:info]",
+  "max-[40rem]:portrait:[&>div:nth-child(3)]:h-full max-[40rem]:portrait:[&>div:nth-child(3)]:w-[1.2rem]",
+  "max-[40rem]:portrait:[&>div:nth-child(3)]:items-stretch",
+].join(" ");
+
+/**
  * One instrument panel: the score (left), the note highway (centre) and the info
  * rail (right). It is an instrument-agnostic shell — the instrument decides the
  * kit and the chart decides the columns — and it owns its own run, fed by its
@@ -157,11 +192,18 @@ export function PlayerPanel({ player, width, height, view, noteStyle, noteSpeed,
 
   return (
     <section
-      className={bare ? "player-panel player-panel--bare" : "player-panel"}
+      className={bare ? PANEL_BARE : PANEL}
       style={{ width, height }}
       aria-label={`${name} — ${label}`}
     >
-      <ScoreRail name={name} kind={player.kind} difficulty={player.difficulty} auto={auto} run={run} />
+      <ScoreRail
+        name={name}
+        kind={player.kind}
+        difficulty={player.difficulty}
+        auto={auto}
+        run={run}
+        bare={bare}
+      />
       {chart ? (
         <Highway
           chart={chart}
@@ -186,7 +228,7 @@ export function PlayerPanel({ player, width, height, view, noteStyle, noteSpeed,
           {t("band.noChart")}
         </div>
       )}
-      <InfoRail run={run} starActive={run.starActive} />
+      <InfoRail run={run} starActive={run.starActive} bare={bare} />
     </section>
   );
 }
