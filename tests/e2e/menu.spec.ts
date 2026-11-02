@@ -61,6 +61,45 @@ test("visits options and credits, and Escape goes back a step", async ({
   expect(leaked, "unexpected external requests").toEqual([]);
 });
 
+test("a screen left before its focus frame still gives its button back", async ({
+  context,
+  page,
+}) => {
+  const leaked = await installFixtures(context);
+  await disableFullscreen(page);
+  // Hold the placement frame. A screen that is **left** before its
+  // `requestAnimationFrame` must still count as the screen the return came from, or
+  // the menu has nothing to put focus back on and `<body>` keeps it. Firefox on CI
+  // hit that window for real — Escape out of Credits inside a frame — and this used
+  // to pass or fail on whether a frame happened to land.
+  await page.addInitScript(() => {
+    const real = window.requestAnimationFrame.bind(window);
+    const held: FrameRequestCallback[] = [];
+    let holding = false;
+    window.requestAnimationFrame = (callback: FrameRequestCallback) => {
+      if (!holding) return real(callback);
+      held.push(callback);
+      return 0;
+    };
+    (window as unknown as { __holdFrames: (on: boolean) => void }).__holdFrames = (on) => {
+      holding = on;
+      if (!on) for (const callback of held.splice(0)) real(callback);
+    };
+  });
+  await enterGame(page);
+
+  type Frames = { __holdFrames: (on: boolean) => void };
+  await page.evaluate(() => (window as unknown as Frames).__holdFrames(true));
+  await page.getByRole("button", { name: /Credits/ }).click();
+  // Back to the menu, with the credits screen's own placement frame never having run.
+  await page.keyboard.press("Escape");
+  await page.evaluate(() => (window as unknown as Frames).__holdFrames(false));
+
+  await expect(page.getByRole("navigation", { name: "Main menu" })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Credits/ })).toBeFocused();
+  expect(leaked, "unexpected external requests").toEqual([]);
+});
+
 test("both calibration dialogs open from Options, and Escape gives their buttons back", async ({
   context,
   page,

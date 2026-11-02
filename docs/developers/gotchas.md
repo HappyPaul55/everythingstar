@@ -1986,7 +1986,12 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   moved by code on a screen change, so the mouse's hover is the only control that
   looks active. Every screen puts focus on the element that
   screen starts with, and a live region says the screen's name; a swapped screen
-  must not leave focus on `<body>`. **A marked root is the starting place**: the
+  must not leave focus on `<body>`. **The screen is recorded when it changes, not when
+  its placement frame runs**: a screen left before that frame is cancelled — Escape out
+  of Credits inside a frame — still has to count as the one the return came from, or the
+  return computes its previous screen wrongly and places nothing at all. Measured in
+  Firefox on CI, where focus sat on `<body>` and nothing moved it back.
+  **A marked root is the starting place**: the
   stage and the loading screen mark themselves `data-nav-default`, and
   `defaultFocus` returns that root rather than its first focusable — focusing the
   stage's first highway pad put the ring on a control the player had not reached.
