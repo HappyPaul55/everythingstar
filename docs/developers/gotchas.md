@@ -686,6 +686,19 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   pause bug: that stem could be the one left behind, and the whole band was moved back
   with it. `data-stem-spread` on `.song-audio` is the dev read-out of how far apart the
   alignment last left them.
+  **A pause takes where the sound actually stopped, not the frame it froze on**
+  (`pausePoint` in `stemSync.ts`): the elements outlive the frame that froze the
+  playhead by a render and a commit, so freezing on the sample and then pulling every
+  stem back onto it threw that interval away and played it **again** on the way back —
+  the "echo when unpausing", a flam on the drums every time a run came back. The stem
+  the clock was reading reports its own stop position, and the playhead takes it when
+  it is **small and forward** (200ms — a frame plus two commits). A sound that stopped
+  *behind* the playhead is a stem to move onto it, not a reason to step the song back,
+  and one far *ahead* is not this edge at all: a hidden tab keeps its media elements
+  playing while the frame loop is stopped, and that stretch is meant to be **replayed**,
+  not skipped, so the playhead wins and the stems are re-seated on it. A deliberate
+  seek — the practice end's — also keeps its target, because its elements have not
+  arrived at it yet.
   **A part a miss has taken out is carried, not pinned** (`HELD_SHARE` in
   `audio/mix.ts`): it is **ducked to a tenth of its own level**, never silenced. A media
   element at `volume = 0` leaves the browser's audio clock and free-runs — measured in
@@ -698,6 +711,18 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   (and asked to `play()` again). `stillAction` is the pause's rule alone
   (`pausedAction` in `stemSync.ts`), where nobody can hear a correction. Each stalled stem
   has its own retry clock, so one file cannot starve another of its `play()` retry.
+- **A media element's `error` is a report, not a verdict.** A stem is judged by what it
+  is **doing** — playing, with a timeline — never by the flag. A machine with **no audio
+  device** sets `MediaError` code 3 on every element the moment playback starts (measured
+  in headless Firefox, which is every CI runner), and a decoder that stumbled and
+  recovered leaves one behind. Treating it as death cost the band its clock on exactly
+  those machines: `isSounding` stopped naming a source, the playhead fell back to the
+  frame clock after the stall window, the drift rules skipped every stem, and the first
+  stem to end finished the run. So `isSounding` ignores it, the transport asks an errored
+  stem to play, and a stem counts as **failed** only with an error *and* no data
+  (`readyState < 2`). The one place the flag still decides is `onError`'s fallback to the
+  parts mix (a 0-byte `song.ogg`), which now ignores an error event from an element that
+  is playing.
 - **A miss ducks that part in the song, and never the master.** The rule is
   `src/lib/game/audio/parts.ts`, and it is the song document's own: `parts[].audioControl`
   names the stems a part owns, `controlledStems` turns that into a **part-key → stems**

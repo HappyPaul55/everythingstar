@@ -80,7 +80,16 @@ export interface StageClock {
   /** Slow the fallback frame clock down (or bring it back to the record). */
   setRate: (rate: number) => void;
   play: () => void;
-  pause: () => void;
+  /**
+   * Stop the transport, holding the playhead where it is.
+   *
+   * `atMs` is where the **sound** stopped, when the caller knows: the media elements
+   * outlive the frame that froze the playhead by a render and a commit, and a pause
+   * that does not say so leaves that interval to be played again when the run comes
+   * back. `pausePoint` decides when a difference is the edge's own latency rather
+   * than a stall. Omitting it — every caller but the song — keeps the playhead.
+   */
+  pause: (atMs?: number) => void;
   toggle: () => void;
   restart: () => void;
   seek: (timeMs: number) => void;
@@ -351,7 +360,19 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
         setRateState(speed);
       },
       play: () => start(false),
-      pause: () => {
+      pause: (atMs?: number) => {
+        // The sound is the clock, and it stopped a render later than this call: take
+        // where it actually stopped when the caller can read that, instead of leaving
+        // the difference for the resume to play a second time. A deliberate seek is
+        // still in flight more often than not at a practice end, and its target is the
+        // answer there — the elements have not arrived at it yet.
+        if (
+          atMs !== undefined &&
+          Number.isFinite(atMs) &&
+          performance.now() - seekedAtRef.current >= SEEK_GUARD_MS
+        ) {
+          timeRef.current = clampPlayhead(atMs, durationMs);
+        }
         playingRef.current = false;
         setPlaying(false);
         // The playhead has not moved; forgetting when it was sampled would make

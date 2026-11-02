@@ -4,7 +4,9 @@ import {
   SOURCE_PREFERENCE_MS,
   START_SEAT_DEADLINE_MS,
   STEM_ALIGN_TOLERANCE_MS,
+  STOP_ADOPT_MS,
   pausedAction,
+  pausePoint,
   sourceStem,
   startSeatAction,
   stemAlignmentsTo,
@@ -148,6 +150,36 @@ describe("startSeatAction", () => {
     // off for the rest of the song.
     expect(START_SEAT_DEADLINE_MS).toBeGreaterThanOrEqual(500);
     expect(START_SEAT_DEADLINE_MS).toBeLessThanOrEqual(2000);
+  });
+});
+
+describe("pausePoint", () => {
+  test("the sound's own stop position is taken when it is the edge's latency", () => {
+    // The elements played on for the commit it took to stop them. Taking where they
+    // stopped is what stops that interval being heard twice on the way back.
+    expect(pausePoint(10_040, 10_000)).toBe(10_040);
+    expect(pausePoint(10_000, 10_000)).toBe(10_000);
+    expect(pausePoint(10_000 + STOP_ADOPT_MS, 10_000)).toBe(10_000 + STOP_ADOPT_MS);
+  });
+
+  test("a sound that stopped behind the playhead is not taken", () => {
+    // A stem behind the song is a stem to move onto it, not a reason to step the
+    // song backwards: the playhead wins and the stems are re-seated.
+    expect(pausePoint(9_980, 10_000)).toBeNull();
+    expect(pausePoint(9_000, 10_000)).toBeNull();
+  });
+
+  test("a stall is not an edge: far ahead means replay it, not skip it", () => {
+    // A hidden tab keeps its media elements playing while the frame loop is stopped.
+    // The run means to replay that stretch, so the playhead is the answer.
+    expect(pausePoint(10_000 + STOP_ADOPT_MS + 1, 10_000)).toBeNull();
+    expect(pausePoint(40_000, 10_000)).toBeNull();
+  });
+
+  test("nothing to read from the sound leaves the playhead where it is", () => {
+    expect(pausePoint(null, 10_000)).toBeNull();
+    expect(pausePoint(Number.NaN, 10_000)).toBeNull();
+    expect(pausePoint(10_040, Number.NaN)).toBeNull();
   });
 });
 

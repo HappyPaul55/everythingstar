@@ -393,6 +393,13 @@ master starts at full — it is the player's, and the mix is the mix's. A file's
   graph and the first click is heard as a click. The cap is five seconds — a manifest or
   a file that never arrives is a **silent** game, not a welcome nobody can leave. The bed
   asked for before the press is remembered and starts with it.
+  **The bed is asked for in the gesture's own turn**, before the graph's resume is
+  awaited. A media element's `play()` is allowed by the press itself and not by a
+  promise that resolves a turn later, and a refusal there is only *remembered* — so a
+  browser strict about activation left the menus silent for the rest of the visit while
+  every click, already decoded, still played. Started before the resume, the bed plays
+  into a suspended graph, makes no sound until it runs, and is already in the right
+  place when it does.
 - **Every page wants `background`; the stage and the jukebox want none.** A menu bed
   over a running song is the one thing the mixer must never do, and the jukebox is a
   preview booth rather than a room with a house band.
