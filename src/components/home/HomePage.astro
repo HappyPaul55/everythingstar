@@ -63,10 +63,10 @@ const modes = [
       <div class="mt-10 grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
         {
           modes.map((mode) => (
-            <article class:list={["sticker", mode.accent && "sticker--accent"]}>
-              <span class="sticker__index">{mode.n}</span>
-              <h2 class="sticker__title">{mode.title}</h2>
-              <p class="sticker__body">{mode.body}</p>
+            <article class:list={["sticker", mode.accent && "sticker-accent"]}>
+              <span class="sticker-index">{mode.n}</span>
+              <h2 class="sticker-title">{mode.title}</h2>
+              <p class="sticker-body">{mode.body}</p>
             </article>
           ))
         }

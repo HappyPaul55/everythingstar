@@ -294,7 +294,7 @@ export function Results({
           <div className="results__titles">
             {/* The tag over the title, the way every other screen is headed: the
                 results are the screen, and the song is what it is about. */}
-            <p className="comment on-ink screen__comment">
+            <p className="comment comment-ink on-ink screen__comment [--tag-color:var(--color-cream)]">
               <span className="slash" aria-hidden="true">
                 //
               </span>{" "}

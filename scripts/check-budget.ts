@@ -52,6 +52,15 @@
  * in the first download, not a lazy chunk moved out of place. The raw cap moved
  * 572 → 580 and the whole-payload cap 700 → 710; the gzip kept its 190.
  *
+ * The utility-first restyle (2026-11-02) moved the **charter's** styling out of
+ * `charter.css` and into the island's strings: the markup now carries the utilities
+ * that used to be selectors, so the whole-`_astro` number grew 707 → 714 KiB while
+ * the stylesheet it replaced left `dist/` smaller. The initial `/play` graph did not
+ * move (573 KiB raw / 185 KiB gzipped): the site and the charter are separate
+ * downloads, and a player's first drawing of the stage is untouched. The cap moved
+ * 710 → 730 to hold that, and the next styling change should keep it there rather
+ * than make the island heavier than the CSS it replaced.
+ *
  * The script will not measure a build it cannot find: `dist/_astro`, `dist/`,
  * `public/audio` and `play.html` are each required before any number is read, and
  * a `play.html` with no initial JS is a failure rather than a zero.
@@ -162,7 +171,7 @@ const checks: Check[] = [
   {
     label: "dist/_astro JS",
     actual: sizeOf(join(DIST, "_astro"), (file) => file.endsWith(".js")),
-    limit: 710 * KIB,
+    limit: 730 * KIB,
   },
   { label: "initial /play raw", actual: initialRaw, limit: 580 * KIB },
   { label: "initial /play gzip", actual: initialGzip, limit: 190 * KIB },

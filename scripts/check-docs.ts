@@ -103,9 +103,11 @@ for (const page of built) {
     `${page.path} has its own canonical`,
     html.includes(`<link rel="canonical" href="${SITE}${page.path}">`),
   );
-  // A page with no ancestors (the hub, a notice) has no trail to draw.
+  // A page with no ancestors (the hub, a notice) has no trail to draw. The
+  // trail is found by its landmark, not by its class list: the look is utilities
+  // now, and a check on a class name would be a check on a stylesheet detail.
   if (page.id !== "README" && !page.id.startsWith("other/")) {
-    check(`${page.path} has a breadcrumb trail`, html.includes("comment breadcrumbs"));
+    check(`${page.path} has a breadcrumb trail`, html.includes('aria-label="Breadcrumb"'));
   }
   check(`${page.path} ships no island`, !html.includes("astro-island"));
   check(`${page.path} carries no component URL`, !html.includes("component-url="));

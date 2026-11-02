@@ -1,0 +1,321 @@
+/* ------------------------------------------------------------------
+   The vocabulary
+   Every repeated look in the product, written once as a Tailwind
+   utility. A surface uses one of these by name; the utilities beside it
+   in the markup are the one-off spacing and sizing that make that
+   surface *this* one.
+
+   Why not plain classes: these are compiled, tree-shaken utilities in
+   Tailwind's own utilities layer, so `@utility` is the supported way to
+   add a name to the language. Why not only inline utilities: a motif
+   such as the sticker is a dozen declarations and three states, and
+   repeating it at each call site is how the three stickers in the site
+   drifted apart the first time.
+
+   The rules of the vocabulary (also in docs/developers/design.md):
+   - a utility names a **role**, never a place (`panel`, not `results-card`);
+   - the call site may add utilities beside it, but must not restate its
+     declarations;
+   - a colour, radius or type size that is not a token does not belong here.
+------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------
+   Labels
+   The mono/uppercase kicker that names a region. One size, one tracking;
+   a second size beside a link is how two labels end up a pixel apart.
+------------------------------------------------------------------ */
+@utility kicker {
+  font-family: var(--font-mono);
+  font-size: var(--text-kicker);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ------------------------------------------------------------------
+   Backdrops
+   A halftone spray speckle: two offset dot layers read as overspray
+   rather than a clean grid. Decorated, never load-bearing.
+------------------------------------------------------------------ */
+@utility spray-ink {
+  background-color: var(--color-ink);
+  background-image:
+    radial-gradient(rgba(255, 212, 0, 0.1) 1px, transparent 1.5px),
+    radial-gradient(rgba(250, 250, 244, 0.06) 1px, transparent 1.5px);
+  background-size:
+    22px 22px,
+    13px 13px;
+  background-position:
+    0 0,
+    7px 8px;
+}
+@utility spray-paper {
+  background-color: var(--color-paper);
+  background-image:
+    radial-gradient(rgba(12, 13, 10, 0.055) 1px, transparent 1.5px),
+    radial-gradient(rgba(12, 13, 10, 0.035) 1px, transparent 1.5px);
+  background-size:
+    26px 26px,
+    15px 15px;
+  background-position:
+    0 0,
+    8px 9px;
+}
+
+/* A hazard-tape band. The height belongs to the call site (`h-2`, `h-[5px]`). */
+@utility hazard {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--color-yellow) 0 12px,
+    var(--color-ink) 12px 24px
+  );
+}
+
+/* ------------------------------------------------------------------
+   The graffiti tag (`// a comment`) and its sprayed highlighter
+------------------------------------------------------------------ */
+@utility comment {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  line-height: 1;
+  color: var(--tag-color, var(--color-ink-soft));
+  text-shadow: var(--tag-shadow, none);
+  transform: rotate(-1.2deg);
+  transform-origin: left center;
+}
+/* The same tag on an ink surface. It only re-points the two variables, so the
+   two classes may be written in either order. */
+@utility comment-ink {
+  --tag-color: var(--color-paper-2);
+  --tag-shadow:
+    0 1px 0 rgba(12, 13, 10, 0.95), 0 0 5px rgba(12, 13, 10, 0.95), 0 0 14px rgba(12, 13, 10, 0.8);
+  --tag-slash: var(--color-yellow);
+}
+@utility slash {
+  color: var(--tag-slash, var(--color-yellow-deep));
+}
+
+@utility mark {
+  background: var(--color-yellow);
+  color: var(--color-ink);
+  padding: 0.02em 0.2em;
+  /* An irregular blob, so it reads as a sprayed blot not a tidy fill. */
+  border-radius: 42% 58% 54% 46% / 58% 46% 60% 40%;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  box-shadow: var(--shadow-blot);
+}
+
+/* ------------------------------------------------------------------
+   The sticker card
+   A pasted-up sticker: thick ink border, hard offset shadow and a
+   resting tilt that straightens and lifts on hover. The accent variant
+   re-points the two shadow variables rather than restating the card.
+------------------------------------------------------------------ */
+@utility sticker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 2px solid var(--color-ink);
+  border-radius: var(--radius-brand);
+  background: var(--color-cream);
+  padding: clamp(1.15rem, 2.4vw, 1.5rem);
+  box-shadow: var(--sticker-shadow, var(--shadow-sticker));
+  transform: rotate(-0.7deg);
+  transition:
+    transform 0.28s var(--ease-brand),
+    box-shadow 0.28s var(--ease-brand),
+    background-color 0.28s var(--ease-brand);
+
+  &:nth-child(even) {
+    transform: rotate(0.7deg);
+  }
+  &:hover,
+  &:focus-within {
+    transform: rotate(0) translate(-3px, -3px);
+    box-shadow: var(--sticker-lift, var(--shadow-sticker-lift));
+    background: #fff;
+  }
+  /* A strip of tape, stuck over the top edge. */
+  &::before {
+    content: "";
+    position: absolute;
+    top: -0.62rem;
+    left: 1.15rem;
+    width: 3.4rem;
+    height: 1.15rem;
+    background: rgba(255, 212, 0, 0.72);
+    border: 1px solid rgba(12, 13, 10, 0.16);
+    transform: rotate(-4deg);
+  }
+  /* Keep the resting tilt, but never move or lift the stickers. */
+  @media (prefers-reduced-motion: reduce) {
+    &:hover,
+    &:focus-within {
+      transform: rotate(-0.7deg);
+    }
+    &:nth-child(even):hover,
+    &:nth-child(even):focus-within {
+      transform: rotate(0.7deg);
+    }
+  }
+}
+@utility sticker-accent {
+  --sticker-shadow: var(--shadow-sticker-accent);
+  --sticker-lift: var(--shadow-sticker-accent-lift);
+}
+@utility sticker-index {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--color-ink-soft);
+}
+@utility sticker-title {
+  margin-top: 0.6rem;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+@utility sticker-body {
+  margin-top: 0.4rem;
+  color: var(--color-ink-soft);
+}
+
+/* ------------------------------------------------------------------
+   The charter
+   A game tool rather than a game screen: the same ink and yellow, a
+   smaller type scale and a workspace that fills the viewport. Its
+   controls are skinnable through three variables so the primary and
+   record variants re-point them instead of restating the button.
+------------------------------------------------------------------ */
+@utility charter-shell {
+  height: 100dvh;
+  min-height: 32rem;
+  overflow: hidden;
+  background: var(--color-ink);
+  color: var(--color-cream);
+}
+
+@utility charter-page {
+  height: 100%;
+  min-height: 0;
+  padding: 0.75rem 0.9rem;
+  font-family: var(--font-body);
+}
+
+@utility charter-btn {
+  --btn-border: rgba(251, 251, 243, 0.24);
+  --btn-color: var(--color-cream);
+  --btn-bg: transparent;
+  --btn-border-hover: var(--color-yellow);
+  --btn-color-hover: var(--color-yellow);
+  --btn-bg-hover: transparent;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.2rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--btn-border);
+  border-radius: var(--radius-inner);
+  background: var(--btn-bg);
+  color: var(--btn-color);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--btn-border-hover);
+    background: var(--btn-bg-hover);
+    color: var(--btn-color-hover);
+  }
+}
+@utility charter-btn-primary {
+  --btn-border: var(--color-yellow);
+  --btn-bg: var(--color-yellow);
+  --btn-color: var(--color-ink);
+  --btn-border-hover: var(--color-cream);
+  --btn-bg-hover: var(--color-cream);
+  --btn-color-hover: var(--color-ink);
+}
+@utility charter-btn-small {
+  min-height: 1.8rem;
+  padding: 0.25rem 0.45rem;
+  font-size: 0.6rem;
+}
+@utility charter-btn-record {
+  --btn-border: var(--color-record);
+  --btn-color: var(--color-record-soft);
+}
+@utility charter-btn-record-on {
+  --btn-bg: var(--color-record);
+  --btn-color: var(--color-ink);
+}
+
+/* A mini field's label: the smallest type in the product, and the only place
+   a control is named. */
+@utility charter-label {
+  color: rgba(251, 251, 243, 0.55);
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+@utility charter-input {
+  min-height: 2rem;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid rgba(251, 251, 243, 0.22);
+  border-radius: var(--radius-inner);
+  background: rgba(251, 251, 243, 0.06);
+  color: var(--color-cream);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+
+  &::placeholder {
+    color: rgba(251, 251, 243, 0.3);
+  }
+}
+
+@utility charter-badge {
+  display: inline-block;
+  margin: 0 0 0.3rem;
+  padding: 0.18rem 0.4rem;
+  border-radius: var(--radius-inner);
+  background: var(--color-yellow);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@utility charter-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-line-ink);
+  border-radius: var(--radius-inner);
+  background: var(--color-charter-pane);
+}
+
+@utility charter-note {
+  position: absolute;
+  min-height: 3px;
+  border-radius: 2px;
+  cursor: grab;
+}

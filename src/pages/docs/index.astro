@@ -37,18 +37,27 @@ const title = hub.data.title;
 >
   <Content />
 
-  <div class="docs-hub">
+  <div class="mt-10 grid gap-8 md:grid-cols-2 md:gap-x-12 md:gap-y-10">
     {
       groups.map((group) => (
-        <section class="docs-hub__section" id={group.section}>
-          <h2 class="docs-hub__title">{t(SECTION_LABELS[group.section])}</h2>
-          <p class="docs-hub__lede">{t(SECTION_LEDES[group.section])}</p>
-          <ul class="docs-hub__list">
+        <section class="scroll-mt-4 border-t-2 border-ink pt-4" id={group.section}>
+          <h2 class="mt-0 border-0 p-0 font-display text-[1.5rem] leading-[1.1] font-normal">
+            {t(SECTION_LABELS[group.section])}
+          </h2>
+          <p class="mt-[0.35rem] max-w-[46rem] text-[0.95rem] text-ink-soft">
+            {t(SECTION_LEDES[group.section])}
+          </p>
+          <ul class="mt-[0.9rem] grid list-none gap-[0.35rem] p-0">
             {group.docs.map((doc) => (
               <li>
-                <a class="docs-hub__link" href={docHref(doc.id, locale)}>
-                  <span class="docs-hub__name">{doc.data.title}</span>
-                  <span class="docs-hub__description">{doc.data.description}</span>
+                <a
+                  class="grid gap-[0.1rem] rounded-inner border border-line px-[0.75rem] py-[0.55rem] text-ink no-underline transition-colors duration-200 ease-brand hover:bg-paper-2"
+                  href={docHref(doc.id, locale)}
+                >
+                  <span class="font-semibold">{doc.data.title}</span>
+                  <span class="text-[0.86rem] leading-[1.45] text-ink-soft">
+                    {doc.data.description}
+                  </span>
                 </a>
               </li>
             ))}

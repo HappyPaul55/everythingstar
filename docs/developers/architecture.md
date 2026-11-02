@@ -1,7 +1,7 @@
 ---
 title: Architecture
 description: "The loop, the screen machine and the one stage: how EverythingStar is laid out, what is mounted for every screen, and where the seams are."
-updated: "2026-11-01"
+updated: "2026-11-02"
 order: 1
 ---
 
@@ -262,7 +262,10 @@ rather than the 671 KiB JPEG it replaced.
 ## The stack, and the first download
 
 - **Astro 7** (static) + **React 19** island (`@astrojs/react`, `client:load`)
-- **Tailwind CSS v4** with design tokens in `@theme` (`src/styles/global.css`)
+- **Tailwind CSS v4**, utility-first: tokens in `@theme` (`src/styles/theme.css`),
+  the repeated looks as `@utility` (`src/styles/utilities.css`), and the markup as
+  the rest. The stage alone keeps a stylesheet of its own (`band.css`) because its
+  geometry is written by the run loop.
 - **Cloudflare static assets** (`wrangler.jsonc`) — GitHub Actions builds and
   uploads the files with `wrangler deploy`, with no Worker script and no API
 - **Bun** for installs, scripts and binaries — never `npm`/`npx`; the lockfile is

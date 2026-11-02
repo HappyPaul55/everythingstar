@@ -5180,11 +5180,6 @@
   .results__titles {
     min-width: 0;
   }
-  /* The `//` tag sits on a dark panel here rather than on the stage, so it is said
-     at full strength: at the panel's size the usual two-thirds reads as a smudge. */
-  .results .comment.on-ink {
-    color: var(--color-cream);
-  }
   .results__song {
     margin: 0;
     font-family: var(--font-mono);

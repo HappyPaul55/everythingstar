@@ -56,7 +56,7 @@ export function Menu({ onQuickPlay, onOptions, onCredits, onBack }: Props) {
     <div className="screen screen--menu">
       <div className="menu-layout">
         <div className="menu__branding">
-          <p className="comment on-ink menu__comment">
+          <p className="comment comment-ink on-ink menu__comment">
             <span className="slash" aria-hidden="true">
               //
             </span>{" "}

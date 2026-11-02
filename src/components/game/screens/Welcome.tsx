@@ -97,7 +97,7 @@ export function Welcome({ onEnter, focus = true }: Props) {
   return (
     <div className="screen screen--welcome">
       <div className="screen__panel screen__panel--title">
-        <p className="comment on-ink screen__comment welcome__build">
+        <p className="comment comment-ink on-ink screen__comment welcome__build">
           <span className="slash" aria-hidden="true">
             //
           </span>{" "}

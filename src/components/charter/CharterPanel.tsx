@@ -18,6 +18,18 @@ import { useScrollTrack } from "../game/band/useScrollTrack";
 /** Where the playhead sits in a pane: low, with the song rising above it. */
 const PANE_ANCHOR = 0.76;
 
+/** The five fret colours, in the order a chart's columns take them. */
+const FRET_BG = ["bg-note-0", "bg-note-1", "bg-note-2", "bg-note-3", "bg-note-4"] as const;
+
+/** The dot beside a pane's name names its instrument as well as its chart. */
+const INSTRUMENT_BG: Record<string, string> = {
+  guitar: "bg-instrument-guitar",
+  bass: "bg-instrument-bass",
+  drums: "bg-instrument-drums",
+  keys: "bg-instrument-keys",
+  dance: "bg-instrument-dance",
+};
+
 export interface PanelDrag {
   chartKey: string;
   deltaMs: number;
@@ -214,24 +226,45 @@ export function CharterPanel({
 
   return (
     <section
-      className={["charter-pane", active ? "is-active" : "", dragging ? "is-dragging" : ""]
+      className={[
+        "charter-pane",
+        active && "is-active border-yellow shadow-[inset_0_0_0_1px_var(--color-yellow)]",
+      ]
         .filter(Boolean)
         .join(" ")}
       aria-label={chartLabel(chart)}
     >
-      <header className="charter-pane__head">
-        <button type="button" className="charter-pane__name" onClick={() => onActivate(chart.key)}>
-          <span className="charter-pane__dot" data-instrument={chart.instrument} />
+      <header
+        className={[
+          "flex min-h-[1.55rem] items-center gap-[0.35rem] border-b border-line-ink bg-[rgba(251,251,243,0.03)] px-[0.35rem] py-[0.15rem]",
+          active && "bg-[rgba(255,212,0,0.1)]",
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
+        <button
+          type="button"
+          className="charter-pane__name flex min-w-0 cursor-pointer items-center gap-[0.3rem] overflow-hidden border-0 bg-transparent font-mono text-[0.54rem] font-bold tracking-[0.03em] whitespace-nowrap text-cream uppercase text-ellipsis"
+          onClick={() => onActivate(chart.key)}
+        >
+          <span
+            className={`size-[0.34rem] flex-none rounded-full ${INSTRUMENT_BG[chart.instrument] ?? "bg-accent"}`}
+            data-instrument={chart.instrument}
+          />
           {chartLabel(chart)}
         </button>
-        <span className="charter-pane__count">
+        <span className="ml-auto font-mono text-[0.5rem] whitespace-nowrap text-[rgba(251,251,243,0.66)]">
           {chart.notes.length} {t("charter.notes")}
         </span>
-        {active ? <span className="charter-pane__editing">{t("charter.active")}</span> : null}
+        {active ? (
+          <span className="font-mono text-[0.48rem] text-yellow uppercase">
+            {t("charter.active")}
+          </span>
+        ) : null}
       </header>
       <div
         ref={body}
-        className="charter-pane__body"
+        className="charter-pane__body relative min-h-0 flex-1 cursor-crosshair touch-none overflow-hidden outline-none focus-visible:-outline-offset-2 focus-visible:outline-2 focus-visible:outline-yellow"
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}
@@ -241,31 +274,41 @@ export function CharterPanel({
         aria-label={`${chartLabel(chart)} highway`}
         tabIndex={0}
       >
-        <div className="charter-pane__columns" aria-hidden="true">
+        <div className="absolute inset-0" aria-hidden="true">
           {Array.from({ length: chart.columns }, (_, index) => (
             <span
               key={index}
-              className="charter-pane__column"
+              className="absolute inset-y-0 border-r border-[rgba(251,251,243,0.045)]"
               style={{ left: `${(index / chart.columns) * 100}%`, width: `${100 / chart.columns}%` }}
             />
           ))}
         </div>
-        <div ref={track.ref} className="charter-pane__layer">
+        <div ref={track.ref} className="absolute inset-0">
           {lines.map((line) => (
             <span
               key={`g-${line.timeMs}`}
-              className={["charter-pane__grid", line.bar ? "is-bar" : line.beat ? "is-beat" : ""]
-                .filter(Boolean)
-                .join(" ")}
+              className={[
+                "absolute inset-x-0 h-px",
+                line.bar
+                  ? "bg-[rgba(251,251,243,0.26)]"
+                  : line.beat
+                    ? "bg-[rgba(251,251,243,0.12)]"
+                    : "bg-[rgba(251,251,243,0.055)]",
+              ].join(" ")}
               style={{ top: `${track.position(line.timeMs)}%` }}
               aria-hidden="true"
             />
           ))}
-          <div className="charter-pane__slides" aria-hidden="true">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
             {slides.map((slide) => (
               <div
                 key={`slide-${slide.key}`}
-                className={`charter-slide is-${slide.ribbon.side}`}
+                className={[
+                  "absolute rounded-full border-[5px] border-[rgba(232,232,226,0.36)]",
+                  slide.ribbon.side === "right"
+                    ? "[clip-path:inset(50%_0_0_50%)]"
+                    : "[clip-path:inset(50%_50%_0_0)]",
+                ].join(" ")}
                 style={{
                   left: `${slide.ribbon.left}px`,
                   top: `${slide.ribbon.top}px`,
@@ -283,7 +326,7 @@ export function CharterPanel({
             return (
               <span
                 key={`take-${note.id}`}
-                className="charter-note charter-note--take"
+                className="charter-note pointer-events-none border border-dashed border-yellow bg-transparent opacity-90"
                 style={{
                   left: `${across.left}%`,
                   width: `${across.width}%`,
@@ -300,11 +343,14 @@ export function CharterPanel({
             const across = noteColumnBox(column, chart.columns);
             const classes = [
               "charter-note",
-              column === null ? "is-open" : `is-c${column % 5}`,
-              note.lengthMs > 0 ? "is-sustain" : "",
-              note.kind === "hopo" ? "is-hopo" : "",
-              note.hero ? "is-hero" : "",
-              selected.has(note.id) ? "is-selected" : "",
+              column === null ? "bg-note-open opacity-85" : FRET_BG[column % 5],
+              note.lengthMs > 0 && "rounded-b-[3px] opacity-90",
+              note.kind === "hopo" && "outline outline-1 -outline-offset-1 outline-cream/90",
+              note.hero
+                ? "shadow-[0_0_0_2px_var(--color-cream),0_0_8px_rgba(255,212,0,0.5)]"
+                : "shadow-[0_1px_0_rgba(0,0,0,0.35)]",
+              selected.has(note.id) && "z-2 outline-2 outline-dashed outline-cream outline-offset-1",
+              dragging && "cursor-grabbing",
             ]
               .filter(Boolean)
               .join(" ");
@@ -325,15 +371,16 @@ export function CharterPanel({
           })}
         </div>
         <span
-          className="charter-pane__playhead"
+          className="pointer-events-none absolute inset-x-0 h-px bg-yellow shadow-[0_0_6px_rgba(255,212,0,0.8)]"
           style={{ top: `${PANE_ANCHOR * 100}%` }}
           aria-hidden="true"
         />
         {chart.notes.length === 0 ? (
-          <p className="charter-pane__empty">{t("charter.emptyChart")}</p>
+          <p className="pointer-events-none absolute inset-0 m-0 grid place-items-center p-4 text-center font-mono text-[0.55rem] text-cream/22">
+            {t("charter.emptyChart")}
+          </p>
         ) : null}
       </div>
     </section>
   );
 }
-

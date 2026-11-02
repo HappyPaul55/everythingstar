@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "./theme.css";
+@import "./utilities.css";
 
 /* ------------------------------------------------------------------
    Self-hosted fonts (latin subset)
@@ -36,42 +38,10 @@
 }
 
 /* ------------------------------------------------------------------
-   Design tokens (Tailwind v4 theme -> CSS variables + utilities)
-   Concept: a graffiti-arcade stage — ink, paper and electric yellow,
-   with one restrained neon accent. Bold, but never loud enough to
-   fight legibility or contrast.
------------------------------------------------------------------- */
-@theme {
-  --color-ink: #0c0d0a;
-  --color-ink-soft: #43463a;
-  --color-muted: #62655a;
-  --color-paper: #f4f4ec;
-  --color-paper-2: #e7e8dd;
-  --color-cream: #fbfbf3;
-  --color-yellow: #ffd400;
-  --color-yellow-deep: #d9b900;
-  /* One extra accent, used sparingly (the slash lane, small spray details). */
-  --color-accent: #22e0ff;
-  --color-accent-deep: #0bb6d4;
-  /* A dropped note. */
-  --color-danger: #ff4d4f;
-  --color-line-ink: rgba(250, 250, 244, 0.16);
-  --color-line-ink-strong: rgba(250, 250, 244, 0.36);
-
-  --font-display: "Permanent Marker", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
-  --font-body: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Space Mono", ui-monospace, "SFMono-Regular", monospace;
-
-  /* The radius scale: a surface, something small sitting inside one, and a pill.
-     Everything round uses one of these three. */
-  --radius-brand: 8px;
-  --radius-inner: 4px;
-  --radius-pill: 999px;
-  --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* ------------------------------------------------------------------
    Base
+   The only element selectors that are not a utility: the page's own
+   defaults, the focus ring that must never be forgotten and the two
+   hooks (`on-ink`, `[hidden]`) everything else reads.
 ------------------------------------------------------------------ */
 @layer base {
   html {
@@ -113,336 +83,18 @@
 }
 
 /* ------------------------------------------------------------------
-   Components
+   Prose
+   The **one** place component selectors are still the right tool. A
+   documentation page is Markdown: the browser builds its headings,
+   lists, tables and code blocks, and the author never writes an
+   attribute on them, so there is no element to hang a utility on.
+   These rules style that generated tree, and nothing else; every other
+   surface in the product is utilities.
+
+   Shared type roles still come from the vocabulary (`@apply kicker`)
+   so a prose label and a game label cannot drift apart.
 ------------------------------------------------------------------ */
 @layer components {
-  /* Skip link (keyboard users). Fixed, not absolute: the link is focused after
-     the page has scrolled, and an absolute one would sit above the viewport. */
-  .skip-link {
-    position: fixed;
-    left: 1rem;
-    top: -100%;
-    z-index: 100;
-    padding: 0.75rem 1.25rem;
-    border-radius: var(--radius-brand);
-    background: var(--color-yellow);
-    color: var(--color-ink);
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    font-weight: 700;
-    transition: top 0.2s var(--ease-brand);
-  }
-  .skip-link:focus {
-    top: 1rem;
-  }
-
-  /* Spray backdrops -------------------------------------------------
-     A halftone spray speckle: two offset dot layers read as overspray
-     rather than a clean grid. Decorated, never load-bearing. */
-  .spray-ink {
-    background-color: var(--color-ink);
-    background-image:
-      radial-gradient(rgba(255, 212, 0, 0.1) 1px, transparent 1.5px),
-      radial-gradient(rgba(250, 250, 244, 0.06) 1px, transparent 1.5px);
-    background-size: 22px 22px, 13px 13px;
-    background-position: 0 0, 7px 8px;
-  }
-  .spray-paper {
-    background-color: var(--color-paper);
-    background-image:
-      radial-gradient(rgba(12, 13, 10, 0.055) 1px, transparent 1.5px),
-      radial-gradient(rgba(12, 13, 10, 0.035) 1px, transparent 1.5px);
-    background-size: 26px 26px, 15px 15px;
-    background-position: 0 0, 8px 9px;
-  }
-
-  /* Hazard-tape bands and dividers -------------------------------- */
-  .hazard {
-    height: 8px;
-    background-image: repeating-linear-gradient(
-      -45deg,
-      var(--color-yellow) 0 12px,
-      var(--color-ink) 12px 24px
-    );
-  }
-  .hazard--thin {
-    height: 5px;
-  }
-
-  /* Graffiti tag label (was the notebook's `// comment`) ----------- */
-  .comment {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-family: var(--font-display);
-    font-size: 1.02rem;
-    line-height: 1;
-    color: var(--color-ink-soft);
-    transform: rotate(-1.2deg);
-    transform-origin: left center;
-  }
-  .comment .slash {
-    color: var(--color-yellow-deep);
-  }
-  /* `on-ink` marks the tag on the game's screens by sitting on the tag *itself*
-     (`class="comment on-ink"`), while the paper pages put it on an ancestor, so both
-     forms are named here. Without the compound form the game's tags fell through to
-     the dark `.comment` colour and read as a smudge over the stage. */
-  .on-ink .comment,
-  .comment.on-ink {
-    color: var(--color-paper-2);
-    text-shadow:
-      0 1px 0 rgba(12, 13, 10, 0.95),
-      0 0 5px rgba(12, 13, 10, 0.95),
-      0 0 14px rgba(12, 13, 10, 0.8);
-  }
-  .on-ink .comment .slash,
-  .comment.on-ink .slash {
-    color: var(--color-yellow);
-  }
-
-  /* Spray-blot highlighter ---------------------------------------- */
-  .mark {
-    background: var(--color-yellow);
-    color: var(--color-ink);
-    padding: 0.02em 0.2em;
-    /* An irregular blob, so it reads as a sprayed blot not a tidy fill. */
-    border-radius: 42% 58% 54% 46% / 58% 46% 60% 40%;
-    box-decoration-break: clone;
-    -webkit-box-decoration-break: clone;
-    box-shadow: 3px 3px 0 0 rgba(12, 13, 10, 0.9);
-  }
-
-  /* Sticker card ---------------------------------------------------
-     A pasted-up sticker: thick ink border, hard offset shadow and a
-     resting tilt that straightens and lifts on hover. */
-  .sticker {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    border: 2px solid var(--color-ink);
-    border-radius: var(--radius-brand);
-    background: var(--color-cream);
-    padding: clamp(1.15rem, 2.4vw, 1.5rem);
-    box-shadow: 6px 6px 0 0 var(--color-ink);
-    transform: rotate(-0.7deg);
-    transition:
-      transform 0.28s var(--ease-brand),
-      box-shadow 0.28s var(--ease-brand),
-      background-color 0.28s var(--ease-brand);
-  }
-  .sticker:nth-child(even) {
-    transform: rotate(0.7deg);
-  }
-  .sticker:hover,
-  .sticker:focus-within {
-    transform: rotate(0) translate(-3px, -3px);
-    box-shadow: 9px 9px 0 0 var(--color-yellow);
-    background: #fff;
-  }
-  /* A strip of tape, stuck over the top edge. */
-  .sticker::before {
-    content: "";
-    position: absolute;
-    top: -0.62rem;
-    left: 1.15rem;
-    width: 3.4rem;
-    height: 1.15rem;
-    background: rgba(255, 212, 0, 0.72);
-    border: 1px solid rgba(12, 13, 10, 0.16);
-    transform: rotate(-4deg);
-  }
-  .sticker__index {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    color: var(--color-ink-soft);
-  }
-  .sticker__title {
-    margin-top: 0.6rem;
-    font-family: var(--font-display);
-    font-size: 1.4rem;
-    line-height: 1.1;
-    letter-spacing: -0.01em;
-  }
-  .sticker__body {
-    margin-top: 0.4rem;
-    color: var(--color-ink-soft);
-  }
-  /* A single accent tick on the "slash" card. */
-  .sticker--accent {
-    box-shadow: 6px 6px 0 0 var(--color-accent);
-  }
-  .sticker--accent:hover,
-  .sticker--accent:focus-within {
-    box-shadow: 9px 9px 0 0 var(--color-accent);
-  }
-
-  /* Responsive navigation (dark bar) */
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 1.7rem;
-    font-family: var(--font-mono);
-    font-size: 0.74rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: rgba(250, 250, 244, 0.66);
-  }
-  .nav-links a {
-    transition: color 0.2s var(--ease-brand);
-  }
-  .nav-links a:hover {
-    color: var(--color-yellow);
-  }
-  .nav-links a[aria-current="page"] {
-    color: var(--color-yellow);
-  }
-  .nav-links .nav-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.5rem 0.9rem;
-    border: 1px solid var(--color-line-ink-strong);
-    border-radius: var(--radius-pill);
-    color: var(--color-cream);
-    transition:
-      color 0.2s var(--ease-brand),
-      background-color 0.2s var(--ease-brand),
-      border-color 0.2s var(--ease-brand);
-  }
-  .nav-links .nav-pill:hover {
-    color: var(--color-ink);
-    background: var(--color-yellow);
-    border-color: var(--color-yellow);
-  }
-
-  /* Mobile menu: a native <details> disclosure, no JavaScript */
-  .nav-disclosure {
-    display: none;
-  }
-  .nav-toggle {
-    display: grid;
-    place-items: center;
-    height: 44px;
-    width: 44px;
-    border: 1px solid var(--color-line-ink-strong);
-    border-radius: var(--radius-brand);
-    color: var(--color-cream);
-    cursor: pointer;
-    list-style: none;
-    transition: border-color 0.2s var(--ease-brand);
-  }
-  .nav-toggle:hover {
-    border-color: var(--color-yellow);
-  }
-  .nav-toggle::-webkit-details-marker {
-    display: none;
-  }
-  @media (max-width: 860px) {
-    .nav-links--bar {
-      display: none;
-    }
-    .nav-disclosure {
-      display: block;
-    }
-    .nav-links--panel {
-      display: none;
-      position: absolute;
-      top: calc(100% + 0.65rem);
-      left: 0;
-      right: 0;
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.15rem;
-      padding: 0.55rem;
-      background: var(--color-cream);
-      border: 2px solid var(--color-ink);
-      border-top: 5px solid var(--color-yellow);
-      border-radius: var(--radius-brand);
-      box-shadow: 6px 6px 0 0 var(--color-yellow);
-    }
-    .nav-links--panel a {
-      display: block;
-      padding: 0.8rem 0.85rem;
-      border-radius: var(--radius-inner);
-      color: var(--color-ink);
-    }
-    .nav-links--panel a:hover {
-      color: var(--color-ink);
-      background: color-mix(in srgb, var(--color-yellow) 45%, #fff);
-    }
-    .nav-links--panel a[aria-current="page"] {
-      color: var(--color-ink);
-      background: var(--color-yellow);
-    }
-    .nav-links--panel .nav-pill {
-      text-align: center;
-      color: var(--color-ink);
-      border-color: var(--color-ink);
-      background: var(--color-yellow);
-    }
-    .nav-links--panel .nav-pill:hover {
-      color: var(--color-ink);
-      border-color: var(--color-ink);
-      background: var(--color-yellow-deep);
-    }
-    .nav-disclosure[open] .nav-links--panel {
-      display: flex;
-    }
-  }
-
-  /* Breadcrumbs: the graffiti comment label as links. */
-  /* `.legal ol` and `.doc ol` style prose lists as grids, which would turn the
-     trail into one crumb a row (and put the `//` above it). The trail is a list of
-     links, so it states its own layout one specificity above them. */
-  .breadcrumbs .breadcrumbs__list {
-    display: inline-flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.25rem 0.5rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-  .breadcrumbs__mark {
-    display: inline-flex;
-    align-items: center;
-  }
-  .breadcrumbs__home {
-    display: inline-flex;
-    align-items: center;
-    line-height: 1;
-    color: inherit;
-    text-decoration: none;
-  }
-  .breadcrumbs__home:hover .slash {
-    color: var(--color-ink);
-  }
-  .breadcrumbs__item {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .breadcrumbs__item + .breadcrumbs__item::before {
-    content: "/";
-    opacity: 0.5;
-  }
-  .breadcrumbs__link {
-    color: inherit;
-    transition: color 0.2s var(--ease-brand);
-  }
-  .breadcrumbs__link:hover {
-    color: var(--color-yellow-deep);
-  }
-  .on-ink .breadcrumbs__link:hover {
-    color: var(--color-yellow);
-  }
-
-  /* Rendered Markdown (notices and documentation) --------------- */
   .legal,
   .doc {
     max-width: 46rem;
@@ -481,11 +133,7 @@
   }
   .doc h4 {
     margin-top: 1.5rem;
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    @apply kicker;
   }
   .legal p,
   .legal li,
@@ -536,7 +184,7 @@
   .legal pre {
     overflow-x: auto;
     padding: 0.9rem 1rem;
-    border: 1px solid rgba(12, 13, 10, 0.14);
+    border: 1px solid var(--color-line);
     border-radius: var(--radius-brand);
     background: var(--color-cream);
     font-size: 0.82rem;
@@ -572,18 +220,13 @@
   .legal th,
   .legal td {
     padding: 0.4rem 0.6rem;
-    border-bottom: 1px solid rgba(12, 13, 10, 0.14);
+    border-bottom: 1px solid var(--color-line);
     text-align: left;
     vertical-align: top;
   }
   .doc th,
   .legal th {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--color-muted);
-    font-weight: 400;
+    @apply kicker text-muted font-normal;
   }
   .doc td:first-child,
   .legal td:first-child {
@@ -597,7 +240,7 @@
   .legal img {
     width: 100%;
     height: auto;
-    border: 1px solid rgba(12, 13, 10, 0.16);
+    border: 1px solid var(--color-line);
     border-radius: var(--radius-brand);
   }
   /* A captured screen (src/lib/docs/shots.ts): one <details> per variant, so
@@ -606,7 +249,7 @@
     margin: 1.5rem 0;
   }
   .doc .doc-shot__variant {
-    border: 1px solid rgba(12, 13, 10, 0.16);
+    border: 1px solid var(--color-line);
     border-radius: var(--radius-brand);
     background: var(--color-cream);
     padding: 0.5rem 0.65rem;
@@ -615,12 +258,7 @@
     margin-top: 0.5rem;
   }
   .doc .doc-shot__variant > summary {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--color-muted);
-    cursor: pointer;
+    @apply kicker text-muted cursor-pointer;
   }
   .doc .doc-shot__variant[open] > summary {
     margin-bottom: 0.6rem;
@@ -636,296 +274,26 @@
     color: var(--color-muted);
   }
   .doc .doc-shot--missing {
-    border: 1px dashed rgba(12, 13, 10, 0.3);
+    border: 1px dashed var(--color-line-strong);
     border-radius: var(--radius-inner);
     padding: 0.75rem 1rem;
   }
   .doc hr,
   .legal hr {
     border: 0;
-    border-top: 1px solid rgba(12, 13, 10, 0.16);
+    border-top: 1px solid var(--color-line);
   }
   .doc kbd,
   .legal kbd {
     font-family: var(--font-mono);
     font-size: 0.78em;
     padding: 0.1rem 0.35rem;
-    border: 1px solid rgba(12, 13, 10, 0.3);
+    border: 1px solid var(--color-line-strong);
     border-bottom-width: 2px;
     border-radius: var(--radius-inner);
     background: var(--color-cream);
     color: var(--color-ink);
     white-space: nowrap;
-  }
-
-  /* Documentation ------------------------------------------------ */
-  .docs {
-    padding-block: clamp(2.25rem, 5vw, 3.5rem) clamp(3rem, 7vw, 5rem);
-  }
-  .docs__wrap {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: clamp(1.5rem, 3vw, 2.5rem);
-    align-items: start;
-  }
-  .docs-side {
-    min-width: 0;
-  }
-  .docs-side__label {
-    display: inline-block;
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--color-muted);
-    text-decoration: none;
-    margin-bottom: 0.6rem;
-  }
-  .docs-side__label:hover {
-    color: var(--color-ink);
-  }
-  .docs-side__group {
-    margin-top: 1.4rem;
-    margin-bottom: 0.35rem;
-    font-family: var(--font-display);
-    font-size: 1.02rem;
-  }
-  .docs-side__list {
-    display: grid;
-    gap: 0.1rem;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  .docs-side__list a {
-    display: block;
-    padding: 0.28rem 0.5rem;
-    border-left: 2px solid transparent;
-    border-radius: var(--radius-inner);
-    font-size: 0.86rem;
-    line-height: 1.35;
-    color: var(--color-ink-soft);
-    text-decoration: none;
-  }
-  .docs-side__list a:hover {
-    color: var(--color-ink);
-    background: var(--color-paper-2);
-  }
-  .docs-side__list a[aria-current="page"] {
-    background: var(--color-paper-2);
-    border-left-color: var(--color-yellow);
-    color: var(--color-ink);
-    font-weight: 600;
-  }
-  .docs__article {
-    min-width: 0;
-  }
-  .docs__article--wide .doc {
-    max-width: 64rem;
-  }
-  /* The hub's section titles are labels, not article sections: the marker face
-     and no yellow rule, whichever heading style `.doc` gives its own. */
-  .doc .docs-hub__title {
-    margin-top: 0;
-    padding: 0;
-    border: 0;
-    font-family: var(--font-display);
-    font-size: 1.5rem;
-    font-weight: 400;
-  }
-  .doc .docs-hub__lede {
-    margin-top: 0.35rem;
-  }
-  .docs__title {
-    margin-top: 0.75rem;
-    font-family: var(--font-display);
-    font-size: clamp(2rem, 5vw, 3rem);
-    line-height: 1.02;
-  }
-  .doc {
-    margin-top: 1.5rem;
-  }
-  .docs__foot {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 0.5rem 1.5rem;
-    margin-top: 2.5rem;
-    padding-top: 0.9rem;
-    border-top: 1px solid rgba(12, 13, 10, 0.14);
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.03em;
-    color: var(--color-muted);
-  }
-  .docs__edit {
-    color: var(--color-ink-soft);
-    text-decoration: none;
-    border-bottom: 1px solid var(--color-yellow);
-  }
-  .docs__edit:hover {
-    color: var(--color-ink);
-  }
-  .docs__pager {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-top: 1.25rem;
-  }
-  .docs__pager-link {
-    display: grid;
-    gap: 0.15rem;
-    max-width: 48%;
-    padding: 0.6rem 0.8rem;
-    border: 1px solid rgba(12, 13, 10, 0.16);
-    border-radius: var(--radius-inner);
-    text-decoration: none;
-    color: var(--color-ink);
-    transition: background-color 0.2s var(--ease-brand);
-  }
-  .docs__pager-link:hover {
-    background: var(--color-paper-2);
-  }
-  .docs__pager-link--next {
-    text-align: right;
-    margin-left: auto;
-  }
-  .docs__pager-label {
-    font-family: var(--font-mono);
-    font-size: 0.62rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--color-muted);
-  }
-  .docs__pager-title {
-    font-size: 0.88rem;
-    line-height: 1.3;
-  }
-  .docs__toc {
-    display: none;
-  }
-  .docs__toc ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 0.2rem;
-  }
-  .docs__toc a {
-    display: block;
-    font-size: 0.78rem;
-    line-height: 1.35;
-    color: var(--color-ink-soft);
-    text-decoration: none;
-  }
-  .docs__toc a:hover {
-    color: var(--color-ink);
-  }
-  .docs__toc-sub {
-    padding-left: 0.6rem;
-  }
-
-  /* The hub's four sections, each a list of its pages. */
-  .docs-hub {
-    display: grid;
-    gap: 2rem;
-    margin-top: 2.5rem;
-  }
-  .docs-hub__section {
-    padding-top: 1rem;
-    border-top: 2px solid var(--color-ink);
-    scroll-margin-top: 1rem;
-  }
-  .docs-hub__title {
-    font-family: var(--font-display);
-    font-size: 1.5rem;
-    line-height: 1.1;
-  }
-  .docs-hub__lede {
-    margin-top: 0.35rem;
-    max-width: 46rem;
-    color: var(--color-ink-soft);
-    font-size: 0.95rem;
-  }
-  .docs-hub__list {
-    display: grid;
-    gap: 0.35rem;
-    margin-top: 0.9rem;
-    padding: 0;
-    list-style: none;
-  }
-  /* The hub's cards are a list of links, not prose bullets: `.doc ul` would
-     otherwise put a disc beside each card. */
-  .doc .docs-hub__list {
-    padding: 0;
-    list-style: none;
-  }
-  .docs-hub__link {
-    display: grid;
-    gap: 0.1rem;
-    padding: 0.55rem 0.75rem;
-    border: 1px solid rgba(12, 13, 10, 0.14);
-    border-radius: var(--radius-inner);
-    text-decoration: none;
-    color: var(--color-ink);
-    transition: background-color 0.2s var(--ease-brand);
-  }
-  .docs-hub__link:hover {
-    background: var(--color-paper-2);
-  }
-  .docs-hub__name {
-    font-weight: 600;
-  }
-  .docs-hub__description {
-    font-size: 0.86rem;
-    line-height: 1.45;
-    color: var(--color-ink-soft);
-  }
-
-  /* On a phone the trail, the pager and the hub are the navigation; a list of
-     ten pages above the article would push the page itself below the fold. */
-  @media (max-width: 55.99rem) {
-    .docs-side {
-      display: none;
-    }
-  }
-  @media (min-width: 56rem) {
-    .docs__wrap:not(.docs__wrap--plain) {
-      grid-template-columns: 15rem minmax(0, 1fr);
-    }
-    .docs-side {
-      position: sticky;
-      top: 1.25rem;
-    }
-    .docs-hub {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 2.5rem 3rem;
-    }
-  }
-  @media (min-width: 75rem) {
-    .docs__wrap:not(.docs__wrap--plain) {
-      grid-template-columns: 15rem minmax(0, 1fr) 12rem;
-    }
-    .docs__toc {
-      display: block;
-      position: sticky;
-      top: 1.25rem;
-    }
-  }
-  /* The hub has no section list beside it and no page contents of its own: one
-     column, centred, with the room the cards need. */
-  .docs__wrap--plain .docs__article {
-    width: 100%;
-    max-width: 64rem;
-    margin-inline: auto;
-  }
-  @media print {
-    .docs-side,
-    .docs__toc,
-    .docs__foot,
-    .docs__pager {
-      display: none;
-    }
   }
 }
 
@@ -987,15 +355,6 @@ html[data-game-fullscreen] {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
-  }
-  /* Keep the resting tilt, but never move or lift the stickers. */
-  .sticker:hover,
-  .sticker:focus-within {
-    transform: rotate(-0.7deg);
-  }
-  .sticker:nth-child(even):hover,
-  .sticker:nth-child(even):focus-within {
-    transform: rotate(0.7deg);
   }
 }
 

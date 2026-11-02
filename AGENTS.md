@@ -61,6 +61,14 @@ what that controller's controls mean.
   `package` job that joins the build to the
   screenshots the captures took; `verify` and `e2e` are the required
   checks. `bun run test:e2e` is the browser suite. Use **Bun**, never npm/npx.
+- **Styling is utility-first.** A surface is a Tailwind utility in the markup; a
+  repeated look is a named utility in `src/styles/utilities.css`; a colour, radius,
+  type size or shadow is a token in `src/styles/theme.css` and nowhere else. The two
+  exceptions are the Markdown prose (`.doc`/`.legal`, whose HTML has no attributes to
+  hang a class on) and the stage's renderer (`band.css`, whose geometry the run loop
+  writes per frame). State hooks — `is-active`, `on-ink`, `[data-nav-focus]`,
+  `aria-current` — carry no declarations and are the tests' contract: do not delete
+  one to tidy a class list. [Design](docs/developers/design.md) is the rule.
 - **Pure logic lives in `src/lib/game/**` with a colocated `*.test.ts`.** Components
   render; they do not decide. A rule that needs testing goes in a module, not in JSX.
 - **The screen is session state, not a route.** One island, one screen at a time, no

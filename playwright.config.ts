@@ -68,7 +68,7 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      testIgnore: ["**/pwa.spec.ts", "**/docs/**"],
+      testIgnore: ["**/pwa.spec.ts", "**/docs/**", "**/visual.spec.ts"],
       use: { ...devices["Desktop Chrome"], headless: true },
     },
     {
@@ -80,7 +80,7 @@ export default defineConfig({
       // wall time. The **captures** stay Chromium-only: they are a picture of the
       // game, and two browsers' renders in one build would be two different games.
       name: "firefox",
-      testIgnore: ["**/pwa.spec.ts", "**/docs/**"],
+      testIgnore: ["**/pwa.spec.ts", "**/docs/**", "**/visual.spec.ts"],
       use: { ...devices["Desktop Firefox"], headless: true },
     },
     ...Object.entries(docshots.variants).map(([name, options]) => ({

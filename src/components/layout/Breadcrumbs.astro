@@ -11,6 +11,10 @@ import { localePath } from "../../i18n/paths";
  * `Documentation / Players` on a documentation page. A page with no ancestors (the
  * hub, a notice) has no trail at all, so nothing is drawn: a lone `//` is a control
  * with no answer to the question a breadcrumb asks.
+ *
+ * The separator is a span between the items rather than a `::before` on each: it is
+ * one character, and the markup already has a place for it. It is also the reason
+ * this file has no stylesheet left — the trail is the tag's look plus a list.
  */
 interface Crumb {
   name: string;
@@ -29,25 +33,31 @@ const t = tFor(locale);
 
 {
   items.length > 0 ? (
-    <nav class="comment breadcrumbs" aria-label={t("nav.breadcrumb")}>
-      <ol class="breadcrumbs__list">
-        <li class="breadcrumbs__mark">
-          <a
-            class="breadcrumbs__home"
-            href={localePath(locale, "/")}
-            aria-label={t("nav.home")}
-          >
-            <span class="slash" aria-hidden="true">//</span>
-          </a>
-        </li>
-        {items.map((crumb) => (
-          <li class="breadcrumbs__item">
-            <a class="breadcrumbs__link" href={crumb.path}>
+    <nav class="comment flex flex-wrap items-center gap-x-2 gap-y-1" aria-label={t("nav.breadcrumb")}>
+      <a
+        class="inline-flex items-center leading-none text-inherit no-underline hover:[&_.slash]:text-ink"
+        href={localePath(locale, "/")}
+        aria-label={t("nav.home")}
+      >
+        <span class="slash" aria-hidden="true">//</span>
+      </a>
+      {
+        items.map((crumb, index) => (
+          <>
+            {index > 0 ? (
+              <span class="text-[0.7em] opacity-50" aria-hidden="true">
+                /
+              </span>
+            ) : null}
+            <a
+              class="text-inherit no-underline transition-colors duration-200 ease-brand hover:text-yellow-deep"
+              href={crumb.path}
+            >
               {crumb.name}
             </a>
-          </li>
-        ))}
-      </ol>
+          </>
+        ))
+      }
     </nav>
   ) : null
 }
