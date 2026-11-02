@@ -14,6 +14,7 @@ import {
 import { AUDIBLE_FLOOR, HELD_SHARE, familyVolume } from "../../../lib/game/audio/mix";
 import {
   pausedAction,
+  pausePoint,
   sourceStem,
   startSeatAction,
   stemAlignmentsTo,
@@ -330,7 +331,8 @@ export function SongAudio({
       at: performance.now(),
       last: elements.current.map((element) => (element ? element.currentTime : 0)),
       started: elements.current.map(
-        (element) => !element || element.error !== null || element.ended,
+        (element) =>
+          !element || element.ended || (element.error !== null && element.readyState < 2),
       ),
     };
   }, []);
@@ -586,7 +588,7 @@ export function SongAudio({
       const nodes = elements.current;
       return (
         nodes.some((element) => element !== null) &&
-        nodes.every((element) => element !== null && element.error !== null)
+        nodes.every((element) => element !== null && element.error !== null && element.readyState < 2)
       );
     };
     // The clock's seek has to reach the sound as well, or the next frame reads
@@ -594,7 +596,7 @@ export function SongAudio({
     const seek = (timeMs: number) => {
       const at = Math.max(0, timeMs + lagRef.current) / 1000;
       elements.current.forEach((element, index) => {
-        if (!element || element.error !== null) return;
+        if (!element) return;
         // Metadata is not ready: there is nothing to move yet, and the drift
         // correction settles it once the element has a timeline.
         if (element.readyState < 1) return;
@@ -625,6 +627,17 @@ export function SongAudio({
   // pause and not a slower song.
   useEffect(() => {
     const playing = clock.playing;
+    // The stem the clock was reading, taken **before** the loop below stops anything:
+    // once they are paused, none of them is sounding and there is no position left to
+    // ask. A muted element is the band screen's preload, not the run's sound, so its
+    // position is not the song's.
+    const reading = !playing ? selectSource() : null;
+    // The stem the clock was reading, for the dev read-out and the gate that says a
+    // pause moves nothing. Written only at an edge: it is a fact about the pause, not
+    // something to rewrite sixty times a second.
+    if (reading && sourceIndex.current >= 0) {
+      box.current?.setAttribute("data-stem-source", String(sourceIndex.current));
+    }
     if (playing) {
       // Put the stems on the playhead **before** any of them starts: while the song
       // stands still a moved element cannot be heard. If they are already moving (a
@@ -646,8 +659,10 @@ export function SongAudio({
       if (!element) continue;
       if (playing) {
         // An ended stem stays ended: a part a chart folder cut short must not restart from
-        // the top in the middle of the song.
-        if (element.error !== null || element.ended) continue;
+        // the top in the middle of the song. An **errored** one is not skipped: the flag
+        // can sit on an element that is playing perfectly well (a machine with no audio
+        // device sets one on the first sample), and a refusal is caught below.
+        if (element.ended) continue;
         void element.play().then(
           () => box.current?.removeAttribute("data-play-error"),
           // A browser is allowed to refuse, and a refusal is the one silent cause that
@@ -667,9 +682,24 @@ export function SongAudio({
     // nothing to seat until the song moves again.
     if (!playing) {
       seating.current = null;
+      // The sound kept playing for the render and the commit it took to stop it, and
+      // the playhead froze on the frame before that. Where the stem actually stopped
+      // is what the run comes back to, so take it when it is that edge's own latency
+      // (`pausePoint`): pulling the stems back onto the frozen playhead instead is
+      // what the resume used to hear as an echo. Anything further ahead is a stall —
+      // a hidden tab, a source that ran on — and there the playhead is the answer and
+      // the stems are re-seated on it.
+      const stopped =
+        reading && !reading.muted
+          ? pausePoint(
+              reading.currentTime * 1000 - lagRef.current,
+              clockRef.current.timeRef.current,
+            )
+          : null;
+      if (stopped !== null) clockRef.current.pause(stopped);
       align();
     }
-  }, [clock.playing, sources, align, beginSeating]);
+  }, [clock.playing, sources, align, beginSeating, selectSource]);
 
   /**
    * The stems and the playhead are the same thing, so they are kept together here:
@@ -729,7 +759,8 @@ export function SongAudio({
         // An ended stem has nothing more to say in this run: it is not a clock, not a
         // stem to carry and not one to restart — a chart folder may cut a part short, and
         // `play()` on an ended element starts its opening bars over the song's middle.
-        if (element.error !== null || element.ended) return;
+        // An error is not on this list: see `isSounding`.
+        if (element.ended) return;
         if (!playing) {
           const write = pausedAction(
             base,
@@ -846,7 +877,6 @@ export function SongAudio({
             const sounding = elements.current.some(
               (element) =>
                 element &&
-                element.error === null &&
                 element.duration > 0 &&
                 !element.ended &&
                 !element.paused &&
@@ -856,9 +886,14 @@ export function SongAudio({
             // the results screen's cue.
             if (!sounding && !practiceRef.current) clock.finish();
           }}
-          onError={() => {
+          onError={(event) => {
             // A file that never arrives is a file the song can do without: try the
             // parts instead of playing nothing at all. (Some folders ship a 0-byte mix.)
+            // A stem that is **playing** is not that file: a machine with no audio
+            // device fires this on every stem the moment it starts, and switching the
+            // mix there would throw away the run for a fault nobody can hear.
+            const failed = event.currentTarget;
+            if (failed.readyState >= 2 && !failed.paused) return;
             broken.current += 1;
             if (attempt === 0 && broken.current >= sources.length) {
               const parts = doc ? partStems(doc) : [];
@@ -912,7 +947,6 @@ function fileName(url: string, stemId: string | null): string {
 /** Whether an element is playing and has a position worth reading. */
 function isSounding(element: HTMLAudioElement): boolean {
   return (
-    element.error === null &&
     !element.ended &&
     element.readyState >= 2 &&
     !element.paused &&
@@ -928,7 +962,13 @@ function stemTiming(element: HTMLAudioElement): StemTiming {
       ? element.currentTime * 1000
       : Number.NaN,
     readyState: element.readyState,
-    failed: element.error !== null,
+    // **An error is a report, not a verdict.** A media element is allowed to carry a
+    // `MediaError` and still be playing — a machine with no audio device sets one the
+    // moment playback starts, and a decoder that stumbled and recovered leaves one
+    // behind. What makes a stem a stem is that it has a timeline and is moving, which
+    // is what `readyState` and the rest of this say; treating the flag as death took
+    // the whole band's clock away on those machines.
+    failed: element.error !== null && element.readyState < 2,
     seeking: element.seeking,
     paused: element.paused,
     ended: element.ended,

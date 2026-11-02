@@ -3,7 +3,7 @@ import { openSlideRun } from "./slide-run";
 import { expectNoExternalRequests } from "./helpers";
 
 /** A slide on a touch highway; the run is opened by `slide-run.ts`. */
-test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
 test("a finger gliding from a note to the one it links scores the slide", async ({
   context,

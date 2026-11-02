@@ -18,9 +18,9 @@ import docshots from "./docshots.config";
  * spends most of the run waiting on the test before it.
  *
  * `desktop` and `mobile` are the capture projects from `docshots.config.ts`; the
- * `chromium` project is the behavioural suite and ignores them. `test:e2e` runs
- * all three, so one browser run both validates the app and writes the images the
- * build names.
+ * `chromium` and `firefox` projects are the behavioural suite and ignore them.
+ * `test:e2e` runs every project, so one run both validates the app in both engines
+ * and writes the images the build names.
  */
 // A worktree checkout can already hold 4321; let a local run pick another port
 // rather than silently reusing a different tree's dev server.
@@ -70,6 +70,18 @@ export default defineConfig({
       name: "chromium",
       testIgnore: ["**/pwa.spec.ts", "**/docs/**"],
       use: { ...devices["Desktop Chrome"], headless: true },
+    },
+    {
+      // The same behavioural suite in a second engine. A web game's rules — media
+      // elements, the audio clock, fullscreen, the pad, focus — are browser
+      // behaviours as much as they are ours, and a green Chromium run says nothing
+      // about Firefox's media pipeline or its focus order. CI shards it next to
+      // Chromium rather than after it, so the second engine costs runners and not
+      // wall time. The **captures** stay Chromium-only: they are a picture of the
+      // game, and two browsers' renders in one build would be two different games.
+      name: "firefox",
+      testIgnore: ["**/pwa.spec.ts", "**/docs/**"],
+      use: { ...devices["Desktop Firefox"], headless: true },
     },
     ...Object.entries(docshots.variants).map(([name, options]) => ({
       name,

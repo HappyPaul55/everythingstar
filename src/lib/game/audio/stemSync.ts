@@ -175,6 +175,59 @@ export function stemAlignmentsTo(
   return moves;
 }
 
+/**
+ * How far ahead of the playhead the sound may have stopped and still be the **same
+ * instant**, in ms.
+ *
+ * A pause is asked for by a press and carried out by an effect: the clock freezes on
+ * the last frame it sampled, and the elements keep playing for the renders and commits
+ * it takes to reach them. On a quiet machine that is tens of milliseconds; a loaded CI
+ * runner measured the same path past two hundred. A hidden tab, a stalled decoder or a
+ * song that ran on while the frame loop was stopped is seconds — a background tab
+ * throttles the timers that would have committed the pause, which is the case the
+ * window exists to tell apart. Half a second separates the two with room on both sides,
+ * and is still shorter than the shortest stretch worth replaying: at that distance the
+ * repeat is a stutter, not a second chance.
+ */
+export const STOP_ADOPT_MS = 500;
+
+/**
+ * Where the playhead should stand after a pause.
+ *
+ * `soundMs` is the position of the stem the clock was reading, in the playhead's own
+ * units (the element's own time minus the audio lag), read **after** it was stopped;
+ * `clockMs` is the playhead the transport froze at.
+ *
+ * A pause used to freeze the playhead at its last sample and then pull every stem back
+ * onto it. That is silent, but it is not free: the interval the sound played between
+ * that sample and the moment it was actually stopped is thrown away and played again
+ * on the way back — the "echo when unpausing", which is a flam on the drums every time
+ * the player returns to a run. Taking the sound's own stop position instead moves
+ * nothing at the edge, so a resume plays on from exactly where the song stopped.
+ *
+ * Only a **small, forward** difference is that edge's latency, and only that is taken:
+ * - a sound that stopped *behind* the playhead is a stem to move onto the playhead,
+ *   not a reason to step the song backwards;
+ * - a sound that is far ahead is not this edge at all. A hidden tab keeps its media
+ *   elements playing while the frame loop is stopped, and the run means to **replay**
+ *   that stretch rather than skip it, so the playhead wins and the stems are re-seated
+ *   on it.
+ *
+ * `null` is "the playhead is the answer": leave it where it is and align the stems.
+ */
+export function pausePoint(
+  soundMs: number | null,
+  clockMs: number,
+  windowMs = STOP_ADOPT_MS,
+): number | null {
+  if (soundMs === null || !Number.isFinite(soundMs) || !Number.isFinite(clockMs)) {
+    return null;
+  }
+  const ahead = soundMs - clockMs;
+  if (ahead < 0 || ahead > windowMs) return null;
+  return soundMs;
+}
+
 /** What one frame writes to a stem while the song stands still. */
 export interface PausedWrite {
   /** The song's own rate: a nudge is for a correction the room can hear. */
@@ -186,13 +239,15 @@ export interface PausedWrite {
 /**
  * The write a paused stem gets on one frame.
  *
- * A pause is a transport edge that **lasts**, and the stage's clock calls its
- * subscribers every frame whether or not the transport is moving. An alignment puts
- * the stems on one clock once, but a stem that was mid-seek then, or that arrives
- * while the song is stopped, is left for the frames after it — and the old rule moved
- * any stem more than a seek away on **every** one of them: sixty writes a second for
- * the whole pause, re-issuing a range request each time and overriding the very
- * "leave a seeking stem alone" rule the alignment keeps.
+ * A pause is a transport edge that **lasts**, and the pause's own alignment puts the
+ * stems on one clock once. That alignment is the rule this one backs up: the frames
+ * after it are only ticked for a seek or a connected pad (the stage's loop is quiet
+ * behind the pause), so a stem it had to leave — one mid-seek, one that gained a
+ * timeline after the edge — is settled by the next tick there is, or by the seating a
+ * resume runs. The old rule here moved any stem more than a seek away on **every**
+ * frame that did come: sixty writes a second for the whole pause, re-issuing a range
+ * request each time and overriding the very "leave a seeking stem alone" rule the
+ * alignment keeps.
  *
  * So the patience here is a still stem's (`stillAction`): a tight hold, and a cooldown
  * after a seek. The room hears nothing of a pause, so a correction costs nothing — but

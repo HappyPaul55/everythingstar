@@ -15,12 +15,14 @@
  * served here), a human guitar that misses every note (so its part ducks and comes
  * back), a machine bass, then a pause and a resume — with the element clocks, the
  * volumes and every `currentTime` write sampled throughout (printed, always, so a
- * failure in CI arrives with its evidence). Two things are **asserted**, both on
+ * failure in CI arrives with its evidence). Three things are **asserted**, all on
  * things no amount of runner load can argue with: the duck really happens — the
- * report's own path; and the `currentTime` writes look like moves a rule could
- * make — no **burst** (the old settle window's frame hammer measured eleven
- * writes in 323 ms; a seat is one move per start and a fruitless seek at most one
- * a second) and no runaway total. The phase spreads are diagnostics rather than
+ * report's own path; the `currentTime` writes look like moves a rule could make — no
+ * **burst** (the old settle window's frame hammer measured eleven writes in 323 ms; a
+ * seat is one move per start and a fruitless seek at most one a second) and no runaway
+ * total; and **a pause moves nothing of the stem the clock was reading**, which is the
+ * difference between holding the playhead where the sound stopped and pulling the
+ * sound back onto a stale frame. The phase spreads are diagnostics rather than
  * verdicts: a loaded CI runner stalls the media pipeline itself (measured: fresh
  * ~100 ms stalls mid-phase, each answered with capped seeks and the rate nudge),
  * and no assertion on element clocks is honest under that — the pure rules behind
@@ -276,6 +278,8 @@ interface Reading {
   stems: string;
   sources: string;
   unreadable: string;
+  /** The stem the clock was reading when the transport last stopped, if it said. */
+  source: string | null;
 }
 
 /**
@@ -320,6 +324,7 @@ async function read(page: Page): Promise<Reading> {
       stems: box?.getAttribute("data-stems") ?? "-",
       sources: box?.getAttribute("data-sources") ?? "-",
       unreadable: box?.getAttribute("data-unreadable") ?? "-",
+      source: box?.getAttribute("data-stem-source") ?? null,
     };
   });
 }
@@ -479,12 +484,38 @@ test.describe("stem sync", () => {
     // hundred paused frames — enough for the old frame-hammer to blow the write
     // budget many times over and for each pipeline to restart on its own moment —
     // without spending a minute of every CI run waiting.
+    // The page's own clock, so a write can be told from one that landed before the
+    // pause was asked for (a drift seek is allowed one a second).
+    const askedPauseAt = await page.evaluate(() => performance.now());
     await page.keyboard.press("Escape");
     await expect(page.locator("html")).toHaveAttribute("data-screen", "paused");
     await page.waitForTimeout(10_000);
     const paused = await read(page);
     note("paused", paused);
     expect(paused.paused.every(Boolean), "every stem stops with the song").toBe(true);
+
+    // **A pause moves nothing of the stem the clock was reading.** That stem is what
+    // the playhead was following, and the edge now holds the playhead where *it*
+    // stopped. It used to freeze on the last frame and pull every stem back onto it,
+    // so that interval was played a second time on the way back — the flam on every
+    // resume — and the first stem to be rewritten was this one.
+    //
+    // The other stems are not asserted: an alignment that finds one 40 ms out is a
+    // correction onto the playhead, which is what the pause is *for*, and a loaded
+    // runner is allowed to be out. The count is printed either way.
+    const source = paused.source === null ? -1 : Number(paused.source);
+    const atPause = (index: number) =>
+      (paused.writeTimes[index] ?? []).filter((at) => at >= askedPauseAt);
+    const sourceWrites = source >= 0 ? atPause(source) : [];
+    console.log(
+      `pause: ${paused.writeTimes.flat().filter((at) => at >= askedPauseAt).length} write(s) ` +
+        `after the edge was asked for, ${sourceWrites.length} of them to stem ${source}`,
+    );
+    expect(source, "the pause names the stem the clock was reading").toBeGreaterThanOrEqual(0);
+    expect(
+      sourceWrites,
+      "a pause pulled the stem the clock was reading back onto the frame it froze at",
+    ).toEqual([]);
 
     await page.keyboard.press("Escape");
     await waitForPlaying(page);

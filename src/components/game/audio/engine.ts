@@ -929,18 +929,28 @@ export function createEngine(onBed?: (id: string | null) => void): Engine {
           // No Web Audio: a silent game, not a rejected gesture.
           return;
         }
-        try {
-          if (context.state === "suspended") await context.resume();
-        } catch {
-          // A context that will not resume is a game with no sound, not a broken one.
-        }
+        const waking =
+          context.state === "suspended"
+            ? context.resume().catch(() => undefined)
+            : Promise.resolve();
+        // **Ask for the sound before waiting for the graph.** A bed is a media
+        // element, and its `play()` is allowed by the press that started this and by
+        // nothing that a promise resolved a turn later can supply. A browser strict
+        // about activation — and a phone more than a desktop — refuses it there, and a
+        // refused bed is only *remembered*: nothing asks again until the bank changes,
+        // so the menus stay silent for the rest of the visit while every click, which
+        // was already decoded, still comes through. Started here it plays into a
+        // suspended graph, where it makes no sound until the graph runs and is then
+        // already in the right place.
+        //
         // Whatever was asked for before the gesture — the welcome's bed, usually. A
         // preview asked for takes the channel instead: the menu bed must not start
         // under it for a moment first. The room is not the music: it starts whatever
         // the music is doing.
         if (wantedPreview) preview(wantedPreview);
-        else if (musicBed.wanted) await bed(musicBed.wanted);
-        if (ambienceBed.wanted) await ambience(ambienceBed.wanted);
+        else if (musicBed.wanted) void bed(musicBed.wanted).catch(() => undefined);
+        if (ambienceBed.wanted) void ambience(ambienceBed.wanted).catch(() => undefined);
+        await waking;
       })();
       return starting;
     },

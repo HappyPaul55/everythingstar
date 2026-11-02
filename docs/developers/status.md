@@ -121,7 +121,10 @@ What is built in each area, and the boundaries that are deliberate rather than g
   milliseconds drifts against the music, so `StageClock.followSource` hands the clock to
   the audio and takes it back only when a song has none. Pause pauses the sound, resume
   picks it up, and the audio lag setting now moves the playhead against the sound the way
-  it was always meant to. A song read from a folder has its stems read as files and handed
+  it was always meant to. **A pause holds the playhead where the sound actually stopped**
+  rather than on the frame that froze it, so a resume neither replays the last frame or
+  two — the "echo when unpausing" — nor skips them; a stall far ahead, such as a hidden
+  tab's media running on, still rewinds instead. A song read from a folder has its stems read as files and handed
   over as object URLs, like its cover. The stems themselves are held in line **by a rate,
   and seated by one move at a start** (`src/lib/game/audio/drift.ts`: within 18ms alone,
   out of line nudged by at most 2% of speed, and a flam the room can hear — past 40ms —

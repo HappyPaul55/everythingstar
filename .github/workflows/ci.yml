@@ -89,12 +89,15 @@ jobs:
       - run: bun run typecheck:tests
       - run: bun test
 
-  # Three behavioural shards and two capture jobs, deliberately named rather than
-  # left to Playwright's index split. The suite used to divide itself into two
-  # behavioural shards and two capture shards by accident; the shard that received
-  # the two long files (`a11y`, `loop`) was the 194 s tail while the other ran 126 s.
-  # The captures are one project each, so a desktop failure cannot take the mobile
-  # run with it. In total this is five runners, under the nine a single run may use.
+  # Two engines, three behavioural shards each, and the two capture jobs,
+  # deliberately named rather than left to Playwright's index split. The suite used
+  # to divide itself into two behavioural shards and two capture shards by accident;
+  # the shard that received the two long files (`a11y`, `loop`) was the 194 s tail
+  # while the other ran 126 s. The captures are one project each, so a desktop
+  # failure cannot take the mobile run with it. **Firefox runs beside Chromium, not
+  # after it**, so a second engine costs runners and not wall time, and the `e2e`
+  # aggregate below refuses the deploy if either engine's shards fail. In total this
+  # is eight runners, under the nine a single run may use.
   browser:
     name: e2e (${{ matrix.name }})
     runs-on: ubuntu-latest
@@ -103,28 +106,51 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: behaviour 1/3
-            key: behaviour-1
+          - name: chromium 1/3
+            key: chromium-1
+            browser: chromium
             project: chromium
             shard: 1/3
             docshots: "false"
-          - name: behaviour 2/3
-            key: behaviour-2
+          - name: chromium 2/3
+            key: chromium-2
+            browser: chromium
             project: chromium
             shard: 2/3
             docshots: "false"
-          - name: behaviour 3/3
-            key: behaviour-3
+          - name: chromium 3/3
+            key: chromium-3
+            browser: chromium
             project: chromium
+            shard: 3/3
+            docshots: "false"
+          - name: firefox 1/3
+            key: firefox-1
+            browser: firefox
+            project: firefox
+            shard: 1/3
+            docshots: "false"
+          - name: firefox 2/3
+            key: firefox-2
+            browser: firefox
+            project: firefox
+            shard: 2/3
+            docshots: "false"
+          - name: firefox 3/3
+            key: firefox-3
+            browser: firefox
+            project: firefox
             shard: 3/3
             docshots: "false"
           - name: captures desktop
             key: captures-desktop
+            browser: chromium
             project: desktop
             shard: 1/1
             docshots: "true"
           - name: captures mobile
             key: captures-mobile
+            browser: chromium
             project: mobile
             shard: 1/1
             docshots: "true"
@@ -149,8 +175,8 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
-      - name: Install Chromium
-        run: bunx playwright install --with-deps chromium
+      - name: Install ${{ matrix.browser }}
+        run: bunx playwright install --with-deps ${{ matrix.browser }}
       # The dev server has no service worker to intercept the routes the specs
       # answer, so neither job needs a built site; the build that names the capture
       # images is the package job's, not this suite's target.

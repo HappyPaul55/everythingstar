@@ -17,12 +17,13 @@ import { enterGame, openBand, startRun, waitForPlaying } from "./helpers";
  * is not a 2px rail). A chord needs both at once — two fingers, one moment — so
  * this drives the fixture's two-note chord and reads the score it earned.
  *
- * Playwright's own touchscreen is single-point, so the fingers come through CDP.
+ * Playwright's own touchscreen is single-point, so the two fingers are dispatched
+ * **inside the page** as pointer events, on the live frame.
  * The points deliberately land **above the visible pads**, in the band the pad's
  * target covers, so a pad that is only its visible box fails here.
  */
 
-test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
 test("two fingers on the hit line play a chord", async ({ context, page }) => {
   const leaked = await installFixtures(context);
@@ -36,8 +37,8 @@ test("two fingers on the hit line play a chord", async ({ context, page }) => {
   await waitForPlaying(page);
 
   // Columns 0 and 2 carry the fixture's only chord, at 500ms. The press happens
-  // **inside the page, on the live frame**: a CDP round trip after the live state
-  // is visible can outlast the 150ms window on a loaded runner. The points are 8px
+  // **inside the page, on the live frame**: a round trip after the live state is
+  // visible can outlast the 150ms window on a loaded runner. The points are 8px
   // above the visible pads, so `elementFromPoint` still proves the column target
   // owns that space.
   await expect(page.locator(".highway__pad")).toHaveCount(3);

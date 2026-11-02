@@ -47,12 +47,13 @@ bun run cards            # render the social cards from og-card.html
 Verify every change with `bun run verify`: lint, knip, `astro check`, the tests'
 typecheck, the unit tests, the build, the PWA gate, the docs gate, the size budget and the
 release archives, in that order. CI splits the same checks into a fast `unit` job, one
-`build` job (plus the installed-game test), three behavioural browser shards and two
-capture jobs, then a `package` job. The build runs first with the documentation's
+`build` job (plus the installed-game test), three behavioural browser shards per engine
+(Chromium and Firefox, run side by side) and two capture jobs, then a `package` job. The
+build runs first with the documentation's
 `<img>` tags but no images; the captures fill the images,
 `docs:bundle` puts them into `dist/`, and the package runs `check:docs` and the PWA
 test against that same build. The local command remains one sequence, so a checkout
-needs nothing more than Bun and Chromium.
+needs nothing more than Bun and a browser.
 
 Every script that calls Astro says `bun --bun astro …`: without `--bun` Bun hands the
 bin to the machine's Node through its shebang, and Astro then refuses to run on a Node
@@ -92,15 +93,27 @@ next feature-sized byte belongs behind a lazy boundary, not in a bigger cap.
 
 ## Browser tests
 
-`bun run test:e2e` drives the real island in headless Chromium through Playwright
-(`playwright.config.ts`, specs in `tests/e2e/`), starting `bun run dev` itself. The
-`desktop` and `mobile` projects are the documentation captures, so the same run both
-validates the app and writes the images the build names. It is not part of `bun test`:
-the unit suite is `*.test.ts` under `src/`, and `bunfig.toml` keeps `tests/e2e/**` out
-of Bun's discovery. Locally the suite runs on one worker. In CI it is split into three
-shards, and each shard uses every core but one, never fewer than two, with a single
-retry per test. A red shard is a red `e2e` check: the aggregate job exists so the
-ruleset still has one check to require when the shard count changes.
+`bun run test:e2e` drives the real island in headless **Chromium and Firefox** through
+Playwright (`playwright.config.ts`, specs in `tests/e2e/`), starting `bun run dev` itself.
+The `desktop` and `mobile` projects are the documentation captures — Chromium only, since
+they are a picture of the game — so the same run both validates the app and writes the
+images the build names. It is not part of `bun test`: the unit suite is `*.test.ts` under
+`src/`, and `bunfig.toml` keeps `tests/e2e/**` out of Bun's discovery. Locally the suite
+runs on one worker. In CI each engine is split into three shards, and the two engines run
+**side by side** rather than one after the other, so the second engine costs runners and
+not wall time; each shard uses every core but one, never fewer than two, with a single
+retry per test. A red shard on either engine is a red `e2e` check: the aggregate job
+exists so the ruleset still has one check to require when the shard count changes.
+
+A spec must be honest in **both** engines. `hasTouch` is the phone: it is what the game
+reads (`(pointer: coarse)`), and both engines implement it. `isMobile` is Chromium's
+mobile emulation — Firefox answers it with a 980&nbsp;px layout viewport — so a phone spec
+sets a viewport and `hasTouch`, never `isMobile`. A real headless Firefox also **enters
+fullscreen** when a run starts (the window becomes the screen), so a spec that measures
+geometry calls `disableFullscreen(page)`; `fullscreen.spec.ts` is the one that means it.
+Neither engine has an **audio device**, and a media element that plays without one carries
+a `MediaError` — deliberately ignored by the game, and the reason a stem is judged by its
+`readyState` and its clock rather than by that flag ([gotchas](gotchas.md)).
 
 [`tests/e2e/README.md`](https://github.com/HappyPaul55/everythingstar/blob/main/tests/e2e/README.md)
 carries the suite's rule and inventory: **a browser test is kept only when no cheaper
