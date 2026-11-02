@@ -17,7 +17,7 @@ import { enterGame, openBand, startRun, waitForPlaying } from "./helpers";
  */
 
 test.describe("on a touch screen", () => {
-  test.use({ hasTouch: true, isMobile: true, viewport: { width: 390, height: 844 } });
+  test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
 
   test("the stage offers a pause control, and it opens the pause", async ({
     context,

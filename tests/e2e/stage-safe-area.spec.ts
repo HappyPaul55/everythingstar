@@ -1,5 +1,5 @@
 import { expect, test } from "./base";
-import { SONG_TITLE, installFixtures } from "./fixture";
+import { SONG_TITLE, disableFullscreen, installFixtures } from "./fixture";
 import { openBand, startRun, waitForPlaying } from "./helpers";
 
 /**
@@ -17,14 +17,23 @@ import { openBand, startRun, waitForPlaying } from "./helpers";
  * insets to hand, so the test stands a top one in — the shape of a notched phone in
  * fullscreen — and asserts both that the rail stays up and that the panel reaches
  * the bottom of the stage.
+ *
+ * The phone is **a narrow viewport and a coarse pointer**, not a browser's mobile
+ * emulation: `hasTouch` is the part both engines implement, and it is the part the
+ * game reads (`(pointer: coarse)`). `isMobile` is Chromium-only — Firefox answers it
+ * with a 980px layout viewport — and fullscreen is refused, because a real headless
+ * Firefox goes fullscreen and the window becomes the whole screen.
  */
-test.use({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 
 test("a stage with a safe area keeps the score rail up and fills the bottom", async ({
   context,
   page,
 }) => {
   const leaked = await installFixtures(context);
+  // A real headless Firefox enters fullscreen and the window becomes the screen, so
+  // the phone's shape would be measured on a desktop one.
+  await disableFullscreen(page);
   await page.goto("/play");
   await expect(page.getByRole("button", { name: "Enter the stage" })).toBeEnabled({
     timeout: 20_000,

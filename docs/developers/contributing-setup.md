@@ -34,11 +34,11 @@ bun run check:release    # every archive holds its plan, and both formats agree
 ```
 
 Run the whole thing before opening a pull request. The browser tests are separate,
-because they need Chromium:
+because they need a browser of their own:
 
 ```bash
-bunx playwright install --with-deps chromium
-bun run test:e2e         # starts its own dev server
+bunx playwright install --with-deps chromium firefox
+bun run test:e2e         # starts its own dev server; every project, both engines
 ```
 
 Two other scripts are useful but not part of the gate:
@@ -48,8 +48,9 @@ bun run import --from <charts> --to <library>   # a folder of charts into the th
 bun run icons / bun run fonts                   # regenerate the icon set / self-hosted fonts
 ```
 
-CI (`.github/workflows/ci.yml`) runs one `build`, a `unit` job and four browser
-shards on every pull request and on `main`; the shards also take the documentation
+CI (`.github/workflows/ci.yml`) runs one `build`, a `unit` job and six browser
+shards — three per engine, Chromium and Firefox side by side — on every pull request and
+on `main`; the shards also take the documentation
 screenshots, and a final `package` job joins them to the build. The required checks are
 `verify` and `e2e`; the local `bun run verify` remains the one-command gate.
 [Testing](testing.md) says what each gate is for and what only a browser can prove.
