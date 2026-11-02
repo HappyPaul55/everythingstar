@@ -1,3 +1,6 @@
+/* eslint-disable no-useless-escape -- A Tailwind arbitrary variant escapes a literal
+   underscore as `\_` so the scanner does not read it as a space; JavaScript drops the
+   backslash, which leaves the class name the stylesheet expects. */
 import {
   lazy,
   Suspense,
@@ -54,6 +57,56 @@ const DownloadsDialog = lazy(() =>
     default: module.DownloadsDialog,
   })),
 );
+
+/**
+ * The jukebox's three shapes. At medium widths the heading and the now-playing
+ * slot share the top row and the list gets the full width below; on a wide screen
+ * the heading spans the page and the list and slot share the remaining height. The
+ * media queries are written out on each utility rather than composed from a prefix,
+ * because a utility has to appear whole in the source for Tailwind to generate it.
+ */
+const PANEL =
+  "screen__panel screen__panel--page screen__panel--songs narrow:max-wide:grid narrow:max-wide:grid-cols-[minmax(0,1fr)_minmax(14rem,0.72fr)] narrow:max-wide:grid-rows-[auto_minmax(0,1fr)] narrow:max-wide:min-h-0 wide:grid wide:grid-cols-[minmax(0,1fr)_minmax(16rem,19rem)] wide:grid-rows-[auto_minmax(0,1fr)] wide:min-h-0";
+
+const HEADING =
+  "jukebox__heading narrow:max-wide:col-start-1 narrow:max-wide:row-start-1 narrow:max-wide:min-w-0 wide:col-span-full wide:row-start-1";
+
+const JUKEBOX =
+  "jukebox flex flex-wrap items-start gap-[clamp(0.7rem,2vmin,1.4rem)] narrow:max-wide:col-span-full narrow:max-wide:row-start-2 narrow:max-wide:flex-nowrap narrow:max-wide:items-stretch narrow:max-wide:min-h-0 wide:col-start-1 wide:row-start-2 wide:flex-nowrap wide:items-stretch wide:min-h-0";
+
+const LIST =
+  "jukebox__list flex-[1_1_34rem] min-w-0 narrow:max-wide:flex narrow:max-wide:flex-1 narrow:max-wide:basis-0 narrow:max-wide:flex-col narrow:max-wide:min-h-0 wide:self-stretch wide:flex wide:flex-auto wide:flex-col wide:min-h-0";
+
+const SCROLLER =
+  "jukebox__scroller relative h-[clamp(13rem,52vh,30rem)] overflow-y-auto overscroll-contain border border-[rgba(250,250,244,0.14)] rounded-inner bg-[rgba(12,13,10,0.62)] narrow:max-wide:flex-1 narrow:max-wide:basis-0 narrow:max-wide:h-auto narrow:max-wide:min-h-0 narrow:max-wide:overflow-y-auto wide:flex-auto wide:h-auto wide:min-h-[12rem]";
+
+const SELECTION =
+  "jukebox__selection narrow:max-wide:col-start-2 narrow:max-wide:row-start-1 narrow:max-wide:grid narrow:max-wide:grid-cols-[minmax(0,1fr)_2.75rem] narrow:max-wide:items-stretch narrow:max-wide:gap-[0.4rem] narrow:max-wide:min-w-0 wide:col-start-2 wide:row-start-2 wide:self-stretch wide:flex-col wide:min-h-0";
+
+const DISPLAY =
+  "jukebox__display group/display narrow:max-wide:grid narrow:max-wide:col-start-1 narrow:max-wide:row-start-1 narrow:max-wide:grid-cols-[minmax(0,1fr)_2.5rem] narrow:max-wide:[grid-template-areas:'now-playing_now-playing'_'title_cover'_'chips_cover'_'artist_artist'_'offline_offline'] narrow:max-wide:content-start narrow:max-wide:gap-[0.2rem_0.45rem] narrow:max-wide:flex-none narrow:max-wide:min-w-0 narrow:max-wide:p-[0.65rem] wide:flex-auto wide:min-h-0 narrow:max-wide:[&_.song-art--panel]:[grid-area:cover] narrow:max-wide:[&_.song-art--panel]:size-[2.5rem] narrow:max-wide:[&_.song-art--panel]:m-0 narrow:max-wide:[&_.jukebox\_\_offline]:[grid-area:offline] narrow:max-wide:[&_.jukebox\_\_offline]:mt-[0.1rem] narrow:max-wide:[&_.jukebox\_\_chips]:[grid-area:chips] narrow:max-wide:[&_.jukebox\_\_chips]:min-w-0 narrow:max-wide:[&_.jukebox\_\_chips]:m-0 narrow:max-wide:[&_.jukebox\_\_chips]:gap-[0.2rem] narrow:max-wide:[&_.jukebox\_\_chips--full]:hidden narrow:max-wide:[&_.jukebox\_\_chips--compact]:flex narrow:max-wide:[&_.jukebox\_\_chips--compact]:flex-[0_1_auto] narrow:max-wide:[&_.jukebox\_\_chips--compact]:flex-nowrap narrow:max-wide:[&_.jukebox\_\_chips--compact]:max-w-full narrow:max-wide:[&_.jukebox\_\_chips--compact]:overflow-hidden narrow:max-wide:[&_.jukebox\_\_chips--compact]:whitespace-nowrap narrow:max-wide:[&_.jukebox\_\_chips--compact_.song-chip]:flex-none narrow:max-wide:[&_.jukebox\_\_chips--compact_.song-chip]:px-[0.25rem] narrow:max-wide:[&_.jukebox\_\_chips--compact_.song-chip]:py-[0.08rem] narrow:max-wide:[&_.jukebox\_\_chips--compact_.song-chip]:text-[0.45rem] narrow:max-wide:[&_.jukebox\_\_chips--compact_.song-chip]:tracking-[0.04em] narrow:max-wide:[&_.jukebox\_\_chips--compact_.song-chip]:whitespace-nowrap narrow:max-wide:[&_.jukebox\_\_history]:hidden";
+
+const NOW_PLAYING =
+  "jukebox__now-playing narrow:max-wide:[grid-area:now-playing] narrow:max-wide:flex narrow:max-wide:items-baseline narrow:max-wide:justify-between narrow:max-wide:gap-2";
+
+const DURATION =
+  "jukebox__duration narrow:max-wide:min-w-0 narrow:max-wide:m-0";
+
+const HEADLINE = "jukebox__headline narrow:max-wide:contents";
+
+const TITLE =
+  "jukebox__title narrow:max-wide:[grid-area:title] narrow:max-wide:min-w-0 narrow:max-wide:max-w-full narrow:max-wide:m-0 narrow:max-wide:text-[clamp(1rem,2.3vmin,1.35rem)] narrow:max-wide:leading-[1.1] narrow:max-wide:overflow-hidden narrow:max-wide:text-ellipsis narrow:max-wide:whitespace-nowrap narrow:max-wide:group-data-[has-song=false]/display:col-span-full";
+
+const ARTIST =
+  "jukebox__artist narrow:max-wide:[grid-area:artist] narrow:max-wide:min-w-0 narrow:max-wide:text-[0.68rem] narrow:max-wide:overflow-hidden narrow:max-wide:text-ellipsis narrow:max-wide:whitespace-nowrap";
+
+const NEXT =
+  "band-btn band-btn--primary band-btn--big jukebox__next w-full narrow:max-wide:col-start-2 narrow:max-wide:row-start-1 narrow:max-wide:flex narrow:max-wide:items-center narrow:max-wide:justify-center narrow:max-wide:w-full narrow:max-wide:min-w-[2.75rem] narrow:max-wide:min-h-[44px] narrow:max-wide:px-1 narrow:max-wide:py-[0.4rem] narrow:max-wide:text-[0.65rem] narrow:max-wide:[writing-mode:vertical-rl] narrow:max-wide:[text-orientation:upright] narrow:max-wide:tracking-[0.08em] narrow:max-wide:mt-0 wide:mt-auto";
+
+const NEXT_FULL = "jukebox__next-full narrow:max-wide:hidden";
+
+const NEXT_COMPACT =
+  "jukebox__next-compact hidden narrow:max-wide:inline";
 
 /**
  * The jukebox: a song list with an index, a search and a slot on the front.
@@ -244,15 +297,17 @@ export function Songs({
   };
 
   const selection = () => (
-    <div className="jukebox__selection">
+    <div className={SELECTION}>
       <aside
-        className="jukebox__display"
+        className={DISPLAY}
         aria-label={t("screen.nowPlaying")}
         data-has-song={song ? "true" : "false"}
       >
-        <div className="jukebox__now-playing">
+        <div className={NOW_PLAYING}>
           <p className="jukebox__label">{t("screen.nowPlaying")}</p>
-          {song ? <p className="jukebox__duration">{formatClock(song.durationMs)}</p> : null}
+          {song ? (
+            <p className={DURATION}>{formatClock(song.durationMs)}</p>
+          ) : null}
         </div>
         {song ? (
           <>
@@ -261,11 +316,11 @@ export function Songs({
               size="panel"
               art={previewView.songId === song.id ? previewView.art ?? undefined : undefined}
             />
-            <div className="jukebox__headline">
-              <p className="jukebox__title">{song.title}</p>
+            <div className={HEADLINE}>
+              <p className={TITLE}>{song.title}</p>
               <SongChips song={song} className="jukebox__chips" />
             </div>
-            <p className="jukebox__artist">
+            <p className={ARTIST}>
               {song.album
                 ? t("screen.songByAlbum", {
                     artist: song.artist.name,
@@ -318,12 +373,12 @@ export function Songs({
             </div>
           </>
         ) : (
-          <p className="jukebox__title">{t("screen.libraryEmpty")}</p>
+          <p className={TITLE}>{t("screen.libraryEmpty")}</p>
         )}
       </aside>
       <button
         type="button"
-        className="band-btn band-btn--primary band-btn--big jukebox__next"
+        className={NEXT}
         aria-label={t("screen.nextBand")}
         // A button that does nothing is still pressed: `aria-disabled` keeps it
         // focusable and says "not now" when a player tries, where `disabled` takes
@@ -335,8 +390,8 @@ export function Songs({
           onNext();
         }}
       >
-        <span className="jukebox__next-full">{t("screen.nextBand")}</span>
-        <span className="jukebox__next-compact" aria-hidden="true">
+        <span className={NEXT_FULL}>{t("screen.nextBand")}</span>
+        <span className={NEXT_COMPACT} aria-hidden="true">
           {t("screen.nextShort")}
         </span>
       </button>
@@ -345,21 +400,24 @@ export function Songs({
 
   return (
     <div className="screen screen--songs">
-      <div className="screen__panel screen__panel--page screen__panel--songs">
-        <div className="jukebox__heading">
+      <div className={PANEL}>
+        <div className={HEADING}>
           <ScreenBackButton label={t("screen.backToMenu")} onBack={onBack} />
           <h2 className="screen__title">{t("screen.songsTitle")}</h2>
         </div>
 
-        <div className="jukebox">
-          <div className="jukebox__list">
-            <div className="jukebox__search">
-              <label className="jukebox__search-label" htmlFor="jukebox-search">
+        <div className={JUKEBOX}>
+          <div className={LIST}>
+            <div className="jukebox__search flex flex-wrap items-center gap-[0.6rem] mb-[0.6rem]">
+              <label
+                className="jukebox__search-label font-mono text-kicker-tight font-bold tracking-[0.12em] uppercase text-[rgba(250,250,244,0.62)] [@media(max-width:40rem)]:sr-only"
+                htmlFor="jukebox-search"
+              >
                 {t("screen.searchLabel")}
               </label>
               <input
                 id="jukebox-search"
-                className="jukebox__input"
+                className="jukebox__input flex-[1_1_12rem] min-w-0 px-[0.6rem] py-[0.45rem] font-[inherit] text-[0.9rem] text-cream bg-[rgba(12,13,10,0.7)] border border-[rgba(250,250,244,0.28)] rounded-inner focus-visible:border-yellow [@media(max-width:40rem)]:basis-[7rem]"
                 type="search"
                 autoComplete="off"
                 spellCheck={false}
@@ -384,25 +442,27 @@ export function Songs({
                   is a URL, and this is where one is added, refreshed or forgotten. */}
               <button
                 type="button"
-                className="band-btn jukebox__playlists"
+                className="band-btn jukebox__playlists flex-none inline-flex items-center gap-[0.45rem]"
                 aria-haspopup="dialog"
                 data-sound="open"
                 onClick={() => setLists(true)}
               >
                 {t("screen.playlists")}
-                <span className="jukebox__playlists-count">{sourceCount}</span>
+                <span className="jukebox__playlists-count px-[0.35rem] text-[0.62rem] text-ink bg-yellow rounded-pill">
+                  {sourceCount}
+                </span>
               </button>
               {offline.supported ? (
                 <button
                   type="button"
-                  className="band-btn jukebox__playlists"
+                  className="band-btn jukebox__playlists flex-none inline-flex items-center gap-[0.45rem]"
                   aria-haspopup="dialog"
                   data-sound="open"
                   onClick={() => setDownloadsOpen(true)}
                 >
                   {t("screen.downloads")}
                   {offline.entries.length > 0 ? (
-                    <span className="jukebox__playlists-count">
+                    <span className="jukebox__playlists-count px-[0.35rem] text-[0.62rem] text-ink bg-yellow rounded-pill">
                       {offline.entries.length}
                     </span>
                   ) : null}
@@ -414,9 +474,12 @@ export function Songs({
                 them. A failure is said here and retried by hand; it never replaces
                 the songs the library already has. */}
             {onDemandCount > 0 ? (
-              <div className="jukebox__search-state" aria-live="polite">
+              <div
+                className="jukebox__search-state flex flex-wrap items-center gap-x-[0.7rem] gap-y-[0.35rem] mt-[-0.15rem] mb-[0.5rem]"
+                aria-live="polite"
+              >
                 {searching ? (
-                  <p className="jukebox__search-line">
+                  <p className="jukebox__search-line m-0 font-mono text-[0.66rem] text-[rgba(250,250,244,0.62)]">
                     {onDemandCount === 1
                       ? t("screen.searchingOne")
                       : t("screen.searchingMany", { count: onDemandCount })}
@@ -424,14 +487,19 @@ export function Songs({
                 ) : null}
                 {live
                   ? searchState.failures.map((failure) => (
-                      <p className="jukebox__search-line is-warn" key={failure.url}>
+                      <p
+                        className="jukebox__search-line is-warn m-0 font-mono text-[0.66rem] text-[rgba(250,250,244,0.62)] [&.is-warn]:text-yellow"
+                        key={failure.url}
+                      >
                         {t("screen.searchFailed", {
                           name: failure.name ?? failure.url,
                         })}{" "}
-                        <span className="jukebox__search-error">{failure.error}</span>{" "}
+                        <span className="jukebox__search-error text-[rgba(250,250,244,0.5)]">
+                          {failure.error}
+                        </span>{" "}
                         <button
                           type="button"
-                          className="band-btn jukebox__search-retry"
+                          className="band-btn jukebox__search-retry px-[0.45rem] py-[0.12rem] text-[0.62rem]"
                           data-sound="select"
                           onClick={() => library.search(trimmed, true)}
                         >
@@ -441,13 +509,15 @@ export function Songs({
                     ))
                   : null}
                 {trimmed.length > 0 && trimmed.length < SEARCH_MIN_CHARS ? (
-                  <p className="jukebox__search-line">{t("screen.searchShort")}</p>
+                  <p className="jukebox__search-line m-0 font-mono text-[0.66rem] text-[rgba(250,250,244,0.62)]">
+                    {t("screen.searchShort")}
+                  </p>
                 ) : null}
               </div>
             ) : null}
 
             <div
-              className="jukebox__scroller"
+              className={SCROLLER}
               ref={list.scroller}
               onScroll={list.onScroll}
               onKeyDown={list.onKeyDown}
@@ -475,26 +545,32 @@ export function Songs({
                           : t("screen.songCount", { count: songCount })}
               </p>
               {!ready ? (
-                <p className="jukebox__empty">{t("screen.songsLoading")}</p>
+                <p className="jukebox__empty m-0 p-[1.2rem] font-mono text-[0.72rem] text-[rgba(250,250,244,0.6)]">
+                  {t("screen.songsLoading")}
+                </p>
               ) : null}
               {ready && loadingLibrary ? (
-                <p className="jukebox__empty">{t("screen.libraryLoading")}</p>
+                <p className="jukebox__empty m-0 p-[1.2rem] font-mono text-[0.72rem] text-[rgba(250,250,244,0.6)]">
+                  {t("screen.libraryLoading")}
+                </p>
               ) : null}
               {nothing ? (
-                <p className="jukebox__empty">
+                <p className="jukebox__empty m-0 p-[1.2rem] font-mono text-[0.72rem] text-[rgba(250,250,244,0.6)]">
                   {onDemandCount > 0
                     ? t("screen.libraryEmptySearch")
                     : t("screen.libraryEmpty")}
                 </p>
               ) : null}
               {!reading && !nothing && !searching && shown.length === 0 ? (
-                <p className="jukebox__empty">{t("screen.noMatches")}</p>
+                <p className="jukebox__empty m-0 p-[1.2rem] font-mono text-[0.72rem] text-[rgba(250,250,244,0.6)]">
+                  {t("screen.noMatches")}
+                </p>
               ) : null}
               {/* Only the window is mounted: the spacers stand in for every row
                   and heading outside it, so the scrollbar and every letter's
                   offset are the ones a fully mounted list would have. */}
               <div
-                className="jukebox__spacer"
+                className="jukebox__spacer w-full pointer-events-none"
                 aria-hidden="true"
                 style={{ height: list.range?.top ?? 0 }}
               />
@@ -503,9 +579,9 @@ export function Songs({
                 if (!group) return null;
                 return (
                   <section className="song-group" key={group.letter}>
-                    <h3 className="song-group__letter">
+                    <h3 className="song-group__letter sticky top-0 z-1 m-0 px-[0.6rem] py-[0.2rem] font-mono text-[0.62rem] font-bold tracking-[0.18em] text-ink bg-yellow">
                       <span>{group.letter}</span>
-                      <span className="song-group__count">
+                      <span className="song-group__count ml-[0.65rem] font-normal tracking-[0.04em] text-ink-soft before:content-['·'] before:mr-[0.55rem] before:text-ink-soft">
                         {group.entries.length === 1
                           ? t("screen.playlistOneSong")
                           : t("screen.songCount", { count: group.entries.length })}
@@ -515,7 +591,7 @@ export function Songs({
                         gap between it and the first row the window kept. */}
                     {section.skip > 0 ? (
                       <div
-                        className="jukebox__spacer"
+                        className="jukebox__spacer w-full pointer-events-none"
                         aria-hidden="true"
                         style={{ height: section.skip }}
                       />
@@ -543,7 +619,7 @@ export function Songs({
                 );
               })}
               <div
-                className="jukebox__spacer"
+                className="jukebox__spacer w-full pointer-events-none"
                 aria-hidden="true"
                 style={{ height: list.range?.bottom ?? 0 }}
               />

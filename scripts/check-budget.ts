@@ -52,6 +52,15 @@
  * in the first download, not a lazy chunk moved out of place. The raw cap moved
  * 572 → 580 and the whole-payload cap 700 → 710; the gzip kept its 190.
  *
+ * The full stage conversion (2026-11-02, the same branch) moved the rest of the
+ * stage's styling into its components. The component CSS fell by ~134 KB, but the
+ * utilities that replaced it generate ~98 KB of stylesheet and ~55 KiB of JS:
+ * `_astro` JS 718 → 773, initial `/play` 573 → 622 KiB raw and 185 → 199 gzipped,
+ * and `/play`'s own document 169 → 199 KB. This is the measured price of the
+ * conversion and the reason it is a "review before merge", not a default. The
+ * caps moved 730 → 830, 580 → 660 and 190 → 215 to hold the number it actually
+ * came to; they are not a target.
+ *
  * The utility-first restyle (2026-11-02) moved the **charter's** styling out of
  * `charter.css` and into the island's strings: the markup now carries the utilities
  * that used to be selectors, so the whole-`_astro` number grew 707 → 714 KiB while
@@ -171,10 +180,10 @@ const checks: Check[] = [
   {
     label: "dist/_astro JS",
     actual: sizeOf(join(DIST, "_astro"), (file) => file.endsWith(".js")),
-    limit: 730 * KIB,
+    limit: 830 * KIB,
   },
-  { label: "initial /play raw", actual: initialRaw, limit: 580 * KIB },
-  { label: "initial /play gzip", actual: initialGzip, limit: 190 * KIB },
+  { label: "initial /play raw", actual: initialRaw, limit: 660 * KIB },
+  { label: "initial /play gzip", actual: initialGzip, limit: 215 * KIB },
   { label: "dist/ total", actual: sizeOf(DIST), limit: 20 * MIB },
   { label: "public/audio", actual: sizeOf(join(ROOT, "public", "audio")), limit: 10 * MIB },
 ];

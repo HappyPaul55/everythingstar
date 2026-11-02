@@ -224,7 +224,10 @@ export function PlayerPanel({ player, width, height, view, noteStyle, noteSpeed,
           onSlide={slide}
         />
       ) : (
-        <div className="highway highway--empty" role="note">
+        <div
+          className="highway highway--empty relative mx-auto grid max-w-[42rem] min-h-0 min-w-0 flex-[1_1_auto] place-items-center overflow-clip rounded-brand border border-[rgba(250,250,244,0.14)] bg-transparent font-mono text-[clamp(0.55rem,2.4cqmin,0.9rem)] tracking-[0.14em] uppercase text-[rgba(250,250,244,0.5)]"
+          role="note"
+        >
           {t("band.noChart")}
         </div>
       )}

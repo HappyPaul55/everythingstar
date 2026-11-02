@@ -52,7 +52,10 @@ export function Loading({ ready, problems, onLoaded }: Props) {
       data-nav-default="true"
     >
       <div className="screen__panel screen__panel--centre">
-        <span className="screen__spinner" aria-hidden="true" />
+        <span
+          className="screen__spinner size-[2.2rem] rounded-full border-[3px] border-[rgba(250,250,244,0.22)] border-t-yellow animate-[band-spin_0.9s_linear_infinite]"
+          aria-hidden="true"
+        />
         <p className="screen__status">{t("screen.loading")}</p>
         {problems.length > 0 ? (
           <SongProblems problems={problems} className="screen__hint" />

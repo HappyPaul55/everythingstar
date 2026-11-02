@@ -26,7 +26,7 @@ export function StepButton({
   return (
     <button
       type="button"
-      className="option__step"
+      className="option__step flex items-center justify-center size-8 font-mono text-[1rem] leading-none text-cream bg-[rgba(12,13,10,0.7)] border border-[rgba(250,250,244,0.28)] rounded-inner cursor-pointer not-aria-disabled:hover:border-yellow not-aria-disabled:focus-visible:border-yellow not-aria-disabled:data-[nav-focus]:border-yellow aria-disabled:text-[rgba(250,250,244,0.35)] aria-disabled:border-[rgba(250,250,244,0.14)]"
       aria-label={label}
       aria-disabled={blocked}
       data-nav-default={defaultFocus ? "true" : undefined}

@@ -288,10 +288,12 @@ export function Results({
         {/* A page, not a dialog: it is labelled like one, and the way out of it is
             the way out of any screen — the action at the end. */}
         <section
-          className={failed ? "results results--failed" : "results"}
+          className={`results mx-auto flex w-full max-w-[72rem] flex-col gap-[1rem] ${
+            failed ? " results--failed" : ""
+          }`}
           aria-labelledby="results-title"
         >
-          <div className="results__titles">
+          <div className="results__titles min-w-0">
             {/* The tag over the title, the way every other screen is headed: the
                 results are the screen, and the song is what it is about. */}
             <p className="comment comment-ink on-ink screen__comment [--tag-color:var(--color-cream)]">
@@ -309,16 +311,16 @@ export function Results({
             </h2>
           </div>
 
-          <p className="results__song">
+          <p className="results__song m-0 font-mono text-[0.7rem] uppercase tracking-[0.08em] text-cream">
             <span className="results__song-title">{song.title}</span>{" "}
-            <span className="results__song-by">
+            <span className="results__song-by text-[rgba(250,250,244,0.7)]">
               {t("screen.resultsBy", { artist: song.artist.name })}
             </span>
           </p>
 
           {/* The run's rating: the stars are what a player reads first after the
               score, and the average multiplier says why they got them. */}
-          <div className="results__rating">
+          <div className="results__rating flex flex-wrap items-baseline gap-[0.5rem]">
             <Rating stars={rating.stars} gold={rating.gold} average={rating.average} />
           </div>
 
@@ -337,7 +339,7 @@ export function Results({
           {/* The band's numbers, one read each — and the score is a read like the
               rest rather than a headline with a field of nothing beside it. "0/42
               notes" says both halves of the same thing, so the hits are one tile. */}
-          <dl className="results__summary">
+          <dl className="results__summary m-0 grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-[0.5rem]">
             <Metric label={t("screen.total")} value={<CountUp value={score} />} total />
             <Metric
               label={t("screen.hits")}
@@ -347,7 +349,11 @@ export function Results({
             <Metric label={t("screen.bestCombo")} value={`${bestCombo}`} />
           </dl>
 
-          <p className="results__best" role="status" aria-live="polite">
+          <p
+            className="results__best m-0 mt-[0.5rem] font-mono text-[0.7rem] font-bold uppercase tracking-[0.08em] text-cream [.results--failed_&]:text-accent"
+            role="status"
+            aria-live="polite"
+          >
             {verdict === null
               ? ""
               : failed
@@ -360,9 +366,14 @@ export function Results({
           </p>
 
           {runs.length > 0 ? (
-            <div className="results__section results__section--cards">
-              <p className="results__heading">{t("screen.whoPlayed")}</p>
-              <ul className="results__players" aria-label={t("screen.playersLabel")}>
+            <div className="results__section results__section--cards flex min-w-0 flex-col">
+              <p className="results__heading m-0 mb-[0.35rem] text-center font-mono text-[0.62rem] font-bold uppercase tracking-[0.14em] text-[rgba(250,250,244,0.78)]">
+                {t("screen.whoPlayed")}
+              </p>
+              <ul
+                className="results__players m-0 flex list-none flex-wrap justify-center gap-[0.6rem] p-0"
+                aria-label={t("screen.playersLabel")}
+              >
                 {runs.map((run) => (
                   <PlayerCard key={run.key} run={run} />
                 ))}
@@ -371,46 +382,53 @@ export function Results({
           ) : null}
 
           {table.length > 0 ? (
-            <div className="results__section">
-              <p className="results__heading">
+            <div className="results__section flex min-w-0 flex-col">
+              <p className="results__heading m-0 mb-[0.35rem] font-mono text-[0.62rem] font-bold uppercase tracking-[0.14em] text-[rgba(250,250,244,0.78)]">
                 {t("screen.savedTop", { count: table.length })}
               </p>
-              <ol className="results__board-list">
+              <ol className="results__board-list m-0 flex w-[min(30rem,100%)] list-none flex-col gap-[0.18rem] p-0">
                 {table.map((run, index) => (
-                  <li className="results__saved" key={`${run.at}-${index}`}>
-                    <span className="results__saved-rank">{index + 1}</span>
+                  <li
+                    className="results__saved flex items-baseline gap-[0.7rem] py-[0.15rem] text-[0.8rem]"
+                    key={`${run.at}-${index}`}
+                  >
+                    <span className="results__saved-rank w-[1.2rem] font-mono text-[0.7rem] text-[rgba(250,250,244,0.8)]">
+                      {index + 1}
+                    </span>
                     {/* Every row is the same song, so the song is what the heading
                         already said: what tells them apart is when it was played —
                         unless it was lost, which is worth saying. And how many were
                         on stage, with the lineup under it: why an Expert score can
                         sit above an Easy one without either being the other's
                         better. */}
-                    <span className="results__saved-meta">
-                      <span className="results__saved-when">
+                    <span className="results__saved-meta grid min-w-0 flex-auto grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-[0.7rem] gap-y-[0.1rem]">
+                      <span className="results__saved-when min-w-0 overflow-hidden truncate font-mono text-[0.7rem] text-[rgba(250,250,244,0.8)]">
                         {run.failed ? t("screen.lost") : shortDate(run.at)}
                       </span>
-                      <span className="results__saved-band">
+                      <span className="results__saved-band flex-none font-mono text-[0.7rem] text-[rgba(250,250,244,0.6)]">
                         {t("screen.savedBand", { count: run.players.length })}
                       </span>
                       {run.lineup ? (
-                        <span className="results__saved-lineup">
+                        <span className="results__saved-lineup col-span-full min-w-0 font-mono text-[0.65rem] text-[rgba(250,250,244,0.55)] [overflow-wrap:anywhere]">
                           <LineupText lineup={run.lineup} />
                         </span>
                       ) : null}
                     </span>
                     {run.stars ? (
-                      <span className="results__saved-stars">
+                      <span className="results__saved-stars flex-none text-[0.72rem]">
                         <Stars stars={run.stars} gold={run.gold ?? false} />
                       </span>
                     ) : null}
-                    <span className="results__saved-score">{formatScore(run.score)}</span>
+                    <span className="results__saved-score flex-none min-w-[3.5rem] text-right font-display text-yellow">
+                      {formatScore(run.score)}
+                    </span>
                   </li>
                 ))}
               </ol>
             </div>
           ) : null}
 
-          <div className="results__actions">
+          <div className="results__actions mt-[0.3rem] flex flex-wrap gap-[0.6rem]">
             <button
               type="button"
               className="band-btn band-btn--primary"
@@ -471,42 +489,44 @@ function PlayerCard({ run }: { run: RunEntry }) {
   const unit = t(run.unit === "words" ? "screen.words" : "screen.notes");
 
   return (
-    <li className="results__player">
-      <div className="results__player-head">
+    <li className="results__player flex min-w-0 flex-[0_1_17rem] flex-col gap-[0.3rem] rounded-inner border border-[rgba(250,250,244,0.2)] bg-[rgba(12,13,10,0.5)] px-[0.65rem] pt-[0.55rem] pb-[0.6rem] max-[40rem]:flex-[0_1_100%]">
+      <div className="results__player-head flex items-center gap-[0.4rem]">
         <span
-          className={`results__player-who${
+          className={`results__player-who [&.is-vocals]:text-accent min-w-0 flex-auto overflow-hidden truncate font-mono text-[0.62rem] font-bold uppercase tracking-[0.08em] text-[rgba(250,250,244,0.9)] ${
             kindTone(run.kind, run.wordsMode) === "vocals" ? " is-vocals" : ""
           }`}
         >
           {run.label}
         </span>
-        <span className="results__tag">
+        <span className="results__tag flex-none rounded-pill border border-[rgba(250,250,244,0.4)] px-[0.4rem] py-[0.1rem] font-mono text-[0.56rem] font-bold uppercase tracking-[0.1em] text-[rgba(250,250,244,0.9)]">
           {run.difficulty
             ? t(`band.${run.difficulty}` as "band.easy")
             : t("screen.freePlay")}
         </span>
       </div>
-      <p className="results__player-score">{formatScore(run.score)}</p>
-      <div className="results__player-rating">
+      <p className="results__player-score m-0 font-display text-[1.6rem] leading-none text-yellow [.results--failed_&]:text-accent">
+        {formatScore(run.score)}
+      </p>
+      <div className="results__player-rating mt-[0.05rem] flex flex-wrap items-baseline gap-[0.5rem]">
         <Rating stars={rating.stars} gold={rating.gold} average={rating.average} />
       </div>
-      <p className="results__player-stats">
+      <p className="results__player-stats m-0 mt-[0.1rem] flex flex-wrap gap-x-[0.35rem] gap-y-[0.15rem] border-t border-dashed border-[rgba(250,250,244,0.3)] pt-[0.35rem] font-mono text-[0.6rem] tracking-[0.03em] text-[rgba(250,250,244,0.85)]">
         {t("screen.countOf", { hits: run.hits, total: run.judged, unit })}
-        <span className="results__dot" aria-hidden="true">
+        <span className="results__dot text-[rgba(250,250,244,0.5)]" aria-hidden="true">
           ·
         </span>
         {hitRatePercent}% {t("screen.accuracy")}
-        <span className="results__dot" aria-hidden="true">
+        <span className="results__dot text-[rgba(250,250,244,0.5)]" aria-hidden="true">
           ·
         </span>
         {run.bestCombo} {t("band.combo")}
         {run.typing ? (
           <>
-            <span className="results__dot" aria-hidden="true">
+            <span className="results__dot text-[rgba(250,250,244,0.5)]" aria-hidden="true">
               ·
             </span>
             {t("screen.typingWpm", { wpm: run.typing.wpm })}
-            <span className="results__dot" aria-hidden="true">
+            <span className="results__dot text-[rgba(250,250,244,0.5)]" aria-hidden="true">
               ·
             </span>
             {t("screen.typingAccuracy", { accuracy: run.typing.accuracy })}
@@ -565,18 +585,32 @@ function Stars({ stars, gold }: { stars: number; gold: boolean }) {
   const t = useT();
   const filled = Math.max(0, Math.min(5, Math.round(stars)));
   if (filled === 0) {
-    return <span className="results__stars results__stars--none">{t("screen.noRating")}</span>;
+    return (
+      <span className="results__stars results__stars--none font-mono text-[0.6rem] uppercase tracking-[0.1em] text-[rgba(250,250,244,0.6)]">
+        {t("screen.noRating")}
+      </span>
+    );
   }
   return (
     <span
-      className={gold ? "results__stars is-gold" : "results__stars"}
+      className={`results__stars inline-flex gap-[0.08rem] text-[1.05rem] leading-none tracking-[0.02em] text-[rgba(250,250,244,0.2)] ${
+        gold ? " is-gold" : ""
+      }`}
       role="img"
       aria-label={gold ? t("screen.goldStars") : t("screen.stars", { n: filled })}
     >
       {Array.from({ length: 5 }, (_, index) => (
         <span
           key={index}
-          className={index < filled ? "results__star is-on" : "results__star"}
+          className={`results__star ${
+            index < filled
+              ? /* Gold is the same five lit in the brand's yellow, with the spray
+                   glow the unlit stars never take. */
+                gold
+                ? "is-on text-yellow [text-shadow:0_0_0.6rem_rgba(255,212,0,0.55)]"
+                : "is-on text-cream"
+              : "text-[rgba(250,250,244,0.2)]"
+          }`}
           aria-hidden="true"
         >
           ★
@@ -606,7 +640,7 @@ function Rating({
     <>
       <Stars stars={stars} gold={gold} />
       {stars > 0 ? (
-        <span className="results__average">
+        <span className="results__average font-mono text-[0.58rem] font-bold uppercase tracking-[0.08em] text-[rgba(250,250,244,0.72)]">
           {t("screen.averageMultiplier")} ×{average.toFixed(2)}
         </span>
       ) : null}
@@ -676,10 +710,20 @@ function Metric({
   /** The band's own score: the first tile, and the one worth reading first. */
   total?: boolean;
 }) {
+  // The band's score is the one that is not just a count, so its value is the
+  // biggest number on the screen — and a lost run marks it in the accent.
+  const metric = total
+    ? "results__metric results__metric--total rounded-inner border border-[rgba(255,212,0,0.5)] px-[0.7rem] pt-[0.5rem] pb-[0.6rem] [.results--failed_&]:border-[rgba(34,224,255,0.45)]"
+    : "results__metric rounded-inner border border-[rgba(250,250,244,0.22)] px-[0.7rem] pt-[0.5rem] pb-[0.6rem]";
+  const valueClass = total
+    ? "results__metric-value m-0 block font-display text-[clamp(1.9rem,4.5vmin,2.8rem)] leading-[1.15] text-yellow [.results--failed_&]:text-accent"
+    : "results__metric-value m-0 block font-display text-[1.6rem] leading-[1.15] text-cream";
   return (
-    <div className={total ? "results__metric results__metric--total" : "results__metric"}>
-      <dt className="results__metric-label">{label}</dt>
-      <dd className="results__metric-value">{value}</dd>
+    <div className={metric}>
+      <dt className="results__metric-label m-0 block font-mono text-[0.58rem] font-bold uppercase tracking-[0.1em] text-[rgba(250,250,244,0.78)]">
+        {label}
+      </dt>
+      <dd className={valueClass}>{value}</dd>
     </div>
   );
 }

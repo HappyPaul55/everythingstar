@@ -2046,6 +2046,18 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   page quietly grows by every stage utility (16 KB per page when this was first
   tried). The paths are relative to the CSS file, so from `src/styles/` it is
   `../components/game`, not `../../components/game`.
+- **The full stage conversion costs about 80 KB on `/play` and buys nothing in
+  bytes.** Measured on the finished branch: the stage's component CSS fell from
+  ~185 KB to ~51 KB, but the utilities that replaced it generate ~98 KB of
+  stylesheet (their class names are long and appear in full in every rule), the
+  island's JS grew 718 → 773 KiB, and `/play` went 169 → 199 KB of document. The
+  caps moved to hold it (JS 730 → 830, initial raw 580 → 660, gzip 190 → 215).
+  Convert a stage region for consistency, never for weight: a terse BEM selector
+  is the smaller spelling of a style used on one element. The four-tier
+  breakpoints are why the theme names `narrow` (40rem) and `wide` (62rem) — an
+  arbitrary `[@media(min-width:40rem)_and_(max-width:61.999rem)]:` variant is
+  fifty characters on every class it touches, and three of them made a
+  three-thousand-character `className`.
 - **Inside the second root, a longhand can lose to the shorthand it was meant to
   override.** `p-[1.4%]` and `max-[40rem]:portrait:px-0` are both utilities, and
   which one wins is decided inside the root that generated them, not by the order

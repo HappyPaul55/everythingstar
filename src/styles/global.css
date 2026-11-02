@@ -3,6 +3,8 @@
    utilities must not be inlined into every marketing page. */
 @source not "../components/game";
 @source not "../components/charter";
+/* The role → utility maps a region builds live beside the pure rules. */
+@source not "../lib/game";
 @import "./theme.css";
 @import "./utilities.css";
 

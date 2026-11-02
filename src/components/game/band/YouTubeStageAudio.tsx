@@ -309,9 +309,12 @@ export function YouTubeStageAudio({
   }, [problem]);
 
   return (
+    // The IFrame API needs a stable box to build the player inside rather than a
+    // React child it would reconcile, so the host covers the backdrop and takes no
+    // pointer: the stage's own controls are what a player presses.
     <div
       ref={box}
-      className="stage-bg__host"
+      className="stage-bg__host pointer-events-none absolute inset-0"
       data-youtube-ready={started ? "true" : "false"}
       data-youtube-problem={problem ?? undefined}
     />

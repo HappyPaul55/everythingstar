@@ -90,6 +90,14 @@
   --radius-inner: 4px;
   --radius-pill: 999px;
 
+  /* --- Breakpoints ----------------------------------------------
+     The stage's layouts are three-tier: a phone, a narrow shelf (two columns)
+     and a wide desk. Naming the two boundaries keeps `40rem`/`62rem` out of the
+     markup, where a media query written as an arbitrary variant is fifty
+     characters on every class it touches. */
+  --breakpoint-narrow: 40rem;
+  --breakpoint-wide: 62rem;
+
   /* --- Motion ---------------------------------------------------- */
   --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
   /* The stage's short animations. Tailwind turns each into an `animate-*`

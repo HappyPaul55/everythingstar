@@ -88,6 +88,33 @@ interface Props {
 /** How many boxes stand in a row before the second one is offered. */
 const FIRST_ROW = 4;
 
+/**
+ * A player's box: a card the grid gives four columns, two on a tablet and one on a
+ * phone. It is a **container** in the inline axis, so the pickers inside answer to
+ * the box rather than to the window.
+ */
+const SLOT =
+  "slot flex h-full flex-col gap-[0.5rem] rounded-inner border border-[rgba(250,250,244,0.14)] bg-[rgba(12,13,10,0.5)] px-[0.6rem] pt-[0.55rem] pb-[0.7rem] [container-type:inline-size]";
+
+/** An empty box is a place in the band: dashed, and quieter than a player's. */
+const SLOT_EMPTY =
+  "slot slot--empty flex h-full flex-col gap-[0.5rem] rounded-inner border border-dashed border-[rgba(250,250,244,0.22)] bg-transparent p-[0.35rem] [container-type:inline-size]";
+
+/** The × that takes a player off the stage: a 44px target around a small glyph. */
+const REMOVE =
+  "slot__remove flex-none grid size-[2.75rem] cursor-pointer place-items-center rounded-inner border-0 bg-transparent p-0 text-[1.05rem] leading-none text-[rgba(250,250,244,0.5)] [&:hover]:text-accent [&[data-nav-focus]]:text-accent [:root:not([data-game-input=pointer])_&:focus-visible]:text-accent";
+
+/** A box too narrow for two tiles a row stacks them and says the label in full. */
+const KINDS =
+  "slot__kinds grid grid-cols-2 gap-[0.2rem] @max-[10.5rem]:grid-cols-[minmax(0,1fr)]";
+
+/** A level: the same tile as a part, shrunk again when the box cannot hold it. */
+const LEVEL =
+  "slot__option @max-[10rem]:px-[0.15rem] @max-[10rem]:text-[0.5rem] @max-[10rem]:tracking-normal";
+
+/** The same shrink for the two notes a box can carry where its levels would be. */
+const SHRINK = "@max-[10rem]:px-[0.15rem] @max-[10rem]:text-[0.5rem] @max-[10rem]:tracking-normal";
+
 export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, onBack, fullscreen, phone }: Props) {
   const t = useT();
   const coarse = useCoarsePointer();
@@ -326,9 +353,11 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
     // no part for this player at all.
     const freePlay = isMelodyKind(slot.kind) && wordsMode === "type" && songWords(offered);
     return (
-      <li className="slot" key={index}>
-        <div className="slot__head">
-          <span className="slot__who">{t("band.player", { n: index + 1 })}</span>
+      <li className={SLOT} key={index}>
+        <div className="slot__head flex items-center gap-[0.3rem]">
+          <span className="slot__who mr-auto font-mono text-[0.6rem] font-bold uppercase tracking-[0.1em] text-[rgba(250,250,244,0.7)]">
+            {t("band.player", { n: index + 1 })}
+          </span>
           {/* One player's controller: what they hold, and what each control is.
               A gear rather than a word — every box has one, and the words belong
               to the thing being played. */}
@@ -338,7 +367,7 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
           />
           <button
             type="button"
-            className="slot__remove"
+            className={REMOVE}
             aria-label={t("screen.removePlayer", { n: index + 1 })}
             data-sound="back"
             onClick={() => removeSlot(index)}
@@ -349,7 +378,7 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
 
         {/* The portrait: what this player is, big enough to read across the grid. */}
         <p
-          className={`slot__portrait${
+          className={`slot__portrait m-0 font-display text-[clamp(1rem,1.5vw,1.35rem)] leading-[1.05] text-yellow [&.is-vocals]:text-accent ${
             kindTone(slot.kind, wordsMode) === "vocals" ? " is-vocals" : ""
           }`}
         >
@@ -357,7 +386,7 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
         </p>
 
         <div
-          className="slot__kinds"
+          className={KINDS}
           role="group"
           aria-label={t("screen.playsLabel", { n: index + 1 })}
         >
@@ -387,7 +416,7 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
                   <>
                     <button
                       type="button"
-                      className={`slot__option is-vocals${
+                      className={`slot__option is-vocals ${
                         isMelodyKind(slot.kind) && wordsMode === "sing" ? " is-active" : ""
                       }`}
                       aria-pressed={isMelodyKind(slot.kind) && wordsMode === "sing"}
@@ -402,7 +431,7 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
                     </button>
                     <button
                       type="button"
-                      className={`slot__option${
+                      className={`slot__option ${
                         isMelodyKind(slot.kind) && wordsMode === "type" ? " is-active" : ""
                       }`}
                       aria-pressed={isMelodyKind(slot.kind) && wordsMode === "type"}
@@ -416,7 +445,7 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
               : (
                   <button
                     type="button"
-                    className={`slot__option${
+                    className={`slot__option ${
                       isMelodyKind(slot.kind) ? " is-active" : ""
                     }`}
                     aria-pressed={isMelodyKind(slot.kind)}
@@ -432,17 +461,17 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
         {/* A singer whose microphone was refused is played by the machine; the box
             says so rather than leaving "the machine is singing" to be discovered. */}
         {hasPitch && isMelodyKind(slot.kind) && mic.permission === "denied" ? (
-          <p className="slot__mic" role="status">
+          <p className="slot__mic m-0 mt-[0.15rem] px-[0.35rem] py-[0.2rem] font-mono text-[0.6rem] leading-[1.4] text-yellow" role="status">
             {t("band.micRefusedHint")}
           </p>
         ) : null}
 
         {/* How hard, as far as this song is concerned — under a rule, because what
             a player takes and how hard they take it are two decisions. */}
-        <div className="slot__foot">
+        <div className="slot__foot mt-auto border-t border-dashed border-[rgba(250,250,244,0.24)] pt-[0.5rem]">
           {levels.length > 0 ? (
             <div
-              className="slot__how"
+              className="slot__how grid grid-flow-col auto-cols-[minmax(0,1fr)] gap-[0.2rem]"
               role="group"
               aria-label={t("screen.howHardLabel", { n: index + 1 })}
             >
@@ -450,11 +479,11 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
                 <button
                   key={level}
                   type="button"
-                  className={
+                  className={`${LEVEL} ${
                     level === nearestDifficulty(levels, slot.difficulty)
-                      ? "slot__option is-active"
-                      : "slot__option"
-                  }
+                      ? " is-active"
+                      : ""
+                  }`}
                   aria-pressed={level === nearestDifficulty(levels, slot.difficulty)}
                   data-sound="select"
                   onClick={() => setSlot(index, { difficulty: level })}
@@ -464,9 +493,13 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
               ))}
             </div>
           ) : freePlay ? (
-            <p className="slot__free">{t("screen.typedFreePlay")}</p>
+            <p className={`slot__free px-[0.35rem] py-[0.2rem] border border-dashed border-accent rounded-inner text-center font-mono text-[0.58rem] font-bold uppercase tracking-[0.1em] text-accent ${SHRINK}`}>
+              {t("screen.typedFreePlay")}
+            </p>
           ) : asked ? null : (
-            <p className="slot__aside">{t("screen.noPartHere")}</p>
+            <p className={`slot__aside px-[0.35rem] py-[0.2rem] text-center font-mono text-[0.58rem] font-bold uppercase tracking-[0.04em] text-accent border border-accent rounded-inner ${SHRINK}`}>
+              {t("screen.noPartHere")}
+            </p>
           )}
         </div>
       </li>
@@ -479,10 +512,10 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
     // words mode in the song's offer, rather than every empty box repeating one.
     const choice = nextSlot(offered, index);
     return (
-      <li className="slot slot--empty" key={index}>
+      <li className={SLOT_EMPTY} key={index}>
         <button
           type="button"
-          className="slot__join"
+          className="slot__join flex-auto flex min-h-[7rem] cursor-pointer flex-col items-center justify-center gap-[0.3rem] rounded-inner border-0 bg-transparent p-[0.6rem] text-center font-mono text-[0.58rem] font-bold uppercase tracking-[0.08em] text-[rgba(250,250,244,0.55)] [&:hover]:bg-[rgba(255,212,0,0.08)] [&:hover]:text-yellow [&[data-nav-focus]]:bg-[rgba(255,212,0,0.08)] [&[data-nav-focus]]:text-yellow [:root:not([data-game-input=pointer])_&:focus-visible]:bg-[rgba(255,212,0,0.08)] [:root:not([data-game-input=pointer])_&:focus-visible]:text-yellow"
           data-nav-default={empty && index === 0 ? "true" : undefined}
           data-sound="select"
           onClick={() => {
@@ -495,12 +528,12 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
             onPlan(joinSlotAt(plan, index, offered));
           }}
         >
-          <span className="slot__join-mark" aria-hidden="true">
+          <span className="slot__join-mark text-[1.5rem] leading-none text-yellow" aria-hidden="true">
             +
           </span>
           {t("screen.joinSlot", { n: index + 1 })}
           <span
-            className={`slot__join-take${
+            className={`slot__join-take text-[0.54rem] tracking-[0.14em] text-yellow [&.is-vocals]:text-accent ${
               kindTone(choice.kind, choice.wordsMode) === "vocals" ? " is-vocals" : ""
             }`}
           >
@@ -525,20 +558,23 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
             which reads as a broken song rather than a folder that needs a press. */}
         <SongProblems problems={shownProblems} className="screen__warn" />
 
-        <ul className="slots" aria-label={t("screen.playersLabel")}>
+        <ul
+          className="slots m-0 mb-[1rem] grid auto-rows-[1fr] list-none grid-cols-4 items-stretch gap-[0.6rem] p-0 max-[76rem]:grid-cols-2 max-[40rem]:grid-cols-1"
+          aria-label={t("screen.playersLabel")}
+        >
           {Array.from({ length: room }, (_, index) => {
             const slot = playedPlan.slots[index];
             return slot && slot.active !== false ? box(slot, index) : emptyBox(index);
           })}
         </ul>
 
-        <div className="band-actions">
+        <div className="band-actions grid grid-cols-[1fr_auto_1fr] items-center gap-[0.6rem] mt-[0.2rem]">
           {/* Only once the first four boxes are full, and only in the middle: it is
               an offer between leaving and playing, not a thing to reach for. */}
           {offering ? (
             <button
               type="button"
-              className="band-btn band-btn--more band-actions__more"
+              className="band-btn band-btn--more band-actions__more col-start-2 justify-self-center border-dashed"
               data-sound="select"
               onClick={() => {
                 focusAfter.current = FIRST_ROW;
@@ -550,7 +586,7 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
           ) : null}
           <button
             type="button"
-            className="band-btn band-btn--primary band-btn--big band-actions__play"
+            className="band-btn band-btn--primary band-btn--big band-actions__play col-start-3 justify-self-end"
             /* Not `disabled`: a disabled button fires nothing, and the *press* is what
                has to say "not like that" — see `refuse` in docs/developers/audio.md. While the
                loader waits, the press is ignored; once its grace passes, the same

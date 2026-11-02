@@ -42,10 +42,21 @@ export function Credits({ sounds, site, onBack }: Props) {
 
   /** One line: what it is for, who it is by, and anything worth adding. */
   const row = (role: string, who: ReactNode, note?: ReactNode) => (
-    <li className="credit" key={role}>
-      <span className="credit__role">{role}</span>
-      <span className="credit__who">{who}</span>
-      {note ? <span className="credit__note">{note}</span> : null}
+    <li
+      className="credit grid grid-cols-[9rem_minmax(0,1fr)] gap-x-[1rem] gap-y-[0.15rem] px-[0.2rem] py-[0.6rem] border-b border-dashed border-[rgba(250,250,244,0.14)] [@media(max-width:40rem)]:grid-cols-[minmax(0,1fr)]"
+      key={role}
+    >
+      <span className="credit__role row-span-2 font-mono text-kicker-tight font-bold tracking-[0.1em] uppercase text-[rgba(250,250,244,0.55)] [@media(max-width:40rem)]:row-auto">
+        {role}
+      </span>
+      <span className="credit__who flex flex-col gap-[0.2rem] text-[0.86rem] leading-[1.4] [&_a]:text-yellow [&_a]:underline [&_a]:underline-offset-[0.15em]">
+        {who}
+      </span>
+      {note ? (
+        <span className="credit__note col-start-2 font-mono text-kicker-tight text-[rgba(250,250,244,0.5)] [@media(max-width:40rem)]:col-start-1">
+          {note}
+        </span>
+      ) : null}
     </li>
   );
 
@@ -56,7 +67,7 @@ export function Credits({ sounds, site, onBack }: Props) {
         <h2 className="screen__title">{t("screen.credits")}</h2>
         <p className="screen__lede">{t("screen.creditsLede")}</p>
 
-        <ul className="credits">
+        <ul className="credits w-[min(42rem,100%)] max-h-[min(58vh,34rem)] overflow-y-auto m-0 p-0 list-none border-t border-dashed border-[rgba(250,250,244,0.14)]">
           {row(
             t("screen.creditGame"),
             <a href={site.authorUrl} rel="noreferrer">
@@ -71,9 +82,12 @@ export function Credits({ sounds, site, onBack }: Props) {
             t("screen.creditAudio"),
             <>
               {sources.map((source) => (
-                <span className="credit__source" key={source.credit}>
+                <span
+                  className="credit__source flex items-baseline justify-between gap-[0.5rem] max-w-[34rem]"
+                  key={source.credit}
+                >
                   {source.credit}
-                  <span className="credit__count">
+                  <span className="credit__count font-mono text-kicker-tight text-[rgba(250,250,244,0.5)]">
                     {source.count === 1
                       ? t("screen.creditOneFile")
                       : t("screen.creditFiles", { count: source.count })}
@@ -98,7 +112,7 @@ export function Credits({ sounds, site, onBack }: Props) {
               the microphone and MIDI prompts depend on. */}
           {row(
             t("screen.creditNotices"),
-            <span className="credit__links">
+            <span className="credit__links inline-flex flex-wrap items-baseline gap-x-[0.35rem] gap-y-[0.15rem]">
               <a href={localePath(locale, "/privacy")}>{t("nav.privacy")}</a>
               <span aria-hidden="true">·</span>
               <a href={localePath(locale, "/terms")}>{t("nav.terms")}</a>

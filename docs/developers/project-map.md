@@ -505,7 +505,11 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   `useHaptics` (one seat's buzz and rumble), `useWakeLock` (the display a run holds),
   `useElementSize`, `useFullscreen` and the temporary `BandControls`. `PlayerPanel`
   is instrument-agnostic — the instrument is data — and owns its lane's run.
-- `src/styles/band.css` — the band stage: the **second Tailwind root**. It is
+- `src/styles/band.css` + `src/styles/stage/*.css` — the band stage: the **second
+  Tailwind root**. `band.css` is the orchestration (layer order, `@reference`s,
+  scoped sources, keyframes); the four region files hold what is left of the
+  component CSS — the shell's document-level rules, two note casings, the shared
+  option tile and the pause's own states. It is
   imported by `GameLayout` for the game-only entries and by `play.astro` for
   `/play`, always **after** `global.css` in source, and it imports only
   `tailwindcss/utilities.css` with `source(none)` plus `@source` roots for

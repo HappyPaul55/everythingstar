@@ -1,0 +1,413 @@
+/* stage-screens: the vocabulary the game's screens share.
+
+   Everything a screen *is* — the welcome's poster, the menu's doors, the options
+   table, the jukebox's list — is a Tailwind utility in its component. What is left
+   here is the words several screens say the same way: the `.screen` frame and its
+   panel / title / actions family, the game's own `.band-btn`, and the pause's
+   compact stack, which `PauseMenu.tsx` calls from another area this pass.
+
+   Two ways a variant stays overridable, and both exist because Tailwind sorts
+   one-class utilities by property rather than by the order they are written, so a
+   sibling utility may be emitted *before* the rule it means to override:
+
+   - A **surface variant** (`--page`, `--centre`, `--primary`, `--big`) re-points
+     variables the base rule reads. Whichever utility is emitted first, the base
+     sees the variant's values — and an inline `p-*`, `text-*` or `grid` at the
+     call site still wins, because it sets the property after the base does.
+   - A **state on the same element** (`&.screen--over`, `&.screen__back`) is a
+     compound selector. It is more specific than the rule it darkens, which is the
+     specificity the stylesheet always had, and it is why a state (`&:hover`,
+     `&[data-nav-focus]`) is nested rather than a second utility. */
+
+/* --- Screens (the loop around a run) ---
+   **One at a time, and only one of them is the stage.** The welcome, the jukebox,
+   the band screen, the load and the results are pages of their own, filling the
+   island's frame with the whole viewport to themselves; the pause is
+   `--over`, scrimmed over the running stage, because it is something that happens
+   *during* a song. They are overlays rather than routes, so moving between them
+   never reloads the page — and a fullscreen session survives the whole loop. The
+   dev controls sit above all of them (z 30), so the review surface is never
+   covered by the thing it is reviewing. */
+@utility screen {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* A page is drawn under the notch and the home indicator in the installed game
+     (`viewport-fit=cover`); the padding is the safe area, or the gutter when there
+     is none. */
+  padding:
+    max(clamp(0.6rem, 2vmin, 1.6rem), env(safe-area-inset-top, 0px))
+    max(clamp(0.6rem, 2vmin, 1.6rem), env(safe-area-inset-right, 0px))
+    max(clamp(0.6rem, 2vmin, 1.6rem), env(safe-area-inset-bottom, 0px))
+    max(clamp(0.6rem, 2vmin, 1.6rem), env(safe-area-inset-left, 0px));
+  overflow: auto;
+  pointer-events: auto;
+  /* A page is a **scrim over the room**, not a sheet of ink: the backdrop is what
+     the menus have instead of a song, and covering it up would be the one thing it
+     is for. Dark enough that the working surfaces read, light enough to see. */
+  background: linear-gradient(180deg, rgba(10, 11, 8, 0.62), rgba(10, 11, 8, 0.82));
+
+  /* The two that sit over the stage: the scrim is what says "during a song". The
+     pause is drawn by another area's component, so its variant keeps the same
+     class name and lives here, in the rule it darkens. */
+  &.screen--over {
+    background: linear-gradient(180deg, rgba(10, 11, 8, 0.86), rgba(10, 11, 8, 0.95));
+  }
+}
+
+/* A panel is skinnable through its own variables, the way the charter's buttons
+   are: `.screen__panel--page` and `--centre` re-point them instead of restating
+   the surface. That is what keeps `w-full`, `grid`, `rounded-none` and the rest of
+   an inline utility able to override the panel at a call site — a compound
+   `&.screen__panel--page` selector would outrank every one of them. */
+@utility screen__panel {
+  width: var(--panel-width, min(78rem, 100%));
+  max-height: var(--panel-max-height, 100%);
+  overflow: var(--panel-overflow, auto);
+  padding: var(--panel-padding, clamp(1rem, 2.6vmin, 2.2rem));
+  display: var(--panel-display, block);
+  color: var(--color-cream);
+  background: var(--panel-bg, rgba(20, 21, 17, 0.92));
+  border: var(--panel-border, 1px solid rgba(250, 250, 244, 0.18));
+  border-radius: var(--panel-radius, var(--radius-brand));
+  box-shadow: var(--panel-shadow, 0 1.4rem 3rem rgba(0, 0, 0, 0.45));
+}
+
+/* A **page**, rather than a dialog: the panel *is* the screen — the full height
+   and width of the island, with the screen's padding as its gutter and no card
+   around it. What needs to read as a surface inside it (the song list, the player
+   boxes, the result cards) already carries its own fill and rule, so the page
+   around them does not need one — and a card floating in the middle of a viewport
+   is exactly what made a screen with this much room look like a modal. */
+@utility screen__panel--page {
+  --panel-width: 100%;
+  --panel-max-height: none;
+  --panel-bg: transparent;
+  --panel-border: none;
+  --panel-radius: 0;
+  --panel-shadow: none;
+  --panel-display: flex;
+
+  align-self: stretch;
+  flex-direction: column;
+  gap: clamp(0.6rem, 1.6vmin, 1.1rem);
+
+  /* On a page, the thing at the end of it belongs at the bottom of it. The band
+     screen's own actions keep their name, so the rule travels with the page. */
+  & .band-actions {
+    margin-top: auto;
+  }
+}
+
+/* The loader's and the pause's card: one centred column, as wide as its contents
+   rather than the page. */
+@utility screen__panel--centre {
+  --panel-display: flex;
+  --panel-width: auto;
+
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  max-width: min(38rem, 100%);
+  text-align: center;
+}
+
+@utility screen__title {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 5.5vmin, 3.2rem);
+  line-height: 1.04;
+  color: var(--color-cream);
+}
+
+@utility screen__lede {
+  max-width: 62ch;
+  margin: 0 0 1.1rem;
+  font-size: clamp(0.85rem, 1.7vmin, 1.05rem);
+  line-height: 1.5;
+  color: rgba(250, 250, 244, 0.8);
+
+  /* In the loader's and the pause's centred card the paragraph sits under the
+     title, so it gives back most of its bottom margin. */
+  .screen__panel--centre & {
+    margin-bottom: 0.4rem;
+  }
+}
+
+@utility screen__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+
+  /* The pause's three answers are one row at every width: a wrapped "Leave the
+     stage" reads as a lesser fourth choice rather than the third. The row never
+     wraps; on a phone the labels keep their line and the controls give up their
+     padding and letter-spacing instead (the clamps below), so nothing drops. The
+     pause is another area's markup this pass, so its states live on the words it
+     reuses. */
+  .screen--paused & {
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: clamp(0.3rem, 1.4vw, 0.6rem);
+    width: 100%;
+  }
+  .screen--paused & .band-btn {
+    flex: 0 1 auto;
+    min-width: 0;
+    padding: 0.6rem clamp(0.4rem, 1.8vw, 1.1rem);
+    font-size: clamp(0.58rem, 2.3vw, 0.72rem);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+}
+
+@utility screen__status {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(250, 250, 244, 0.72);
+}
+
+@utility screen__hint {
+  margin: 0.7rem 0 0;
+  font-size: 0.78rem;
+  color: rgba(250, 250, 244, 0.6);
+
+  /* The loader's hint is a quiet paragraph otherwise, so its list has no gutter. */
+  &.screen__problems {
+    padding: 0;
+  }
+}
+
+/* A song that could not be read, said where the band is chosen: a silent run is a
+   bug report nobody can write, and "No chart for this instrument" on the stage
+   reads as a broken song rather than a folder the browser wants to be let back
+   into. */
+@utility screen__warn {
+  max-width: 62ch;
+  margin: 0 0 1.1rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid rgba(255, 77, 79, 0.5);
+  border-radius: var(--radius-inner);
+  background: rgba(255, 77, 79, 0.14);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--color-cream);
+}
+
+@utility screen__comment {
+  margin: 0 0 0.7rem;
+}
+
+/* A load can name several things at once: one problem is a sentence, more than one
+   is a short list. The list keeps the surface it was given and adds no gutter. */
+@utility screen__problems {
+  list-style: none;
+
+  & li + li {
+    margin-top: 0.3rem;
+  }
+}
+
+/* --- The game's own buttons (contrast against the bands' own components) ---
+   The primary and big variants re-point four variables rather than restating the
+   button, so an inline `px-*`/`text-*` at a call site still wins: it sets the
+   longhand after the base's `padding`/`font-size`, whichever order the variant
+   utilities are emitted in. */
+@utility band-btn {
+  padding: var(--btn-pad, 0.6rem 1.1rem);
+  font-family: var(--font-mono);
+  font-size: var(--btn-size, 0.72rem);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--btn-color, var(--color-cream));
+  background: var(--btn-bg, rgba(12, 13, 10, 0.6));
+  border: 1px solid var(--btn-border, rgba(250, 250, 244, 0.35));
+  border-radius: var(--radius-inner);
+  cursor: pointer;
+  transition:
+    background-color 0.18s var(--ease-brand),
+    border-color 0.18s var(--ease-brand),
+    color 0.18s var(--ease-brand);
+
+  &:hover:not(:disabled),
+  :root:not([data-game-input="pointer"]) &:focus-visible:not(:disabled),
+  &[data-nav-focus]:not(:disabled) {
+    color: var(--btn-hover-color, var(--color-ink));
+    background: var(--btn-hover-bg, var(--color-yellow));
+    border-color: var(--btn-hover-border, var(--color-yellow));
+  }
+  /* The same look, for the buttons that stay pressable on purpose: a refused action
+     has to be pressable for the press to be what says "not like that" — see
+     `refuse` in docs/developers/audio.md. */
+  &:disabled,
+  &[aria-disabled="true"] {
+    opacity: 0.4;
+    cursor: var(--cursor-not-allowed), not-allowed;
+  }
+
+  /* The back button: a hover-shaped control, not a ringed one. The cream pill
+     behind the label is the whole cue, so the band's generic `.band-btn` hover
+     (which would fill it yellow) is outranked here, where the two classes meet.
+     The compound selectors are the ones this rule had as `.band-btn.screen__back`. */
+  &.screen__back {
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    gap: 0.4rem;
+    min-height: 44px;
+    margin-bottom: 0.35rem;
+    padding: 0 0.45rem;
+    font-size: 0.62rem;
+    background: transparent;
+    border-color: transparent;
+
+    &::before {
+      position: absolute;
+      z-index: -1;
+      inset: 5px 0;
+      content: "";
+      background: rgba(12, 13, 10, 0.6);
+      border: 1px solid rgba(250, 250, 244, 0.35);
+      border-radius: var(--radius-inner);
+      transition:
+        background-color 0.18s var(--ease-brand),
+        border-color 0.18s var(--ease-brand);
+    }
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled),
+    &[data-nav-focus]:not(:disabled) {
+      background: transparent;
+      border-color: transparent;
+
+      &::before {
+        background: var(--color-cream);
+        border-color: var(--color-cream);
+      }
+    }
+    &:focus-visible,
+    &[data-nav-focus] {
+      outline: none;
+    }
+    @media (forced-colors: active) {
+      &:focus-visible,
+      &[data-nav-focus] {
+        outline: 3px solid CanvasText;
+      }
+    }
+  }
+}
+
+/* The one action that is taken: filled with the brand's yellow. */
+@utility band-btn--primary {
+  --btn-color: var(--color-ink);
+  --btn-bg: var(--color-yellow);
+  --btn-border: var(--color-yellow);
+  --btn-hover-bg: var(--color-cream);
+  --btn-hover-border: var(--color-cream);
+}
+
+/* The big door: the welcome's way in and the menu's three choices. */
+@utility band-btn--big {
+  --btn-pad: 0.8rem 1.5rem;
+  --btn-size: 0.84rem;
+}
+
+/* --- The pause's own controls ---
+   `PauseMenu.tsx` is another area's file this pass: the quick settings stack and
+   the practice row keep their class names as utilities so the pause does not have
+   to change. They are place-named on purpose — this is the pause's one compact
+   stack, not a role the rest of the game should reach for. */
+@utility quick {
+  display: flex;
+  flex-direction: column;
+  width: min(24rem, 100%);
+  padding: 0.4rem 0.65rem;
+  background: rgba(12, 13, 10, 0.55);
+  border: 1px solid rgba(250, 250, 244, 0.12);
+  border-radius: var(--radius-brand);
+  text-align: left;
+
+  /* The steppers keep the 44px target here, where a pause is often a thumb. */
+  & .option__step {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+  & .slot__option {
+    min-height: 44px;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.62rem;
+  }
+}
+
+@utility quick__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.25rem 0;
+
+  & + & {
+    border-top: 1px dashed rgba(250, 250, 244, 0.14);
+  }
+}
+
+@utility quick__name {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(250, 250, 244, 0.72);
+}
+
+@utility quick__control {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+@utility quick__value {
+  min-width: 3.9rem;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  text-align: center;
+  color: var(--color-cream);
+}
+
+/* Practice is the pause's own extra door, kept above the three answers so it does
+   not become a fourth in their row. Both controls keep the 44px target. */
+@utility screen__practice {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+
+  & .band-btn {
+    min-height: 44px;
+  }
+}
+
+/* The menu's wordmark drifts, so the hub is never quite still — slow and small, on
+   the wordmark alone. It moves on `translate` (the compositor's job), which also
+   leaves the button's own hover `translate` free to lift on top, and the site's one
+   reduced-motion rule stops it. The animation name and duration are the theme's
+   (`--animate-menu-float`); the keyframes are the stage's. */
+@keyframes menu-float {
+  from {
+    translate: 0 0.25rem;
+  }
+  to {
+    translate: 0 -0.25rem;
+  }
+}

@@ -90,7 +90,7 @@ export function GearButton({ label, onClick }: { label: string; onClick: () => v
   return (
     <button
       type="button"
-      className="slot__gear"
+      className="slot__gear flex-none grid size-[2.75rem] cursor-pointer place-items-center rounded-inner border-0 bg-transparent p-0 text-[rgba(250,250,244,0.5)] [&_svg]:size-[0.8rem] [&:hover]:text-yellow [&[data-nav-focus]]:text-yellow [:root:not([data-game-input=pointer])_&:focus-visible]:text-yellow"
       aria-label={label}
       aria-haspopup="dialog"
       data-sound="open"

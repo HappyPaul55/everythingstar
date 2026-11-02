@@ -1,3 +1,6 @@
+/* eslint-disable no-useless-escape -- A Tailwind arbitrary variant escapes a literal
+   underscore as `\_` so the scanner does not read it as a space; JavaScript drops the
+   backslash, which leaves the class name the stylesheet expects. */
 import { useT } from "../../../i18n/react";
 import { songChips } from "../../../lib/game/jukebox";
 import type { Song } from "../../../lib/game/song";
@@ -39,6 +42,33 @@ interface Props {
   onStart?: () => void;
 }
 
+/**
+ * The row's geometry, as one string. The cover's size is the variable its own tile
+ * reads, so the two can never drift apart; the time's track is fixed, or the titles
+ * below it would not start at the same x. The three tiers all rewrite the grid:
+ * five columns on a wide screen, two lines under 80rem, three under 40rem — one row
+ * height each, because the windowed list measures one row and stands in for every
+ * row outside the window.
+ *
+ * The **phone tier is written `[&.song-row]`**: two media conditions can both be
+ * true (a phone is under 80rem and under 40rem), and Tailwind emits a smaller
+ * max-width first, so the phone's own rules must outrank the two-line ones rather
+ * than rely on their order.
+ */
+const ROW = [
+  "song-row group/row grid grid-cols-[1.9rem_2.4rem_minmax(0,1.1fr)_minmax(0,0.9fr)_17rem] [grid-template-areas:'art_time_title_artist_chips'] items-center gap-[0.6rem] w-full px-[0.6rem] py-[0.28rem] text-left text-cream bg-transparent border-b border-b-[rgba(250,250,244,0.07)] cursor-pointer",
+  "[--song-art-size:1.9rem]",
+  "hover:bg-[rgba(255,212,0,0.1)] focus-visible:bg-[rgba(255,212,0,0.1)] data-[nav-focus]:bg-[rgba(255,212,0,0.1)]",
+  "[@media(max-width:80rem)]:[--song-art-size:2.7rem]",
+  "[@media(max-width:80rem)]:grid-cols-[2.7rem_calc(0.88rem_*_3.1)_minmax(0,1fr)_17rem]",
+  "[@media(max-width:80rem)]:[grid-template-areas:'art_time_title_chips'_'art_artist_artist_chips']",
+  "[@media(max-width:80rem)]:gap-y-[0.12rem]",
+  "[@media(max-width:80rem)]:py-[0.42rem]",
+  "[@media(max-width:40rem)]:[&.song-row]:[--song-art-size:3.4rem]",
+  "[@media(max-width:40rem)]:[&.song-row]:grid-cols-[3.4rem_calc(0.88rem_*_3.1)_minmax(0,1fr)]",
+  "[@media(max-width:40rem)]:[&.song-row]:[grid-template-areas:'art_time_title'_'art_artist_artist'_'art_chips_chips']",
+].join(" ");
+
 export function SongRow({
   song,
   selected,
@@ -56,7 +86,7 @@ export function SongRow({
   return (
     <button
       type="button"
-      className={selected ? "song-row is-active" : "song-row"}
+      className={selected ? `${ROW} is-active bg-[rgba(255,212,0,0.16)] shadow-[inset_3px_0_0_var(--color-yellow)]` : ROW}
       aria-pressed={selected}
       aria-haspopup={opensDialog ? "dialog" : undefined}
       data-nav-default={defaultFocus ? "true" : undefined}
@@ -72,10 +102,18 @@ export function SongRow({
       }}
     >
       <SongCover song={song} />
-      <span className="song-row__time">{formatClock(song.durationMs)}</span>
-      <span className="song-row__title">{song.title}</span>
-      <span className="song-row__artist">{song.artist.name}</span>
-      <span className="song-row__offers">{offers}</span>
+      <span className="song-row__time [grid-area:time] font-mono text-[0.62rem] whitespace-nowrap text-[rgba(250,250,244,0.72)] [@media(max-width:80rem)]:text-[0.88rem]">
+        {formatClock(song.durationMs)}
+      </span>
+      <span className="song-row__title [grid-area:title] overflow-hidden whitespace-nowrap text-ellipsis text-[0.88rem] [@media(max-width:80rem)]:self-end [@media(max-width:40rem)]:[&.song-row\_\_title]:self-center">
+        {song.title}
+      </span>
+      <span className="song-row__artist [grid-area:artist] overflow-hidden whitespace-nowrap text-ellipsis text-label text-[rgba(250,250,244,0.6)] [@media(max-width:80rem)]:self-start [@media(max-width:40rem)]:[&.song-row\_\_artist]:self-center">
+        {song.artist.name}
+      </span>
+      <span className="song-row__offers [grid-area:chips] overflow-hidden whitespace-nowrap text-ellipsis font-mono text-[0.56rem] lowercase text-[rgba(250,250,244,0.6)]">
+        {offers}
+      </span>
     </button>
   );
 }

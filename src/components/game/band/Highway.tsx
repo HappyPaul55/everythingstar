@@ -24,14 +24,20 @@ import {
 import {
   arrowFor,
   columnCentre,
+  columnTone,
   HIT_BURST_MS,
   heldColumns,
   hitBursts,
   noteBox,
   noteClasses,
   noteColumnBox,
+  noteFaceClasses,
   noteGlyph,
+  noteGlyphClasses,
+  NOTE_KEY_CLASS,
   noteWindowSeconds,
+  PAD_GLYPH_CLASS,
+  PAD_KEY_CLASS,
   type ArrowGlyph,
 } from "../../../lib/game/band/notes";
 import { slideRibbon } from "../../../lib/game/band/slides";
@@ -239,6 +245,7 @@ const HighwayNote = memo(function HighwayNote({
   height,
 }: HighwayNoteProps) {
   const classes = noteClasses(note, { state, hammered, held, kick });
+  const faceClasses = noteFaceClasses(note, { state, hammered, held, kick });
   const style: CSSProperties = {
     left: `${left}%`,
     width: `${width}%`,
@@ -251,11 +258,16 @@ const HighwayNote = memo(function HighwayNote({
       style={style}
       data-note={note.id}
     >
-      <span className="highway__face" aria-hidden="true">
-        {glyph ? <ArrowMark glyph={glyph} className="highway__glyph" /> : null}
+      <span className={faceClasses} aria-hidden="true">
+        {glyph ? (
+          <ArrowMark
+            glyph={glyph}
+            className={noteGlyphClasses(note, { state, hammered, held, kick })}
+          />
+        ) : null}
       </span>
       {hint ? (
-        <span className="highway__key" aria-hidden="true">
+        <span className={NOTE_KEY_CLASS} aria-hidden="true">
           {hint}
         </span>
       ) : null}
@@ -603,9 +615,27 @@ export function Highway({
       );
       const at = indexOf.get(source.id) ?? -1;
       const outcome = at >= 0 ? run.outcomes[at] : undefined;
-      const classes = ["highway__slide", `is-${ribbon.side}`];
-      if (outcome === "miss") classes.push("is-miss");
-      else if (outcome === "hit" && held[source.column]) classes.push("is-armed");
+      const armed = outcome === "hit" && held[source.column];
+      const missed = outcome === "miss";
+      const classes = [
+        "highway__slide absolute [--slide-width:clamp(6px,2.2cqmin,12px)] rounded-[50%] border-[color:var(--slide-colour)]",
+        `is-${ribbon.side}`,
+        ribbon.side === "right"
+          ? "[clip-path:inset(50%_0_0_50%)]"
+          : "[clip-path:inset(50%_50%_0_0)]",
+        // Armed: the source has landed and its column is under a finger, so the
+        // glide is playable **now**. Brighter and a little wider rather than
+        // moving, which is the same "read it in place" rule the notes follow.
+        // Dropped: the band stays to show what was lost, muted but still neutral —
+        // it is a link nobody can play, not a note that was missed.
+        missed
+          ? "[--slide-colour:rgba(232,232,226,0.14)] border-[length:var(--slide-width)] opacity-70"
+          : armed
+            ? "[--slide-colour:rgba(248,248,242,0.58)] border-[length:calc(var(--slide-width)+2px)] opacity-100"
+            : "[--slide-colour:rgba(232,232,226,0.34)] border-[length:var(--slide-width)] opacity-90",
+      ];
+      if (missed) classes.push("is-miss");
+      else if (armed) classes.push("is-armed");
       links.push({
         key: `${source.id}:${source.slideTo}`,
         className: classes.join(" "),
@@ -646,11 +676,24 @@ export function Highway({
   const hammered = (note: LaneNote) =>
     note.kind === "hopo" && hopoTappable(chart, run, indexOf.get(note.id) ?? -1);
 
+  // `--note-share` is how wide a note — and the pad it lands on — is drawn, as a
+  // share of its column; `NOTE_SHARE` in `notes.ts` is the same number said the
+  // other way. `--note` is the one colour a note falls back to when it has no
+  // column: the five frets are the theme's, in the classic five-fret order.
   return (
     <div
       className={`highway highway--${view} highway--notes-${noteStyle}${
         arrows ? " highway--markers-arrows" : ""
-      }${tap ? " highway--tap" : ""}`}
+      }${tap ? " highway--tap" : ""} relative mx-auto flex-[1_1_auto] min-h-0 min-w-0 max-w-[42rem] overflow-clip rounded-brand bg-transparent [--note-share:68%] [--note:var(--color-yellow)] ${
+        // The frame's edge is a rectangle, and the neck inside it is a trapezoid —
+        // so in 3D a border here would sit on the bounding box rather than on the
+        // neck. The deck carries the edge instead, because it is the plane that
+        // tilts. Measured against the panel's own height (`cqh`), so the tilt
+        // looks the same in a small box and a big one.
+        view === "3d"
+          ? "border border-transparent [perspective:170cqh] [perspective-origin:50%_50%]"
+          : "border border-[rgba(250,250,244,0.14)]"
+      }${tap ? " touch-none" : ""}`}
       style={
         {
           "--columns": columns,
@@ -661,40 +704,87 @@ export function Highway({
       role={tap ? "group" : "img"}
       aria-label={t("band.highway")}
     >
-      <div className="highway__deck">
-        <div className="highway__columns" aria-hidden="true">
+      {/* The deck: dark wood with the stage light pooling under the hit line. It
+          is the whole plane, so in 3D it recedes with everything else. The board
+          fades out where the notes come in, rather than stopping on a hard edge:
+          the neck, its rails and the notes on it arrive out of the room. In 3D it
+          is made longer than the frame on purpose, so that once tilted it still
+          fills it. The **grid** across it is not drawn here: those lines are the
+          song's beats, and they are mounted in the track (`.highway__beat`) so
+          they scroll with the notes. */}
+      <div
+        className={
+          view === "3d"
+            ? "highway__deck absolute inset-x-0 top-auto [bottom:0] h-[222%] origin-bottom rounded-brand border border-[rgba(250,250,244,0.14)] bg-[radial-gradient(85%_42%_at_50%_101%,rgba(255,212,0,0.22),transparent_72%),linear-gradient(180deg,#08090d_0%,#14161c_58%,#1d2028_100%)] shadow-[inset_0_0_3.5rem_rgba(0,0,0,0.65)] [mask-image:linear-gradient(180deg,transparent_0%,rgba(0,0,0,0.55)_10%,#000_28%)] [transform:rotateX(48deg)] [transform-style:preserve-3d] [transform-origin:50%_100%]"
+            : "highway__deck absolute inset-0 bg-[radial-gradient(85%_42%_at_50%_101%,rgba(255,212,0,0.22),transparent_72%),linear-gradient(180deg,#08090d_0%,#14161c_58%,#1d2028_100%)] shadow-[inset_0_0_3.5rem_rgba(0,0,0,0.65)] [mask-image:linear-gradient(180deg,transparent_0%,rgba(0,0,0,0.55)_10%,#000_28%)]"
+        }
+      >
+        {/* A column's rail: the string down its edge, and a breath of shade so a
+            wide highway still reads as columns rather than one field. */}
+        <div
+          className="highway__columns absolute inset-0 z-[1] grid grid-cols-[repeat(var(--columns),1fr)]"
+          aria-hidden="true"
+        >
           {Array.from({ length: columns }, (_, column) => (
-            <span key={column} className="highway__column" />
+            <span
+              key={column}
+              className="highway__column border-r border-[rgba(250,250,244,0.12)] bg-[linear-gradient(180deg,rgba(0,0,0,0.35),transparent_22%,transparent_78%,rgba(250,250,244,0.05))] last:border-r-0"
+            />
           ))}
         </div>
 
-        <div className="highway__track" ref={track.ref}>
+        {/* One translated layer: the notes hold their places and this carries
+            them past the hit line, so a frame costs a single style write. */}
+        <div
+          className={`highway__track absolute inset-0 z-[4] will-change-transform${view === "3d" ? " [transform-style:preserve-3d]" : ""}${tap ? " pointer-events-none [&_*]:pointer-events-none" : ""}`}
+          ref={track.ref}
+        >
           {/* A fill is drawn under the notes: a band across the neck that moves
               with them, saying "play freely here" without being something to hit. */}
           {fills.map((fill) => (
             <span
               key={fill.key}
-              className="highway__fill"
+              className="highway__fill absolute inset-x-0 z-[1] flex items-start justify-center overflow-hidden border-y border-dashed border-[color-mix(in_srgb,var(--color-yellow)_55%,transparent)] bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-yellow)_22%,transparent),color-mix(in_srgb,var(--color-yellow)_8%,transparent))] pointer-events-none"
               style={{ top: `${fill.top}%`, height: `${fill.height}%` }}
               aria-hidden="true"
             >
-              <span className="highway__fill-label">{t("band.fill")}</span>
+              <span className="highway__fill-label mt-[0.2rem] font-mono text-[clamp(0.55rem,2.2cqmin,0.8rem)] tracking-[0.08em] uppercase text-yellow [text-shadow:0_1px_0_rgba(12,13,10,0.9),0_0_10px_rgba(12,13,10,0.8)] opacity-90">
+                {t("band.fill")}
+              </span>
             </span>
           ))}
           {/* The beat grid, under everything: a line a beat, a brighter one a bar. */}
           {beats.map((beat) => (
             <span
               key={beat.timeMs}
-              className={beat.bar ? "highway__beat is-bar" : "highway__beat"}
+              className={
+                beat.bar
+                  ? "highway__beat is-bar absolute inset-x-0 z-[1] h-[2px] bg-[rgba(250,250,244,0.34)] shadow-[0_0_0.6rem_rgba(250,250,244,0.2)]"
+                  : "highway__beat absolute inset-x-0 z-[1] h-px bg-[rgba(250,250,244,0.14)]"
+              }
               style={{ top: `${track.position(beat.timeMs)}%` }}
             />
           ))}
           {/* The slide links, under the notes they join: one box per link, in the
               track's own pixels so its half-ellipse border scrolls with the song
               like everything else. Drawing only — the whether of a slide belongs
-              to the run, not to this band. */}
+              to the run, not to this band.
+
+              A **slide** is a link between two notes, drawn as a wide band. Its
+              bottom centre is the source's end and its right or left centre is
+              the target's head. The band is a div with a huge border-radius, cut
+              to the quarter of the ellipse on the target's side — so it leaves the
+              source **across** and turns **up** into the target, the same way
+              whichever direction the slide goes. It is a border, not a stroked
+              path: no SVG and nothing to repaint on a frame. It is never a target
+              — the pads own the line — so it takes no pointer events. The colour
+              is neutral gray at an opacity: a slide belongs to neither note's
+              column, and picking one would say something the chart does not. */}
           {slides.length > 0 ? (
-            <div className="highway__slides" aria-hidden="true">
+            <div
+              className="highway__slides absolute inset-0 z-[1] overflow-hidden pointer-events-none"
+              aria-hidden="true"
+            >
               {slides.map((link) => (
                 <div
                   key={link.key}
@@ -745,15 +835,28 @@ export function Highway({
             so the song moves on without it and the burst does not slide away with
             the note it answers. Decorative, and it reads the run's own hit times.
             An open note spans the neck, so its burst does too. */}
-        <div className="highway__bursts" aria-hidden="true">
+        <div
+          className="highway__bursts absolute inset-0 z-[6] pointer-events-none"
+          aria-hidden="true"
+        >
           {bursts.map(({ index, atMs }) => {
             const note = chart.notes[index];
             if (!note) return null;
             const across = noteColumnBox(note.column, columns);
-            const classes = ["highway__burst"];
+            const kick = isKick(note, chart.instrument);
+            const classes = [
+              // A hot core on the line with a coloured bloom around it: the core
+              // is what says "here", the bloom is what says "this note". Light
+              // only — no blur, filter or image, because this is drawn on every
+              // note of a whole song. The site's reduced-motion rule ends every
+              // animation at once, which would leave the burst invisible — and a
+              // hit still needs its answer — so a still glow is held instead.
+              "highway__burst note-burst absolute top-[calc(var(--hit-fraction)*100%)] h-[clamp(1.3rem,11cqmin,3rem)] origin-bottom [transform:translateY(-100%)] animate-hit-burst motion-reduce:animate-none motion-reduce:opacity-85 pointer-events-none",
+              columnTone(note.column, kick),
+            ];
             if (note.column === null) classes.push("is-open");
             else classes.push(`is-column-${note.column % 5}`);
-            if (isKick(note, chart.instrument)) classes.push("is-kick");
+            if (kick) classes.push("is-kick");
             return (
               <span
                 key={`${index}:${atMs}`}
@@ -766,9 +869,20 @@ export function Highway({
 
         {/* The far end of a tilted neck is dimmed, so a small note up there reads as
             distance rather than as a small note. Decorative, and above the notes. */}
-        <div className="highway__fog" aria-hidden="true" />
+        <div
+          className={`highway__fog absolute inset-0 z-[5] pointer-events-none bg-[linear-gradient(180deg,rgba(7,8,10,0.82)_0%,rgba(7,8,10,0.3)_9%,transparent_26%)] ${
+            view === "3d" ? "block" : "hidden"
+          }`}
+          aria-hidden="true"
+        />
 
-        {/* The pads the notes land on: one per column, filled by the fret held on
+        {/* The hit line: a rail across the neck with a **pad per column** on it.
+            The rail sits on the note's own centre, worked out from the same two
+            fractions the notes are placed by. The pads are the frets under the
+            player's fingers — a pad fills only when that column is held, never
+            because a note is landing or was struck.
+
+            The pads the notes land on: one per column, filled by the fret held on
             it and by nothing else — the hand on the line, never the note. With tap
             on they are also the **controls**: a press plays the note above the pad,
             because on a phone there is no strum bar to reach for. An arrow marker
@@ -779,7 +893,11 @@ export function Highway({
             (a slide) rather than a release and a new tap. The pads stay buttons so
             a keyboard or an assistive activation still has something to click. */}
         <div
-          className="highway__hit"
+          className={`highway__hit absolute inset-x-0 bottom-[calc((1_-_var(--hit-fraction))*100%_-_var(--tap,4)*0.5%)] z-[3] grid grid-cols-[repeat(var(--columns),1fr)] items-center after:absolute after:inset-x-0 after:top-1/2 after:h-[2px] after:bg-[rgba(250,250,244,0.3)] after:shadow-[0_0_12px_rgba(250,250,244,0.3)] after:[transform:translateY(-50%)] after:content-[''] ${
+            // A mat's hit area is a row of arrows rather than keys, so the rail
+            // grows to hold one.
+            arrows ? "h-auto min-h-[1.4rem]" : "h-[calc(var(--tap,4)*1%)] min-h-[8px]"
+          } ${tap ? "pointer-events-auto touch-none" : "pointer-events-none"}`}
           aria-hidden={tap ? undefined : true}
           onPointerDown={hitDown}
           onPointerMove={hitMove}
@@ -791,9 +909,43 @@ export function Highway({
             const lit = down[column] || pressed[column];
             const kick = column === kickColumn;
             const label = kick ? t("band.kick") : t("band.column", { n: column + 1 });
-            const className = `highway__pad is-column-${column % 5}${
-              kick ? " is-kick" : ""
-            }${arrows ? " highway__pad--arrow" : ""}${lit ? " is-held" : ""}`;
+            // A gem is round, so the pad it lands on is too. A mat's marker keeps
+            // its arrow and its whole-column target, so it is never rounded away.
+            const roundPad = noteStyle === "gems" && !arrows;
+            const className = [
+              "highway__pad relative z-[1] grid place-items-center self-stretch justify-self-center w-[var(--note-share)] min-h-[8px]",
+              columnTone(column, kick),
+              roundPad ? "rounded-pill" : "rounded-inner",
+              kick ? "border-dashed" : "",
+              // A fret held down is a solid block of its own colour: the hand on
+              // the line. Instant, not a fade — feedback that arrives after the
+              // press is about the past. A mat's hit area is an arrow rather than
+              // a block, so it keeps no fill at all.
+              arrows
+                ? "border-0 bg-transparent shadow-none"
+                : lit
+                  ? "border-2 border-[color:var(--note)] bg-[var(--note)] shadow-[0_0_0_2px_color-mix(in_srgb,var(--note)_45%,transparent),0_0_20px_color-mix(in_srgb,var(--note)_80%,transparent)]"
+                  : "border-2 border-[color:color-mix(in_srgb,var(--note)_72%,transparent)] bg-[color-mix(in_srgb,var(--note)_14%,transparent)] shadow-[0_0_10px_color-mix(in_srgb,var(--note)_28%,transparent)]",
+              // The visible pad stays the size the note lands on, but the
+              // **target** is the whole column, in a band about 3rem tall around
+              // the line: a finger is not a 2px rail, and two fingers on a chord
+              // must not have to find two narrow strips. A pad is `NOTE_SHARE`
+              // (0.68) of its column, so 23.5% of the pad on each side reaches
+              // exactly the column's edges — neighbours meet without overlapping.
+              // The pad keeps the stage's own focus treatment off: it is not in
+              // the tab order, and a tap is already its own feedback. The
+              // pseudo-element target is part of the button, so the pad is what a
+              // finger touches; the row around it owns the gesture and capture.
+              tap
+                ? "appearance-none m-0 p-0 cursor-pointer touch-none select-none [-webkit-tap-highlight-color:transparent] focus:outline-none before:absolute before:inset-[-1rem_-23.5%_-1rem] before:content-['']"
+                : "",
+              `is-column-${column % 5}`,
+              kick ? "is-kick" : "",
+              arrows ? "highway__pad--arrow" : "",
+              lit ? "is-held" : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
             // A dance mat's arrow **is** the control, so it keeps its glyph even
             // while the other instruments are naming their keys. A guitar with an
             // arrow skin gets the key instead for these first notes: the note above
@@ -805,7 +957,7 @@ export function Highway({
             const mark = arrows && !hint ? (
               <ArrowMark
                 glyph={arrowFor(column, columns)}
-                className="highway__pad-glyph"
+                className={PAD_GLYPH_CLASS}
               />
             ) : null;
             return tap ? (
@@ -820,7 +972,7 @@ export function Highway({
                 onContextMenu={(event) => event.preventDefault()}
               >
                 {hint ? (
-                  <span className="highway__pad-key" aria-hidden="true">
+                  <span className={PAD_KEY_CLASS} aria-hidden="true">
                     {hint}
                   </span>
                 ) : (
@@ -830,7 +982,7 @@ export function Highway({
             ) : (
               <span key={column} className={className}>
                 {hint ? (
-                  <span className="highway__pad-key" aria-hidden="true">
+                  <span className={PAD_KEY_CLASS} aria-hidden="true">
                     {hint}
                   </span>
                 ) : (
@@ -846,11 +998,16 @@ export function Highway({
           own caption for the first few notes, outside the tilted deck so it stays
           flat while the neck recedes. */}
       {teach && (touch || labels?.strum) ? (
-        <div className="highway__coach" aria-hidden="true">
+        <div
+          className="highway__coach absolute z-[8] right-[0.45rem] bottom-[0.08rem] flex items-center gap-[0.3em] rounded-pill border border-[color-mix(in_srgb,var(--color-yellow)_45%,transparent)] bg-[rgba(12,13,10,0.78)] px-[0.45em] py-[0.1em] font-mono text-[clamp(0.45rem,1.8cqh,0.65rem)] font-bold tracking-[0.08em] leading-[1.1] uppercase text-cream shadow-[0_0.2rem_0.8rem_rgba(0,0,0,0.35)] pointer-events-none"
+          aria-hidden="true"
+        >
           {touch ? null : (
-            <span className="highway__coach-keys">{labels?.strum}</span>
+            <span className="highway__coach-keys text-[1.15em] tracking-[0.12em] text-yellow">
+              {labels?.strum}
+            </span>
           )}
-          <span className="highway__coach-word">
+          <span className="highway__coach-word text-[rgba(250,250,244,0.78)]">
             {touch ? t("band.tapHint") : t("band.strum")}
           </span>
         </div>

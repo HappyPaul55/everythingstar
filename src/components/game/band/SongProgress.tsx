@@ -44,8 +44,11 @@ export function SongProgress() {
   }, [clock]);
 
   return (
+    // On the gutter and under the safe area rather than in it: in fullscreen the
+    // top of the screen is the status bar or the notch, and a progress bar there
+    // is a bar nobody sees.
     <div
-      className="song-progress"
+      className="song-progress pointer-events-none absolute inset-x-0 top-[env(safe-area-inset-top,0px)] z-[2] h-[5px] bg-[rgba(250,250,244,0.16)]"
       ref={bar}
       role="progressbar"
       aria-label={t("band.progress")}
@@ -53,7 +56,10 @@ export function SongProgress() {
       aria-valuemax={100}
       aria-valuenow={0}
     >
-      <span className="song-progress__fill" ref={fill} />
+      <span
+        className="song-progress__fill block h-full w-full origin-left [transform:scaleX(0)] bg-yellow [box-shadow:0_0_12px_rgba(255,212,0,0.45)] will-change-transform"
+        ref={fill}
+      />
     </div>
   );
 }

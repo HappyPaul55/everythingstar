@@ -117,13 +117,13 @@ interface FooterAction {
 /** The row of actions a phase ends on, in the order that phase names them. */
 function Footer({ actions }: { actions: readonly FooterAction[] }) {
   return (
-    <div className="config__actions">
+    <div className="config__actions dialog-actions">
       {actions.map((action) => (
         <button
           key={action.label}
           ref={action.ref}
           type="button"
-          className={action.primary ? "band-btn band-btn--primary" : "band-btn"}
+          className={`${action.primary ? "band-btn band-btn--primary" : "band-btn"} min-h-[2.75rem]`}
           data-sound={action.sound}
           data-calibration-start={action.start ? "true" : undefined}
           onClick={action.onClick}
@@ -443,7 +443,7 @@ export function CalibrationDialog({ onSettings, onClose, initialMode = "sound" }
       {phase === "ready" ? (
         <>
           <div
-            className="calibration__modes"
+            className="calibration__modes flex gap-[0.4rem]"
             role="group"
             aria-label={t("screen.calibrationMode")}
           >
@@ -451,7 +451,9 @@ export function CalibrationDialog({ onSettings, onClose, initialMode = "sound" }
               <button
                 key={option}
                 type="button"
-                className={mode === option ? "slot__option is-active" : "slot__option"}
+                className={`slot__option min-h-[2.75rem] flex-1 px-[0.6rem] py-[0.45rem] text-[0.7rem] ${
+                  mode === option ? " is-active" : ""
+                }`}
                 aria-pressed={mode === option}
                 data-sound="select"
                 onClick={() => {
@@ -464,8 +466,8 @@ export function CalibrationDialog({ onSettings, onClose, initialMode = "sound" }
               </button>
             ))}
           </div>
-          <p className="config__lead">{t(copy.intro)}</p>
-          <p className="config__hint">{t(copy.cue)}</p>
+          <p className="dialog-lead">{t(copy.intro)}</p>
+          <p className="dialog-hint">{t(copy.cue)}</p>
           <Footer
             actions={[
               {
@@ -483,24 +485,30 @@ export function CalibrationDialog({ onSettings, onClose, initialMode = "sound" }
 
       {phase === "listening" ? (
         <>
-          <p className="config__lead" role="status" aria-live="polite">
+          <p className="dialog-lead" role="status" aria-live="polite">
             {t("screen.calibrationProgress", { count: accepted, total: CALIBRATION_TAPS })}
           </p>
-          <p className="config__hint">{t(copy.tapHint)}</p>
+          <p className="dialog-hint">{t(copy.tapHint)}</p>
           {mode === "picture" ? (
             // The measurement itself: a marker sweeps across and crosses the line
             // on each beat. Its shape and stripes carry it without relying on its
             // colour, and it keeps moving under reduced motion — it is the test,
             // not decoration.
-            <div className="calibration__track" aria-hidden="true">
-              <span className="calibration__line" />
-              <span className="calibration__marker" ref={marker} />
+            <div
+              className="calibration__track relative my-[0.2rem] h-[clamp(4rem,14vmin,6rem)] overflow-hidden rounded-inner border border-[rgba(250,250,244,0.24)] bg-[rgba(12,13,10,0.5)]"
+              aria-hidden="true"
+            >
+              <span className="calibration__line absolute inset-y-0 left-1/2 -translate-x-px border-l-2 border-dashed border-[rgba(250,250,244,0.75)]" />
+              <span
+                className="calibration__marker absolute top-[10%] bottom-[10%] left-0 w-[clamp(0.7rem,2.6vmin,1rem)] -translate-x-1/2 rounded-pill border-2 border-cream bg-[repeating-linear-gradient(-45deg,var(--color-yellow)_0_4px,var(--color-ink)_4px_8px)] shadow-[0_0_0_2px_rgba(12,13,10,0.9)] transition-none"
+                ref={marker}
+              />
             </div>
           ) : null}
           <button
             ref={tapButton}
             type="button"
-            className="calibration__tap"
+            className="calibration__tap flex w-full min-h-[clamp(6rem,20vmin,9rem)] cursor-pointer items-center justify-center rounded-inner border border-yellow bg-yellow p-[1rem] font-display text-[clamp(1.5rem,6vmin,2.2rem)] leading-none text-ink select-none [touch-action:manipulation] [&:hover]:border-cream [&:hover]:bg-cream [&[data-nav-focus]]:border-cream [&[data-nav-focus]]:bg-cream [:root:not([data-game-input=pointer])_&:focus-visible]:border-cream [:root:not([data-game-input=pointer])_&:focus-visible]:bg-cream"
             onClick={(event) => {
               // The tap is the measurement, not a UI press: the mixer's click cue
               // would land on top of the beat the player is listening for.
@@ -517,8 +525,12 @@ export function CalibrationDialog({ onSettings, onClose, initialMode = "sound" }
       {phase === "done" ? (
         result !== null ? (
           <>
-            <p className="config__label">{t(copy.result)}</p>
-            <output className="calibration__reading" aria-live="polite" aria-atomic="true">
+            <p className="dialog-label">{t(copy.result)}</p>
+            <output
+              className="calibration__reading block text-center font-mono text-[clamp(1.8rem,7vmin,2.6rem)] font-bold text-yellow"
+              aria-live="polite"
+              aria-atomic="true"
+            >
               {formatLag(result)}
             </output>
             <Footer
@@ -544,7 +556,7 @@ export function CalibrationDialog({ onSettings, onClose, initialMode = "sound" }
           </>
         ) : (
           <>
-            <p className="config__lead">{t("screen.calibrationTooFew")}</p>
+            <p className="dialog-lead">{t("screen.calibrationTooFew")}</p>
             <Footer
               actions={[
                 {
@@ -563,7 +575,7 @@ export function CalibrationDialog({ onSettings, onClose, initialMode = "sound" }
 
       {phase === "unavailable" ? (
         <>
-          <p className="config__lead">{t("screen.calibrationUnavailable")}</p>
+          <p className="dialog-lead">{t("screen.calibrationUnavailable")}</p>
           <Footer actions={[cancel]} />
         </>
       ) : null}

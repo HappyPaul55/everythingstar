@@ -243,8 +243,8 @@ function GameApp({ credits, attract = false }: Props) {
             is **closed** until the chip is pressed. The homepage window asks for a
             screen and nothing else, so its corner is set aside. */}
         {!session.attract || attractConfig?.chrome ? (
-          <div className="stage-corner">
-            <div className="stage-corner__row">
+          <div className="stage-corner absolute top-[env(safe-area-inset-top,0px)] right-[calc(0.6rem_+_env(safe-area-inset-right,0px))] z-30 flex flex-col items-end gap-[0.3rem]">
+            <div className="stage-corner__row flex items-start gap-[0.3rem]">
               {coarse && session.screen === "playing" ? (
                 <StagePause onPause={() => session.dispatch("pause")} />
               ) : null}

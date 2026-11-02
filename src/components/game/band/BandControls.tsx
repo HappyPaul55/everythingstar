@@ -19,6 +19,18 @@ import { useClock, useClockMs, useFps, formatClock } from "./StageClock";
 import type { FullscreenState } from "./useFullscreen";
 
 /**
+ * The dev read-out's three lines. One type role, three strengths: the line that
+ * names a thing, the quiet detail under it, and the one thing to know about it.
+ * They are the same 0.55rem mono label the rest of the stage uses, so the
+ * keycap-sized panel stays a read-out rather than a second interface.
+ */
+const NOTE_BASE =
+  "band-controls__note m-0 font-mono text-[0.55rem] tracking-[0.12em] uppercase";
+const NOTE = `${NOTE_BASE} font-bold text-[rgba(250,250,244,0.7)]`;
+const NOTE_DIM = `${NOTE_BASE} font-normal tracking-[0.04em] normal-case text-[rgba(250,250,244,0.6)]`;
+const NOTE_WARN = `${NOTE_BASE} font-bold tracking-[0.04em] normal-case text-yellow`;
+
+/**
  * TEMPORARY preview controls. **Dev tools, not the product** — see
  * `src/lib/game/dev.ts` for the flag and the removal list: the transport, the
  * frame-rate and note-count read-outs, the screen jumper, how many players take a
@@ -80,12 +92,12 @@ export function BandControls({
   );
 
   return (
-    <div className="band-controls">
+    <div className="band-controls flex flex-col items-end gap-[0.5rem]">
       {/* The way in: one chip, and **everything** behind it — the transport included,
           so a look at the stage is a look at the stage. */}
       <button
         type="button"
-        className="band-controls__toggle"
+        className="band-controls__toggle chip-btn [&:hover]:chip-btn-on [&[aria-expanded=true]]:chip-btn-on"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
@@ -93,18 +105,28 @@ export function BandControls({
       </button>
 
       {open ? (
-        <div className="band-controls__row">
+        <div className="band-controls__row pointer-events-auto flex max-w-[min(46rem,calc(100vw-1.2rem))] flex-wrap items-center justify-end gap-x-[0.6rem] gap-y-[0.45rem] rounded-brand border border-[rgba(250,250,244,0.24)] bg-[rgba(12,13,10,0.86)] px-[0.6rem] py-[0.4rem]">
           {/* Marked, loudly and on purpose: none of this is the product. See
               `src/lib/game/dev.ts` for what comes out before release. */}
-          <span className="band-controls__dev">{t("band.dev")}</span>
-          <button type="button" className="band-controls__button" onClick={clock.toggle}>
+          <span className="band-controls__dev rounded-pill bg-accent px-[0.5rem] py-[0.15rem] font-mono text-[0.55rem] font-bold uppercase tracking-[0.16em] text-ink">
+            {t("band.dev")}
+          </span>
+          <button
+            type="button"
+            className="band-controls__button cursor-pointer rounded-inner border border-ink bg-cream px-[0.7rem] py-[0.32rem] font-mono text-[0.66rem] font-bold uppercase tracking-[0.06em] text-ink [&:hover]:bg-yellow"
+            onClick={clock.toggle}
+          >
             {clock.playing ? t("band.pause") : t("band.play")}
           </button>
-          <button type="button" className="band-controls__button" onClick={clock.restart}>
+          <button
+            type="button"
+            className="band-controls__button cursor-pointer rounded-inner border border-ink bg-cream px-[0.7rem] py-[0.32rem] font-mono text-[0.66rem] font-bold uppercase tracking-[0.06em] text-ink [&:hover]:bg-yellow"
+            onClick={clock.restart}
+          >
             {t("band.restart")}
           </button>
           <input
-            className="band-scrub"
+            className="band-scrub w-[clamp(5rem,22vw,15rem)] accent-yellow"
             type="range"
             min={0}
             max={clock.durationMs}
@@ -113,26 +135,32 @@ export function BandControls({
             aria-label={t("band.seek")}
             onChange={(event) => clock.seek(Number(event.target.value))}
           />
-          <span className="band-controls__stat">{formatClock(timeMs)}</span>
-          <span className="band-controls__stat">{t("band.fps", { fps })}</span>
-          <span className="band-controls__stat">
+          <span className="band-controls__stat font-mono text-[0.62rem] font-bold uppercase tracking-[0.06em] whitespace-nowrap text-[rgba(250,250,244,0.62)]">
+            {formatClock(timeMs)}
+          </span>
+          <span className="band-controls__stat font-mono text-[0.62rem] font-bold uppercase tracking-[0.06em] whitespace-nowrap text-[rgba(250,250,244,0.62)]">
+            {t("band.fps", { fps })}
+          </span>
+          <span className="band-controls__stat font-mono text-[0.62rem] font-bold uppercase tracking-[0.06em] whitespace-nowrap text-[rgba(250,250,244,0.62)]">
             {t("band.noteCount", { count: noteCount })}
           </span>
         </div>
       ) : null}
 
       {open ? (
-        <div className="band-controls__bar">
+        <div className="band-controls__bar pointer-events-auto flex max-w-[min(52rem,calc(100vw-1.2rem))] flex-wrap items-center justify-end gap-x-[1rem] gap-y-[0.5rem] rounded-brand border border-[rgba(250,250,244,0.24)] bg-[rgba(12,13,10,0.86)] px-[0.85rem] py-[0.5rem]">
           {/* Every screen, reachable without playing the song before it — the
               whole point of the jumper. */}
-          <div className="band-step" role="group" aria-label={t("band.screenLabel")}>
-            <span className="band-step__label">{t("band.screenLabel")}</span>
+          <div className="band-step flex items-center gap-[0.3rem]" role="group" aria-label={t("band.screenLabel")}>
+            <span className="band-step__label font-mono text-[0.58rem] font-bold uppercase tracking-[0.1em] text-[rgba(250,250,244,0.6)]">
+              {t("band.screenLabel")}
+            </span>
             {SCREENS.map((entry) => (
               <button
                 key={entry}
                 type="button"
                 className={
-                  entry === screen ? "band-step__option is-active" : "band-step__option"
+                  entry === screen ? "band-step__option step-option is-active" : "band-step__option step-option"
                 }
                 aria-pressed={entry === screen}
                 onClick={() => onGoTo(entry)}
@@ -152,16 +180,18 @@ export function BandControls({
               onChange={onHumans}
             />
           ) : null}
-          <div className="band-step" role="group" aria-label={t("band.video")}>
-            <span className="band-step__label">{t("band.video")}</span>
+          <div className="band-step flex items-center gap-[0.3rem]" role="group" aria-label={t("band.video")}>
+            <span className="band-step__label font-mono text-[0.58rem] font-bold uppercase tracking-[0.1em] text-[rgba(250,250,244,0.6)]">
+              {t("band.video")}
+            </span>
             {[1, 0].map((option) => (
               <button
                 key={option}
                 type="button"
                 className={
                   (video ? 1 : 0) === option
-                    ? "band-step__option is-active"
-                    : "band-step__option"
+                    ? "band-step__option step-option is-active"
+                    : "band-step__option step-option"
                 }
                 aria-pressed={(video ? 1 : 0) === option}
                 onClick={() => onVideoChange(option === 1)}
@@ -172,14 +202,16 @@ export function BandControls({
           </div>
           {/* Which way the necks are drawn. The same setting the options page owns,
               so the review surface and the product surface cannot disagree. */}
-          <div className="band-step" role="group" aria-label={t("screen.view")}>
-            <span className="band-step__label">{t("screen.view")}</span>
+          <div className="band-step flex items-center gap-[0.3rem]" role="group" aria-label={t("screen.view")}>
+            <span className="band-step__label font-mono text-[0.58rem] font-bold uppercase tracking-[0.1em] text-[rgba(250,250,244,0.6)]">
+              {t("screen.view")}
+            </span>
             {HIGHWAY_VIEWS.map((option) => (
               <button
                 key={option}
                 type="button"
                 className={
-                  view === option ? "band-step__option is-active" : "band-step__option"
+                  view === option ? "band-step__option step-option is-active" : "band-step__option step-option"
                 }
                 aria-pressed={view === option}
                 onClick={() => onViewChange(option)}
@@ -191,7 +223,7 @@ export function BandControls({
           {fullscreen.supported ? (
             <button
               type="button"
-              className="band-controls__button"
+              className="band-controls__button cursor-pointer rounded-inner border border-ink bg-cream px-[0.7rem] py-[0.32rem] font-mono text-[0.66rem] font-bold uppercase tracking-[0.06em] text-ink [&:hover]:bg-yellow"
               aria-pressed={fullscreen.active}
               onClick={fullscreen.toggle}
             >
@@ -200,13 +232,20 @@ export function BandControls({
           ) : null}
           {/* The volume, and which bed the bag dealt. A game with four backgrounds
               and no way to turn them down is a game somebody closes. */}
-          <div className="band-step band-step--volume" role="group" aria-label={t("band.volume")}>
-            <label className="band-step__label" htmlFor="band-volume">
+          <div
+            className="band-step band-step--volume flex items-center gap-[0.3rem] [&_.band-scrub]:w-[clamp(4rem,12vw,8rem)]"
+            role="group"
+            aria-label={t("band.volume")}
+          >
+            <label
+              className="band-step__label font-mono text-[0.58rem] font-bold uppercase tracking-[0.1em] text-[rgba(250,250,244,0.6)]"
+              htmlFor="band-volume"
+            >
               {t("band.volume")}
             </label>
             <input
               id="band-volume"
-              className="band-scrub"
+              className="band-scrub w-[clamp(5rem,22vw,15rem)] accent-yellow"
               type="range"
               min={0}
               max={1}
@@ -219,11 +258,12 @@ export function BandControls({
       ) : null}
 
       {open ? (
-        <div className="band-controls__keys">
+        // The key map and the auto toggles, one line per player.
+        <div className="band-controls__keys pointer-events-auto flex max-w-[min(30rem,calc(100vw_-_1.2rem))] flex-col items-end gap-[0.25rem] rounded-brand border border-[rgba(250,250,244,0.24)] bg-[rgba(12,13,10,0.86)] px-[0.6rem] py-[0.4rem]">
           {lanes.map((player) => (
-            <span key={player.id} className="band-key">
-              <span className="band-key__who">{t("band.player", { n: player.seat + 1 })}</span>
-              <span className="band-key__map">
+            <span key={player.id} className="band-key flex items-center gap-[0.45rem]">
+              <span className="band-key__who font-mono text-[0.55rem] font-bold tracking-[0.12em] uppercase text-[rgba(250,250,244,0.7)]">{t("band.player", { n: player.seat + 1 })}</span>
+              <span className="band-key__map font-mono text-[0.58rem] tracking-[0.04em] whitespace-nowrap text-[rgba(250,250,244,0.72)]">
                 {seatControlReadout(t, plan.seats, player.seat, player.auto)}
               </span>
             </span>
@@ -235,13 +275,13 @@ export function BandControls({
           warning is the point: one keyboard cannot tell two people apart, so the
           game says so instead of quietly double-judging. */}
       {open ? (
-        <div className="band-controls__notes">
-          <p className="band-controls__note">{t("band.controllers")}</p>
+        <div className="band-controls__notes pointer-events-auto flex max-w-[min(30rem,calc(100vw_-_1.2rem))] flex-col items-end gap-[0.15rem] rounded-brand border border-[rgba(250,250,244,0.24)] bg-[rgba(12,13,10,0.86)] px-[0.6rem] py-[0.4rem]">
+          <p className={NOTE}>{t("band.controllers")}</p>
           {pads.length === 0 ? (
-            <p className="band-controls__note band-controls__note--dim">{t("band.noPads")}</p>
+            <p className={`${NOTE_DIM} band-controls__note--dim`}>{t("band.noPads")}</p>
           ) : (
             pads.map((pad) => (
-              <p key={pad.index} className="band-controls__note band-controls__note--dim">
+              <p key={pad.index} className={`${NOTE_DIM} band-controls__note--dim`}>
                 {pad.mapping === "standard"
                   ? t("band.padOn", { n: pad.index + 1 })
                   : t("band.padOdd", { n: pad.index + 1 })}
@@ -251,7 +291,7 @@ export function BandControls({
           {conflicts.map((conflict) => (
             <p
               key={conflict.seats.join("-")}
-              className="band-controls__note band-controls__note--warn"
+              className={`${NOTE_WARN} band-controls__note--warn`}
               role="note"
             >
               {t("band.share", {
@@ -262,17 +302,17 @@ export function BandControls({
             </p>
           ))}
           {conflicts.length > 0 ? (
-            <p className="band-controls__note band-controls__note--dim">{t("band.shareWhy")}</p>
+            <p className={`${NOTE_DIM} band-controls__note--dim`}>{t("band.shareWhy")}</p>
           ) : null}
           {/* The microphone has a status worth seeing: a refusal is not an error,
               it is a band that plays itself, and the read-out says which it is. */}
           {mic.supported ? (
-            <p className="band-controls__note band-controls__note--dim">{micLine(t, mic.status)}</p>
+            <p className={`${NOTE_DIM} band-controls__note--dim`}>{micLine(t, mic.status)}</p>
           ) : null}
           {/* What the game can play: the sound manifest's own tally, so the count of
               what is still to come is read from the file rather than remembered.
               Reload is for a sound dropped in while the game is running. */}
-          <p className="band-controls__note">
+          <p className={NOTE}>
             {t("band.sounds")}: {sounds.loading
               ? t("band.soundsLoading")
               : t("band.soundsCount", {
@@ -281,9 +321,11 @@ export function BandControls({
                   types: sounds.types.length,
                 })}
             {sounds.loading ? null : (
+              // A read-out with one thing you can do about it: small, inline, and
+              // not a button you would ever press by accident.
               <button
                 type="button"
-                className="band-controls__mini"
+                className="band-controls__mini mx-[0.4rem] cursor-pointer rounded-inner border border-[rgba(250,250,244,0.3)] bg-[rgba(12,13,10,0.6)] px-[0.35rem] py-[0.05rem] font-mono text-[0.55rem] tracking-[0.08em] uppercase text-cream hover:border-yellow hover:bg-yellow hover:text-ink"
                 onClick={sounds.reload}
               >
                 {t("band.reload")}
@@ -292,7 +334,7 @@ export function BandControls({
           </p>
           {/* What the mixer is actually playing, so a silent game can be told from a
               game with nothing to play. */}
-          <p className="band-controls__note band-controls__note--dim">
+          <p className={`${NOTE_DIM} band-controls__note--dim`}>
             {t("band.music")}: {audio.bed ?? t("band.musicOff")}
           </p>
           {/* The song's own sound, asked of the elements themselves: the line above is
@@ -300,11 +342,11 @@ export function BandControls({
           <SongAudioReadout t={t} />
           {/* Whether the browser is asking for reduced motion. If the backdrop flares
               look frozen, it is almost always this rather than a bug. */}
-          <p className="band-controls__note band-controls__note--dim">
+          <p className={`${NOTE_DIM} band-controls__note--dim`}>
             {t("band.motion")}: {t(reducedMotion ? "band.motionReduced" : "band.motionFull")}
           </p>
           {sounds.problems.slice(0, 3).map((problem) => (
-            <p key={problem} className="band-controls__note band-controls__note--warn" role="note">
+            <p key={problem} className={`${NOTE_WARN} band-controls__note--warn`} role="note">
               {problem}
             </p>
           ))}
@@ -377,7 +419,7 @@ function SongAudioReadout({ t }: { t: Translate }) {
 
   return (
     <>
-      <p className="band-controls__note">
+      <p className={NOTE}>
         {t("band.songAudio")}:{" "}
         {read.stems === 0
           ? t("band.noStems")
@@ -386,22 +428,22 @@ function SongAudioReadout({ t }: { t: Translate }) {
         · {t("band.autoplay")}: {autoplayPolicy(navigator)}
       </p>
       {read.unreadable > 0 ? (
-        <p className="band-controls__note band-controls__note--warn" role="note">
+        <p className={`${NOTE_WARN} band-controls__note--warn`} role="note">
           {t("band.stemsUnread", { count: read.unreadable })}
         </p>
       ) : null}
       {read.failed > 0 ? (
-        <p className="band-controls__note band-controls__note--warn" role="note">
+        <p className={`${NOTE_WARN} band-controls__note--warn`} role="note">
           {t("band.stemsFailed", { count: read.failed })}
         </p>
       ) : null}
       {read.lines.map((line, index) => (
-        <p key={index} className="band-controls__note band-controls__note--dim">
+        <p key={index} className={`${NOTE_DIM} band-controls__note--dim`}>
           {line}
         </p>
       ))}
       {read.play ? (
-        <p className="band-controls__note band-controls__note--warn" role="note">
+        <p className={`${NOTE_WARN} band-controls__note--warn`} role="note">
           {t("band.playRefused")}: {read.play}
         </p>
       ) : null}

@@ -8,6 +8,9 @@ import type { WordProgress } from "./useTyping";
  * A typist's reading rides on the words themselves: the characters typed are
  * marked, the next one is the caret, and the rest wait. That is what keeps the
  * melody to one view instead of needing a second region for typing.
+ *
+ * Typing feedback is on the words themselves, in whichever view is up, so these
+ * are the same two colours in the lyric view and on the roll.
  */
 interface Props {
   text: string;
@@ -16,20 +19,23 @@ interface Props {
   progress?: WordProgress;
 }
 
+/** A character takes its colour on rather than jumping to it. */
+const CHAR = "melody-char transition-[color] duration-100 ease-brand";
+
 export function TypeWord({ text, level, progress }: Props) {
   if (!progress) return <>{text}</>;
 
   const classes = ["melody-word", `is-${progress.status}`];
   if (progress.status === "done") {
     return (
-      <span className={classes.join(" ")} data-word-state="done">
+      <span className={`${classes.join(" ")} text-accent`} data-word-state="done">
         {text}
       </span>
     );
   }
   if (progress.status === "missed") {
     return (
-      <span className={classes.join(" ")} data-word-state="missed">
+      <span className={`${classes.join(" ")} text-danger`} data-word-state="missed">
         {text}
       </span>
     );
@@ -42,12 +48,12 @@ export function TypeWord({ text, level, progress }: Props) {
           key={index}
           className={
             char.caret
-              ? "melody-char is-caret"
+              ? `${CHAR} is-caret border-b-2 border-b-yellow`
               : char.done
-                ? "melody-char is-done"
+                ? `${CHAR} is-done text-accent`
                 : char.counts
-                  ? "melody-char is-todo"
-                  : "melody-char"
+                  ? `${CHAR} is-todo`
+                  : CHAR
           }
         >
           {char.char}

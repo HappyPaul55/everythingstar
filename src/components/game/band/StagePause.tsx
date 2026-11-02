@@ -14,7 +14,7 @@ export function StagePause({ onPause }: { onPause: () => void }) {
   return (
     <button
       type="button"
-      className="stage-pause"
+      className="stage-pause chip-btn min-h-[2.75rem] rounded-t-none border-t-0 [&:hover]:chip-btn-on [&[data-nav-focus]]:chip-btn-on [:root:not([data-game-input=pointer])_&:focus-visible]:chip-btn-on"
       onClick={onPause}
       data-sound="select"
       aria-label={t("screen.pause")}

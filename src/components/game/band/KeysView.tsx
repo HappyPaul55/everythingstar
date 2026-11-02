@@ -26,6 +26,111 @@ import { useElementSize } from "./useElementSize";
 import { useScrollTrack } from "./useScrollTrack";
 import type { MelodySinging } from "./useSinging";
 import type { MelodyTyping, WordProgress } from "./useTyping";
+import { PART_BAR, PART_SHAPE, PART_TEXT, partClass } from "./partClasses";
+
+/**
+ * The roll's box. Its geometry is the game's, not the stylesheet's: `KeysView`
+ * writes `--keys-anchor`, `--keys-share` and `--rows` here from
+ * `ROLL_ANCHOR`/`ROLL_SHARE` in `melody.ts` and from the chart's own rows, so the
+ * staff lines and the playhead cannot drift from the notes.
+ *
+ * The staff lines are the box's own `::before`, across the band the roll
+ * occupies. The view is one of the two things the run's entrance drops from the
+ * top.
+ */
+const KEYS = [
+  "keys relative flex-none h-full overflow-hidden [container-type:size]",
+  "before:pointer-events-none before:absolute before:inset-[0_0_calc(100%_-_var(--keys-share))_0] before:content-['']",
+  "before:bg-[repeating-linear-gradient(to_top,transparent_0,transparent_calc(100%/var(--rows)_-_1px),rgba(250,250,244,0.12)_calc(100%/var(--rows)_-_1px),rgba(250,250,244,0.12)_calc(100%/var(--rows)))]",
+  "animate-[lyrics-drop_var(--entrance-slide,650ms)_cubic-bezier(0.22,0.61,0.36,1)_var(--entrance-lead,1200ms)_both] motion-reduce:[animation-delay:0ms]",
+].join(" ");
+
+/** The "now" line: a fixed column the notes and words travel toward. It spans the
+ *  whole box, because the words ride the same axis as the bars now. */
+const PLAYHEAD =
+  "keys__playhead absolute inset-y-0 left-[var(--keys-anchor)] z-[3] w-[2px] bg-[rgba(250,250,244,0.5)] [box-shadow:0_0_14px_rgba(250,250,244,0.35)]";
+
+/** Where the voice is, at the playhead: a singer can see how close they are rather
+ *  than only finding out afterwards. Sized in container units like everything else
+ *  inside a panel, and only shown while something is heard. */
+const PITCH =
+  "keys__pitch pointer-events-none absolute left-[var(--keys-anchor)] top-0 z-[4] ml-[calc(clamp(0.45rem,2.6cqmin,1.2rem)/-2)] h-[clamp(0.45rem,2.6cqmin,1.2rem)] w-[clamp(0.45rem,2.6cqmin,1.2rem)] rounded-pill bg-yellow opacity-0 [box-shadow:0_0_0_2px_rgba(12,13,10,0.5)] transition-opacity duration-[120ms] ease-brand [transform:translateY(-50%)]";
+
+/** One translated layer, so the roll moves as one — the words ride it too. */
+const TRACK = "keys__track absolute inset-0 will-change-transform";
+
+/**
+ * One line's strip, on the roll's own layer: its words, placed at its own moment
+ * and drawn for its own span, so the pitch and the reading stay together. The top
+ * comes from the part's row in the band below the roll. A line still to be sung
+ * rides its own approach fade, the way the lyric view always did; the moment it is
+ * over stops it being lit.
+ */
+const LINE =
+  "keys__line absolute z-[2] box-border flex items-center gap-[0.6cqmin] px-[0.8cqmin] font-display text-[clamp(0.7rem,3.4cqmin,1.5rem)] leading-[1.1] transition-[color] duration-300 ease-brand on-video";
+const LINE_RESTING = "text-[rgba(250,250,244,0.4)]";
+/** Above its neighbours, so a long line's words are never covered by the next
+ *  line's as they pass. */
+const LINE_SINGING = "z-[3] text-cream";
+
+/** Which voice reads the line, in a duet: the words keep their own colour. */
+const TAG =
+  "keys__line__tag flex-none border-l-[3px] pl-[0.35em] font-mono text-[clamp(0.5rem,1.8cqmin,0.75rem)] font-bold tracking-[0.1em]";
+
+/** The words themselves: the strip's whole width, so a line that is coming up and
+ *  a line that is running out keep the same face. */
+const WORDS = "keys__line__words inline-flex flex-nowrap gap-[0.32em]";
+
+/** A typist on the part's words says their progress on the line, in the part's own
+ *  colour: the words are where they type, not a separate card. */
+const TYPING =
+  "keys__line__typing flex-none font-mono text-[clamp(0.45rem,1.6cqmin,0.65rem)] font-bold tracking-[0.08em]";
+
+/** A note is a bar for as long as it is held, so a voice holding on reads as one. */
+const NOTE =
+  "keys__note absolute z-[2] h-[clamp(0.32rem,1.6cqmin,0.85rem)] transition-[opacity,transform] duration-[160ms] ease-brand";
+
+/** The ink outline every bar wears, and the glow a live one adds. */
+const NOTE_OUTLINE = "[box-shadow:0_0_0_2px_rgba(12,13,10,0.45)]";
+const NOTE_LIVE =
+  "[box-shadow:0_0_0_2px_rgba(12,13,10,0.45),0_0_14px_rgba(250,250,244,0.6)]";
+
+/** Both voices on the same note: one bar, split between them. */
+const NOTE_SPLIT =
+  "[background:linear-gradient(to_bottom,var(--part-0)_0_50%,var(--part-1)_50%_100%)]";
+
+/**
+ * A bar's face, its shadow and its motion for the state it is in.
+ *
+ * A bar stops short of the next note in its part rather than running into it, and
+ * a freeform (spoken or rapped) word has no pitch and so no note here. The second
+ * voice has square ends and the third is a pill, so the voices are told apart
+ * without leaning on colour alone.
+ *
+ * Two singers on one bar, one hit and one miss, keep both part colours, dim a
+ * little and are outlined in the miss colour: picking one singer's verdict would
+ * tell the other player a lie about the note they just sang.
+ */
+function noteFace(part: number, shared: boolean, state: NoteState): string {
+  const shape = shared ? "rounded-inner" : partClass(PART_SHAPE, part);
+  const up = "[transform:translateY(-50%)]";
+  if (state === "mixed") {
+    return `rounded-inner opacity-[0.55] [box-shadow:inset_0_0_0_2px_var(--color-danger)] ${NOTE_SPLIT} ${up}`;
+  }
+  if (state === "miss") {
+    return `${shape} [background:var(--color-danger)] ${NOTE_OUTLINE} ${up}`;
+  }
+  const fill = shared ? NOTE_SPLIT : partClass(PART_BAR, part);
+  if (state === "live") {
+    return `${shape} ${fill} ${NOTE_LIVE} ${up}`;
+  }
+  if (state === "hit") {
+    // Shrink toward the note's own onset, so the bar does not slide off the
+    // moment it belongs to.
+    return `${shape} ${fill} origin-left opacity-25 ${NOTE_OUTLINE} [transform:translateY(-50%)_scale(0.8)]`;
+  }
+  return `${shape} ${fill} ${NOTE_OUTLINE} ${up}`;
+}
 
 /**
  * The keys view: the pitch roll the melody scrolls across, with the words
@@ -197,7 +302,7 @@ export function KeysView({ words, height, track, typing, singing, level, visualL
 
   return (
     <div
-      className="keys"
+      className={KEYS}
       style={
         {
           height,
@@ -213,7 +318,7 @@ export function KeysView({ words, height, track, typing, singing, level, visualL
       role="group"
       aria-label={t("band.keysLabel")}
     >
-      <span className="keys__chip">
+      <span className="keys__chip chip z-[3]">
         {singing.singers.length > 0 && typing.typists.length > 0
           ? `${t("band.singers", { count: singing.singers.length })} · ${t(
               "band.typists",
@@ -224,15 +329,17 @@ export function KeysView({ words, height, track, typing, singing, level, visualL
             : t("band.typists", { count: typing.typists.length || words })}
       </span>
       {onFreeform(mounted, now) ? (
-        <span className="keys__badge">{t("band.freeform")}</span>
+        <span className="keys__badge chip chip-accent z-[3] [--chip-top:calc(1.6cqmin_+_2.4em)]">
+          {t("band.freeform")}
+        </span>
       ) : null}
-      <span className="keys__playhead" aria-hidden="true" />
+      <span className={PLAYHEAD} aria-hidden="true" />
       {/* Where the voice is, against where the note is — written to the DOM
           from the frame loop, since a cursor that re-rendered would be a
           frame's worth of re-rendering. Hidden whenever nothing is heard. */}
-      <span className="keys__pitch" ref={cursor} aria-hidden="true" />
+      <span className={PITCH} ref={cursor} aria-hidden="true" />
 
-      <div className="keys__track" ref={scroll.ref}>
+      <div className={TRACK} ref={scroll.ref}>
         {/* A bar for as long as the note is held, stopping short of the next
             note in its part. Freeform words have no pitch, so no bar. */}
         {bars.map(({ note, parts: on }) => {
@@ -244,13 +351,15 @@ export function KeysView({ words, height, track, typing, singing, level, visualL
             note,
             nextTimes.length > 0 ? Math.min(...nextTimes) : null,
           );
+          const state = stateOf(note, now, verdicts, sungByPlace);
           return (
             <span
               key={`note-${note.id}`}
               className={[
-                "keys__note",
+                NOTE,
+                noteFace(note.part, on.length > 1, state),
                 on.length > 1 ? "is-shared" : `is-part-${note.part}`,
-                `is-${stateOf(note, now, verdicts, sungByPlace)}`,
+                `is-${state}`,
                 note.hero ? "is-hero" : "",
               ]
                 .filter(Boolean)
@@ -336,9 +445,9 @@ function LineStrip({
   const approaching = now < line.timeMs;
   const sounding = now >= line.timeMs && now < line.endMs;
 
-  const classes = ["keys__line", `is-part-${part}`];
+  const classes = [LINE, `is-part-${part}`, sounding ? LINE_SINGING : LINE_RESTING];
   if (sounding) classes.push("is-active");
-  if (approaching) classes.push("is-rising");
+  if (approaching) classes.push("is-rising", "lyric-rising");
 
   return (
     <span
@@ -353,13 +462,17 @@ function LineStrip({
       }
       data-part={part}
     >
-      {parts > 1 ? <span className="keys__line__tag">{part + 1}</span> : null}
-      <span className="keys__line__words">
+      {parts > 1 ? (
+        <span className={`${TAG} ${partClass(PART_TEXT, part)}`}>{part + 1}</span>
+      ) : null}
+      <span className={WORDS}>
         {line.words.map((item, index) => (
           <span
             key={index}
             className={[
               "lyrics-view__word",
+              index === wordIndex ? "word-active" : "",
+              item.hero ? "word-hero" : "",
               index === wordIndex ? "is-active" : "",
               item.hero ? "is-hero" : "",
             ]
@@ -376,7 +489,7 @@ function LineStrip({
         ))}
       </span>
       {typist ? (
-        <span className="keys__line__typing" aria-hidden="true">
+        <span className={`${TYPING} ${partClass(PART_TEXT, part)}`} aria-hidden="true">
           {typist.hits}/{typist.total}
         </span>
       ) : null}

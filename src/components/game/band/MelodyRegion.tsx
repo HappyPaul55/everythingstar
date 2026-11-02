@@ -22,6 +22,53 @@ import { useStageControls } from "./StageControls";
 import { useSinging } from "./useSinging";
 import { useTyping } from "./useTyping";
 import { useHaptics } from "./useHaptics";
+import { PART_TEXT, partClass } from "./partClasses";
+
+/**
+ * The melody region's own box, and its palette. It is see-through so the backdrop
+ * can be enjoyed, and its text carries its own contrast instead
+ * (`--on-video-shadow`, inherited by the lyric lines and the roll's words).
+ *
+ * `--part-N` is one colour per part, so a duet's second singer reads as their own
+ * — and a third, so a trio of harmonies does too. Part 0 is the accent the roll
+ * has always used.
+ */
+const REGION = [
+  "melody relative z-[1] flex w-full flex-none flex-col overflow-hidden [container-type:size] min-h-0",
+  "[--on-video-shadow:0_1px_0_rgba(12,13,10,0.9),0_0_12px_rgba(12,13,10,0.8),0_2px_30px_rgba(12,13,10,0.6)]",
+  "[--part-0:var(--color-accent)] [--part-1:var(--color-yellow)] [--part-2:#ff7ab8]",
+].join(" ");
+
+/**
+ * The melody's scores: a song with pitch has no player panel to put them in, and a
+ * duet's singers are scored apart, so there is one per voice. Clear of the
+ * temporary preview controls in the top corner.
+ */
+const SCORES =
+  "melody-scores absolute right-[2.4cqmin] top-[calc(1.6cqmin_+_4.6rem)] z-[3] flex flex-col items-end gap-[0.7cqmin] on-video";
+
+/** One voice's card: what they are, and how their run is going. */
+const SCORE = "melody-score flex flex-col items-end gap-[0.2cqmin]";
+const PART_LABEL =
+  "melody-score__part border-l-[3px] pl-[0.4em] font-mono text-[clamp(0.5rem,2.2cqmin,0.85rem)] font-bold";
+/** Which of the song's parts this player has, when it is not the only one. */
+const ROLE_PART =
+  "melody-score__role-part font-mono text-[clamp(0.45rem,1.8cqmin,0.7rem)] font-bold uppercase tracking-[0.14em] text-[rgba(250,250,244,0.5)]";
+/** Which role this score is: the words typed, or the words sung. */
+const ROLE =
+  "melody-score__role font-mono text-[clamp(0.45rem,1.8cqmin,0.7rem)] font-bold uppercase tracking-[0.14em] text-[rgba(250,250,244,0.72)]";
+const COMBO =
+  "melody-score__combo font-mono text-[clamp(0.5rem,2cqmin,0.78rem)] font-bold uppercase tracking-[0.1em] text-yellow";
+
+/**
+ * The score itself. In a duet each card takes its singer's colour and a smaller
+ * size, so the numbers read as the same two voices the roll and the words are
+ * drawn in.
+ */
+const value = (part: number, duet: boolean) =>
+  duet
+    ? `melody-score__value font-display text-[clamp(0.8rem,3.6cqmin,1.6rem)] leading-none tabular-nums ${partClass(PART_TEXT, part)}`
+    : "melody-score__value font-display text-[clamp(0.9rem,5cqmin,2.1rem)] leading-none tabular-nums text-cream";
 
 /**
  * The full-width melody region, always at the top of the stage.
@@ -179,7 +226,7 @@ export function MelodyRegion({
     // The melody is a **region** of the stage, named for what it is. Its two views
     // are the same place drawn two ways — one is ever mounted — so each is a
     // **group** inside it rather than a second landmark saying the melody again.
-    <div className="melody" style={{ height }} role="region" aria-label={t("band.melody")}>
+    <div className={REGION} style={{ height }} role="region" aria-label={t("band.melody")}>
       {view === "keys" ? (
         <KeysView
           words={words}
@@ -204,7 +251,7 @@ export function MelodyRegion({
       {/* Scores: the singers' only where there is pitch to judge, the typists'
           wherever they are, since typing is scored in either mode. Each player on
           the words has one, and those sharing a part say so by their own number. */}
-      <div className={roles.parts > 1 ? "melody-scores is-duet" : "melody-scores"}>
+      <div className={roles.parts > 1 ? `${SCORES} is-duet` : SCORES}>
         {track.melody.hasPitch
           ? sung.singers.map((singer, index) => (
               <PartScore
@@ -311,20 +358,22 @@ function PartScore({
   useHaptics({ enabled: haptics && !auto, seat, misses });
   return (
     <div
-      className={`melody-score is-part-${part}`}
+      className={`${SCORE} is-part-${part}`}
       role="group"
       aria-label={t("band.partScore", { n: part + 1, role: label })}
     >
       {/* A number when there is more than one of this role — a pair of singers
           on a solo song are told apart by it, as well as by the colour. */}
-      {players > 1 ? <span className="melody-score__part">{player + 1}</span> : null}
-      {parts > 1 ? <span className="melody-score__role-part">part {part + 1}</span> : null}
-      <span className="melody-score__role">
+      {players > 1 ? (
+        <span className={`${PART_LABEL} ${partClass(PART_TEXT, part)}`}>{player + 1}</span>
+      ) : null}
+      {parts > 1 ? <span className={ROLE_PART}>part {part + 1}</span> : null}
+      <span className={ROLE}>
         {label}
         {auto ? ` · ${t("band.auto")}` : ""}
       </span>
-      <span className="melody-score__value">{formatScore(score)}</span>
-      <span className="melody-score__combo">
+      <span className={value(part, parts > 1)}>{formatScore(score)}</span>
+      <span className={COMBO}>
         {t("band.combo")} ×{combo}
       </span>
     </div>
