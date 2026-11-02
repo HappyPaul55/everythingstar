@@ -40,13 +40,15 @@ export function ScreenFocus({ screen, song }: Props) {
   useEffect(() => {
     if (lastScreen.current === screen) return;
     const previous = lastScreen.current;
+    // The screen is recorded **now**, not when the placement frame runs. A screen that
+    // is left before that frame arrives is cancelled below — and it still has to count
+    // as where the next screen came *from*, or the return to the one before it computes
+    // `previous` wrongly and places nothing. Measured in Firefox on CI: Escape out of
+    // Credits inside a frame left focus on `<body>` and nothing moved it back.
+    lastScreen.current = screen;
     // Wait one frame: a paused screen is a native dialog, and `showModal()` runs
     // in its own effect. Focusing before it opens would land behind it.
     const frame = requestAnimationFrame(() => {
-      // The screen is handled **here**, not before the frame. A second change in
-      // the same frame cancels this placement, and a canceled placement must
-      // leave the screen unhandled so the next effect can try again.
-      lastScreen.current = screen;
       const root = activeRoot(screen);
       if (!root) return;
       let target = defaultFocus(root);
