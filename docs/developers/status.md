@@ -1,7 +1,7 @@
 ---
 title: What is built, and where it stops
 description: "The honest state of EverythingStar: every mode that works end to end, the parts that are deliberately out of scope, and what a next version would take on."
-updated: "2026-10-31"
+updated: "2026-11-03"
 order: 20
 ---
 
@@ -93,6 +93,14 @@ A status page ages; `updated` at the foot of this page is when it was last true.
 The built-in index is read fresh once per visit; a browser seeded with the old local
 `/playlist/default.json` is migrated onto it, and `src/lib/game/mock/` stays a
 **fixture generator** for the tests.
+
+- **The printable guide**: `/guide` puts every player and charter page, plus the
+  notices, on one paper page with a cover, contents and a chapter per document, and
+  `bun run guide:pdf` prints it to `release/guide.pdf` — a tagged PDF with an outline,
+  full metadata and the desktop screenshots. The PDF is attached to each GitHub
+  Release rather than deployed: at native capture resolution it is ~37 MiB, past
+  Cloudflare's per-asset limit. The page itself is noindex and out of the sitemap and
+  the offline shell.
 
 ## Status in detail
 

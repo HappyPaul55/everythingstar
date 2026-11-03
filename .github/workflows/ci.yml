@@ -215,6 +215,13 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
+      - name: Cache Playwright browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
+      - name: Install Chromium
+        run: bunx playwright install --with-deps chromium
       - name: Download the build
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
@@ -228,6 +235,9 @@ jobs:
           merge-multiple: true
       - run: bun run docs:bundle
       - run: bun run check:docs
+      # The release's guide PDF, printed from the build and the captures above.
+      # It is not uploaded with `site-dist`: it is a release asset, not a deploy.
+      - run: bun run guide:pdf
       - run: bun run check:pwa
       - run: bun run budget
       - run: bun run release:assets

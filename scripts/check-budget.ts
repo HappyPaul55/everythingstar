@@ -40,7 +40,12 @@
  * but it is still upload and first-visit weight, so the cap is a limit rather
  * than a target.
  * Every documentation page is plain HTML with no island, and `check-docs.ts`
- * proves it. **Slides** moved the raw cap by 6 KiB (566 → 572): a slide is a link,
+ * proves it. **The printable guide** (`/guide`) added 0.3 MiB of prose and inlined
+ * CSS to `dist/` on 2026-11-03 — one more paper page and no JavaScript. Its PDF is
+ * deliberately **not** in the build: at the captures' native resolution it is
+ * ~27 MiB, past Cloudflare's 25 MiB per-asset limit, so `scripts/guide-pdf.ts`
+ * writes it to `release/guide.pdf` and `check-docs.ts` refuses one in `dist/`.
+ * **Slides** moved the raw cap by 6 KiB (566 → 572): a slide is a link,
  * and its model, its judging, its ribbon and its document reader all belong to the
  * first download because a chart and a highway are the game. The gzipped graph kept
  * its headroom, and the total stayed inside the whole-payload cap.

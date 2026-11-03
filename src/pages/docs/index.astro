@@ -15,6 +15,13 @@ import { SECTION_LABELS, SECTION_LEDES } from "../../lib/docs/sections";
 const hub = await getEntry("docs", "README");
 if (!hub) throw new Error("Missing the documentation hub (docs/README.md).");
 
+const siteEntry = await getEntry("site", "main");
+if (!siteEntry) throw new Error("Missing site settings entry (site/main).");
+const pdfUrl = new URL(
+  "releases/latest/download/guide.pdf",
+  `${siteEntry.data.repo.replace(/\/$/, "")}/`,
+).href;
+
 const locale = localeFromPath(Astro.url.pathname);
 const t = tFor(locale);
 const { Content } = await render(hub);
@@ -36,6 +43,17 @@ const title = hub.data.title;
   wide
 >
   <Content />
+
+  <aside class="docs-guide" aria-labelledby="docs-guide-title">
+    <div>
+      <h2 class="docs-guide__title" id="docs-guide-title">{t("docs.guide")}</h2>
+      <p class="docs-guide__lede">{t("docs.guideLede")}</p>
+    </div>
+    <p class="docs-guide__links">
+      <a class="docs-guide__link" href="/guide">{t("docs.guideRead")}</a>
+      <a class="docs-guide__link docs-guide__link--pdf" href={pdfUrl}>{t("docs.guidePdf")}</a>
+    </p>
+  </aside>
 
   <div class="docs-hub">
     {
