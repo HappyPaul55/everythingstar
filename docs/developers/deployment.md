@@ -110,15 +110,23 @@ A release is a **checkpoint, not a build**:
 
 1. `bun run version:bump patch` (or `minor`, `major`) on a `release/vX.Y.Z` branch.
 2. Open a PR titled `chore(release): vX.Y.Z` and merge it.
-3. Wait for that commit's **Deploy** run to be green, then tag the merge commit —
-   `git tag -a vX.Y.Z -m "EverythingStar vX.Y.Z" <sha>` — and push the tag.
+3. **Nothing else.** When that merge's CI run on `main` succeeds, the Release workflow
+   tags the commit `vX.Y.Z` and publishes. A merge that does not change the version is
+   a no-op, and a failed CI run never releases.
 
-The tag must equal `package.json`'s version and be on `main`;
-`.github/workflows/release.yml` refuses anything else and otherwise **builds that
-commit**, runs `bun run release:assets` and publishes a GitHub Release with generated
-notes and the six archives attached. It builds because a tag has no other way to get the
-artefacts, and the commit is already `main`'s, where `verify` built and checked the same
-archives. Tags cannot be moved or deleted, and a published release is immutable.
+The Release workflow (`workflow_run` on a successful CI run on `main`) reads the version
+from `package.json`, and treats it as a release exactly when `gh release view vX.Y.Z`
+does not exist. It then builds that commit, runs `bun run guide:pdf`,
+`bun run release:assets` and `check:release`, creates the annotated tag **after** the
+artifacts are checked, and publishes a GitHub Release with generated notes and the six
+archives plus `guide.pdf`. Creating the tag last means a failed build leaves no tag; a
+retry finds the tag if the failure came later and publishes the commit it points at.
+
+A `v*` tag pushed by hand still works — for a backfill or a deliberate re-run — and
+must equal `package.json`'s version and be on `main`; anything else is refused. This
+workflow publishes in the same run, so it needs no personal access token and no second
+workflow to answer a tag. Tags cannot be moved or deleted, and a published release is
+immutable.
 
 ## The release archives
 
