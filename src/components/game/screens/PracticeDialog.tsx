@@ -26,6 +26,10 @@ interface Props {
   onClose: () => void;
 }
 
+/** A stretch or a speed: a radio-like tile, and never smaller than a thumb. */
+const OPTION =
+  "min-h-[2.75rem] cursor-pointer rounded-inner border border-[rgba(250,250,244,0.3)] bg-[rgba(12,13,10,0.6)] px-[0.6rem] py-[0.45rem] font-mono text-[0.68rem] font-bold uppercase tracking-[0.06em] text-cream";
+
 export function PracticeDialog({
   sections,
   initial,
@@ -56,28 +60,30 @@ export function PracticeDialog({
     <NativeDialog
       title={t("practice.title")}
       onClose={onClose}
-      panelClassName="practice-panel"
+      panelClassName="w-[min(30rem,100%)]"
       initialFocus="[data-dialog-focus]"
     >
-      <p className="config__lead">{t("practice.title")}</p>
-      <p className="config__hint">{t("practice.lede")}</p>
+      <p className="dialog-lead">{t("practice.title")}</p>
+      <p className="dialog-hint">{t("practice.lede")}</p>
 
-      <p className="config__label" id={sectionLabel}>
+      <p className="dialog-label" id={sectionLabel}>
         {t("practice.section")}
       </p>
       {sections.length > 0 ? (
-        <div className="practice-options" role="radiogroup" aria-labelledby={sectionLabel}>
+        <div
+          className="practice-options grid grid-cols-[repeat(auto-fit,minmax(7rem,1fr))] gap-[0.35rem]"
+          role="radiogroup"
+          aria-labelledby={sectionLabel}
+        >
           {sections.map((section, index) => (
             <button
               key={`${section.startMs}-${section.endMs}-${practiceLabel(t, section)}`}
               type="button"
               role="radio"
               aria-checked={chosen === section}
-              className={
-                chosen === section
-                  ? "practice-option practice-option--section is-chosen"
-                  : "practice-option practice-option--section"
-              }
+              className={`practice-option practice-option--section text-left ${OPTION} aria-checked:border-yellow aria-checked:bg-yellow aria-checked:text-ink ${
+                chosen === section ? " is-chosen" : ""
+              }`}
               data-dialog-focus={index === 0 ? true : undefined}
               onClick={() => setStartMs(section.startMs)}
             >
@@ -86,24 +92,26 @@ export function PracticeDialog({
           ))}
         </div>
       ) : (
-        <p className="config__hint">{t("practice.noSection")}</p>
+        <p className="dialog-hint">{t("practice.noSection")}</p>
       )}
 
-      <p className="config__label" id={speedLabel}>
+      <p className="dialog-label" id={speedLabel}>
         {t("practice.speedLabel")}
       </p>
-      <div className="practice-options practice-options--speeds" role="radiogroup" aria-labelledby={speedLabel}>
+      <div
+        className="practice-options practice-options--speeds grid grid-cols-3 gap-[0.35rem]"
+        role="radiogroup"
+        aria-labelledby={speedLabel}
+      >
         {PRACTICE_SPEEDS.map((option) => (
           <button
             key={option}
             type="button"
             role="radio"
             aria-checked={speed === option}
-            className={
-              speed === option
-                ? "practice-option is-chosen"
-                : "practice-option"
-            }
+            className={`practice-option ${OPTION} aria-checked:border-yellow aria-checked:bg-yellow aria-checked:text-ink ${
+              speed === option ? " is-chosen" : ""
+            }`}
             onClick={() => setSpeed(option)}
           >
             {Math.round(option * 100)}%
@@ -111,7 +119,7 @@ export function PracticeDialog({
         ))}
       </div>
 
-      <label className="practice-loop">
+      <label className="practice-loop flex min-h-[2.75rem] cursor-pointer items-center gap-[0.5rem] font-mono text-[0.68rem] font-bold uppercase tracking-[0.06em] text-cream [&_input]:size-[1.15rem] [&_input]:accent-yellow">
         <input
           type="checkbox"
           checked={loop}
@@ -119,9 +127,9 @@ export function PracticeDialog({
         />
         <span>{t("practice.loop")}</span>
       </label>
-      <p className="config__hint">{t("practice.loopHint")}</p>
+      <p className="dialog-hint">{t("practice.loopHint")}</p>
 
-      <div className="config__actions">
+      <div className="config__actions dialog-actions">
         <button
           type="button"
           className="band-btn band-btn--primary"

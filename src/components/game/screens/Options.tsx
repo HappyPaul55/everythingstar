@@ -80,6 +80,25 @@ interface Props {
   onBack: () => void;
 }
 
+/** The page's one column of settings. */
+const OPTIONS = "options flex flex-col w-[min(48rem,100%)]";
+
+/**
+ * One row of the settings table: what it is on the left, what changes it on the
+ * right, and a dashed rule between rows. The players row is the one that stacks
+ * its controls under its heading, so it re-points the grid at its call site
+ * (`[&.option--players]:grid-cols-[minmax(0,1fr)]`) rather than restating the row.
+ */
+const OPTION_ROW =
+  "option grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-[1.2rem] gap-y-[0.3rem] border-b border-dashed border-[rgba(250,250,244,0.14)] px-0 py-3 last:border-b-0 [@media(max-width:40rem)]:grid-cols-1 [@media(max-width:40rem)]:justify-items-start";
+
+const OPTION_NAME = "option__name m-0 font-display text-[1.05rem] font-normal leading-[1.2]";
+const OPTION_HINT =
+  "option__hint max-w-[46ch] mt-[0.1rem] mb-0 text-label leading-[1.45] text-[rgba(250,250,244,0.62)]";
+const OPTION_CONTROL = "option__control flex items-center gap-[0.4rem]";
+const OPTION_VALUE =
+  "option__value min-w-[4.4rem] font-mono text-[0.8rem] text-center text-[rgba(250,250,244,0.88)]";
+
 export function Options({ settings, onSettings, plan, onPlan, onBack }: Props) {
   const t = useT();
   /** Which player's controller is being set up, if any. */
@@ -201,7 +220,7 @@ export function Options({ settings, onSettings, plan, onPlan, onBack }: Props) {
         <h2 className="screen__title">{t("screen.options")}</h2>
         <p className="screen__lede">{t("screen.optionsLede")}</p>
 
-        <div className="options">
+        <div className={OPTIONS}>
           {/* How late the sound arrives. A stepper rather than a slider: it is a
               calibration, and the two directions are what a player wants to press.
               Beside it is the measured version, which writes the same setting —
@@ -521,17 +540,24 @@ export function Options({ settings, onSettings, plan, onPlan, onBack }: Props) {
           {/* Who is playing with what. A player takes an instrument on the band
               screen; what they hold in their hands is theirs, and is remembered. */}
           <OptionRow
-            className="option--players"
+            className="option--players [&.option--players]:grid-cols-[minmax(0,1fr)]"
             name={t("screen.players")}
             hints={[t("screen.playersHint")]}
           >
-            <ul className="seats">
+            <ul className="seats flex flex-col gap-[0.3rem] mt-[0.7rem] mb-0 p-0 list-none [&_[class*='gear']]:size-[1.9rem]">
               {plan.slots.map((slot, index) => (
-                <li className="seat" key={index}>
-                  <span className="seat__who">{t("band.player", { n: index + 1 })}</span>
+                <li
+                  className="seat grid grid-cols-[5.5rem_minmax(0,1fr)_auto_auto] gap-[0.6rem] items-center px-2 py-[0.35rem] bg-[rgba(12,13,10,0.55)] border border-[rgba(250,250,244,0.12)] rounded-inner"
+                  key={index}
+                >
+                  <span className="seat__who font-mono text-[0.62rem] font-bold tracking-[0.08em] uppercase text-[rgba(250,250,244,0.6)]">
+                    {t("band.player", { n: index + 1 })}
+                  </span>
                   <span
-                    className={`seat__kind${
-                      kindTone(slot.kind, slot.wordsMode) === "vocals" ? " is-vocals" : ""
+                    className={`seat__kind overflow-hidden whitespace-nowrap text-ellipsis text-[0.85rem]${
+                      kindTone(slot.kind, slot.wordsMode) === "vocals"
+                        ? " is-vocals text-accent"
+                        : ""
                     }`}
                   >
                     {slot.active === false
@@ -541,7 +567,7 @@ export function Options({ settings, onSettings, plan, onPlan, onBack }: Props) {
                       : kindLabel(t, slot.kind, true, slot.role)}
                   </span>
                   {slot.active === false ? null : (
-                    <span className="seat__device">
+                    <span className="seat__device font-mono text-[0.64rem] text-[rgba(250,250,244,0.68)]">
                       {deviceLabel(t, slot.kind, slot.controller)}
                     </span>
                   )}
@@ -576,7 +602,7 @@ export function Options({ settings, onSettings, plan, onPlan, onBack }: Props) {
               ]}
             >
               {install.status === "available" ? (
-                <div className="option__control">
+                <div className={OPTION_CONTROL}>
                   <button
                     type="button"
                     className="band-btn band-btn--primary"
@@ -590,7 +616,7 @@ export function Options({ settings, onSettings, plan, onPlan, onBack }: Props) {
                   </button>
                 </div>
               ) : install.status === "installed" ? (
-                <output className="option__value" aria-label={t("screen.installInstalled")}>
+                <output className={OPTION_VALUE} aria-label={t("screen.installInstalled")}>
                   ✓
                 </output>
               ) : null}
@@ -601,13 +627,15 @@ export function Options({ settings, onSettings, plan, onPlan, onBack }: Props) {
               A profile deliberately does not carry the library, downloads or audio,
               and the hint says so — the file is a player's own record, not a copy of
               the game. Import asks before it replaces anything. */}
-          <section className="option option--profile">
+          <section className={`${OPTION_ROW} option--profile`}>
             <div className="option__text">
-              <h3 className="option__name">{t("profile.title")}</h3>
-              <p className="option__hint">{t("profile.hint")}</p>
-              <p className="option__hint">{t("profile.notIncluded")}</p>
+              <h3 className={OPTION_NAME}>{t("profile.title")}</h3>
+              <p className={OPTION_HINT}>{t("profile.hint")}</p>
+              <p className={OPTION_HINT}>{t("profile.notIncluded")}</p>
             </div>
-            <div className="option__control option__control--profile">
+            <div
+              className={`${OPTION_CONTROL} option__control--profile flex-wrap justify-end`}
+            >
               <button
                 type="button"
                 className="band-btn"
@@ -635,7 +663,11 @@ export function Options({ settings, onSettings, plan, onPlan, onBack }: Props) {
             </div>
 
             {message ? (
-              <p className="option__hint option__hint--wide" role="status" aria-live="polite">
+              <p
+                className={`${OPTION_HINT} option__hint--wide col-span-full`}
+                role="status"
+                aria-live="polite"
+              >
                 {message.kind === "exported"
                   ? t("profile.exported", { name: message.name })
                   : t(`profile.problem.${message.problem}` as MessageKey)}
@@ -644,13 +676,15 @@ export function Options({ settings, onSettings, plan, onPlan, onBack }: Props) {
 
             {pending ? (
               <div
-                className="profile-confirm"
+                className="profile-confirm flex flex-col gap-[0.4rem] col-span-full px-[0.7rem] py-[0.6rem] bg-[rgba(255,212,0,0.08)] border border-[rgba(255,212,0,0.35)] rounded-inner"
                 role="group"
                 aria-label={t("profile.confirmLabel")}
               >
-                <p className="profile-confirm__ask">{t("profile.confirm")}</p>
-                <p className="option__hint">{t("profile.confirmHint")}</p>
-                <div className="config__actions">
+                <p className="profile-confirm__ask m-0 font-display text-[1.05rem] leading-[1.25] text-yellow">
+                  {t("profile.confirm")}
+                </p>
+                <p className={OPTION_HINT}>{t("profile.confirmHint")}</p>
+                <div className="config__actions dialog-actions">
                   <button
                     type="button"
                     className="band-btn band-btn--primary"
@@ -726,11 +760,11 @@ function OptionRow({
   children: ReactNode;
 }) {
   return (
-    <section className={className ? `option ${className}` : "option"}>
+    <section className={className ? `${OPTION_ROW} ${className}` : OPTION_ROW}>
       <div className="option__text">
-        <h3 className="option__name">{name}</h3>
+        <h3 className={OPTION_NAME}>{name}</h3>
         {hints.map((hint) => (
-          <p className="option__hint" key={hint}>
+          <p className={OPTION_HINT} key={hint}>
             {hint}
           </p>
         ))}
@@ -774,7 +808,11 @@ function LagOption({
   const latest = value >= limit;
   return (
     <OptionRow name={name} hints={hints}>
-      <div className="option__control option__control--lag" role="group" aria-label={name}>
+      <div
+        className={`${OPTION_CONTROL} option__control--lag flex-wrap justify-start`}
+        role="group"
+        aria-label={name}
+      >
         <StepButton
           direction={-1}
           blocked={earliest}
@@ -782,7 +820,7 @@ function LagOption({
           defaultFocus={defaultFocus}
           onStep={onStep}
         />
-        <output className="option__value" aria-live="polite" aria-atomic="true">
+        <output className={OPTION_VALUE} aria-live="polite" aria-atomic="true">
           {format(value)}
         </output>
         <StepButton
@@ -793,7 +831,7 @@ function LagOption({
         />
         <button
           type="button"
-          className="option__calibrate band-btn"
+          className="option__calibrate band-btn min-h-[44px]"
           aria-label={calibrateLabel}
           aria-haspopup="dialog"
           data-sound="open"
@@ -830,7 +868,7 @@ function ToggleOption({
 }) {
   return (
     <OptionRow name={name} hints={hints}>
-      <div className="option__control" role="group" aria-label={name}>
+      <div className={OPTION_CONTROL} role="group" aria-label={name}>
         {choices.map((choice) => (
           <button
             key={choice.key}
@@ -872,10 +910,10 @@ function RangeOption({
 }) {
   return (
     <OptionRow name={<label htmlFor={id}>{name}</label>} hints={hints}>
-      <div className="option__control">
+      <div className={OPTION_CONTROL}>
         <input
           id={id}
-          className="option__range"
+          className="option__range w-[min(15rem,45vw)] accent-yellow"
           type="range"
           min={min}
           max={max}
@@ -884,7 +922,7 @@ function RangeOption({
           aria-valuetext={format(value)}
           onChange={(event) => onChange(Number(event.target.value))}
         />
-        <span className="option__value">{format(value)}</span>
+        <span className={OPTION_VALUE}>{format(value)}</span>
       </div>
     </OptionRow>
   );

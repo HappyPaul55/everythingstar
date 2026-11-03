@@ -4,12 +4,12 @@
  *
  * It is game-only (no website header or footer), `noindex`, and not in the
  * sitemap — it is a tool reached from the game's menu, not a page to find in a
- * search. It shares the game's token and stage stylesheets, then adds its own.
+ * search. It carries the site's tokens and the stage's stylesheet, and its own look
+ * is utilities in its components (`charter-btn`, `charter-pane`, `charter-note`).
  */
 import GameLayout from "../layouts/GameLayout.astro";
 import CharterApp from "../components/charter/CharterApp.tsx";
 import { localeFromPath, tFor } from "../i18n/astro";
-import "../styles/charter.css";
 
 const locale = localeFromPath(Astro.url.pathname);
 const t = tFor(locale);

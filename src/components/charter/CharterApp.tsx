@@ -92,7 +92,7 @@ function CharterApp() {
     load.doc.audio.stems.length > 0;
 
   return (
-    <div className="charter-root">
+    <div className="charter-shell">
       <StageClockProvider durationMs={load.doc?.durationMs ?? song?.durationMs ?? 0}>
         <SongAudioStatusProvider preload={!!load.doc}>
           <SongProvider track={track} seed={song?.seed ?? 0} doc={load.doc}>

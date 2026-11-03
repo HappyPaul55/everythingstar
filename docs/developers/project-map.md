@@ -1,7 +1,7 @@
 ---
 title: Project map
 description: "Where everything lives: every module, what it owns, and the seam it sits behind — the file-by-file map of the game, the site and the scripts."
-updated: "2026-10-31"
+updated: "2026-11-02"
 order: 2
 ---
 
@@ -295,7 +295,11 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   everything else.
 - `src/pages/charter.astro` + `src/components/charter/**` — **the charter island**, a tool at `/charter` rather than a screen in the run loop. It opens a song and every chart it carries, draws up to eight 2D panes, adds and moves notes by pointer, links a selected pair of notes as a **slide**, records keyboard/gamepad/MIDI takes, and downloads a Clone Hero `.chart`. Its clock and `SongAudio` are its own; the band, judging, score board and mixer are not mounted. See [Charter](charter.md).
 - `src/lib/game/charter/**` — the charter's pure rules: `grid.ts` (BPM, subdivision, snapping, bar lines), `edit.ts` (the canonical note list and every edit, including copy/paste, cross-chart paste and dropping a stale slide link), `record.ts` (a take of the game's own actions into notes), and `exportChart.ts` (the whole set as a `.chart`, naming the slides it cannot write). Unit-tested beside them.
-- `src/styles/charter.css` — the charter's own look, imported only by `/charter`; it keeps the stage's tokens and never reaches a marketing page or `/play`.
+- `src/styles/utilities.css` — the charter's own look as utilities: `charter-shell`,
+  `charter-page`, `charter-btn(-primary|-small|-record)`, `charter-label`,
+  `charter-input`, `charter-badge`, `charter-pane` and `charter-note`. The island has
+  no stylesheet of its own any more; `/charter` carries the site's and the stage's
+  and composes the rest in the markup.
 - `src/lib/game/song.ts` — **the song**: what a library lists and a band is offered
   (title, artist, album, art, length, and what there is to play). Not a track — a
   song is *where a track comes from*. `songDifficulties`, `songHasPart` and
@@ -501,17 +505,26 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   `useHaptics` (one seat's buzz and rumble), `useWakeLock` (the display a run holds),
   `useElementSize`, `useFullscreen` and the temporary `BandControls`. `PlayerPanel`
   is instrument-agnostic — the instrument is data — and owns its lane's run.
-- `src/styles/band.css` — the band stage styling (regions, player panel, rails,
-  highway and its note treatments, preview controls). It is imported by
-  `GameLayout` for the game-only entries and by `play.astro` for `/play`, always
-  **after** `global.css` in source. The production bundler can still concatenate
-  `band.css` first, so the file **states Tailwind's layer order itself**
-  (`@layer properties, theme, base, components, utilities;`). Without that,
-  `components` becomes the first layer, Tailwind's preflight (`base`) lands after
-  it, and resets the welcome title, the mode chips and every `.band-btn`. The
-  marketing pages deliberately do not carry this stylesheet, which is why `/play`
-  states the global-then-band pair itself. `tests/e2e/play-style.spec.ts` pins the
-  computed styles in the dev suite **and** the production-preview suite.
+- `src/styles/band.css` + `src/styles/stage/*.css` — the band stage: the **second
+  Tailwind root**. `band.css` is the orchestration (layer order, `@reference`s,
+  scoped sources, keyframes); the four region files hold what is left of the
+  component CSS — the shell's document-level rules, two note casings, the shared
+  option tile and the pause's own states. It is
+  imported by `GameLayout` for the game-only entries and by `play.astro` for
+  `/play`, always **after** `global.css` in source, and it imports only
+  `tailwindcss/utilities.css` with `source(none)` plus `@source` roots for
+  `components/game` and `components/charter`. That scoping is what keeps a game
+  utility out of `global.css`, which every marketing page inlines: without it a
+  class written on the stage is generated into the site's stylesheet and lands on
+  the landing page (measured at 16 KB per page before the split). It still holds
+  the stage's own component CSS — the highway, the melody views, the screens and
+  the backdrop — where a selector is the right tool. The file **states Tailwind's
+  layer order itself** (`@layer properties, theme, base, components, utilities;`):
+  the production bundler can concatenate `band.css` first, and without the
+  statement `components` becomes the first layer, Tailwind's preflight (`base`)
+  lands after it, and resets the welcome title, the mode chips and every
+  `.band-btn`. `tests/e2e/play-style.spec.ts` pins the computed styles in the dev
+  suite **and** the production-preview suite.
 - `src/lib/{site,button,nav}.ts` — types and pure helpers (`buttonClass` shared
   by `Button.astro`; `siteNav` shared by header and footer and unit-tested).
 - `src/i18n/**` — `locales.ts` (currently only `en`), `ui/en.game.ts` (the game's
@@ -520,10 +533,18 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   Astro pages read), `game.ts` (the island's own lookup), `index.ts` (`t`),
   `astro.ts` (`tFor`, `localeFromPath`), `react.tsx` (`I18nProvider`, `useT`,
   `withLocale`), `paths.ts` (`localePath`).
-- `src/styles/global.css` — Tailwind v4 `@theme` tokens (colours, the radius
-  scale and the fonts) and the shell components (`.spray-*`, `.hazard`,
-  `.comment`, `.mark`, `.sticker`, the nav), plus the print and reduced-motion
-  layers.
+- `src/styles/theme.css` — Tailwind v4 `@theme` tokens: the palette (ink, paper,
+  yellow, the accent, the fret and instrument colours, the charter's surfaces), the
+  type scale, the three radii, the shadows and the stage's animations. **The one
+  place a token may be written.**
+- `src/styles/utilities.css` — the vocabulary: the repeated looks as Tailwind
+  `@utility` (`.spray-*`, `.hazard`, `.comment`, `.mark`, `.sticker`, the charter's
+  controls). Each one is compiled and tree-shaken, so an unused name costs nothing
+  and a name used twice is written once.
+- `src/styles/global.css` — the imports, the self-hosted faces, the base layer
+  (focus, selection, `[hidden]`), the **Markdown prose** (`.doc` / `.legal`, the one
+  place a component selector is still right), and the frame, print and
+  reduced-motion layers. Everything else on the site is utilities in the markup.
 - `wrangler.jsonc` — the Cloudflare upload: the Worker name and
   `assets.directory: ./dist`, with **no `main` and no `run_worker_first`**, so
   `bunx wrangler deploy` uploads static files and nothing else. `workers_dev` and

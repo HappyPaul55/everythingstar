@@ -1,0 +1,383 @@
+/* stage-shell: split from band.css along its own section seams.
+   The melody, the backdrop, the room's lights and the song's progress are
+   utilities in the markup now. What is left is the stage root — its
+   document-level rules (scrollbars, the game's cursor, focus) and its own
+   measured box (`.band`, `.band__stage`, `.band__overlay`) — the renderer's
+   keyframes, and the two rules whose elements belong to other regions: the
+   island's room in `GameApp`, and the neck's rise in `Highway.tsx`. */
+
+/* ------------------------------------------------------------------
+   The stage's own repeated looks
+   A name is a role, never a place. These are the looks the melody views
+   say more than once; everything else in those views is a one-off
+   utility beside them. They live here rather than in `utilities.css`
+   because they belong to the stage's vocabulary, not the site's.
+------------------------------------------------------------------ */
+
+/* Text standing on the video carries its own contrast. The melody region sets
+   `--on-video-shadow` once and inherits it to the lyric lines and the roll's
+   words; this is what reads it. */
+@utility on-video {
+  text-shadow: var(--on-video-shadow);
+}
+
+/* The mono pill a view tags itself with. `--chip-top` is the one thing a second
+   chip changes (the freeform badge sits under the first), and `chip-accent`
+   re-points only the fill rather than restating the pill. */
+@utility chip {
+  position: absolute;
+  top: var(--chip-top, 1.6cqmin);
+  left: 2.4cqmin;
+  padding: 0.25em 0.7em;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: clamp(0.5rem, 2.2cqmin, 0.85rem);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  background: var(--chip-fill, var(--color-yellow));
+}
+@utility chip-accent {
+  --chip-fill: var(--color-accent);
+}
+
+/* The word being sung: the fill carries it, and a dark halo would only muddy
+   the yellow. */
+@utility word-active {
+  padding: 0 0.16em;
+  border-radius: var(--radius-inner);
+  background: var(--color-yellow);
+  color: var(--color-ink);
+  text-shadow: none;
+  box-shadow: 2px 2px 0 0 rgba(12, 13, 10, 0.7);
+}
+/* A hero word is outlined rather than filled, so it can sit alongside the
+   active word's yellow fill without the two being confused. */
+@utility word-hero {
+  outline: 2px solid var(--color-yellow);
+  outline-offset: 0.12em;
+  border-radius: var(--radius-inner);
+}
+
+/* A line still to be sung is drawn in the full colour and simply faded back, so
+   it rises to exactly the look it will have when it starts: no jump on the
+   hand-over. Its own moment, and the moment it is over, are told apart by that
+   fade, not by a colour change. Reduced motion still gets the line, just
+   without the rise. */
+@utility lyric-rising {
+  opacity: calc(0.4 + 0.6 * var(--approach, 0));
+  transform: translateY(calc((1 - var(--approach, 0)) * 0.5em));
+  @media (prefers-reduced-motion: reduce) {
+    transform: none;
+  }
+}
+
+@layer components {
+  /* --- Stage root (owned by the island; the fullscreen target) --- */
+  .band {
+    position: relative;
+    width: 100%;
+    height: 100dvh;
+    background: var(--color-ink);
+  }
+  /* --- The stage's own scrollbars ---
+     One thin bar in the stage's colours: the browser's is wide enough to break
+     the frame it sits in, and the jukebox's song list makes that plain. Both
+     spellings are set, because `scrollbar-width` does not inherit and the WebKit
+     pseudo-elements are what a Safari predating the standard still reads. Scoped
+     to the stage, so the paper pages keep their own. */
+  .band,
+  .band * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(250, 250, 244, 0.26) transparent;
+  }
+  .band *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .band *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .band *::-webkit-scrollbar-thumb {
+    background: rgba(250, 250, 244, 0.26);
+    border-radius: var(--radius-inner);
+  }
+  .band *::-webkit-scrollbar-thumb:hover {
+    background: rgba(250, 250, 244, 0.45);
+  }
+  .band *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  .band:fullscreen {
+    /* The fullscreen element is fixed to the screen, not left at its place in a
+       scrolled `/play` document: the author's `position: relative` above otherwise
+       overrides the user agent's own rule for `:fullscreen`, and the stage can then
+       sit wherever the page was scrolled to. `100dvh` is the viewport that is
+       actually visible, which is the one the device's safe areas are measured
+       inside. */
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    background: var(--color-ink);
+  }
+  /* --- The game's own cursor ---
+     The desktop's arrow belongs to the desktop: over a stage made of ink and electric
+     yellow it is the one thing that is not ours. So the game draws its **own set** — the
+     whole palette of pointers, not just the two a stage has to have, so nothing has to
+     be answered with the desktop's chrome. Every file in `public/cursors/` is a
+     hand-authored **SVG and nothing else**: Chromium, Gecko and WebKit all take an SVG
+     cursor, so there is no raster twin to keep in step, and each one carries its own
+     `width`/`height` — which is the thing that lets an engine take it as a cursor at all.
+     An engine that will not has the **keyword at the end of the declaration** to fall
+     back on, which is why every `cursor` here ends in `auto`, `pointer`, `text` or the
+     rest rather than a bare `url()`. The hotspot is written here beside each url, because
+     it belongs to how the mark is used, not to the drawing.
+
+     **Applied**: the arrow at rest, the hand on anything pressable, the I-beam in a field
+     you type in, `not-allowed` on a control that refuses, `grab`/`grabbing` on a slider,
+     and `wait` on the loading screen. **Held in reserve**, defined and ready for the
+     screen that needs them: `help`, `move`, `zoom-in`, `zoom-out`.
+
+     Applied only where there **is** a mouse: a touch screen has no pointer to draw, and
+     leaving `cursor` alone there costs nothing. */
+  .band {
+    --cursor-arrow: url("/cursors/cursor-arrow.svg") 3 2;
+    --cursor-hand: url("/cursors/cursor-hand.svg") 11 3;
+    --cursor-text: url("/cursors/cursor-text.svg") 16 16;
+    --cursor-wait: url("/cursors/cursor-wait.svg") 16 16;
+    --cursor-help: url("/cursors/cursor-help.svg") 16 16;
+    --cursor-move: url("/cursors/cursor-move.svg") 16 16;
+    --cursor-not-allowed: url("/cursors/cursor-not-allowed.svg") 16 16;
+    --cursor-grab: url("/cursors/cursor-grab.svg") 16 16;
+    --cursor-grabbing: url("/cursors/cursor-grabbing.svg") 16 16;
+    --cursor-zoom-in: url("/cursors/cursor-zoom-in.svg") 13 13;
+    --cursor-zoom-out: url("/cursors/cursor-zoom-out.svg") 13 13;
+  }
+  @media (pointer: fine) {
+    .band {
+      cursor: var(--cursor-arrow), auto;
+    }
+    /* One list of what is pressable, so a new control is never the one thing still
+       drawn by the desktop. */
+    .band a[href],
+    .band button,
+    .band summary,
+    .band label,
+    .band select,
+    .band [role="button"],
+    .band input[type="checkbox"],
+    .band input[type="radio"] {
+      cursor: var(--cursor-hand), pointer;
+    }
+    .band input[type="text"],
+    .band input[type="search"],
+    .band input[type="url"],
+    .band input[type="email"],
+    .band input[type="number"],
+    .band textarea {
+      cursor: var(--cursor-text), text;
+    }
+    /* A slider is something you take hold of, not something you press. */
+    .band input[type="range"]:not(:disabled) {
+      cursor: var(--cursor-grab), grab;
+    }
+    .band input[type="range"]:active:not(:disabled) {
+      cursor: var(--cursor-grabbing), grabbing;
+    }
+    /* The one screen that is a wait, and says so. */
+    .screen--loading {
+      cursor: var(--cursor-wait), wait;
+    }
+  }
+  /* --- Focus on the stage ---
+     The paper pages keep the site's ink outline; on ink that outline is a black
+     ring inside a yellow control. The stage's focus is a cream ring, outside the
+     control where it can be seen, and it is the same ring whether a keyboard or
+     the pad's D-pad put it there. */
+  .band :focus-visible,
+  .band [data-nav-focus] {
+    outline: 3px solid var(--color-cream);
+    outline-offset: 3px;
+    border-radius: var(--radius-inner);
+  }
+  /* A screen, a stage or a dialog is a place, not a control: focusing it is for
+     the screen reader's announcement, and a ring around the whole viewport is not
+     a focus cue anyone needs. */
+  .band .screen:focus-visible,
+  .band .screen__title:focus-visible,
+  .band .band__stage:focus-visible,
+  .band dialog:focus-visible,
+  .band dialog[data-nav-focus] {
+    outline: none;
+  }
+  /* Rows inside a scroller lose an outside ring to the scroller's edge. */
+  .band .song-row:focus-visible,
+  .band .song-row[data-nav-focus],
+  .band .jukebox__letter:focus-visible,
+  .band .jukebox__letter[data-nav-focus] {
+    outline-offset: -3px;
+  }
+  @media (forced-colors: active) {
+    .band :focus-visible,
+    .band [data-nav-focus] {
+      outline: 3px solid CanvasText;
+    }
+    /* A pressed tile, the current song and the current letter are only a fill in
+       colour; forced colours removes the fill, so give them an outline. */
+    .band [aria-pressed="true"],
+    .band [aria-current="true"],
+    .band .song-row.is-active {
+      outline: 2px solid Highlight;
+      outline-offset: 2px;
+    }
+    .band .melody-word.is-done {
+      text-decoration: underline;
+      text-underline-offset: 0.15em;
+    }
+    .band .melody-word.is-missed {
+      text-decoration: line-through;
+    }
+  }
+  /* A focus moved by code because the screen changed is not the mouse's focus.
+     When the pointer is what is driving, do not paint a second active control. */
+  :root[data-game-input="pointer"] .band :focus-visible:not([data-nav-focus]) {
+    outline: none;
+  }
+  .band__stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    /* `clip`, not `hidden`: `hidden` still makes this a **scroll container**, and the
+       game's own focus placement (`scrollIntoView` on a highway pad) scrolled it by
+       a few dozen pixels. The stage's children then sat above its top, the progress
+       bar was off the screen and the bottom showed a strip of backdrop — the "game
+       doesn't sit in" report. Toggling `position` reset the scroll, which is why it
+       looked fixed. A clipped box cannot be scrolled at all. `hidden` stays as the
+       fallback for a browser without `clip`. */
+    overflow: hidden;
+    overflow: clip;
+    background: var(--color-ink);
+    /* The stage's gutter, plus the device's own on the edges a control can sit
+       against. In fullscreen and in the installed app the page reaches under the
+       status bar, the notch and the home indicator (`viewport-fit=cover` on both
+       layouts), so the play area is inset by them as well as by the brand's
+       gutter. A browser with none of those resolves every inset to 0 and the
+       stage is exactly what it was. `BandStage` measures the **content box**, so
+       this padding is the frame of the play area rather than space the layout
+       reserves a second time.
+
+       The **bottom** is the exception: the lowest thing on the stage is the
+       highway's deck, not a control, so the neck can run under the home
+       indicator and the gesture bar. Reserving the bottom inset there left a
+       strip of backdrop below the deck — a gap the game did not fill — for a
+       system bar that has nothing on it to press. The top keeps its inset
+       because the score rail is up there, and the sides keep theirs for a
+       landscape notch. */
+    padding: var(--stage-gutter, 16px);
+    padding:
+      calc(var(--stage-gutter, 16px) + env(safe-area-inset-top, 0px))
+      calc(var(--stage-gutter, 16px) + env(safe-area-inset-right, 0px))
+      var(--stage-gutter, 16px)
+      calc(var(--stage-gutter, 16px) + env(safe-area-inset-left, 0px));
+  }
+  /* A coarse pointer gets a Pause chip beside Fullscreen in the stage corner. Both
+     are 44 px targets, so the stage reserves a strip at the top for them: without
+     it the score rail on a lone player's phone runs underneath the chips. The
+     layout measures the content box, so the highway gives the strip up rather than
+     being covered. */
+  @media (pointer: coarse) {
+    .band__stage {
+      padding-top: calc(
+        var(--stage-gutter, 16px) + env(safe-area-inset-top, 0px) + 3.1rem
+      );
+    }
+  }
+  .band__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+  }
+
+  /* --- The stage opens ---
+     The room arrives first: the song's background, the score rails and the meter
+     are on screen from the moment the stage mounts. The **highways** and the
+     **words** stay offscreen for a quiet beat (`--entrance-lead`), then rise from
+     the floor and drop from the top together while the band's hype plays. The stage
+     mounts for the first entrance of a run, so this is the run's entrance — a pause
+     or a practice restart keeps the same stage and does not replay it. The extra
+     2rem clears the stage gutter, so nothing peeks before the slide begins.
+
+     Only these two things animate: the panel's rails are not part of the highway,
+     and the melody's score cards are not part of the view. The melody views carry
+     the drop as an `animate-[lyrics-drop_…]` utility on their own roots, where the
+     words are; the neck's rise is still a rule here because `.highway` belongs to
+     the highway region's markup (`Highway.tsx`), which this pass did not touch. */
+  @keyframes highway-rise {
+    from {
+      transform: translateY(calc(100% + 2rem));
+    }
+  }
+  @keyframes lyrics-drop {
+    from {
+      transform: translateY(calc(-100% - 2rem));
+    }
+  }
+  .highway {
+    animation: highway-rise var(--entrance-slide, 650ms)
+      cubic-bezier(0.22, 0.61, 0.36, 1) var(--entrance-lead, 1200ms) both;
+  }
+  /* Reduced motion still gets the stage, just without the wait. */
+  @media (prefers-reduced-motion: reduce) {
+    .highway {
+      animation-delay: 0ms;
+    }
+  }
+
+  /* --- Backdrop ---
+     The game's own artwork sits on the island root, so **the menus have a room**; a
+     run paints its own back over the top (the song's video, or its art). The run's
+     own backdrop — its still, its video, the player it embeds and the scrim and dim
+     over them — is utilities on `StageBackground`. What is left here is the island's
+     room: `GameApp` renders it, and the island root's styles are not this pass's. */
+  .band__backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    background-color: var(--color-ink);
+  }
+  .band__backdrop-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  /* --- The room's lights ---
+     A few flares drifting over the backdrop, so a still picture is not a still room.
+     Each is a soft **radial gradient** rather than a shadow or a blur: a 60vmax blurred
+     layer costs a frame of painting per repaint, and these run for as long as the game
+     does. Animated on transform and opacity only, so the compositor does the moving.
+     `screen` because light **adds** — a glow brightens the room instead of sitting on
+     top of it. Decorative: no pointer events, hidden from a screen reader, and still
+     under `prefers-reduced-motion`. The drift is the one thing that stays a keyframe;
+     every element's look beside it is a utility in `BackdropFlares`. */
+  @keyframes flare-drift {
+    from {
+      transform: translate(-50%, -50%) scale(0.9);
+    }
+    to {
+      transform: translate(
+          calc(-50% + var(--flare-drift, 6vmax)),
+          calc(-50% - var(--flare-drift, 6vmax) * 0.6)
+        )
+        scale(1.12);
+    }
+  }
+  /* Reduced motion is handled once, for the whole site, in `global.css`. */
+}

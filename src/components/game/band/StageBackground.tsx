@@ -30,24 +30,40 @@ interface Props {
   dim?: number;
 }
 
+/**
+ * A YouTube backdrop has to cover the stage and lose its player chrome, so it is
+ * sized from the viewport (the stage is 100dvh) and nudged up in scale. The rules
+ * are on the wrapper's descendants because the IFrame API replaces the element it
+ * is given: its own iframe is built inside the host, at the same depth.
+ */
+const EMBED =
+  "stage-bg__embed absolute inset-0 overflow-hidden [&_iframe]:pointer-events-none [&_iframe]:absolute [&_iframe]:left-1/2 [&_iframe]:top-1/2 [&_iframe]:h-[56.25vw] [&_iframe]:w-screen [&_iframe]:min-h-dvh [&_iframe]:min-w-[177.78dvh] [&_iframe]:border-0 [&_iframe]:[transform:translate(-50%,-50%)_scale(1.15)]";
+
+/**
+ * A still back: the game's artwork, or a song's cover stretched past its size. A
+ * cover is square and often small, so it is blurred into a back rather than pulled
+ * out of shape: an atmosphere, not a picture.
+ */
+const STILL = "stage-bg__image absolute inset-0 bg-cover bg-center bg-no-repeat";
+const STILL_BLUR =
+  "stage-bg__image stage-bg__image--blur absolute -inset-[6%] bg-cover bg-center bg-no-repeat blur-[28px] saturate-[1.1]";
+
 export function StageBackground({ media, youtube, dim = 0 }: Props) {
   return (
     <div
-      className="stage-bg"
+      className="stage-bg absolute inset-0 z-0"
       aria-hidden="true"
       style={{ "--backdrop-dim": dim } as CSSProperties}
     >
       {media.kind === "image" ? (
         <div
-          className={
-            media.blur ? "stage-bg__image stage-bg__image--blur" : "stage-bg__image"
-          }
+          className={media.blur ? STILL_BLUR : STILL}
           style={{ backgroundImage: `url(${media.src})` }}
         />
       ) : null}
       {media.kind === "video" ? (
         <video
-          className="stage-bg__video"
+          className="stage-bg__video h-full w-full object-cover"
           src={media.src}
           poster={media.poster}
           muted
@@ -61,8 +77,10 @@ export function StageBackground({ media, youtube, dim = 0 }: Props) {
           className={
             // The player is the truth: if the song's video is on, it is the
             // picture as well as the sound. A stale id in the playlist summary
-            // must not put a second, muted embed behind it.
-            media.kind === "youtube" ? "stage-bg__embed" : "stage-bg__embed is-audio-only"
+            // must not put a second, muted embed behind it. A player told not to
+            // show its video keeps running and audible, and lets the stage's own
+            // artwork be the picture.
+            media.kind === "youtube" ? EMBED : `${EMBED} is-audio-only opacity-0`
           }
         >
           <YouTubeStageAudio
@@ -75,7 +93,7 @@ export function StageBackground({ media, youtube, dim = 0 }: Props) {
           />
         </div>
       ) : media.kind === "youtube" ? (
-        <div className="stage-bg__embed">
+        <div className={EMBED}>
           <iframe
             src={youtubeEmbedUrl(media.id)}
             title=""
@@ -85,10 +103,10 @@ export function StageBackground({ media, youtube, dim = 0 }: Props) {
           />
         </div>
       ) : null}
-      <div className="stage-bg__scrim" />
+      <div className="stage-bg__scrim absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_0%,rgba(12,13,10,0.12),rgba(12,13,10,0.58)_72%),linear-gradient(to_bottom,rgba(12,13,10,0.28),rgba(12,13,10,0.46))]" />
       {/* The dim is the backdrop's own: it sits over the video or art and its
           scrim, and under every panel and note the stage draws. */}
-      <div className="stage-bg__dim" />
+      <div className="stage-bg__dim pointer-events-none absolute inset-0 bg-ink opacity-[var(--backdrop-dim,0)]" />
     </div>
   );
 }

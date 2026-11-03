@@ -4,6 +4,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
 } from "react";
 import { useT } from "../../i18n/react";
 import type { SourceSongDoc } from "../../lib/game/source";
@@ -703,51 +704,59 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
   };
 
   return (
-    <div className="charter">
-      <header className="charter-head charter-head--workspace">
-        <div className="charter-title">
+    <div className="charter-page flex flex-col gap-2 max-[760px]:p-[0.55rem]">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-line-ink pb-2 max-[540px]:items-start">
+        <div>
           <p className="charter-badge">{t("charter.badge")}</p>
-          <h1>{project.song.title}</h1>
-          <p className="charter-meta">
+          <h1 className="m-0 font-display text-[clamp(1.2rem,2.4vw,1.8rem)] leading-none text-cream">
+            {project.song.title}
+          </h1>
+          <p className="mt-1 font-mono text-[0.66rem] text-[rgba(251,251,243,0.55)]">
             {project.song.artist.name} · {charts.length} {t("charter.charts").toLowerCase()}
           </p>
         </div>
-        <div className="charter-head__actions">
-          <div className="charter-actions">
+        <div className="flex max-w-[42rem] flex-col items-end gap-[0.2rem] max-[540px]:items-start">
+          <div className="flex flex-wrap items-center justify-end gap-[0.4rem] max-[540px]:justify-start">
             <button type="button" className="charter-btn" onClick={onBack}>
               {t("charter.song")}
             </button>
             <button type="button" className="charter-btn" onClick={() => setDialog(true)}>
               {t("charter.charts")}
             </button>
-            <button type="button" className="charter-btn charter-btn--primary" onClick={exportChart}>
+            <button
+              type="button"
+              className="charter-btn charter-btn-primary"
+              onClick={exportChart}
+            >
               {t("charter.download")}
             </button>
             <button type="button" className="charter-btn" onClick={onGame}>
               {t("charter.back")}
             </button>
           </div>
-          <p className="charter-help">{t("charter.help")}</p>
+          <p className="m-0 max-w-[38rem] text-right text-[0.62rem] leading-[1.35] text-[rgba(251,251,243,0.64)] max-[760px]:hidden">
+            {t("charter.help")}
+          </p>
         </div>
       </header>
 
-      <div className="charter-toolbar">
-        <div className="charter-transport">
+      <div className="flex flex-wrap items-center gap-[0.55rem] border-b border-line-ink py-[0.4rem]">
+        <div className="flex flex-wrap items-center gap-[0.4rem]">
           <button
             type="button"
-            className="charter-play"
+            className="size-8 cursor-pointer rounded-full border-0 bg-cream text-[0.65rem] text-ink"
             onClick={togglePlay}
             aria-label={clock.playing ? t("charter.pause") : t("charter.play")}
           >
             {clock.playing ? "❚❚" : "▶"}
           </button>
-          <div
-            className={["charter-record-combo", record.recording ? "is-on" : ""].filter(Boolean).join(" ")}
-            ref={recordMenuRef}
-          >
+          <div className="relative inline-flex items-stretch" ref={recordMenuRef}>
             <button
               type="button"
-              className={["charter-btn", "charter-btn--record", "charter-record-main", record.recording ? "is-on" : ""]
+              className={[
+                "charter-btn charter-btn-record rounded-r-none border-r-0",
+                record.recording && "charter-btn-record-on",
+              ]
                 .filter(Boolean)
                 .join(" ")}
               onClick={() => {
@@ -757,12 +766,12 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
               }}
               disabled={!active}
             >
-              <span className="charter-record-dot" aria-hidden="true" />
+              <span className="size-[0.42rem] rounded-full bg-current" aria-hidden="true" />
               {record.recording ? t("charter.stopRecording") : t("charter.record")}
             </button>
             <button
               type="button"
-              className="charter-btn charter-btn--record charter-record-arrow"
+              className="charter-btn charter-btn-record min-w-[1.35rem] rounded-l-none px-[0.3rem] text-[0.55rem]"
               aria-label={t("charter.recordOptions")}
               aria-haspopup="true"
               aria-expanded={recordMenu}
@@ -771,10 +780,15 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
               ▾
             </button>
             {recordMenu ? (
-              <div className="charter-record-menu" role="group" aria-label={t("charter.recordOptions")}>
-                <label className="charter-mini">
-                  <span>{t("charter.controller")}</span>
+              <div
+                className="absolute top-[calc(100%+0.3rem)] left-0 z-30 flex min-w-[13rem] flex-col gap-[0.45rem] rounded-inner border border-[rgba(251,251,243,0.22)] bg-charter-menu p-[0.55rem] shadow-menu"
+                role="group"
+                aria-label={t("charter.recordOptions")}
+              >
+                <label className="flex min-w-0 flex-col gap-1">
+                  <span className="charter-label">{t("charter.controller")}</span>
                   <select
+                    className="charter-input w-full min-w-32"
                     value={record.controller.on}
                     onChange={(event) => {
                       const on = event.target.value;
@@ -794,9 +808,10 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
                     <option value="midi">{t("charter.midi")}</option>
                   </select>
                 </label>
-                <label className="charter-mini">
-                  <span>{t("charter.recordMode")}</span>
+                <label className="flex min-w-0 flex-col gap-1">
+                  <span className="charter-label">{t("charter.recordMode")}</span>
                   <select
+                    className="charter-input w-full min-w-32"
                     value={recordMode}
                     onChange={(event) => setRecordMode(event.target.value as "replace" | "overdub")}
                   >
@@ -808,26 +823,44 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
             ) : null}
           </div>
           {record.recording ? (
-            <span className="charter-recording" role="status">
+            <span className="charter-recording font-mono text-[0.64rem] text-record-soft" role="status">
               {t("charter.armed")} · {t("charter.notes")}: {preview.length}
             </span>
           ) : null}
-          <button type="button" className="charter-btn charter-btn--small" onClick={() => seekTo(0)}>
+          <button
+            type="button"
+            className="charter-btn charter-btn-small"
+            onClick={() => seekTo(0)}
+          >
             {t("charter.stop")}
           </button>
-          <button type="button" className="charter-btn charter-btn--small" onClick={() => jumpNote(-1)}>
+          <button
+            type="button"
+            className="charter-btn charter-btn-small"
+            onClick={() => jumpNote(-1)}
+          >
             ‹
           </button>
-          <button type="button" className="charter-btn charter-btn--small" onClick={() => jumpNote(1)}>
+          <button
+            type="button"
+            className="charter-btn charter-btn-small"
+            onClick={() => jumpNote(1)}
+          >
             ›
           </button>
-          <span className="charter-time">{clockText(now)}</span>
-          <span className="charter-muted">/ {clockText(project.doc?.durationMs ?? clock.durationMs)}</span>
-          <span className="charter-position">{positionLabel(now, grid)}</span>
+          <span className="font-mono text-[0.78rem] text-cream tabular-nums">
+            {clockText(now)}
+          </span>
+          <span className="font-mono text-[0.6rem] text-[rgba(251,251,243,0.64)]">
+            / {clockText(project.doc?.durationMs ?? clock.durationMs)}
+          </span>
+          <span className="rounded-pill border border-line-ink px-[0.4rem] py-[0.18rem] font-mono text-[0.58rem] text-yellow">
+            {positionLabel(now, grid)}
+          </span>
         </div>
 
         <input
-          className="charter-seek"
+          className="min-w-32 flex-1 basis-[14rem] accent-yellow"
           type="range"
           min={0}
           max={Math.max(1, project.doc?.durationMs ?? clock.durationMs)}
@@ -836,10 +869,11 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
           aria-label={t("charter.position", { bar: 0, beat: 0 })}
         />
 
-        <div className="charter-settings">
-          <label className="charter-mini">
-            <span>{t("charter.bpm")}</span>
+        <div className="flex flex-wrap items-center gap-[0.4rem] max-[760px]:ml-0 ml-auto">
+          <label className="flex min-w-0 flex-col gap-[0.15rem]">
+            <span className="charter-label">{t("charter.bpm")}</span>
             <input
+              className="charter-input min-h-[1.7rem] w-[4.2rem]"
               type="number"
               min={20}
               max={400}
@@ -848,9 +882,10 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
               onChange={(event) => changeGrid({ bpm: Number(event.target.value) })}
             />
           </label>
-          <label className="charter-mini">
-            <span>{t("charter.beatsPerBar")}</span>
+          <label className="flex min-w-0 flex-col gap-[0.15rem]">
+            <span className="charter-label">{t("charter.beatsPerBar")}</span>
             <input
+              className="charter-input min-h-[1.7rem] w-[4.2rem]"
               type="number"
               min={1}
               max={16}
@@ -858,9 +893,10 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
               onChange={(event) => changeGrid({ beatsPerBar: Number(event.target.value) })}
             />
           </label>
-          <label className="charter-mini">
-            <span>{t("charter.division")}</span>
+          <label className="flex min-w-0 flex-col gap-[0.15rem]">
+            <span className="charter-label">{t("charter.division")}</span>
             <select
+              className="charter-input min-h-[1.7rem] w-[4.2rem]"
               value={grid.division}
               onChange={(event) => changeGrid({ division: Number(event.target.value) })}
             >
@@ -871,9 +907,13 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
               ))}
             </select>
           </label>
-          <label className="charter-mini">
-            <span>{t("charter.zoom")}</span>
-            <select value={zoom} onChange={(event) => setZoom(Number(event.target.value))}>
+          <label className="flex min-w-0 flex-col gap-[0.15rem]">
+            <span className="charter-label">{t("charter.zoom")}</span>
+            <select
+              className="charter-input min-h-[1.7rem] w-[4.2rem]"
+              value={zoom}
+              onChange={(event) => setZoom(Number(event.target.value))}
+            >
               {ZOOMS.map((value) => (
                 <option key={value} value={value}>
                   {value}s
@@ -881,9 +921,13 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
               ))}
             </select>
           </label>
-          <label className="charter-mini">
-            <span>{t("charter.speed")}</span>
-            <select value={speed} onChange={(event) => onSpeed(Number(event.target.value))}>
+          <label className="flex min-w-0 flex-col gap-[0.15rem]">
+            <span className="charter-label">{t("charter.speed")}</span>
+            <select
+              className="charter-input min-h-[1.7rem] w-[4.2rem]"
+              value={speed}
+              onChange={(event) => onSpeed(Number(event.target.value))}
+            >
               {SPEEDS.map((value) => (
                 <option key={value} value={value}>
                   {value}×
@@ -891,9 +935,10 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
               ))}
             </select>
           </label>
-          <label className="charter-mini">
-            <span>{t("charter.metronome")}</span>
+          <label className="flex min-w-0 flex-col gap-[0.15rem]">
+            <span className="charter-label">{t("charter.metronome")}</span>
             <select
+              className="charter-input min-h-[1.7rem] w-[4.2rem]"
               value={metronome ? "on" : "off"}
               onChange={(event) => setMetronome(event.target.value === "on")}
             >
@@ -901,9 +946,10 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
               <option value="off">{t("charter.off")}</option>
             </select>
           </label>
-          <label className="charter-mini">
-            <span>{t("charter.quantizeTake")}</span>
+          <label className="flex min-w-0 flex-col gap-[0.15rem]">
+            <span className="charter-label">{t("charter.quantizeTake")}</span>
             <select
+              className="charter-input min-h-[1.7rem] w-[4.2rem]"
               value={quantize ? "on" : "off"}
               onChange={(event) => setQuantize(event.target.value === "on")}
             >
@@ -914,7 +960,10 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
         </div>
       </div>
 
-      <div className={`charter-grid charter-grid--${columns}`} style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+      <div
+        className="grid flex-1 auto-rows-[minmax(13rem,1fr)] grid-cols-[repeat(var(--cols),minmax(0,1fr))] gap-[0.45rem] overflow-auto pb-1 max-[540px]:grid-cols-1 max-[540px]:auto-rows-[minmax(13rem,1fr)] max-[760px]:auto-rows-[minmax(12rem,1fr)]"
+        style={{ "--cols": columns } as CSSProperties}
+      >
         {shown.map((chart) => (
           <CharterPanel
             key={chart.key}
@@ -935,26 +984,28 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
         ))}
       </div>
 
-      <footer className="charter-inspect">
-        <div className="charter-inspect__left">
+      <footer className="flex flex-wrap items-center gap-[0.6rem] border-t border-line-ink pt-[0.45rem] font-mono text-[0.58rem] text-[rgba(251,251,243,0.55)]">
+        <div className="charter-inspect__left flex min-w-0 flex-wrap items-center gap-2">
           <span>
             {selection.size > 0
               ? t("charter.selected", { count: selection.size })
               : t("charter.noSelection")}
           </span>
           {one ? (
-            <div className="charter-note-editor">
-              <label className="charter-mini">
-                <span>{t("charter.noteTime")}</span>
+            <div className="charter-note-editor flex flex-wrap items-end gap-[0.35rem] max-[540px]:hidden">
+              <label className="flex min-w-0 flex-col gap-[0.15rem]">
+                <span className="charter-label">{t("charter.noteTime")}</span>
                 <input
+                  className="charter-input w-[4.6rem]"
                   type="number"
                   value={one.timeMs}
                   onChange={(event) => patchNote({ timeMs: Number(event.target.value) })}
                 />
               </label>
-              <label className="charter-mini">
-                <span>{t("charter.noteColumn")}</span>
+              <label className="flex min-w-0 flex-col gap-[0.15rem]">
+                <span className="charter-label">{t("charter.noteColumn")}</span>
                 <select
+                  className="charter-input w-[4.6rem]"
                   value={one.column === null ? "open" : one.column}
                   onChange={(event) =>
                     patchNote({
@@ -962,7 +1013,9 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
                     })
                   }
                 >
-                  {active?.instrument !== "drums" ? <option value="open">{t("charter.openNote")}</option> : null}
+                  {active?.instrument !== "drums" ? (
+                    <option value="open">{t("charter.openNote")}</option>
+                  ) : null}
                   {Array.from({ length: active?.columns ?? 5 }, (_, index) => (
                     <option key={index} value={index}>
                       {index + 1}
@@ -970,18 +1023,20 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
                   ))}
                 </select>
               </label>
-              <label className="charter-mini">
-                <span>{t("charter.noteLength")}</span>
+              <label className="flex min-w-0 flex-col gap-[0.15rem]">
+                <span className="charter-label">{t("charter.noteLength")}</span>
                 <input
+                  className="charter-input w-[4.6rem]"
                   type="number"
                   min={0}
                   value={one.lengthMs}
                   onChange={(event) => patchNote({ lengthMs: Number(event.target.value) })}
                 />
               </label>
-              <label className="charter-mini">
-                <span>{t("charter.noteKind")}</span>
+              <label className="flex min-w-0 flex-col gap-[0.15rem]">
+                <span className="charter-label">{t("charter.noteKind")}</span>
                 <select
+                  className="charter-input w-[4.6rem]"
                   value={one.kind}
                   onChange={(event) => patchNote({ kind: event.target.value as LaneNote["kind"] })}
                 >
@@ -995,8 +1050,9 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
                   ))}
                 </select>
               </label>
-              <label className="charter-check">
+              <label className="charter-label inline-flex min-h-[1.8rem] cursor-pointer items-center gap-[0.3rem]">
                 <input
+                  className="accent-yellow"
                   type="checkbox"
                   checked={one.hero}
                   onChange={(event) => patchNote({ hero: event.target.checked })}
@@ -1004,7 +1060,7 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
                 {t("charter.hero")}
               </label>
               {slideTarget ? (
-                <div className="charter-mini">
+                <div className="flex min-w-0 flex-col gap-[0.15rem]">
                   <span>
                     {t("charter.slideTo", {
                       time: slideTarget.timeMs,
@@ -1013,7 +1069,7 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
                   </span>
                   <button
                     type="button"
-                    className="charter-btn charter-btn--small"
+                    className="charter-btn charter-btn-small"
                     onClick={removeSlide}
                   >
                     {t("charter.removeSlide")}
@@ -1023,49 +1079,55 @@ export function CharterWorkspace({ project, speed, onSpeed, onBack, onGame }: Pr
             </div>
           ) : null}
         </div>
-        <div className="charter-inspect__actions">
-          <button type="button" className="charter-btn charter-btn--small" onClick={undo}>
+        <div className="flex flex-wrap gap-1">
+          <button type="button" className="charter-btn charter-btn-small" onClick={undo}>
             {t("charter.undo")}
           </button>
-          <button type="button" className="charter-btn charter-btn--small" onClick={redo}>
+          <button type="button" className="charter-btn charter-btn-small" onClick={redo}>
             {t("charter.redo")}
           </button>
-          <button type="button" className="charter-btn charter-btn--small" onClick={copySelection}>
+          <button type="button" className="charter-btn charter-btn-small" onClick={copySelection}>
             {t("charter.copy")}
           </button>
-          <button type="button" className="charter-btn charter-btn--small" onClick={pasteSelection}>
+          <button type="button" className="charter-btn charter-btn-small" onClick={pasteSelection}>
             {t("charter.paste")}
           </button>
-          <button type="button" className="charter-btn charter-btn--small" onClick={quantizeSelection}>
+          <button
+            type="button"
+            className="charter-btn charter-btn-small"
+            onClick={quantizeSelection}
+          >
             {t("charter.quantize")}
           </button>
-          <button type="button" className="charter-btn charter-btn--small" onClick={linkSlide}>
+          <button type="button" className="charter-btn charter-btn-small" onClick={linkSlide}>
             {t("charter.slide")}
           </button>
-          <button type="button" className="charter-btn charter-btn--small" onClick={deleteSelection}>
+          <button type="button" className="charter-btn charter-btn-small" onClick={deleteSelection}>
             {t("charter.delete")}
           </button>
         </div>
-        <div className="charter-inspect__status" role="status">
+        <div className="charter-inspect__status ml-auto flex max-w-[34rem] flex-wrap items-start gap-[0.6rem]" role="status">
           {status ? <span>{status}</span> : null}
           {exportProblems.length > 0 ? (
-            <details>
-              <summary>{t("charter.exportProblems")}</summary>
-              <ul>
+            <details className="max-w-[20rem]">
+              <summary className="cursor-pointer text-yellow">
+                {t("charter.exportProblems")}
+              </summary>
+              <ul className="mt-1 max-h-20 overflow-auto pl-4">
                 {exportProblems.map((problem) => (
                   <li key={problem}>{problem}</li>
                 ))}
               </ul>
             </details>
           ) : null}
-          <details>
-            <summary>
+          <details className="max-w-[20rem]">
+            <summary className="cursor-pointer text-yellow">
               {problems.length > 0
                 ? `${t("charter.problems")} (${problems.length})`
                 : t("charter.noProblems")}
             </summary>
             {problems.length > 0 ? (
-              <ul>
+              <ul className="mt-1 max-h-20 overflow-auto pl-4">
                 {problems.map((problem) => (
                   <li key={problem}>{problem}</li>
                 ))}

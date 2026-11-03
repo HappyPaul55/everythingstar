@@ -1,7 +1,7 @@
 ---
 title: Gotchas
 description: "The rules that have already been broken once: the vocabulary, the track format, the parsers, the stems, the stage geometry and the local records."
-updated: "2026-11-01"
+updated: "2026-11-02"
 order: 3
 ---
 
@@ -2036,6 +2036,69 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   the jukebox's slot), **inner** for a control or an inset (a button, an option
   row, the letter index, a note) and **pill only for a text label** (a chip, a
   tag, a badge). A pill on a small square control is a blob, not a rounding.
+- **The stage is a second Tailwind root, and its `@source` roots are load-bearing.**
+  `global.css` imports Tailwind with `@source not "../components/game"` and
+  `@source not "../components/charter"`; `band.css` imports *only* the utilities
+  with `source(none)` and adds those two back. A utility written in a game
+  component therefore belongs to `band.css` — the stylesheet only `/play` and the
+  game-only entries carry — instead of to `global.css`, which every marketing page
+  inlines. Getting the path wrong is silent: the page still works, and the landing
+  page quietly grows by every stage utility (16 KB per page when this was first
+  tried). The paths are relative to the CSS file, so from `src/styles/` it is
+  `../components/game`, not `../../components/game`.
+- **The full stage conversion costs about 80 KB on `/play` and buys nothing in
+  bytes.** Measured on the finished branch: the stage's component CSS fell from
+  ~185 KB to ~51 KB, but the utilities that replaced it generate ~98 KB of
+  stylesheet (their class names are long and appear in full in every rule), the
+  island's JS grew 718 → 773 KiB, and `/play` went 169 → 199 KB of document. The
+  caps moved to hold it (JS 730 → 830, initial raw 580 → 660, gzip 190 → 215).
+  Convert a stage region for consistency, never for weight: a terse BEM selector
+  is the smaller spelling of a style used on one element. The four-tier
+  breakpoints are why the theme names `narrow` (40rem) and `wide` (62rem) — an
+  arbitrary `[@media(min-width:40rem)_and_(max-width:61.999rem)]:` variant is
+  fifty characters on every class it touches, and three of them made a
+  three-thousand-character `className`.
+- **Inside the second root, a longhand can lose to the shorthand it was meant to
+  override.** `p-[1.4%]` and `max-[40rem]:portrait:px-0` are both utilities, and
+  which one wins is decided inside the root that generated them, not by the order
+  they are written in the class list. The bare panel's portrait layout therefore
+  says `[padding:0.35rem_0_0]` and `[gap:0.4rem_0.7rem]` — the whole property, in
+  one rule — rather than three longhands. The computed-style sampler is what
+  caught it: the page looked right and the padding was 5px.
+- **A utility's selector is long, so the stage is measured, not assumed.** A
+  utility is emitted once, but its class name is repeated in full in the
+  stylesheet (`.\.max-\[40rem\]\:portrait\:\[\&\>div\:nth-child\(1\)\]\:w-\[1\.2rem\]`),
+  and against a terse BEM selector that is a loss for a rule used on one element.
+  Converting the panel and its rails cost 1.8 KB of CSS; the highway would cost
+  more. Convert a stage region only when `bun run budget` and a `/play` CSS
+  measurement say it is worth it.
+- **A utility in the `utilities` layer beats a component rule, and that is the point.**
+  The site is utility-first, so a screen's look lives in the markup and the
+  stylesheet has no selector to fight it. The consequence bites when a rule in
+  `band.css` (inside `@layer components`) tries to override a utility that is now
+  on the element: it cannot, whatever its specificity. When a stage rule has to win
+  a tie, either move the declaration into the utility's vocabulary or take the
+  utility off the element — do not add `!important`.
+- **The vocabulary is a role, the token is a value.** A colour, radius, type size,
+  shadow or animation is declared once in `theme.css` and nowhere else; a repeated
+  look is a `@utility` in `utilities.css`; a one-off is inline in the markup. A raw
+  `#rrggbb` outside `theme.css` is how the charter ended up with five colours the
+  site had never heard of.
+- **A state hook is not a class name to tidy.** `is-active`, `on-ink`,
+  `[data-nav-focus]` and `aria-current` carry no declarations: they are what the
+  gamepad's focus, the screen reader and the browser suite read. The charter's
+  `.charter-pane.is-active`, the `.charter-pane__body` and `.charter-note-editor`
+  are hooks of exactly this kind. Renaming one is a test change, not a cleanup.
+- **The Markdown prose is the one component stylesheet left.** `.doc` and `.legal`
+  style HTML the Markdown pipeline generates, so there is no element to put a
+  utility on. Keep those rules in `global.css`; a paper page's *chrome* around them
+  is utilities like everything else.
+- **`bun run visual` is a local guard, and its baselines are never committed.** It
+  drives the static screens and compares them pixel for pixel against
+  `.cache/visual/`; a missing baseline skips the shot, so CI is unaffected. Take
+  one with `bun run visual:baseline` on the branch you are about to restyle, and
+  re-take it only for a screen you meant to change — the picker's list and the
+  stage's moving parts are excluded because their pictures differ run to run.
 - **The scrollbars are the stage's, and thin.** `band.css` thins every scroller
   inside `.band` (8px, a cream thumb at quarter opacity on a transparent track)
   in both the standard properties and the WebKit pseudo-elements, since

@@ -64,14 +64,14 @@ export function LanesRegion({
     // second time. The group says what the panels are together — the band's
     // players — which is what its label was always for.
     <div
-      className="lanes"
+      className="relative z-1 grid min-h-0 flex-none content-end justify-center overflow-hidden"
       style={{ height }}
       role="group"
       aria-label={t("band.playersLabel")}
     >
       {empty ? null : (
         <div
-          className="lanes__grid"
+          className="grid content-center justify-center"
           style={{
             gridTemplateColumns: `repeat(${grid.columns}, ${grid.width}px)`,
             gap,
@@ -95,7 +95,10 @@ export function LanesRegion({
         </div>
       )}
       {tooSmall ? (
-        <p className="lanes__notice" role="note">
+        <p
+          className="pointer-events-none absolute bottom-[0.9rem] left-1/2 z-2 max-w-[min(26rem,calc(100%-2rem))] -translate-x-1/2 rounded-pill border border-[rgba(250,250,244,0.24)] bg-[rgba(12,13,10,0.88)] px-[0.9rem] py-[0.45rem] text-center font-mono text-[0.72rem] leading-[1.45] text-[rgba(250,250,244,0.9)] shadow-[0_0.25rem_1rem_rgba(0,0,0,0.45)]"
+          role="note"
+        >
           {t("band.tooSmall")}
         </p>
       ) : null}

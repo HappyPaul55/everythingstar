@@ -32,6 +32,8 @@
     "typecheck:tests": "tsc --noEmit -p tsconfig.test.json",
     "test": "bun test",
     "test:e2e": "playwright test",
+    "visual": "playwright test --config playwright.visual.config.ts",
+    "visual:baseline": "playwright test --config playwright.visual.config.ts --update-snapshots",
     "perf": "playwright test --config playwright.perf.config.ts",
     "test:pwa": "playwright test --config playwright.pwa.config.ts",
     "knip": "knip",

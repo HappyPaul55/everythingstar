@@ -22,6 +22,35 @@ interface Props {
   art?: string | null;
 }
 
+/**
+ * The tile is the same shape either way: the base is the frame, and the two sizes
+ * add the one thing that differs — a row's square is its column's width, and the
+ * now-playing cover is a square that fills its column. The jukebox's grid overrides
+ * the panel's size and margin where it draws the compact row.
+ */
+const ART = [
+  "song-art block relative flex-none overflow-hidden rounded-inner",
+  "border border-[rgba(250,250,244,0.16)] bg-[rgba(12,13,10,0.7)]",
+].join(" ");
+
+const ART_ROW = [
+  "song-art--row [grid-area:art]",
+  "w-[var(--song-art-size,1.9rem)] h-[var(--song-art-size,1.9rem)]",
+].join(" ");
+
+/* The now-playing cover is **square** — it is an album cover, and the art we are
+   given is drawn square: a wide crop cuts the picture rather than framing it. The
+   cover's width is its column's; the jukebox's grid overrides the size and margin
+   where it draws the compact row. */
+const ART_PANEL = "song-art--panel w-full aspect-square mb-[0.35rem]";
+
+const TILE = [
+  "song-art__tile flex h-full w-full items-center justify-center font-display",
+  "text-cream tracking-[0.04em]",
+  /* The accent wash is one background: the diagonal band and the ink under it. */
+  "[background:linear-gradient(135deg,var(--art-accent,var(--color-yellow))_0_18%,transparent_18%_100%),rgba(20,21,17,0.9)]",
+].join(" ");
+
 export function SongCover({ song, size = "row", art: supplied }: Props) {
   // A row can be reused for another song; a failure on the last cover is not a
   // failure on this one. Comparing the failed `src` with the current one settles it
@@ -37,14 +66,14 @@ export function SongCover({ song, size = "row", art: supplied }: Props) {
 
   return (
     <span
-      className={`song-art song-art--${size}`}
+      className={`${ART} ${size === "row" ? ART_ROW : ART_PANEL}`}
       aria-hidden="true"
       ref={ref}
       style={song.accent ? ({ "--art-accent": song.accent } as CSSProperties) : undefined}
     >
       {art ? (
         <img
-          className="song-art__img"
+          className="song-art__img block h-full w-full object-cover"
           src={art}
           alt=""
           loading="lazy"
@@ -52,7 +81,16 @@ export function SongCover({ song, size = "row", art: supplied }: Props) {
           onError={() => setFailed(source)}
         />
       ) : (
-        <span className="song-art__tile">{songInitials(song.title)}</span>
+        <span
+          className={`${TILE} ${
+            /* A row's initials are sized off the tile, so one rule draws a 30px
+               tile and a 54px one at the same proportion. The now-playing cover's
+               size is the jukebox's own rule. */
+            size === "row" ? "text-[calc(var(--song-art-size,1.9rem)*0.42)]" : "text-[0.8rem]"
+          }`}
+        >
+          {songInitials(song.title)}
+        </span>
       )}
     </span>
   );

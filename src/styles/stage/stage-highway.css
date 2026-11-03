@@ -1,0 +1,143 @@
+/* stage-highway: the highway's own looks.
+   The road, its rails, its notes, the hit line and the tilt are Tailwind
+   utilities in `Highway.tsx`, with a note's state written once in `notes.ts`.
+   What is left here is the two looks a utility cannot carry without turning
+   into a 200-character arbitrary value: a pseudo-element's casing — the tail a
+   gem or an arrow draws behind its head, and the wall that stands a note's face
+   up in 3D. The three looks below repeat on every note, so they are named once
+   rather than restated at each call site. */
+
+/* The note's face: a glossy top, a hard edge beneath it and a shadow on the
+   frets, so it reads as a thing sitting *on* the neck. The skin (bars, gems,
+   arrows) and the note's state re-point it from the markup; a state is a class
+   on the note, so its override is a variant on the face. */
+@utility note-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-inner);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--note) 55%, white) 0%,
+    var(--note) 44%,
+    color-mix(in srgb, var(--note) 74%, black) 100%
+  );
+  box-shadow:
+    0 0 0 2px rgba(12, 13, 10, 0.5),
+    inset 0 2px 0 0 rgba(250, 250, 244, 0.5),
+    inset 0 -4px 6px rgba(12, 13, 10, 0.45),
+    0 3px 0 0 color-mix(in srgb, var(--note) 45%, black),
+    0 9px 14px rgba(0, 0, 0, 0.5);
+  transition: box-shadow 0.14s var(--ease-brand);
+}
+
+/* The first-run key label, on a note's head and on a pad. A cap is **cream on
+   ink**, not a fret colour: the note's own colour is the column, and the label
+   is only its name. It scales with the face rather than with the page's type. */
+@utility keycap {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.15em;
+  padding: 0.06em 0.28em;
+  border-radius: var(--radius-inner);
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: clamp(0.5rem, 2.4cqh, 0.85rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  box-shadow:
+    0 0 0 1px rgba(12, 13, 10, 0.35),
+    0 2px 0 rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+/* A landed note's answer: a hot core on the line with a coloured bloom around
+   it. Both are the same gradient family as the room's lights — no blur, so
+   nothing repaints per frame. */
+@utility note-burst {
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      30% 62% at 50% 100%,
+      #fff 0%,
+      color-mix(in srgb, var(--note) 82%, white) 30%,
+      transparent 100%
+    ),
+    radial-gradient(
+      58% 120% at 50% 100%,
+      color-mix(in srgb, var(--note) 62%, transparent) 8%,
+      transparent 78%
+    );
+}
+
+@layer components {
+  /* The tail runs from the note's top down to the **middle of its face**, so a
+     note covers the lower half of its own tail: an arrow's point and its lower
+     half stay clean, and a gem's tail meets it under the puck. The note is its own
+     size container, so `100cqw` is the note's width; the face is `width / 1.35`
+     tall, and half of that is `width / 2.7`. */
+  .highway--notes-gems .highway__note.is-sustain::after,
+  .highway--notes-arrows .highway__note.is-sustain::after {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    left: 34%;
+    right: 34%;
+    top: 0;
+    bottom: calc(100cqw / 2.7);
+    border-radius: var(--radius-pill);
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--note) 68%, black),
+      var(--note) 85%
+    );
+    box-shadow: 0 0 0 1.5px rgba(12, 13, 10, 0.45);
+    opacity: 0.9;
+  }
+  /* An open note has no column and no direction: it stays one wide bar in every
+     skin, and the skin's tail would be a strip down the middle of nothing. */
+  .highway--notes-gems .highway__note.is-open::after,
+  .highway--notes-arrows .highway__note.is-open::after {
+    display: none;
+  }
+  .highway--notes-arrows .highway__note.is-sustain::after {
+    left: 40%;
+    right: 40%;
+    /* An arrow's shaft is the same width as the tail, so its casing would show as
+       a dark line down the shaft. In the arrows skin the tail is a clean strip that the
+       arrow's own shaft continues. */
+    box-shadow: none;
+  }
+
+  /* A note is a **block** on the board, not a tile laid on it. Its height is a
+     face hung off the near edge and stood up: a single perpendicular wall, which
+     is what the eye reads as thickness. The wall hangs off the **face**, so a
+     gem's block is under its head rather than down the length of its tail. */
+  .highway--3d .highway__face::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: clamp(4px, 2cqmin, 13px);
+    transform-origin: 50% 0%;
+    transform: rotateX(90deg);
+    border-radius: 0 0 var(--radius-inner) var(--radius-inner);
+    background: linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--note) 62%, black),
+      color-mix(in srgb, var(--note) 32%, black)
+    );
+  }
+  /* A hopo's border is part of its box, and the side wall hangs off the padding
+     box — so reach it back under the border or the white face gains a coloured
+     ledge around its block. */
+  .highway--3d .highway__note.is-hopo .highway__face::before {
+    left: -3px;
+    right: -3px;
+  }
+}

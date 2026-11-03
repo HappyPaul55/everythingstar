@@ -35,48 +35,49 @@ const isActive = (href: string) => {
 
 const current = (href: string) => (isActive(href) ? "page" : undefined);
 const playHref = localePath(locale, "/play");
+
+// The two looks a navigation link takes: a plain label in the bar, and the
+// outlined pill for Play. The panel repeats both on paper.
+const barLink =
+  "transition-colors duration-200 ease-brand hover:text-yellow aria-[current=page]:text-yellow";
+const barPill =
+  "inline-flex items-center gap-[0.35rem] rounded-pill border border-line-ink-strong px-[0.9rem] py-2 text-cream transition-colors duration-200 ease-brand hover:border-yellow hover:bg-yellow hover:text-ink aria-[current=page]:border-yellow aria-[current=page]:text-yellow";
+const panelLink =
+  "block rounded-inner px-[0.85rem] py-[0.8rem] text-ink transition-colors duration-200 ease-brand hover:bg-[color-mix(in_srgb,var(--color-yellow)_45%,#fff)] aria-[current=page]:bg-yellow";
 ---
 
-<header
-  id="site-header"
-  class="on-ink no-print relative z-30 bg-ink"
->
-  <div class="hazard hazard--thin" aria-hidden="true"></div>
+<header id="site-header" class="on-ink no-print relative z-30 bg-ink">
+  <div class="hazard h-[5px]" aria-hidden="true"></div>
   <Container class="relative flex items-center justify-between gap-6 py-[0.9rem]">
-    <a
-      class="inline-flex items-center gap-[0.6rem]"
-      href={localePath(locale, "/")}
-    >
+    <a class="inline-flex items-center gap-[0.6rem]" href={localePath(locale, "/")}>
       <Mark size={30} />
-      <span
-        class="font-display text-[1.15rem] leading-none text-cream sm:text-[1.3rem]"
-      >
+      <span class="font-display text-[1.15rem] leading-none text-cream sm:text-[1.3rem]">
         {settings.name}
       </span>
     </a>
 
-    <nav class="nav-links nav-links--bar" aria-label={t("nav.primary")}>
+    <nav
+      class="hidden items-center gap-[1.7rem] font-mono text-[0.74rem] font-bold tracking-[0.06em] text-cream/66 uppercase min-[861px]:flex"
+      aria-label={t("nav.primary")}
+    >
       {
         nav.map((item) => (
-          <a href={item.href} aria-current={current(item.href)}>
+          <a class={barLink} href={item.href} aria-current={current(item.href)}>
             {item.label}
           </a>
         ))
       }
-      <a class="nav-pill" href={playHref} aria-current={current(playHref)}
+      <a class={barPill} href={playHref} aria-current={current(playHref)}
         >{t("nav.play")}</a
       >
     </nav>
 
-    <details class="nav-disclosure">
-      <summary class="nav-toggle" aria-label={t("nav.menu")}>
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
+    <details class="min-[861px]:hidden [&[open]>nav]:flex">
+      <summary
+        class="grid h-11 w-11 cursor-pointer list-none place-items-center rounded-brand border border-line-ink-strong text-cream transition-colors duration-200 ease-brand hover:border-yellow [&::-webkit-details-marker]:hidden"
+        aria-label={t("nav.menu")}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path
             d="M4 7h16M4 12h16M4 17h16"
             stroke="currentColor"
@@ -84,16 +85,21 @@ const playHref = localePath(locale, "/play");
             stroke-linecap="round"></path>
         </svg>
       </summary>
-      <nav class="nav-links nav-links--panel" aria-label={t("nav.primary")}>
+      <nav
+        class="absolute inset-x-0 top-[calc(100%+0.65rem)] hidden flex-col items-stretch gap-[0.15rem] rounded-brand border-x-2 border-b-2 border-t-[5px] border-ink border-t-yellow bg-cream p-[0.55rem] font-mono text-[0.74rem] font-bold tracking-[0.06em] uppercase shadow-sticker"
+        aria-label={t("nav.primary")}
+      >
         {
           nav.map((item) => (
-            <a href={item.href} aria-current={current(item.href)}>
+            <a class={panelLink} href={item.href} aria-current={current(item.href)}>
               {item.label}
             </a>
           ))
         }
-        <a class="nav-pill" href={playHref} aria-current={current(playHref)}
-          >{t("nav.play")}</a
+        <a
+          class="block rounded-inner bg-yellow px-[0.85rem] py-[0.8rem] text-center text-ink transition-colors duration-200 ease-brand hover:bg-yellow-deep"
+          href={playHref}
+          aria-current={current(playHref)}>{t("nav.play")}</a
         >
       </nav>
     </details>

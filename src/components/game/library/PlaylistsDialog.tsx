@@ -305,7 +305,7 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
             void runImport(files, "folder");
           }}
         />
-        <p className="config__lead">{t("screen.playlistsLead")}</p>
+        <p className="dialog-lead">{t("screen.playlistsLead")}</p>
         <p className="sr-only" role="status" aria-live="polite">
           {library.loading
             ? t("screen.libraryLoading")
@@ -313,8 +313,8 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
         </p>
 
         {empty ? (
-          <div className="playlists__empty">
-            <p className="config__hint">{t("screen.playlistsNone")}</p>
+          <div className="playlists__empty flex flex-col items-start gap-[0.5rem]">
+            <p className="dialog-hint">{t("screen.playlistsNone")}</p>
             {/* The way back: a library somebody has emptied stays emptied unless
                 they say otherwise, and this is the one press that says it. */}
             <button
@@ -326,7 +326,7 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
             </button>
           </div>
         ) : (
-          <ul className="playlists">
+          <ul className="playlists m-0 flex list-none flex-col gap-[0.4rem] p-0">
             {library.playlists.map((row) => {
               // What saving this row would do, worked out before anybody presses:
               // a catalogue can say how many songs it would keep, and a row that is
@@ -348,33 +348,33 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
                 plan.songs.length > 0;
               return (
                 <li
-                  className={row.disabled ? "playlists__row is-disabled" : "playlists__row"}
+                  className={`playlists__row flex flex-col gap-[0.25rem] rounded-inner border border-[rgba(250,250,244,0.16)] bg-[rgba(12,13,10,0.5)] px-[0.6rem] pt-[0.5rem] pb-[0.6rem] ${row.disabled ? " is-disabled" : ""}`}
                   key={row.url}
                 >
-                  <div className="playlists__head">
-                    <span className="playlists__name">
+                  <div className="playlists__head flex items-baseline gap-[0.5rem]">
+                    <span className="playlists__name min-w-0 flex-auto overflow-hidden truncate font-display text-[1.05rem] text-cream [.is-disabled_&]:text-[rgba(250,250,244,0.4)] [.is-disabled_&]:line-through">
                       {row.builtIn
                         ? t("screen.playlistDefaultName")
                         : row.name ?? fileName(row.url)}
                     </span>
                     {row.disabled ? null : row.onDemand ? (
-                      <span className="playlists__count">
+                      <span className="playlists__count flex-none font-mono text-[0.62rem] font-bold uppercase tracking-[0.08em] text-yellow">
                         {t("screen.playlistOnDemand")}
                       </span>
                     ) : (
-                      <span className="playlists__count">
+                      <span className="playlists__count flex-none font-mono text-[0.62rem] font-bold uppercase tracking-[0.08em] text-yellow">
                         {row.count === 1
                           ? t("screen.playlistOneSong")
                           : t("screen.playlistSongs", { count: row.count })}
                       </span>
                     )}
                   </div>
-                  <p className="playlists__url">{row.url}</p>
+                  <p className="playlists__url m-0 font-mono text-[0.62rem] text-[rgba(250,250,244,0.6)] [overflow-wrap:anywhere]">{row.url}</p>
                   {row.onDemand && !row.disabled ? (
-                    <p className="config__hint">{t("screen.playlistOnDemandHint")}</p>
+                    <p className="dialog-hint">{t("screen.playlistOnDemandHint")}</p>
                   ) : null}
-                  <div className="playlists__foot">
-                    <span className="playlists__state">{state(t, row)}</span>
+                  <div className="playlists__foot flex flex-wrap items-center gap-[0.4rem]">
+                    <span className="playlists__state min-w-0 flex-[1_1_12rem] text-[0.72rem] text-[rgba(250,250,244,0.76)]">{state(t, row)}</span>
                     <button
                       type="button"
                       className="band-btn"
@@ -454,7 +454,7 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
                     )}
                   </div>
                   {queue ? (
-                    <p className="config__hint" role="status">
+                    <p className="dialog-hint" role="status">
                       {t("screen.downloadQueue", {
                         done: queue.done,
                         total: queue.total,
@@ -462,19 +462,19 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
                     </p>
                   ) : null}
                   {saveable && plan.skipped.length > 0 ? (
-                    <p className="config__hint">
+                    <p className="dialog-hint">
                       {t("screen.playlistOfflineSkipped", {
                         count: plan.skipped.length,
                       })}
                     </p>
                   ) : null}
                   {failedSong ? (
-                    <p className="config__hint is-warn" role="status">
+                    <p className="dialog-hint is-warn" role="status">
                       {t("screen.playlistSaveFailed", { title: failedSong.title })}
                     </p>
                   ) : null}
                   {row.problems.length > 0 ? (
-                    <p className="config__hint is-warn">
+                    <p className="dialog-hint is-warn">
                       {t("screen.playlistProblems", { count: row.problems.length })}:{" "}
                       {row.problems.slice(0, 3).join("; ")}
                     </p>
@@ -486,14 +486,14 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
         )}
 
         {library.folders.length > 0 ? (
-          <ul className="playlists">
+          <ul className="playlists m-0 flex list-none flex-col gap-[0.4rem] p-0">
             {library.folders.map((folder) => (
-              <li className="playlists__row" key={folder.id}>
-                <div className="playlists__head">
-                  <span className="playlists__name">{folder.name}</span>
-                  <span className="playlists__count">{folderState(t, folder)}</span>
+              <li className="playlists__row flex flex-col gap-[0.25rem] rounded-inner border border-[rgba(250,250,244,0.16)] bg-[rgba(12,13,10,0.5)] px-[0.6rem] pt-[0.5rem] pb-[0.6rem]" key={folder.id}>
+                <div className="playlists__head flex items-baseline gap-[0.5rem]">
+                  <span className="playlists__name min-w-0 flex-auto overflow-hidden truncate font-display text-[1.05rem] text-cream [.is-disabled_&]:text-[rgba(250,250,244,0.4)] [.is-disabled_&]:line-through">{folder.name}</span>
+                  <span className="playlists__count flex-none font-mono text-[0.62rem] font-bold uppercase tracking-[0.08em] text-yellow">{folderState(t, folder)}</span>
                 </div>
-                <p className="playlists__url">
+                <p className="playlists__url m-0 font-mono text-[0.62rem] text-[rgba(250,250,244,0.6)] [overflow-wrap:anywhere]">
                   {folder.imported
                     ? t("screen.folderImportedHint")
                     : folder.locked
@@ -501,14 +501,14 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
                       : t("screen.openFolderHint")}
                 </p>
                 {folder.error ? (
-                  <p className="config__hint is-warn" role="alert">
+                  <p className="dialog-hint is-warn" role="alert">
                     {folder.error === "permission"
                       ? t("screen.folderReconnectDenied")
                       : t("screen.folderReconnectFailed")}
                   </p>
                 ) : null}
-                <div className="playlists__foot">
-                  <span className="playlists__state" />
+                <div className="playlists__foot flex flex-wrap items-center gap-[0.4rem]">
+                  <span className="playlists__state min-w-0 flex-[1_1_12rem] text-[0.72rem] text-[rgba(250,250,244,0.76)]" />
                   {folder.locked ? (
                     <button
                       type="button"
@@ -536,16 +536,16 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
         ) : null}
 
         {library.pinned.length > 0 ? (
-          <div className="playlists__add">
-            <span className="config__label">{t("screen.pinnedLead")}</span>
-            <ul className="playlists">
+          <div className="playlists__add flex flex-col gap-[0.3rem]">
+            <span className="dialog-label">{t("screen.pinnedLead")}</span>
+            <ul className="playlists m-0 flex list-none flex-col gap-[0.4rem] p-0">
               {library.pinned.map((row) => (
-                <li className="playlists__row" key={row.url}>
-                  <div className="playlists__head">
-                    <span className="playlists__name">
+                <li className="playlists__row flex flex-col gap-[0.25rem] rounded-inner border border-[rgba(250,250,244,0.16)] bg-[rgba(12,13,10,0.5)] px-[0.6rem] pt-[0.5rem] pb-[0.6rem]" key={row.url}>
+                  <div className="playlists__head flex items-baseline gap-[0.5rem]">
+                    <span className="playlists__name min-w-0 flex-auto overflow-hidden truncate font-display text-[1.05rem] text-cream [.is-disabled_&]:text-[rgba(250,250,244,0.4)] [.is-disabled_&]:line-through">
                       {row.song?.title ?? fileName(row.url)}
                     </span>
-                    <span className="playlists__count">
+                    <span className="playlists__count flex-none font-mono text-[0.62rem] font-bold uppercase tracking-[0.08em] text-yellow">
                       {row.status === "ready"
                         ? t("screen.playlistOneSong")
                         : row.status === "loading"
@@ -553,15 +553,15 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
                           : t("screen.pinnedUnreadable")}
                     </span>
                   </div>
-                  <p className="playlists__url">{row.url}</p>
+                  <p className="playlists__url m-0 font-mono text-[0.62rem] text-[rgba(250,250,244,0.6)] [overflow-wrap:anywhere]">{row.url}</p>
                   {row.song ? (
-                    <p className="config__hint">{row.song.artist.name}</p>
+                    <p className="dialog-hint">{row.song.artist.name}</p>
                   ) : null}
                   {row.status === "error" && row.error ? (
-                    <p className="config__hint is-warn">{row.error}</p>
+                    <p className="dialog-hint is-warn">{row.error}</p>
                   ) : null}
-                  <div className="playlists__foot">
-                    <span className="playlists__state" />
+                  <div className="playlists__foot flex flex-wrap items-center gap-[0.4rem]">
+                    <span className="playlists__state min-w-0 flex-[1_1_12rem] text-[0.72rem] text-[rgba(250,250,244,0.76)]" />
                     <button
                       type="button"
                       className="band-btn"
@@ -595,7 +595,7 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
         ) : null}
 
         {copied === "error" ? (
-          <p className="config__hint is-warn" role="alert">
+          <p className="dialog-hint is-warn" role="alert">
             {t("screen.playlistCopyFailed")}
           </p>
         ) : null}
@@ -604,25 +604,25 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
         </p>
 
         {library.duplicates.length > 0 ? (
-          <p className="config__hint">
+          <p className="dialog-hint">
             {t("screen.playlistDuplicates", { count: library.duplicates.length })}
           </p>
         ) : null}
 
         <form
-          className="playlists__add"
+          className="playlists__add flex flex-col gap-[0.3rem]"
           onSubmit={(event) => {
             event.preventDefault();
             add();
           }}
         >
-          <label className="config__label" htmlFor="playlists-url">
+          <label className="dialog-label" htmlFor="playlists-url">
             {t("screen.addPlaylist")}
           </label>
-          <div className="playlists__add-row">
+          <div className="playlists__add-row flex gap-[0.4rem]">
             <input
               id="playlists-url"
-              className="jukebox__input"
+              className="jukebox__input min-w-0 flex-auto"
               type="text"
               inputMode="url"
               autoComplete="off"
@@ -643,31 +643,33 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
             </button>
           </div>
           {typed === "" ? null : invalid ? (
-            <p id="playlists-url-hint" className="config__hint is-warn">
+            <p id="playlists-url-hint" className="dialog-hint is-warn">
               {t("screen.playlistUrlInvalid")}
             </p>
           ) : (
-            <p id="playlists-url-hint" className="config__hint">
+            <p id="playlists-url-hint" className="dialog-hint">
               {t("screen.playlistHost", { host: host ?? "" })}
               {insecure ? ` ${t("screen.playlistInsecure")}` : null}
             </p>
           )}
         </form>
 
-        <div className="playlists__add">
-          <span className="config__label">{t("screen.foldersLead")}</span>
+        <div className="playlists__add flex flex-col gap-[0.3rem]">
+          <span className="dialog-label">{t("screen.foldersLead")}</span>
           <div
-            className={dropping ? "playlists__drop is-over" : "playlists__drop"}
+            className={`playlists__drop grid min-h-[3rem] place-items-center rounded-inner border border-dashed border-[rgba(250,250,244,0.3)] p-[0.5rem] text-center transition-[border-color,background-color] duration-[0.12s] ease-brand [&.is-over]:border-yellow [&.is-over]:bg-[rgba(255,212,0,0.1)] ${
+              dropping ? " is-over" : ""
+            }`}
             aria-live="polite"
           >
-            <span className="playlists__drop-note">
+            <span className="playlists__drop-note font-mono text-[0.6rem] font-bold uppercase tracking-[0.1em] text-[rgba(250,250,244,0.62)] [.is-over_&]:text-yellow">
               {dropping ? t("screen.importDropActive") : t("screen.importDrop")}
             </span>
           </div>
-          <div className="playlists__add-row playlists__import-row">
+          <div className="playlists__add-row playlists__import-row flex gap-[0.4rem]">
             <button
               type="button"
-              className="band-btn band-btn--primary"
+              className="band-btn band-btn--primary flex-auto"
               disabled={busy !== null || !importable}
               onClick={() => fileInput.current?.click()}
               data-sound="open"
@@ -676,7 +678,7 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
             </button>
             <button
               type="button"
-              className="band-btn"
+              className="band-btn flex-auto"
               disabled={busy !== null || !importable}
               onClick={() => folderInput.current?.click()}
               data-sound="open"
@@ -684,11 +686,11 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
               {t("screen.importFolder")}
             </button>
           </div>
-          <p className="config__hint">
+          <p className="dialog-hint">
             {importable ? t("screen.importHint") : t("screen.importNoSupport")}
           </p>
-          <div className="playlists__add-row">
-            <p className="config__hint">
+          <div className="playlists__add-row flex gap-[0.4rem]">
+            <p className="dialog-hint">
               {supportsFolders() ? t("screen.openFolderHint") : t("screen.folderNoSupport")}
             </p>
             <button
@@ -702,18 +704,18 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
             </button>
           </div>
           {busy !== null ? (
-            <p className="config__hint" role="status" aria-live="polite">
+            <p className="dialog-hint" role="status" aria-live="polite">
               {progress}
             </p>
           ) : null}
           {problem !== null ? (
-            <p className="config__hint is-warn" role="alert">
+            <p className="dialog-hint is-warn" role="alert">
               {importProblem(t, problem)}
             </p>
           ) : null}
         </div>
 
-        <div className="config__actions">
+        <div className="config__actions dialog-actions">
           <button type="button" className="band-btn" onClick={() => library.refresh()}>
             {t("screen.refreshAll")}
           </button>

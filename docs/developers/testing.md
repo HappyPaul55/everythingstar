@@ -1,7 +1,7 @@
 ---
 title: Testing
 description: "The gates a change has to pass: the unit suite, the browser suite and its rule, the documentation captures, the build gates, and what only a real browser can prove."
-updated: "2026-11-01"
+updated: "2026-11-02"
 order: 13
 ---
 
@@ -27,6 +27,8 @@ bun run lint             # oxlint — the lint gate
 bun run typecheck:tests  # tsc over src/**/*.test.ts (tsconfig.test.json)
 bun test                 # unit tests (bun test)
 bun run test:e2e         # browser tests (Playwright, starts the dev server)
+bun run visual           # compare the static screens against a local baseline
+bun run visual:baseline  # write that baseline (not committed)
 bun run test:pwa         # installs the worker against a build, then reloads offline
 bun run knip             # dead-code check (knip)
 bun run budget           # dist/, audio and initial-JS size caps
@@ -163,6 +165,28 @@ a page, and a narrowed shot is declared. The mock is the published FOSS library:
 is offline. [Writing docs](writing-docs.md#screenshots) is the authoring rule: which
 variants a shot is captured in, how a frame is narrowed, and how a test drives its
 screen.
+
+## A styling change
+
+`bun run visual` is the guard for a restyle: `tests/e2e/visual.spec.ts` drives the
+static screens — the welcome, the menu, the jukebox, the band setup, the dialogs, the
+results, the pause, the practice chooser and the charter's editor — with the
+documentation's own drivers, and compares each viewport against a baseline in
+`.cache/visual/`. That folder is ignored, like every capture in this repository, and a
+missing baseline **skips** the shot, so CI and a fresh checkout never fail on it. The
+workflow is one command on the branch, then one command after each step:
+
+```bash
+bun run visual:baseline   # arming the guard, before the first change
+bun run visual            # after a change; a diff writes expected/actual/diff under test-results/
+```
+
+A few screens are deliberately absent: anything whose pixels move with the song's
+clock (the highway's notes, the piano roll, the progress bar, the stage's lights) is a
+picture of a moment, not of a layout, and the charter picker's list is read
+asynchronously, so its picture is of a load. Those keep their behavioural specs and
+`play-style.spec.ts` instead. Re-take a baseline only for a screen whose look you
+meant to change, and say so in the pull request.
 
 ## The cost of a frame
 

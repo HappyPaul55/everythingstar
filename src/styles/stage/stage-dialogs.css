@@ -1,0 +1,207 @@
+/* stage-dialogs: the vocabulary the game's dialogs and the stage's corner share.
+ *
+ * Everything else about a dialog, the jukebox or the options page is a Tailwind
+ * utility in its component. Two kinds of rule remain, and neither styles one
+ * screen of ours:
+ *
+ * 1. **The vocabulary** below — the few looks that repeat across the game's
+ *    dialogs and the stage's corner. They are `@utility` blocks, so the markup
+ *    carries the names and a variant (`[&:hover]:chip-btn-on`) says a state.
+ * 2. **`slot__option`**, the game's option tile: one class name spanning six
+ *    components and a test hook (`.slot__option[aria-pressed="true"]`), so it is
+ *    a utility rather than a shared const passed at each call site.
+ */
+@utility chip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.34rem 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-cream);
+  background: rgba(12, 13, 10, 0.8);
+  border: 1px solid rgba(250, 250, 244, 0.28);
+  border-radius: var(--radius-inner);
+  cursor: pointer;
+  pointer-events: auto;
+}
+/* The lit chip: a press, a keyboard focus or the dev panel being open. */
+@utility chip-btn-on {
+  color: var(--color-ink);
+  background: var(--color-yellow);
+  border-color: var(--color-yellow);
+}
+
+/* The dev panel's one-of-N choice: a small tile that fills as it is chosen. */
+@utility step-option {
+  min-width: 1.6rem;
+  padding: 0.2rem 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--color-cream);
+  background: transparent;
+  border: 1px solid rgba(250, 250, 244, 0.24);
+  border-radius: var(--radius-inner);
+  cursor: pointer;
+  transition:
+    background-color 0.18s var(--ease-brand),
+    border-color 0.18s var(--ease-brand),
+    color 0.18s var(--ease-brand);
+
+  &:hover {
+    border-color: var(--color-yellow);
+    color: var(--color-yellow);
+  }
+  &[aria-pressed="true"] {
+    background: var(--color-yellow);
+    border-color: var(--color-yellow);
+    color: var(--color-ink);
+  }
+  &:disabled {
+    opacity: 0.4;
+    cursor: var(--cursor-not-allowed), not-allowed;
+  }
+}
+
+/* The game's option tile: one choice in a row of choices — an instrument, a
+   level, a device, a mode. It is used by `Options`, `Band`, `SlotSettings`,
+   `CalibrationDialog` and `PauseMenu`, and the tests read `.slot__option`, so the
+   name stays a utility instead of a const repeated at each call site. `is-active`
+   and `is-vocals` are state hooks with no declarations of their own; the tile
+   keys off them. */
+@utility slot__option {
+  padding: 0.2rem 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-cream);
+  background: transparent;
+  border: 1px solid rgba(250, 250, 244, 0.24);
+  border-radius: var(--radius-inner);
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  /* An active tile keeps its ink text: a hover that recoloured it would be yellow
+     on yellow. It lightens instead, so it still reads as hovered. */
+  &:hover:not(:disabled):not(.is-active),
+  :root:not([data-game-input="pointer"]) &:focus-visible:not(:disabled):not(.is-active),
+  &[data-nav-focus]:not(:disabled):not(.is-active) {
+    color: var(--color-yellow);
+    border-color: var(--color-yellow);
+  }
+  &.is-active {
+    color: var(--color-ink);
+    background: var(--color-yellow);
+    border-color: var(--color-yellow);
+  }
+  &.is-active:hover:not(:disabled),
+  :root:not([data-game-input="pointer"]) &.is-active:focus-visible:not(:disabled),
+  &.is-active[data-nav-focus]:not(:disabled) {
+    background: var(--color-cream);
+    border-color: var(--color-cream);
+  }
+  /* Vocals are the blue part wherever a part is offered — sung or typed, pitched
+     or lyrics-only. Every instrument keeps the default yellow. */
+  &.is-vocals {
+    color: var(--color-accent);
+    border-color: color-mix(in srgb, var(--color-accent) 55%, transparent);
+  }
+  &.is-vocals:hover:not(:disabled):not(.is-active),
+  :root:not([data-game-input="pointer"]) &.is-vocals:focus-visible:not(:disabled):not(.is-active),
+  &.is-vocals[data-nav-focus]:not(:disabled):not(.is-active) {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  &.is-vocals.is-active {
+    color: var(--color-ink);
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  &.is-vocals.is-active:hover:not(:disabled) {
+    background: var(--color-cream);
+    border-color: var(--color-cream);
+  }
+  /* What the song has no part for is still on the board, out of reach: a sideways
+     glance says why it is disabled, which hiding it would not. It never keeps the
+     active fill, or the label would be ink on yellow on yellow. */
+  &:disabled {
+    color: rgba(250, 250, 244, 0.28);
+    background: transparent;
+    border-color: rgba(250, 250, 244, 0.12);
+    cursor: var(--cursor-not-allowed), not-allowed;
+  }
+}
+
+/* A dialog's panel: the card the shell puts over the screen. The width is the
+   default one; the wide variant below is the jukebox's and the charter's too. */
+@utility dialog-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: min(26rem, 100%);
+  max-height: 100%;
+  overflow: auto;
+  padding: clamp(0.8rem, 2vmin, 1.3rem);
+  color: var(--color-cream);
+  background: rgba(20, 21, 17, 0.96);
+  border: 1px solid rgba(250, 250, 244, 0.18);
+  border-radius: var(--radius-brand);
+  box-shadow: 0 1.4rem 3rem rgba(0, 0, 0, 0.45);
+}
+/* The wider panel a URL wants. It keeps its own name because the jukebox and the
+   charter pass it as `panelClassName`; it is declared after the base so it wins. */
+@utility config__panel--wide {
+  width: min(38rem, 100%);
+}
+
+/* A dialog's opening line, in the display face: it is a heading said once. */
+@utility dialog-lead {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  line-height: 1.15;
+  color: var(--color-yellow);
+}
+/* The small print under it: one size for every note a dialog makes, and the warn
+   variant re-points its colour rather than restating the type. */
+@utility dialog-hint {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.03em;
+  color: rgba(250, 250, 244, 0.6);
+
+  &.is-warn {
+    color: var(--color-yellow);
+  }
+}
+@utility dialog-label {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(250, 250, 244, 0.6);
+}
+@utility dialog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* Outside the layer: keyframes are not a component style.
+   `band-spin` is the menu's arrow, which lives in stage-screens. */
+@keyframes band-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}

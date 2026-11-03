@@ -21,7 +21,7 @@ export function StageFullscreen({ fullscreen }: { fullscreen: FullscreenState })
   return (
     <button
       type="button"
-      className="stage-fullscreen"
+      className="stage-fullscreen chip-btn min-h-[2.75rem] rounded-t-none border-t-0 [&:hover]:chip-btn-on [&[data-nav-focus]]:chip-btn-on [:root:not([data-game-input=pointer])_&:focus-visible]:chip-btn-on"
       onClick={fullscreen.enter}
       data-sound="select"
     >

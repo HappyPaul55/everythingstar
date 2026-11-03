@@ -404,10 +404,10 @@ export function SlotSettings({
       {learning ? (
         <>
           {/* One step at a time, in the words of the thing being pressed for. */}
-          <p className="config__lead" role="status" aria-live="polite">
+          <p className="dialog-lead" role="status" aria-live="polite">
             {stepLabel(t, step, slot.kind)}
           </p>
-          <p className={learning.taken ? "config__hint is-warn" : "config__hint"}>
+          <p className={learning.taken ? "dialog-hint is-warn" : "dialog-hint"}>
             {learning.taken
               ? t("screen.learnTaken")
               : learning.device.on === "keyboard"
@@ -416,16 +416,16 @@ export function SlotSettings({
                   ? t("screen.learnMidi")
                   : t("screen.learnPad")}
           </p>
-          <ol className="config__steps" ref={stepsList} tabIndex={-1}>
+          <ol className="config__steps m-0 flex list-none flex-col gap-[0.15rem] p-0" ref={stepsList} tabIndex={-1}>
             {learning.steps.map((entry, at) => (
               <li
                 key={stepKey(entry)}
-                className={
-                  at < learning.controls.length ? "config__step is-done" : "config__step"
-                }
+                className={`config__step flex items-baseline gap-[0.5rem] rounded-inner bg-[rgba(12,13,10,0.5)] px-[0.35rem] py-[0.2rem] [&.is-done]:bg-[rgba(255,212,0,0.14)] ${
+                  at < learning.controls.length ? " is-done" : ""
+                }`}
               >
-                <span className="config__step-name">{stepLabel(t, entry, slot.kind)}</span>
-                <span className="config__step-value">
+                <span className="config__step-name font-mono text-[0.6rem] tracking-[0.03em] text-[rgba(250,250,244,0.7)]">{stepLabel(t, entry, slot.kind)}</span>
+                <span className="config__step-value ml-auto font-mono text-[0.62rem] font-bold text-cream [.is-done_&]:text-yellow">
                   {at < learning.controls.length
                     ? controlLabel(
                         t,
@@ -440,7 +440,7 @@ export function SlotSettings({
               </li>
             ))}
           </ol>
-          <div className="config__actions" ref={actions} tabIndex={-1}>
+          <div className="config__actions dialog-actions" ref={actions} tabIndex={-1}>
             {step && stepIsOptional(step) ? (
               <button type="button" className="band-btn" onClick={skip}>
                 {t("screen.learnSkip")}
@@ -459,8 +459,8 @@ export function SlotSettings({
         </>
       ) : (
         <>
-          <p className="config__label">{t("screen.device")}</p>
-          <div className="config__devices" role="group" aria-label={t("screen.device")}>
+          <p className="dialog-label">{t("screen.device")}</p>
+          <div className="config__devices grid grid-cols-2 gap-[0.25rem]" role="group" aria-label={t("screen.device")}>
             {devices.map((entry, at) => (
               <button
                 key={entry.key}
@@ -485,8 +485,8 @@ export function SlotSettings({
             <p
               className={
                 midiHint === "screen.midiInputs" || midiHint === "screen.midiAsking"
-                  ? "config__hint"
-                  : "config__hint is-warn"
+                  ? "dialog-hint"
+                  : "dialog-hint is-warn"
               }
             >
               {midiHint === "screen.midiInputs"
@@ -497,22 +497,22 @@ export function SlotSettings({
             </p>
           ) : null}
           {!isMelodyKind(slot.kind) && missingPad !== null ? (
-            <p className="config__hint is-warn">
+            <p className="dialog-hint is-warn">
               {t("screen.padNotConnected", { n: missingPad })}
             </p>
           ) : null}
 
           {isMelodyKind(slot.kind) ? (
-            <p className="config__hint">{t("screen.deviceWords")}</p>
+            <p className="dialog-hint">{t("screen.deviceWords")}</p>
           ) : (
             <>
-              <p className="config__label">{t("screen.mapping")}</p>
-              <p className="config__keys">
+              <p className="dialog-label">{t("screen.mapping")}</p>
+              <p className="config__keys m-0 rounded-inner border border-[rgba(250,250,244,0.18)] bg-[rgba(12,13,10,0.6)] px-[0.5rem] py-[0.35rem] font-mono text-[0.68rem] tracking-[0.04em] text-cream">
                 {controller?.on === "none"
                   ? t("screen.mappingNone")
                   : (seatKeys ?? t("screen.mappingPreset"))}
               </p>
-              <div className="config__actions">
+              <div className="config__actions dialog-actions">
                 {/* Learning needs a device that is there to answer: a pad that is
                     not connected cannot be learned, and offering the button anyway
                     starts a session nothing can complete. */}
@@ -565,7 +565,7 @@ export function SlotSettings({
                   </button>
                 ) : null}
               </div>
-              <p className="config__hint">
+              <p className="dialog-hint">
                 {t("screen.learnHint", { count: columns ?? fretCount(slot.kind) })}
               </p>
             </>

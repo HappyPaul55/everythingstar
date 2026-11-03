@@ -1,0 +1,123 @@
+/* ------------------------------------------------------------------
+   The theme
+   One file for every token the site and the game draw from. Tailwind v4
+   turns each of these into both a CSS variable and a utility, so a value
+   that is declared here is the *only* place it can be said: a colour, a
+   radius, a type size, a shadow or an animation that is written anywhere
+   else is a drift the stylesheet gate cannot see.
+
+   Imported by `global.css`, which every page and every island carries, so the
+   site, the game and the charter agree on one palette.
+------------------------------------------------------------------ */
+@theme {
+  /* --- Ink, paper and the one accent ---------------------------- */
+  --color-ink: #0c0d0a;
+  --color-ink-soft: #43463a;
+  --color-muted: #62655a;
+  --color-paper: #f4f4ec;
+  --color-paper-2: #e7e8dd;
+  --color-cream: #fbfbf3;
+  --color-yellow: #ffd400;
+  --color-yellow-deep: #d9b900;
+  /* One extra accent, used sparingly (the slash lane, small spray details). */
+  --color-accent: #22e0ff;
+  --color-accent-deep: #0bb6d4;
+  /* A dropped note. */
+  --color-danger: #ff4d4f;
+  --color-line-ink: rgba(250, 250, 244, 0.16);
+  --color-line-ink-strong: rgba(250, 250, 244, 0.36);
+  /* The paper pages' hairlines: a rule, a card edge, a table row. */
+  --color-line: rgba(12, 13, 10, 0.14);
+  --color-line-strong: rgba(12, 13, 10, 0.3);
+
+  /* --- The game's own surfaces ---------------------------------- */
+  /* The charter's workspace, its sticky letter rail and the panel a chart is
+     drawn in. They are the stage's ink, a shade apart, so the tool reads as the
+     same place without being a flat black rectangle. */
+  --color-charter-menu: #171a11;
+  --color-charter-pane: #11140d;
+  /* Recording: the one action in the tool that is not the brand's yellow. */
+  --color-record: #ff6b6b;
+  --color-record-soft: #ff9a9a;
+
+  /* --- Chart colours -------------------------------------------- */
+  /* The five frets, in the classic five-fret order — green, red, yellow, blue,
+     orange — because anyone who has held one of these controllers already knows
+     them, and an open note is its purple bar. A deliberate exception to the brand
+     palette: a note's column is carried by position too, so this is recognition,
+     never a dependency. The charter's notes use the same five so a chart drawn in
+     the editor looks like the chart that is played. */
+  --color-fret-0: #35a03a;
+  --color-fret-1: #d5322e;
+  --color-fret-2: #f0c419;
+  --color-fret-3: #2d78d2;
+  --color-fret-4: #ef8a1f;
+  --color-fret-open: #8b5cc7;
+  /* Instrument dots in the charter's pane headers. */
+  --color-instrument-guitar: #4ade80;
+  --color-instrument-bass: #60a5fa;
+  --color-instrument-drums: #fb923c;
+  --color-instrument-keys: #c084fc;
+  --color-instrument-dance: #f472b6;
+  /* The charter's notes. Its editor is a drafting board rather than the highway,
+     so its five are the lighter instrument hues: a note being drawn reads as a
+     mark on paper, not as something about to be hit. */
+  --color-note-0: #4ade80;
+  --color-note-1: #f87171;
+  --color-note-2: #facc15;
+  --color-note-3: #60a5fa;
+  --color-note-4: #fb923c;
+  --color-note-open: #f4f4ec;
+
+  /* --- Type ------------------------------------------------------ */
+  --font-display: "Permanent Marker", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* The label scale. Every mono/uppercase chip, kicker and read-out in the
+     product is one of these and nothing else; a size invented beside a rule is
+     how two labels on one screen end up a pixel apart. */
+  --text-kicker: 0.68rem;
+  --text-kicker--line-height: 1.2;
+  --text-kicker-tight: 0.6rem;
+  --text-label: 0.74rem;
+  --text-readout: 0.78rem;
+
+  /* --- Radius --------------------------------------------------- */
+  /* The radius scale: a surface, something small sitting inside one, and a pill.
+     Everything round uses one of these three. */
+  --radius-brand: 8px;
+  --radius-inner: 4px;
+  --radius-pill: 999px;
+
+  /* --- Breakpoints ----------------------------------------------
+     The stage's layouts are three-tier: a phone, a narrow shelf (two columns)
+     and a wide desk. Naming the two boundaries keeps `40rem`/`62rem` out of the
+     markup, where a media query written as an arbitrary variant is fifty
+     characters on every class it touches. */
+  --breakpoint-narrow: 40rem;
+  --breakpoint-wide: 62rem;
+
+  /* --- Motion ---------------------------------------------------- */
+  --ease-brand: cubic-bezier(0.22, 1, 0.36, 1);
+  /* The stage's short animations. Tailwind turns each into an `animate-*`
+     utility; a name that is used once still belongs here, because the keyframes
+     and the element's own duration must be changed together. */
+  --animate-highway-rise: highway-rise 1.1s var(--ease-brand) both;
+  --animate-hero-pulse: hero-pulse 1.6s ease-in-out infinite;
+  --animate-hit-burst: hit-burst 320ms var(--ease-brand) both;
+  --animate-menu-float: menu-float 6s ease-in-out infinite;
+  --animate-lyrics-drop: lyrics-drop 220ms var(--ease-brand) both;
+  --animate-flare-drift: flare-drift 14s linear infinite;
+
+  /* --- Shadows --------------------------------------------------- */
+  /* The sticker's hard offset shadow, and the lift it takes on hover. Written
+     once because three motifs (`sticker`, the home page's cards and the menu's
+     chips) share the same geometry. */
+  --shadow-sticker: 6px 6px 0 0 var(--color-ink);
+  --shadow-sticker-lift: 9px 9px 0 0 var(--color-yellow);
+  --shadow-sticker-accent: 6px 6px 0 0 var(--color-accent);
+  --shadow-sticker-accent-lift: 9px 9px 0 0 var(--color-accent);
+  --shadow-blot: 3px 3px 0 0 rgba(12, 13, 10, 0.9);
+  --shadow-menu: 0 0.9rem 2rem rgba(0, 0, 0, 0.45);
+}

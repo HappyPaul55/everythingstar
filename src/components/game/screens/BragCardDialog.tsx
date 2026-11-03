@@ -178,16 +178,16 @@ export function BragCardDialog({ run, onClose }: Props) {
     <NativeDialog
       title={t("brag.title")}
       onClose={onClose}
-      panelClassName="brag-panel"
+      panelClassName="w-[min(46rem,100%)]"
       initialFocus="[data-dialog-focus]"
     >
-      <p className="config__lead">{t("brag.title")}</p>
-      <p className="config__hint">{t("brag.lede")}</p>
+      <p className="dialog-lead">{t("brag.title")}</p>
+      <p className="dialog-hint">{t("brag.lede")}</p>
 
-      <div className="brag-preview">
+      <div className="brag-preview overflow-hidden rounded-inner border border-[rgba(250,250,244,0.18)] bg-[rgba(12,13,10,0.7)]">
         {preview ? (
           <img
-            className="brag-preview__image"
+            className="brag-preview__image block h-auto w-full"
             src={preview}
             alt={t("brag.previewAlt", { title: card.title })}
             width={BRAG_WIDTH}
@@ -197,7 +197,7 @@ export function BragCardDialog({ run, onClose }: Props) {
         ) : null}
       </div>
 
-      <div className="config__actions brag-actions">
+      <div className="brag-actions config__actions dialog-actions [&_.band-btn]:min-h-[2.75rem]">
         <button
           type="button"
           className="band-btn band-btn--primary"
@@ -227,7 +227,7 @@ export function BragCardDialog({ run, onClose }: Props) {
         </button>
       </div>
 
-      <p className="config__hint" role="status" aria-live="polite">
+      <p className="dialog-hint" role="status" aria-live="polite">
         {note}
       </p>
     </NativeDialog>

@@ -30,17 +30,24 @@ const locale = localeFromPath(Astro.url.pathname);
 const t = tFor(locale);
 const groups = docGroups(await getCollection("docs"));
 const pages = groups.find((group) => group.section === section)?.docs ?? [];
+
+const pageLink =
+  "block rounded-inner border-l-2 border-transparent px-2 py-[0.28rem] text-[0.86rem] leading-[1.35] text-ink-soft no-underline hover:bg-paper-2 hover:text-ink aria-[current=page]:border-l-yellow aria-[current=page]:bg-paper-2 aria-[current=page]:font-semibold aria-[current=page]:text-ink";
 ---
 
-<aside class="docs-side">
-  <a class="docs-side__label" href={localePath(locale, "/docs")}>{t("docs.title")}</a>
-  <nav class="docs-side__pages" aria-label={t(SECTION_LABELS[section])}>
-    <p class="docs-side__group">{t(SECTION_LABELS[section])}</p>
-    <ul class="docs-side__list">
+<aside class="hidden min-w-0 md:sticky md:top-5 md:block">
+  <a
+    class="mb-[0.6rem] inline-block font-mono text-[0.68rem] tracking-[0.12em] text-muted uppercase no-underline hover:text-ink"
+    href={localePath(locale, "/docs")}>{t("docs.title")}</a
+  >
+  <nav aria-label={t(SECTION_LABELS[section])}>
+    <p class="mt-[1.4rem] mb-[0.35rem] font-display text-[1.02rem]">{t(SECTION_LABELS[section])}</p>
+    <ul class="m-0 grid list-none gap-[0.1rem] p-0">
       {
         pages.map((page) => (
           <li>
             <a
+              class={pageLink}
               href={docHref(page.id, locale)}
               aria-current={page.id === current ? "page" : undefined}
             >

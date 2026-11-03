@@ -22,6 +22,11 @@ interface Props {
   onCreate: (instrument: InstrumentKind, difficulty: Difficulty, role?: LaneRole) => void;
 }
 
+/** A labelled control: the label over the input, both hugging their content. */
+const field = "flex min-w-0 flex-col gap-[0.15rem]";
+const label = "charter-label";
+const message = "my-[0.6rem] text-[0.8rem] text-[rgba(251,251,243,0.55)]";
+
 /**
  * Every chart the song carries, and the eight that can be up at once.
  *
@@ -49,30 +54,33 @@ export function CharterChartsDialog({
       panelClassName="config__panel--wide"
       initialFocus="[data-dialog-focus]"
     >
-      <div className="charter-dialog">
-        <p className="charter-message">
+      <div className="flex w-full max-h-[min(70dvh,38rem)] flex-col gap-[0.6rem] overflow-auto">
+        <p className={message}>
           {t("charter.chartCount", { count: charts.length })} ·{" "}
           {t("charter.visible", { count: visible.size })}
         </p>
-        <div className="charter-chart-list">
+        <div className="flex max-h-[18rem] flex-col overflow-auto rounded-inner border border-line-ink">
           {charts.map((chart) => (
             <div
               key={chart.key}
-              className={["charter-chart-row", chart.key === activeKey ? "is-active" : ""]
+              className={[
+                "flex items-center gap-[0.4rem] border-t border-t-[rgba(251,251,243,0.07)] px-[0.35rem] py-[0.25rem] first:border-t-0",
+                chart.key === activeKey && "bg-[rgba(255,212,0,0.08)]",
+              ]
                 .filter(Boolean)
                 .join(" ")}
             >
               <button
                 type="button"
-                className="charter-chart-row__name"
+                className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 border-0 bg-transparent text-left font-mono text-[0.64rem] text-cream uppercase"
                 onClick={() => onActivate(chart.key)}
               >
                 {chartLabel(chart)}
-                <span>{chart.notes.length}</span>
+                <span className="ml-auto text-[rgba(251,251,243,0.4)]">{chart.notes.length}</span>
               </button>
               <button
                 type="button"
-                className="charter-btn charter-btn--small"
+                className="charter-btn charter-btn-small"
                 aria-pressed={visible.has(chart.key)}
                 onClick={() => onToggle(chart.key)}
               >
@@ -82,11 +90,14 @@ export function CharterChartsDialog({
           ))}
         </div>
 
-        <h3 className="charter-subhead">{t("charter.newChart")}</h3>
-        <div className="charter-new">
-          <label className="charter-field">
-            <span>{t("charter.instrument")}</span>
+        <h3 className="mt-[0.3rem] mb-0 font-mono text-[0.66rem] tracking-[0.08em] text-yellow uppercase">
+          {t("charter.newChart")}
+        </h3>
+        <div className="flex flex-wrap items-end gap-[0.4rem]">
+          <label className={`${field} basis-[8rem]`}>
+            <span className={label}>{t("charter.instrument")}</span>
             <select
+              className="charter-input"
               value={instrument}
               onChange={(event) => setInstrument(event.target.value as InstrumentKind)}
             >
@@ -98,9 +109,13 @@ export function CharterChartsDialog({
             </select>
           </label>
           {instrument === "guitar" ? (
-            <label className="charter-field">
-              <span>{t("charter.role")}</span>
-              <select value={role} onChange={(event) => setRole(event.target.value as LaneRole | "")}>
+            <label className={`${field} basis-[8rem]`}>
+              <span className={label}>{t("charter.role")}</span>
+              <select
+                className="charter-input"
+                value={role}
+                onChange={(event) => setRole(event.target.value as LaneRole | "")}
+              >
                 <option value="">{t("charter.none")}</option>
                 {LANE_ROLES.map((entry) => (
                   <option key={entry} value={entry}>
@@ -110,9 +125,10 @@ export function CharterChartsDialog({
               </select>
             </label>
           ) : null}
-          <label className="charter-field">
-            <span>{t("charter.difficulty")}</span>
+          <label className={`${field} basis-[8rem]`}>
+            <span className={label}>{t("charter.difficulty")}</span>
             <select
+              className="charter-input"
               value={difficulty}
               onChange={(event) => setDifficulty(event.target.value as Difficulty)}
             >
@@ -125,14 +141,14 @@ export function CharterChartsDialog({
           </label>
           <button
             type="button"
-            className="charter-btn charter-btn--primary"
+            className="charter-btn charter-btn-primary"
             data-dialog-focus
             onClick={() => onCreate(instrument, difficulty, role || undefined)}
           >
             {t("charter.create")}
           </button>
         </div>
-        <p className="charter-message">{t("charter.maxVisible")}</p>
+        <p className={message}>{t("charter.maxVisible")}</p>
       </div>
     </NativeDialog>
   );

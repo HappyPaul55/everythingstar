@@ -6,6 +6,55 @@ import type { TypingLevel } from "../../../lib/game/typing";
 import { useClockMs } from "./StageClock";
 import { TypeWord } from "./TypeWord";
 import type { MelodyTyping } from "./useTyping";
+import { PART_RULE, PART_TEXT, partClass } from "./partClasses";
+
+/**
+ * The view's box: a container in both axes (the words and its chip are sized in
+ * `cqmin`), centred, and see-through so the backdrop is the room it sits in. It
+ * is one of the two things the run's entrance drops from the top.
+ */
+const VIEW = [
+  "lyrics-view relative flex flex-none flex-col justify-center gap-[1.5cqmin] overflow-hidden px-[5cqmin] py-[2.5cqmin] min-h-0 [container-type:size]",
+  "animate-[lyrics-drop_var(--entrance-slide,650ms)_cubic-bezier(0.22,0.61,0.36,1)_var(--entrance-lead,1200ms)_both] motion-reduce:[animation-delay:0ms]",
+].join(" ");
+
+/**
+ * The words: a stack for a solo, and side by side for a duet, each block with the
+ * rule and the number that say whose words they are. No room for two blocks to be
+ * read side by side stacks them again.
+ */
+const LINES_SOLO = "lyrics-view__lines flex flex-col gap-[1.4cqmin] text-center";
+const LINES_DUET =
+  "lyrics-view__lines flex flex-row items-stretch gap-[7cqmin] text-left @max-[34rem]:flex-col @max-[34rem]:gap-[3cqmin]";
+
+/**
+ * One block per voice. A solo has the one it always had; a duet sets them side by
+ * side, separated by the stage's own gutter of space and marked by a rule in that
+ * voice's colour. A line both sing simply appears in both blocks.
+ *
+ * A rising line starts half a line lower (see `lyric-rising`); the gap has to hold
+ * that shift or it lands on the line below. The line's own font is 7cqmin here
+ * (5cqmin in a duet), so 3.6cqmin clears both.
+ */
+const PART = "lyrics-view__part flex flex-col gap-[3.6cqmin]";
+const PART_DUET = "flex-1 basis-0 border-l-[3px] pl-[3.2cqmin]";
+
+/** Which voice reads the line, in a duet. */
+const TAG =
+  "lyrics-view__tag mb-[0.35em] font-mono text-[clamp(0.5rem,2.2cqmin,0.85rem)] font-bold tracking-[0.1em]";
+
+/**
+ * One line, still to be sung, being sung, or done. A line still to be sung is
+ * drawn in the full colour and simply faded back, so it rises to exactly the look
+ * it will have when it starts — the fade, not a colour change, tells its moment
+ * from the one after it.
+ */
+const LINE =
+  "lyrics-view__line font-display leading-[1.12] transition-[color] duration-300 ease-brand on-video";
+const LINE_SOLO = "text-[clamp(1rem,7cqmin,3.4rem)]";
+const LINE_DUET = "text-[clamp(0.85rem,5cqmin,2.2rem)]";
+const LINE_RESTING = "text-[rgba(250,250,244,0.4)]";
+const LINE_SINGING = "text-cream";
 
 /**
  * The lyrics view: a song whose words carry no pitch, a pitched song with only
@@ -50,7 +99,7 @@ export function LyricsView({
     [track.melody.lines, parts, now],
   );
 
-  const classes = ["lyrics-view"];
+  const classes = [VIEW];
   if (duet) classes.push("lyrics-view--duet");
 
   return (
@@ -64,27 +113,46 @@ export function LyricsView({
       aria-label={t("band.melody")}
     >
       {words > 0 ? (
-        <span className="lyrics-view__chip">
+        <span className="lyrics-view__chip chip">
           {t(typing.typists.length > 0 ? "band.typists" : "band.singers", {
             count: words,
           })}
         </span>
       ) : null}
-      <div className="lyrics-view__lines">
+      <div className={duet ? LINES_DUET : LINES_SOLO}>
         {rows.map((row) => (
-          <div key={row.part} className={`lyrics-view__part is-part-${row.part}`}>
-            {duet ? <span className="lyrics-view__tag">{row.part + 1}</span> : null}
+          <div
+            key={row.part}
+            className={[
+              PART,
+              duet ? PART_DUET : "",
+              duet ? partClass(PART_RULE, row.part) : "",
+              `is-part-${row.part}`,
+            ]
+              .filter(Boolean)
+              .join(" ")}
+          >
+            {duet ? (
+              <span className={`${TAG} ${partClass(PART_TEXT, row.part)}`}>
+                {row.part + 1}
+              </span>
+            ) : null}
             {row.lines.map((line) => {
               const sounding = line === row.activeLine && now < line.endMs;
               const rising = line === row.nextLine;
               const word = sounding ? activeWordIndex(line, now) : -1;
-              const classes = ["lyrics-view__line"];
+              const classes = [
+                LINE,
+                duet ? LINE_DUET : LINE_SOLO,
+                sounding || rising ? LINE_SINGING : LINE_RESTING,
+                rising ? "lyric-rising" : "",
+              ];
               if (sounding) classes.push("is-active");
               if (rising) classes.push("is-rising");
               return (
                 <p
                   key={line.timeMs}
-                  className={classes.join(" ")}
+                  className={classes.filter(Boolean).join(" ")}
                   style={
                     rising
                       ? ({
@@ -100,6 +168,8 @@ export function LyricsView({
                         key={index}
                         className={[
                           "lyrics-view__word",
+                          sung ? "word-active" : "",
+                          item.hero ? "word-hero" : "",
                           sung ? "is-active" : "",
                           item.hero ? "is-hero" : "",
                         ]

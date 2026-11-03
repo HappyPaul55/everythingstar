@@ -183,7 +183,10 @@ const canonicalPath = path ?? Astro.url.pathname;
     <ServiceWorker />
   </head>
   <body>
-    <a class="skip-link no-print" href={skipHref}>{t("common.skipToContent")}</a>
+    <a
+      class="skip-link no-print fixed top-[-100%] left-4 z-100 rounded-brand bg-yellow px-5 py-3 font-mono text-[0.8rem] font-bold text-ink transition-[top] duration-200 ease-brand focus:top-4"
+      href={skipHref}>{t("common.skipToContent")}</a
+    >
 
     <p class="print-only print-masthead">
       {site.name} · {site.url.replace(/^https?:\/\//, "").replace(/\/$/, "")}

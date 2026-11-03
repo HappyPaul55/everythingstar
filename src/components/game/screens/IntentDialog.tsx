@@ -40,7 +40,7 @@ export function IntentDialog({ request, onAccept, onDismiss }: Props) {
         panelClassName="intent"
         initialFocus="[data-intent-primary]"
       >
-        <p className="config__lead">{t(reason)}</p>
+        <p className="dialog-lead">{t(reason)}</p>
         <Actions>
           <button
             type="button"
@@ -86,15 +86,15 @@ export function IntentDialog({ request, onAccept, onDismiss }: Props) {
     >
       {request.phase === "ask" ? (
         <>
-          <p className="config__lead">{t("screen.intentFrom", { host })}</p>
-          <p className="config__hint">
+          <p className="dialog-lead">{t("screen.intentFrom", { host })}</p>
+          <p className="dialog-hint">
             {t(kind === "playlist" ? "screen.intentPlaylistHint" : "screen.intentSongHint")}
           </p>
         </>
       ) : null}
 
       {working ? (
-        <p className="config__lead" role="status">
+        <p className="dialog-lead" role="status">
           {t("screen.intentAdding")}
         </p>
       ) : null}
@@ -160,10 +160,10 @@ function Outcome({
     case "playlist":
       return (
         <>
-          <p className="config__lead">
+          <p className="dialog-lead">
             {t("screen.intentPlaylistAdded", { name: outcome.name ?? host })}
           </p>
-          <p className="config__hint">
+          <p className="dialog-hint">
             {outcome.count === 1
               ? t("screen.playlistOneSong")
               : t("screen.playlistSongs", { count: outcome.count })}
@@ -175,17 +175,17 @@ function Outcome({
       );
     case "song":
       return (
-        <p className="config__lead">
+        <p className="dialog-lead">
           {t("screen.intentSongAdded", { title: outcome.title })}
         </p>
       );
     case "already":
-      return <p className="config__lead">{t("screen.intentAlready")}</p>;
+      return <p className="dialog-lead">{t("screen.intentAlready")}</p>;
     case "failed":
       return (
         <>
-          <p className="config__lead">{t("screen.intentFailed")}</p>
-          <p className="config__hint is-warn">{outcome.reason}</p>
+          <p className="dialog-lead">{t("screen.intentFailed")}</p>
+          <p className="dialog-hint is-warn">{outcome.reason}</p>
         </>
       );
   }

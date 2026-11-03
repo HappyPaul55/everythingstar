@@ -16,13 +16,15 @@ interface Props {
 
 export function Stepper({ label, value, max, onChange }: Props) {
   return (
-    <div className="band-step" role="group" aria-label={label}>
-      <span className="band-step__label">{label}</span>
+    <div className="band-step flex items-center gap-[0.3rem]" role="group" aria-label={label}>
+      <span className="band-step__label font-mono text-[0.58rem] font-bold uppercase tracking-[0.1em] text-[rgba(250,250,244,0.6)]">
+        {label}
+      </span>
       {Array.from({ length: max + 1 }, (_, option) => (
         <button
           key={option}
           type="button"
-          className={option === value ? "band-step__option is-active" : "band-step__option"}
+          className={`band-step__option step-option ${option === value ? " is-active" : ""}`}
           aria-pressed={option === value}
           onClick={() => onChange(option)}
         >

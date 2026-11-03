@@ -52,6 +52,24 @@
  * in the first download, not a lazy chunk moved out of place. The raw cap moved
  * 572 → 580 and the whole-payload cap 700 → 710; the gzip kept its 190.
  *
+ * The full stage conversion (2026-11-02, the same branch) moved the rest of the
+ * stage's styling into its components. The component CSS fell by ~134 KB, but the
+ * utilities that replaced it generate ~98 KB of stylesheet and ~55 KiB of JS:
+ * `_astro` JS 718 → 773, initial `/play` 573 → 622 KiB raw and 185 → 199 gzipped,
+ * and `/play`'s own document 169 → 199 KB. This is the measured price of the
+ * conversion and the reason it is a "review before merge", not a default. The
+ * caps moved 730 → 830, 580 → 660 and 190 → 215 to hold the number it actually
+ * came to; they are not a target.
+ *
+ * The utility-first restyle (2026-11-02) moved the **charter's** styling out of
+ * `charter.css` and into the island's strings: the markup now carries the utilities
+ * that used to be selectors, so the whole-`_astro` number grew 707 → 714 KiB while
+ * the stylesheet it replaced left `dist/` smaller. The initial `/play` graph did not
+ * move (573 KiB raw / 185 KiB gzipped): the site and the charter are separate
+ * downloads, and a player's first drawing of the stage is untouched. The cap moved
+ * 710 → 730 to hold that, and the next styling change should keep it there rather
+ * than make the island heavier than the CSS it replaced.
+ *
  * The script will not measure a build it cannot find: `dist/_astro`, `dist/`,
  * `public/audio` and `play.html` are each required before any number is read, and
  * a `play.html` with no initial JS is a failure rather than a zero.
@@ -162,10 +180,10 @@ const checks: Check[] = [
   {
     label: "dist/_astro JS",
     actual: sizeOf(join(DIST, "_astro"), (file) => file.endsWith(".js")),
-    limit: 710 * KIB,
+    limit: 830 * KIB,
   },
-  { label: "initial /play raw", actual: initialRaw, limit: 580 * KIB },
-  { label: "initial /play gzip", actual: initialGzip, limit: 190 * KIB },
+  { label: "initial /play raw", actual: initialRaw, limit: 660 * KIB },
+  { label: "initial /play gzip", actual: initialGzip, limit: 215 * KIB },
   { label: "dist/ total", actual: sizeOf(DIST), limit: 20 * MIB },
   { label: "public/audio", actual: sizeOf(join(ROOT, "public", "audio")), limit: 10 * MIB },
 ];
