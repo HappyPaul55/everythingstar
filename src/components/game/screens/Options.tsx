@@ -1,6 +1,3 @@
-/* eslint-disable no-useless-escape -- A Tailwind arbitrary variant escapes a literal
-   underscore as `\_` so the scanner does not read it as a space; JavaScript drops the
-   backslash, which leaves the class name the stylesheet expects. */
 import { useState, lazy, Suspense, useRef, type ChangeEvent, type ReactNode } from "react";
 import { useT } from "../../../i18n/react";
 import type { MessageKey, Translate } from "../../../i18n";
@@ -547,7 +544,7 @@ export function Options({ settings, onSettings, plan, onPlan, onBack }: Props) {
             name={t("screen.players")}
             hints={[t("screen.playersHint")]}
           >
-            <ul className="seats flex flex-col gap-[0.3rem] mt-[0.7rem] mb-0 p-0 list-none [&_.slot\_\_gear]:size-[1.9rem]">
+            <ul className="seats flex flex-col gap-[0.3rem] mt-[0.7rem] mb-0 p-0 list-none [&_[class*='gear']]:size-[1.9rem]">
               {plan.slots.map((slot, index) => (
                 <li
                   className="seat grid grid-cols-[5.5rem_minmax(0,1fr)_auto_auto] gap-[0.6rem] items-center px-2 py-[0.35rem] bg-[rgba(12,13,10,0.55)] border border-[rgba(250,250,244,0.12)] rounded-inner"
@@ -687,7 +684,7 @@ export function Options({ settings, onSettings, plan, onPlan, onBack }: Props) {
                   {t("profile.confirm")}
                 </p>
                 <p className={OPTION_HINT}>{t("profile.confirmHint")}</p>
-                <div className="config__actions">
+                <div className="config__actions dialog-actions">
                   <button
                     type="button"
                     className="band-btn band-btn--primary"

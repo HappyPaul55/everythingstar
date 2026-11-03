@@ -37,12 +37,11 @@ reason a utility cannot answer:
   loop; no class can carry them. The classes beside them are utilities, built by
   the pure modules (`lib/game/band/notes.ts`, `partClasses.ts`) so the role map is
   tested and Tailwind can see every literal it must generate.
-- **A handful of shared primitives and casings.** `.slot__option` (its
-  `:root[data-game-input]` focus variants are document state), the two note
-  pseudo-element casings (a sustain tail in `cqw`, the 3D side wall), the
-  scrollbars, the game cursor, the stage's focus rules and `.band` itself. Each is
-  a document-level rule or a shaped pseudo-element that a utility would write as a
-  200-character arbitrary value.
+- **A handful of document-level rules and two casings.** The scrollbars, the game
+  cursor, the stage's `[data-nav-focus]` focus rules and `.band` itself; and two
+  note pseudo-element casings (a sustain tail in `cqw`, the 3D side wall). Every
+  other class in the stage — including the jukebox, the option tile and the song
+  chips — is utilities in the markup.
 
   The stage is the **second Tailwind root**: `band.css` imports only the
   utilities with `source(none)` and scans `components/game`, `components/charter`

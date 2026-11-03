@@ -1,16 +1,15 @@
-/* stage-dialogs: what is left of the stage's dialog stylesheet after the surfaces
- * moved into the markup.
+/* stage-dialogs: the vocabulary the game's dialogs and the stage's corner share.
  *
- * Two kinds of rule remain, and neither styles one screen of ours:
+ * Everything else about a dialog, the jukebox or the options page is a Tailwind
+ * utility in its component. Two kinds of rule remain, and neither styles one
+ * screen of ours:
  *
  * 1. **The vocabulary** below — the few looks that repeat across the game's
  *    dialogs and the stage's corner. They are `@utility` blocks, so the markup
  *    carries the names and a variant (`[&:hover]:chip-btn-on`) says a state.
- * 2. **The jukebox and the options page's shared controls**, which are another
- *    area's markup (`Songs.tsx`, `SongRow.tsx`, `Options.tsx`) and the jukebox's
- *    own layout in `stage-screens.css` overrides some of them. They stay as plain
- *    component rules until that markup is converted; deleting them here would
- *    restyle a screen this file does not own.
+ * 2. **`slot__option`**, the game's option tile: one class name spanning six
+ *    components and a test hook (`.slot__option[aria-pressed="true"]`), so it is
+ *    a utility rather than a shared const passed at each call site.
  */
 @utility chip-btn {
   display: inline-flex;
@@ -64,6 +63,79 @@
   }
   &:disabled {
     opacity: 0.4;
+    cursor: var(--cursor-not-allowed), not-allowed;
+  }
+}
+
+/* The game's option tile: one choice in a row of choices — an instrument, a
+   level, a device, a mode. It is used by `Options`, `Band`, `SlotSettings`,
+   `CalibrationDialog` and `PauseMenu`, and the tests read `.slot__option`, so the
+   name stays a utility instead of a const repeated at each call site. `is-active`
+   and `is-vocals` are state hooks with no declarations of their own; the tile
+   keys off them. */
+@utility slot__option {
+  padding: 0.2rem 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-cream);
+  background: transparent;
+  border: 1px solid rgba(250, 250, 244, 0.24);
+  border-radius: var(--radius-inner);
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+
+  /* An active tile keeps its ink text: a hover that recoloured it would be yellow
+     on yellow. It lightens instead, so it still reads as hovered. */
+  &:hover:not(:disabled):not(.is-active),
+  :root:not([data-game-input="pointer"]) &:focus-visible:not(:disabled):not(.is-active),
+  &[data-nav-focus]:not(:disabled):not(.is-active) {
+    color: var(--color-yellow);
+    border-color: var(--color-yellow);
+  }
+  &.is-active {
+    color: var(--color-ink);
+    background: var(--color-yellow);
+    border-color: var(--color-yellow);
+  }
+  &.is-active:hover:not(:disabled),
+  :root:not([data-game-input="pointer"]) &.is-active:focus-visible:not(:disabled),
+  &.is-active[data-nav-focus]:not(:disabled) {
+    background: var(--color-cream);
+    border-color: var(--color-cream);
+  }
+  /* Vocals are the blue part wherever a part is offered — sung or typed, pitched
+     or lyrics-only. Every instrument keeps the default yellow. */
+  &.is-vocals {
+    color: var(--color-accent);
+    border-color: color-mix(in srgb, var(--color-accent) 55%, transparent);
+  }
+  &.is-vocals:hover:not(:disabled):not(.is-active),
+  :root:not([data-game-input="pointer"]) &.is-vocals:focus-visible:not(:disabled):not(.is-active),
+  &.is-vocals[data-nav-focus]:not(:disabled):not(.is-active) {
+    color: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  &.is-vocals.is-active {
+    color: var(--color-ink);
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+  }
+  &.is-vocals.is-active:hover:not(:disabled) {
+    background: var(--color-cream);
+    border-color: var(--color-cream);
+  }
+  /* What the song has no part for is still on the board, out of reach: a sideways
+     glance says why it is disabled, which hiding it would not. It never keeps the
+     active fill, or the label would be ink on yellow on yellow. */
+  &:disabled {
+    color: rgba(250, 250, 244, 0.28);
+    background: transparent;
+    border-color: rgba(250, 250, 244, 0.12);
     cursor: var(--cursor-not-allowed), not-allowed;
   }
 }
@@ -124,380 +196,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
-}
-
-@layer components {
-  /* --- The options page's own tiles, kept here until that screen is converted ---
-     `.slot__option` is the game's option tile, and `Options.tsx` still draws its
-     toggles with it. The band screen's boxes have their utilities in the markup;
-     this rule is what the options page — another area — still reads. */
-  .slot__option {
-    padding: 0.2rem 0.35rem;
-    font-family: var(--font-mono);
-    font-size: 0.58rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--color-cream);
-    background: transparent;
-    border: 1px solid rgba(250, 250, 244, 0.24);
-    border-radius: var(--radius-inner);
-    cursor: pointer;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  /* An active tile keeps its ink text: a hover that recoloured it would be yellow
-     on yellow. It lightens instead, so it still reads as hovered. */
-  .slot__option:hover:not(:disabled):not(.is-active),
-  :root:not([data-game-input="pointer"]) .slot__option:focus-visible:not(:disabled):not(.is-active),
-  .slot__option[data-nav-focus]:not(:disabled):not(.is-active) {
-    color: var(--color-yellow);
-    border-color: var(--color-yellow);
-  }
-  .slot__option.is-active {
-    color: var(--color-ink);
-    background: var(--color-yellow);
-    border-color: var(--color-yellow);
-  }
-  .slot__option.is-active:hover:not(:disabled),
-  :root:not([data-game-input="pointer"]) .slot__option.is-active:focus-visible:not(:disabled),
-  .slot__option.is-active[data-nav-focus]:not(:disabled) {
-    background: var(--color-cream);
-    border-color: var(--color-cream);
-  }
-  /* Vocals are the blue part wherever a part is offered — sung or typed, pitched
-     or lyrics-only. Every instrument keeps the default yellow. */
-  .slot__option.is-vocals {
-    color: var(--color-accent);
-    border-color: color-mix(in srgb, var(--color-accent) 55%, transparent);
-  }
-  .slot__option.is-vocals:hover:not(:disabled):not(.is-active),
-  :root:not([data-game-input="pointer"]) .slot__option.is-vocals:focus-visible:not(:disabled):not(.is-active),
-  .slot__option.is-vocals[data-nav-focus]:not(:disabled):not(.is-active) {
-    color: var(--color-accent);
-    border-color: var(--color-accent);
-  }
-  .slot__option.is-vocals.is-active {
-    color: var(--color-ink);
-    background: var(--color-accent);
-    border-color: var(--color-accent);
-  }
-  .slot__option.is-vocals.is-active:hover:not(:disabled) {
-    background: var(--color-cream);
-    border-color: var(--color-cream);
-  }
-  /* What the song has no part for is still on the board, out of reach: a sideways
-     glance says why it is disabled, which hiding it would not. It never keeps the
-     active fill, or the label would be ink on yellow on yellow. */
-  .slot__option:disabled {
-    color: rgba(250, 250, 244, 0.28);
-    background: transparent;
-    border-color: rgba(250, 250, 244, 0.12);
-    cursor: var(--cursor-not-allowed), not-allowed;
-  }
-  /* A box too narrow for the longest level's tile: the words shrink before the
-     row wraps. */
-  @container (max-width: 10rem) {
-    .slot__how .slot__option {
-      padding: 0.2rem 0.15rem;
-      font-size: 0.5rem;
-      letter-spacing: 0;
-    }
-  }
-
-  /* The row of actions a dialog ends on — the options page's confirmation still
-     draws its own with this name. */
-  .config__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-  }
-
-  /* --- The jukebox (Songs.tsx and SongRow.tsx) ---
-     Songs is another area's screen. Its index, now-playing slot, history and next
-     button are laid out by `stage-screens.css` as well, so they stay here, whole,
-     until that markup carries its own utilities. */
-
-  /* The index: one letter per line, the ones with no songs out of reach.
-     It is part of the same band as the list and the now-playing column, so it is
-     **stretched to their height** and its letters share it out between them: a
-     column of letters the height of the list beside it is a column of targets you
-     cannot miss, rather than a stub that stops a third of the way down. */
-  .jukebox__index {
-    display: flex;
-    flex-direction: column;
-    align-self: stretch;
-    gap: 0.05rem;
-    padding: 0.2rem;
-    border: 1px solid rgba(250, 250, 244, 0.14);
-    /* An inset of the list, like the scroller beside it — not a pill. */
-    border-radius: var(--radius-inner);
-    background: rgba(12, 13, 10, 0.6);
-  }
-  /* On a phone the index would take a third of the width and leave the list too
-     narrow to read; the search box is the way through it there. */
-  @media (max-width: 48rem) {
-    .jukebox__index {
-      display: none;
-    }
-  }
-  .jukebox__index[data-idle="true"] {
-    opacity: 0.4;
-  }
-  .jukebox__letter {
-    /* An equal share of the column, whatever height that is — so the index fills
-       its height the way the list fills its own. It is a flex box itself, so the
-       letter sits in the middle of the share it was given rather than at its top. */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 1 1 0;
-    min-height: 1rem;
-    padding: 0;
-    width: 1.5rem;
-    font-family: var(--font-mono);
-    font-size: clamp(0.6rem, 1.4vmin, 0.85rem);
-    font-weight: 700;
-    line-height: 1;
-    color: var(--color-cream);
-    background: transparent;
-    border: none;
-    /* A small control, like every other option button: the scale's `inner`, not a
-       pill — at this size a pill is a blob. */
-    border-radius: var(--radius-inner);
-    cursor: pointer;
-  }
-  .jukebox__letter:hover:not(:disabled),
-  :root:not([data-game-input="pointer"]) .jukebox__letter:focus-visible:not(:disabled),
-  .jukebox__letter[data-nav-focus]:not(:disabled) {
-    color: var(--color-ink);
-    background: var(--color-yellow);
-  }
-  .jukebox__letter:disabled {
-    color: rgba(250, 250, 244, 0.28);
-    /* A letter the list has no songs under is not pressable — but it is still our
-       arrow, not the desktop's. */
-    cursor: var(--cursor-arrow), default;
-  }
-  .jukebox__letter.is-active {
-    color: var(--color-ink);
-    background: var(--color-yellow);
-  }
-
-  /* The slot on the front: what the jukebox is holding. */
-  .jukebox__display {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    padding: 0.9rem;
-    background: rgba(12, 13, 10, 0.72);
-    border: 1px solid rgba(250, 250, 244, 0.16);
-    border-radius: var(--radius-brand);
-    overflow: hidden;
-  }
-  .jukebox__label {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 0.58rem;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: rgba(250, 250, 244, 0.55);
-  }
-  .jukebox__now-playing {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-  .jukebox__duration {
-    margin: 0;
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    color: var(--color-yellow);
-  }
-  .jukebox__title {
-    margin: 0.2rem 0 0;
-    font-family: var(--font-display);
-    font-size: clamp(1.2rem, 3vmin, 1.7rem);
-    line-height: 1.1;
-    color: var(--color-cream);
-  }
-  .jukebox__artist {
-    margin: 0;
-    font-size: 0.78rem;
-    color: rgba(250, 250, 244, 0.66);
-  }
-  /* The optional third thing to do with the song on the front: keep it for a
-     flight. One line beside the artist; the Downloads dialog owns the list. */
-  .jukebox__offline {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.35rem 0.6rem;
-    /* The jukebox's panel moves this to 0.1rem; the rule lives here so that screen
-       keeps its own spacing. */
-    margin-top: 0.25rem;
-  }
-  .jukebox__chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    margin: 0.4rem 0 0;
-  }
-  .jukebox__chips--compact {
-    display: none;
-  }
-  .jukebox__selection {
-    flex: none;
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-    min-width: 0;
-  }
-  .jukebox__history {
-    flex: 1 1 7rem;
-    min-height: 0;
-    margin-top: 0.25rem;
-    overflow: hidden;
-    border-top: 1px dashed rgba(250, 250, 244, 0.2);
-  }
-  .jukebox__history-table {
-    display: block;
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-    font-family: var(--font-mono);
-    font-size: 0.57rem;
-    line-height: 1.2;
-    color: rgba(250, 250, 244, 0.78);
-  }
-  .jukebox__history-table thead,
-  .jukebox__history-table tbody {
-    display: block;
-  }
-  .jukebox__history-table tbody {
-    max-height: 100%;
-    overflow: hidden;
-  }
-  .jukebox__history-table tr {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 3.6rem 4rem;
-    align-items: center;
-    height: 1.45rem;
-  }
-  .jukebox__history-table th,
-  .jukebox__history-table td {
-    min-width: 0;
-    overflow: hidden;
-    padding: 0.1rem 0.2rem;
-    text-align: left;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  .jukebox__history-table th {
-    color: rgba(250, 250, 244, 0.48);
-    font-size: 0.52rem;
-    font-weight: 400;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  .jukebox__history-table td:last-child,
-  .jukebox__history-table th:last-child {
-    text-align: right;
-  }
-  .jukebox__history-table tr.jukebox__history-empty td {
-    grid-column: 1 / -1;
-    text-align: center;
-    color: rgba(250, 250, 244, 0.55);
-  }
-  .jukebox__next {
-    width: 100%;
-  }
-  .jukebox__next-compact {
-    display: none;
-  }
-  @media (max-width: 40rem) {
-    /* Phones use the song list for the full screen; details only appear after a
-       row is chosen, in a native modal that traps focus and handles Escape. */
-    .screen__panel--songs {
-      min-height: 0;
-    }
-    .screen__panel--songs > .jukebox {
-      display: flex;
-      flex: 1 1 auto;
-      flex-direction: column;
-      flex-wrap: nowrap;
-      align-items: stretch;
-      width: 100%;
-      min-height: 0;
-    }
-    .screen__panel--songs .jukebox__list {
-      display: flex;
-      flex: 1 1 auto;
-      flex-direction: column;
-      width: 100%;
-      min-height: 0;
-    }
-    .screen__panel--songs .jukebox__scroller {
-      flex: 1 1 0;
-      height: auto;
-      min-height: 0;
-      overflow-y: auto;
-    }
-    .screen--songs .jukebox__selection {
-      display: none;
-    }
-    .jukebox__song-dialog .jukebox__selection {
-      display: flex;
-      width: 100%;
-      gap: 0.7rem;
-    }
-    .jukebox__song-dialog .song-art--panel {
-      width: clamp(7rem, 32vw, 10rem);
-      max-width: 100%;
-      aspect-ratio: 1 / 1;
-      align-self: center;
-    }
-  }
-
-  /* The now-playing cover is **square** — it is an album cover, and the art we are
-     given is drawn square: a wide crop of it cuts the picture rather than framing
-     it. The cover's size is its column's width, so the song's own screen overrides
-     this rule where it draws the row's thumbnail. */
-  .song-art--panel {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    margin-bottom: 0.35rem;
-  }
-  .song-art--panel .song-art__tile {
-    font-size: clamp(1.6rem, 5vmin, 2.6rem);
-  }
-
-  /* --- Song chips: what a song offers, on its row and in the jukebox's slot ---
-     The jukebox's own layout (stage-screens) shrinks a chip when the row is drawn
-     as a compact line, so the base rule stays beside it. */
-  .song-chip {
-    padding: 0.1rem 0.4rem;
-    font-family: var(--font-mono);
-    font-size: 0.56rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: rgba(250, 250, 244, 0.76);
-    border: 1px solid rgba(250, 250, 244, 0.28);
-    border-radius: var(--radius-pill);
-  }
-  /* Only the words' place — a song that can be sung — wears the accent. Every
-     instrument, and a song that can only be typed, stays in the default schema. */
-  .song-chip--vocals {
-    color: var(--color-accent);
-    border-color: var(--color-accent);
-  }
 }
 
 /* Outside the layer: keyframes are not a component style.

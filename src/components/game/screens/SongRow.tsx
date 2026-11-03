@@ -1,6 +1,3 @@
-/* eslint-disable no-useless-escape -- A Tailwind arbitrary variant escapes a literal
-   underscore as `\_` so the scanner does not read it as a space; JavaScript drops the
-   backslash, which leaves the class name the stylesheet expects. */
 import { useT } from "../../../i18n/react";
 import { songChips } from "../../../lib/game/jukebox";
 import type { Song } from "../../../lib/game/song";
@@ -105,10 +102,10 @@ export function SongRow({
       <span className="song-row__time [grid-area:time] font-mono text-[0.62rem] whitespace-nowrap text-[rgba(250,250,244,0.72)] [@media(max-width:80rem)]:text-[0.88rem]">
         {formatClock(song.durationMs)}
       </span>
-      <span className="song-row__title [grid-area:title] overflow-hidden whitespace-nowrap text-ellipsis text-[0.88rem] [@media(max-width:80rem)]:self-end [@media(max-width:40rem)]:[&.song-row\_\_title]:self-center">
+      <span className="song-row__title [grid-area:title] overflow-hidden whitespace-nowrap text-ellipsis text-[0.88rem] [@media(max-width:80rem)]:self-end [@media(max-width:40rem)]:[&[class*='song-row'][class*='title']]:self-center">
         {song.title}
       </span>
-      <span className="song-row__artist [grid-area:artist] overflow-hidden whitespace-nowrap text-ellipsis text-label text-[rgba(250,250,244,0.6)] [@media(max-width:80rem)]:self-start [@media(max-width:40rem)]:[&.song-row\_\_artist]:self-center">
+      <span className="song-row__artist [grid-area:artist] overflow-hidden whitespace-nowrap text-ellipsis text-label text-[rgba(250,250,244,0.6)] [@media(max-width:80rem)]:self-start [@media(max-width:40rem)]:[&[class*='song-row'][class*='artist']]:self-center">
         {song.artist.name}
       </span>
       <span className="song-row__offers [grid-area:chips] overflow-hidden whitespace-nowrap text-ellipsis font-mono text-[0.56rem] lowercase text-[rgba(250,250,244,0.6)]">

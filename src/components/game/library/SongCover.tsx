@@ -25,8 +25,8 @@ interface Props {
 /**
  * The tile is the same shape either way: the base is the frame, and the two sizes
  * add the one thing that differs — a row's square is its column's width, and the
- * now-playing cover fills its box. The panel's own width and margin are still in
- * the jukebox's stylesheet, which sizes the cover against that screen's grid.
+ * now-playing cover is a square that fills its column. The jukebox's grid overrides
+ * the panel's size and margin where it draws the compact row.
  */
 const ART = [
   "song-art block relative flex-none overflow-hidden rounded-inner",
@@ -37,6 +37,12 @@ const ART_ROW = [
   "song-art--row [grid-area:art]",
   "w-[var(--song-art-size,1.9rem)] h-[var(--song-art-size,1.9rem)]",
 ].join(" ");
+
+/* The now-playing cover is **square** — it is an album cover, and the art we are
+   given is drawn square: a wide crop cuts the picture rather than framing it. The
+   cover's width is its column's; the jukebox's grid overrides the size and margin
+   where it draws the compact row. */
+const ART_PANEL = "song-art--panel w-full aspect-square mb-[0.35rem]";
 
 const TILE = [
   "song-art__tile flex h-full w-full items-center justify-center font-display",
@@ -60,7 +66,7 @@ export function SongCover({ song, size = "row", art: supplied }: Props) {
 
   return (
     <span
-      className={`${ART} ${size === "row" ? ART_ROW : "song-art--panel"}`}
+      className={`${ART} ${size === "row" ? ART_ROW : ART_PANEL}`}
       aria-hidden="true"
       ref={ref}
       style={song.accent ? ({ "--art-accent": song.accent } as CSSProperties) : undefined}

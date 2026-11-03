@@ -59,7 +59,7 @@ export function DownloadAction({
 
   return (
     <div
-      className="jukebox__offline flex flex-wrap items-center gap-x-[0.6rem] gap-y-[0.35rem]"
+      className="jukebox__offline flex flex-wrap items-center mt-[0.25rem] gap-x-[0.6rem] gap-y-[0.35rem]"
       data-downloaded={entry ? "true" : "false"}
     >
       {entry ? (

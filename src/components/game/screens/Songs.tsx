@@ -1,6 +1,3 @@
-/* eslint-disable no-useless-escape -- A Tailwind arbitrary variant escapes a literal
-   underscore as `\_` so the scanner does not read it as a space; JavaScript drops the
-   backslash, which leaves the class name the stylesheet expects. */
 import {
   lazy,
   Suspense,
@@ -66,39 +63,39 @@ const DownloadsDialog = lazy(() =>
  * because a utility has to appear whole in the source for Tailwind to generate it.
  */
 const PANEL =
-  "screen__panel screen__panel--page screen__panel--songs narrow:max-wide:grid narrow:max-wide:grid-cols-[minmax(0,1fr)_minmax(14rem,0.72fr)] narrow:max-wide:grid-rows-[auto_minmax(0,1fr)] narrow:max-wide:min-h-0 wide:grid wide:grid-cols-[minmax(0,1fr)_minmax(16rem,19rem)] wide:grid-rows-[auto_minmax(0,1fr)] wide:min-h-0";
+  "screen__panel screen__panel--page screen__panel--songs max-narrow:min-h-0 narrow:max-wide:grid narrow:max-wide:grid-cols-[minmax(0,1fr)_minmax(14rem,0.72fr)] narrow:max-wide:grid-rows-[auto_minmax(0,1fr)] narrow:max-wide:min-h-0 wide:grid wide:grid-cols-[minmax(0,1fr)_minmax(16rem,19rem)] wide:grid-rows-[auto_minmax(0,1fr)] wide:min-h-0";
 
 const HEADING =
   "jukebox__heading narrow:max-wide:col-start-1 narrow:max-wide:row-start-1 narrow:max-wide:min-w-0 wide:col-span-full wide:row-start-1";
 
 const JUKEBOX =
-  "jukebox flex flex-wrap items-start gap-[clamp(0.7rem,2vmin,1.4rem)] narrow:max-wide:col-span-full narrow:max-wide:row-start-2 narrow:max-wide:flex-nowrap narrow:max-wide:items-stretch narrow:max-wide:min-h-0 wide:col-start-1 wide:row-start-2 wide:flex-nowrap wide:items-stretch wide:min-h-0";
+  "jukebox flex flex-wrap items-start gap-[clamp(0.7rem,2vmin,1.4rem)] max-narrow:flex max-narrow:flex-[1_1_auto] max-narrow:flex-col max-narrow:flex-nowrap max-narrow:items-stretch max-narrow:w-full max-narrow:min-h-0 narrow:max-wide:col-span-full narrow:max-wide:row-start-2 narrow:max-wide:flex-nowrap narrow:max-wide:items-stretch narrow:max-wide:min-h-0 wide:col-start-1 wide:row-start-2 wide:flex-nowrap wide:items-stretch wide:min-h-0";
 
 const LIST =
-  "jukebox__list flex-[1_1_34rem] min-w-0 narrow:max-wide:flex narrow:max-wide:flex-1 narrow:max-wide:basis-0 narrow:max-wide:flex-col narrow:max-wide:min-h-0 wide:self-stretch wide:flex wide:flex-auto wide:flex-col wide:min-h-0";
+  "jukebox__list flex-[1_1_34rem] min-w-0 max-narrow:flex max-narrow:flex-[1_1_auto] max-narrow:flex-col max-narrow:w-full max-narrow:min-h-0 narrow:max-wide:flex narrow:max-wide:flex-1 narrow:max-wide:basis-0 narrow:max-wide:flex-col narrow:max-wide:min-h-0 wide:self-stretch wide:flex wide:flex-auto wide:flex-col wide:min-h-0";
 
 const SCROLLER =
-  "jukebox__scroller relative h-[clamp(13rem,52vh,30rem)] overflow-y-auto overscroll-contain border border-[rgba(250,250,244,0.14)] rounded-inner bg-[rgba(12,13,10,0.62)] narrow:max-wide:flex-1 narrow:max-wide:basis-0 narrow:max-wide:h-auto narrow:max-wide:min-h-0 narrow:max-wide:overflow-y-auto wide:flex-auto wide:h-auto wide:min-h-[12rem]";
+  "jukebox__scroller relative h-[clamp(13rem,52vh,30rem)] overflow-y-auto overscroll-contain border border-[rgba(250,250,244,0.14)] rounded-inner bg-[rgba(12,13,10,0.62)] max-narrow:flex-[1_1_0] max-narrow:h-auto max-narrow:min-h-0 max-narrow:overflow-y-auto narrow:max-wide:flex-1 narrow:max-wide:basis-0 narrow:max-wide:h-auto narrow:max-wide:min-h-0 narrow:max-wide:overflow-y-auto wide:flex-auto wide:h-auto wide:min-h-[12rem]";
 
 const SELECTION =
-  "jukebox__selection narrow:max-wide:col-start-2 narrow:max-wide:row-start-1 narrow:max-wide:grid narrow:max-wide:grid-cols-[minmax(0,1fr)_2.75rem] narrow:max-wide:items-stretch narrow:max-wide:gap-[0.4rem] narrow:max-wide:min-w-0 wide:col-start-2 wide:row-start-2 wide:self-stretch wide:flex-col wide:min-h-0";
+  "jukebox__selection flex-none flex flex-col gap-[0.6rem] min-w-0 narrow:max-wide:col-start-2 narrow:max-wide:row-start-1 narrow:max-wide:grid narrow:max-wide:grid-cols-[minmax(0,1fr)_2.75rem] narrow:max-wide:items-stretch narrow:max-wide:gap-[0.4rem] narrow:max-wide:min-w-0 wide:col-start-2 wide:row-start-2 wide:self-stretch wide:flex-col wide:min-h-0";
 
 const DISPLAY =
-  "jukebox__display group/display narrow:max-wide:grid narrow:max-wide:col-start-1 narrow:max-wide:row-start-1 narrow:max-wide:grid-cols-[minmax(0,1fr)_2.5rem] narrow:max-wide:[grid-template-areas:'now-playing_now-playing'_'title_cover'_'chips_cover'_'artist_artist'_'offline_offline'] narrow:max-wide:content-start narrow:max-wide:gap-[0.2rem_0.45rem] narrow:max-wide:flex-none narrow:max-wide:min-w-0 narrow:max-wide:p-[0.65rem] wide:flex-auto wide:min-h-0 narrow:max-wide:[&_.song-art--panel]:[grid-area:cover] narrow:max-wide:[&_.song-art--panel]:size-[2.5rem] narrow:max-wide:[&_.song-art--panel]:m-0 narrow:max-wide:[&_.jukebox\_\_offline]:[grid-area:offline] narrow:max-wide:[&_.jukebox\_\_offline]:mt-[0.1rem] narrow:max-wide:[&_.jukebox\_\_chips]:[grid-area:chips] narrow:max-wide:[&_.jukebox\_\_chips]:min-w-0 narrow:max-wide:[&_.jukebox\_\_chips]:m-0 narrow:max-wide:[&_.jukebox\_\_chips]:gap-[0.2rem] narrow:max-wide:[&_.jukebox\_\_chips--full]:hidden narrow:max-wide:[&_.jukebox\_\_chips--compact]:flex narrow:max-wide:[&_.jukebox\_\_chips--compact]:flex-[0_1_auto] narrow:max-wide:[&_.jukebox\_\_chips--compact]:flex-nowrap narrow:max-wide:[&_.jukebox\_\_chips--compact]:max-w-full narrow:max-wide:[&_.jukebox\_\_chips--compact]:overflow-hidden narrow:max-wide:[&_.jukebox\_\_chips--compact]:whitespace-nowrap narrow:max-wide:[&_.jukebox\_\_chips--compact_.song-chip]:flex-none narrow:max-wide:[&_.jukebox\_\_chips--compact_.song-chip]:px-[0.25rem] narrow:max-wide:[&_.jukebox\_\_chips--compact_.song-chip]:py-[0.08rem] narrow:max-wide:[&_.jukebox\_\_chips--compact_.song-chip]:text-[0.45rem] narrow:max-wide:[&_.jukebox\_\_chips--compact_.song-chip]:tracking-[0.04em] narrow:max-wide:[&_.jukebox\_\_chips--compact_.song-chip]:whitespace-nowrap narrow:max-wide:[&_.jukebox\_\_history]:hidden";
+  "jukebox__display group/display flex-[1_1_auto] flex flex-col gap-[0.3rem] p-[0.9rem] bg-[rgba(12,13,10,0.72)] border border-[rgba(250,250,244,0.16)] rounded-brand overflow-hidden narrow:max-wide:grid narrow:max-wide:col-start-1 narrow:max-wide:row-start-1 narrow:max-wide:grid-cols-[minmax(0,1fr)_2.5rem] narrow:max-wide:[grid-template-areas:'now-playing_now-playing'_'title_cover'_'chips_cover'_'artist_artist'_'offline_offline'] narrow:max-wide:content-start narrow:max-wide:gap-[0.2rem_0.45rem] narrow:max-wide:flex-none narrow:max-wide:min-w-0 narrow:max-wide:p-[0.65rem] wide:flex-auto wide:min-h-0 narrow:max-wide:[&_.song-art--panel]:[grid-area:cover] narrow:max-wide:[&_.song-art--panel]:size-[2.5rem] narrow:max-wide:[&_.song-art--panel]:m-0 narrow:max-wide:[&_[data-downloaded]]:[grid-area:offline] narrow:max-wide:[&_[data-downloaded]]:mt-[0.1rem] narrow:max-wide:[&_[class*='chips']]:[grid-area:chips] narrow:max-wide:[&_[class*='chips']]:min-w-0 narrow:max-wide:[&_[class*='chips']]:m-0 narrow:max-wide:[&_[class*='chips']]:gap-[0.2rem] narrow:max-wide:[&_[class*='chips--full']]:hidden narrow:max-wide:[&_[class*='chips--compact']]:flex narrow:max-wide:[&_[class*='chips--compact']]:flex-[0_1_auto] narrow:max-wide:[&_[class*='chips--compact']]:flex-nowrap narrow:max-wide:[&_[class*='chips--compact']]:max-w-full narrow:max-wide:[&_[class*='chips--compact']]:overflow-hidden narrow:max-wide:[&_[class*='chips--compact']]:whitespace-nowrap narrow:max-wide:[&_[class*='chips--compact']_.song-chip]:flex-none narrow:max-wide:[&_[class*='chips--compact']_.song-chip]:px-[0.25rem] narrow:max-wide:[&_[class*='chips--compact']_.song-chip]:py-[0.08rem] narrow:max-wide:[&_[class*='chips--compact']_.song-chip]:text-[0.45rem] narrow:max-wide:[&_[class*='chips--compact']_.song-chip]:tracking-[0.04em] narrow:max-wide:[&_[class*='chips--compact']_.song-chip]:whitespace-nowrap narrow:max-wide:[&_[class*='history']]:hidden";
 
 const NOW_PLAYING =
-  "jukebox__now-playing narrow:max-wide:[grid-area:now-playing] narrow:max-wide:flex narrow:max-wide:items-baseline narrow:max-wide:justify-between narrow:max-wide:gap-2";
+  "jukebox__now-playing flex items-baseline justify-between gap-[0.5rem] narrow:max-wide:[grid-area:now-playing] narrow:max-wide:flex narrow:max-wide:items-baseline narrow:max-wide:justify-between narrow:max-wide:gap-2";
 
 const DURATION =
-  "jukebox__duration narrow:max-wide:min-w-0 narrow:max-wide:m-0";
+  "jukebox__duration m-0 font-mono text-[0.72rem] font-bold tracking-[0.08em] text-yellow narrow:max-wide:min-w-0 narrow:max-wide:m-0";
 
 const HEADLINE = "jukebox__headline narrow:max-wide:contents";
 
 const TITLE =
-  "jukebox__title narrow:max-wide:[grid-area:title] narrow:max-wide:min-w-0 narrow:max-wide:max-w-full narrow:max-wide:m-0 narrow:max-wide:text-[clamp(1rem,2.3vmin,1.35rem)] narrow:max-wide:leading-[1.1] narrow:max-wide:overflow-hidden narrow:max-wide:text-ellipsis narrow:max-wide:whitespace-nowrap narrow:max-wide:group-data-[has-song=false]/display:col-span-full";
+  "jukebox__title mt-[0.2rem] mb-0 font-display text-[clamp(1.2rem,3vmin,1.7rem)] leading-[1.1] text-cream narrow:max-wide:[grid-area:title] narrow:max-wide:min-w-0 narrow:max-wide:max-w-full narrow:max-wide:m-0 narrow:max-wide:text-[clamp(1rem,2.3vmin,1.35rem)] narrow:max-wide:leading-[1.1] narrow:max-wide:overflow-hidden narrow:max-wide:text-ellipsis narrow:max-wide:whitespace-nowrap narrow:max-wide:group-data-[has-song=false]/display:col-span-full";
 
 const ARTIST =
-  "jukebox__artist narrow:max-wide:[grid-area:artist] narrow:max-wide:min-w-0 narrow:max-wide:text-[0.68rem] narrow:max-wide:overflow-hidden narrow:max-wide:text-ellipsis narrow:max-wide:whitespace-nowrap";
+  "jukebox__artist m-0 text-[0.78rem] text-[rgba(250,250,244,0.66)] narrow:max-wide:[grid-area:artist] narrow:max-wide:min-w-0 narrow:max-wide:text-[0.68rem] narrow:max-wide:overflow-hidden narrow:max-wide:text-ellipsis narrow:max-wide:whitespace-nowrap";
 
 const NEXT =
   "band-btn band-btn--primary band-btn--big jukebox__next w-full narrow:max-wide:col-start-2 narrow:max-wide:row-start-1 narrow:max-wide:flex narrow:max-wide:items-center narrow:max-wide:justify-center narrow:max-wide:w-full narrow:max-wide:min-w-[2.75rem] narrow:max-wide:min-h-[44px] narrow:max-wide:px-1 narrow:max-wide:py-[0.4rem] narrow:max-wide:text-[0.65rem] narrow:max-wide:[writing-mode:vertical-rl] narrow:max-wide:[text-orientation:upright] narrow:max-wide:tracking-[0.08em] narrow:max-wide:mt-0 wide:mt-auto";
@@ -107,6 +104,19 @@ const NEXT_FULL = "jukebox__next-full narrow:max-wide:hidden";
 
 const NEXT_COMPACT =
   "jukebox__next-compact hidden narrow:max-wide:inline";
+
+const INDEX =
+  "jukebox__index flex flex-col self-stretch gap-[0.05rem] p-[0.2rem] border border-[rgba(250,250,244,0.14)] rounded-inner bg-[rgba(12,13,10,0.6)] data-[idle=true]:opacity-40 max-[48rem]:hidden";
+
+const LETTER =
+  "jukebox__letter flex items-center justify-center flex-[1_1_0] min-h-[1rem] p-0 w-[1.5rem] font-mono text-[clamp(0.6rem,1.4vmin,0.85rem)] font-bold leading-none text-cream bg-transparent border-0 rounded-inner cursor-pointer [&:hover:not(:disabled)]:text-ink [&:hover:not(:disabled)]:bg-yellow [:root:not([data-game-input=pointer])_&:focus-visible:not(:disabled)]:text-ink [:root:not([data-game-input=pointer])_&:focus-visible:not(:disabled)]:bg-yellow [&[data-nav-focus]:not(:disabled)]:text-ink [&[data-nav-focus]:not(:disabled)]:bg-yellow disabled:text-[rgba(250,250,244,0.28)] disabled:cursor-[var(--cursor-arrow),default] [&.is-active]:text-ink [&.is-active]:bg-yellow";
+
+/** The phone's own dialog: the details the full-width list cannot also show. */
+const SONG_DIALOG =
+  "jukebox__song-dialog [&_.song-art--panel]:max-narrow:w-[clamp(7rem,32vw,10rem)] [&_.song-art--panel]:max-narrow:max-w-full [&_.song-art--panel]:max-narrow:aspect-square [&_.song-art--panel]:max-narrow:self-center";
+
+/** The selection shown inside that dialog: full width, a little more air. */
+const DIALOG_SELECTION = "max-narrow:flex max-narrow:w-full max-narrow:gap-[0.7rem]";
 
 /**
  * The jukebox: a song list with an index, a search and a slot on the front.
@@ -296,15 +306,17 @@ export function Songs({
     previewSong(chosen);
   };
 
-  const selection = () => (
-    <div className={SELECTION}>
+  const selection = (inDialog = false) => (
+    <div className={inDialog ? `${SELECTION} ${DIALOG_SELECTION}` : `${SELECTION} max-narrow:hidden`}>
       <aside
         className={DISPLAY}
         aria-label={t("screen.nowPlaying")}
         data-has-song={song ? "true" : "false"}
       >
         <div className={NOW_PLAYING}>
-          <p className="jukebox__label">{t("screen.nowPlaying")}</p>
+          <p className="jukebox__label m-0 font-mono text-[0.58rem] font-bold tracking-[0.18em] uppercase text-[rgba(250,250,244,0.55)]">
+            {t("screen.nowPlaying")}
+          </p>
           {song ? (
             <p className={DURATION}>{formatClock(song.durationMs)}</p>
           ) : null}
@@ -345,8 +357,8 @@ export function Songs({
                 onDownload={() => offline.download(song)}
               />
             ) : null}
-            <div className="jukebox__history">
-              <table className="jukebox__history-table">
+            <div className="jukebox__history flex-[1_1_7rem] min-h-0 mt-[0.25rem] overflow-hidden border-t border-dashed border-[rgba(250,250,244,0.2)]">
+              <table className="jukebox__history-table block w-full border-collapse table-fixed font-mono text-[0.57rem] leading-[1.2] text-[rgba(250,250,244,0.78)] [&_thead]:block [&_tbody]:block [&_tbody]:max-h-full [&_tbody]:overflow-hidden [&_tr]:grid [&_tr]:grid-cols-[minmax(0,1fr)_3.6rem_4rem] [&_tr]:items-center [&_tr]:h-[1.45rem] [&_th]:min-w-0 [&_th]:overflow-hidden [&_th]:px-[0.2rem] [&_th]:py-[0.1rem] [&_th]:text-left [&_th]:whitespace-nowrap [&_th]:text-ellipsis [&_td]:min-w-0 [&_td]:overflow-hidden [&_td]:px-[0.2rem] [&_td]:py-[0.1rem] [&_td]:text-left [&_td]:whitespace-nowrap [&_td]:text-ellipsis [&_th]:text-[rgba(250,250,244,0.48)] [&_th]:text-[0.52rem] [&_th]:font-normal [&_th]:tracking-[0.08em] [&_th]:uppercase [&_td:last-child]:text-right [&_th:last-child]:text-right">
                 <thead>
                   <tr>
                     <th scope="col">{t("screen.historyPlayed")}</th>
@@ -365,7 +377,12 @@ export function Songs({
                     ))
                   ) : (
                     <tr className="jukebox__history-empty">
-                      <td colSpan={3}>{t("screen.noScoreYet")}</td>
+                      <td
+                        colSpan={3}
+                        className="col-span-full text-center text-[rgba(250,250,244,0.55)]"
+                      >
+                        {t("screen.noScoreYet")}
+                      </td>
                     </tr>
                   )}
                 </tbody>
@@ -627,7 +644,7 @@ export function Songs({
           </div>
 
           <nav
-            className="jukebox__index"
+            className={INDEX}
             aria-label={t("screen.jukeboxIndex")}
             data-idle={query.trim() !== ""}
           >
@@ -643,8 +660,8 @@ export function Songs({
                   tabIndex={-1}
                   className={
                     letter === list.current
-                      ? "jukebox__letter is-active"
-                      : "jukebox__letter"
+                      ? `${LETTER} is-active`
+                      : LETTER
                   }
                   aria-current={letter === list.current ? "true" : undefined}
                   disabled={!has || query.trim() !== ""}
@@ -664,11 +681,11 @@ export function Songs({
       {phone && phoneSelectionOpen && song ? (
         <NativeDialog
           title={song.title}
-          className="jukebox__song-dialog"
+          className={SONG_DIALOG}
           panelClassName="config__panel--wide jukebox__song-dialog-panel"
           onClose={() => setPhoneSelectionOpen(false)}
         >
-          {selection()}
+          {selection(true)}
         </NativeDialog>
       ) : null}
 
