@@ -1,0 +1,179 @@
+---
+import { getCollection, getEntry, render } from "astro:content";
+import "../styles/global.css";
+import "../styles/guide.css";
+import { tFor } from "../i18n/astro";
+import { DEFAULT_LOCALE, HTML_LANG } from "../i18n/locales";
+import { SECTION_LABELS, SECTION_LEDES } from "../lib/docs/sections";
+import { guideAnchor, guideGroups } from "../lib/docs/guide";
+import { docHref } from "../lib/docs/paths";
+import { readableDate } from "../lib/docs/date";
+
+/**
+ * The printable guide: every **player** and **charter** document, plus the
+ * **notices**, on one paper page — the whole set a reader needs away from the
+ * site, with a cover, a table of contents and a chapter per document.
+ *
+ * It is a build intermediate as much as a page. `scripts/guide-pdf.ts` opens the
+ * built route in Chromium and prints it to `release/guide.pdf`; the PDF is a
+ * release asset rather than a deploy, because the captures make it far larger
+ * than Cloudflare's 25 MiB per-file cap.
+ *
+ * The page is deliberately **not** in the site's shell: no header, footer,
+ * service worker or install prompt, because a printed book should not carry
+ * navigation. It is also noindex — it is the documentation again, and the
+ * sectioned pages are the ones a search result should land on.
+ */
+const entries = await getCollection("docs");
+const groups = guideGroups(entries);
+const byId = new Map(entries.map((entry) => [entry.id, entry]));
+
+const hub = byId.get("README");
+if (!hub) throw new Error("Missing the documentation hub (docs/README.md).");
+
+const siteEntry = await getEntry("site", "main");
+if (!siteEntry) throw new Error("Missing site settings entry (site/main).");
+const site = siteEntry.data;
+
+const locale = DEFAULT_LOCALE;
+const t = tFor(locale);
+const { Content: Intro } = await render(hub);
+
+const chapters = await Promise.all(
+  groups.flatMap((group) =>
+    group.docs.map(async (doc) => {
+      const entry = byId.get(doc.id);
+      if (!entry) throw new Error(`Guide chapter without a document: ${doc.id}`);
+      const { Content } = await render(entry);
+      return { group: group.section, entry, Content };
+    }),
+  ),
+);
+
+const built = new Date();
+const builtDate = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+}).format(built);
+
+const pdfUrl = new URL(
+  "releases/latest/download/guide.pdf",
+  `${site.repo.replace(/\/$/, "")}/`,
+).href;
+
+function label(section: string): string {
+  return section === "other"
+    ? t("guide.notices")
+    : t(SECTION_LABELS[section as keyof typeof SECTION_LABELS]);
+}
+
+function lede(section: string): string {
+  return t(SECTION_LEDES[section as keyof typeof SECTION_LEDES]);
+}
+---
+
+<!doctype html>
+<html lang={HTML_LANG[locale]}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#0c0d0a" />
+    <title>{t("guide.kicker")} — {t("guide.title")}</title>
+    <meta name="description" content={t("guide.description")} />
+    <link
+      rel="preload"
+      href="/fonts/permanent-marker-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body class="guide">
+    <main id="main" class="guide__page">
+      <header class="guide-cover">
+        <p class="guide-cover__kicker">{t("guide.kicker")}</p>
+        <h1 class="guide-cover__title">{t("guide.title")}</h1>
+        <p class="guide-cover__lede">{t("guide.lede")}</p>
+        <p class="guide-cover__meta">
+          <span>{t("guide.version", { version: __BUILD_VERSION__ })}</span>
+          <span>{t("guide.built", { date: builtDate })}</span>
+          <span>{site.url.replace(/^https?:\/\//, "").replace(/\/$/, "")}</span>
+        </p>
+        <p class="guide-cover__actions no-print">
+          <a class="guide-cover__action" href={pdfUrl}>{t("guide.pdf")}</a>
+          <a class="guide-cover__action" href="/docs">{t("guide.online")}</a>
+        </p>
+      </header>
+
+      <section class="guide-intro">
+        <Intro />
+      </section>
+
+      <nav class="guide-contents" id="guide-contents" aria-label={t("guide.contents")}>
+        <h2 class="guide-contents__title">{t("guide.contents")}</h2>
+        {
+          groups.map((group) => (
+            <section class="guide-contents__group">
+              <h3 class="guide-contents__section">{label(group.section)}</h3>
+              <p class="guide-contents__lede">{lede(group.section)}</p>
+              <ol class="guide-contents__list">
+                {group.docs.map((doc) => (
+                  <li class="guide-contents__item">
+                    <a class="guide-contents__link" href={`#${guideAnchor(doc.id)}`}>
+                      <span class="guide-contents__name">{doc.data.title}</span>
+                      <span class="guide-contents__description">{doc.data.description}</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ))
+        }
+      </nav>
+
+      {
+        chapters.map(({ group, entry, Content }) => (
+          <section
+            class="guide-chapter"
+            id={guideAnchor(entry.id)}
+            data-doc-id={entry.id}
+            data-doc-section={group}
+            data-doc-href={docHref(entry.id, locale)}
+          >
+            <header class="guide-chapter__head">
+              <p class="guide-chapter__section">{label(group)}</p>
+              <h2 class="guide-chapter__title">{entry.data.title}</h2>
+              <p class="guide-chapter__lede">{entry.data.description}</p>
+            </header>
+            <div class="doc">
+              <Content />
+            </div>
+            <p class="guide-chapter__updated">
+              {t("guide.updated", { date: readableDate(entry.data.updated) })}
+            </p>
+          </section>
+        ))
+      }
+
+      <footer class="guide-colophon">
+        <p class="guide-colophon__title">{t("guide.kicker")} — {t("guide.title")}</p>
+        <p>
+          {t("guide.colophon", { licence: site.license })}
+        </p>
+        <p class="guide-colophon__meta">
+          <a href={site.repo}>{t("guide.source")}</a>
+          <span>{site.url.replace(/^https?:\/\//, "").replace(/\/$/, "")}</span>
+          <span>{t("guide.version", { version: __BUILD_VERSION__ })}</span>
+        </p>
+        <p class="guide-colophon__meta">
+          <a href={pdfUrl}>{t("guide.pdf")}</a>
+          <a href="/docs">{t("guide.online")}</a>
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>

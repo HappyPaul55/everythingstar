@@ -1,7 +1,7 @@
 ---
 title: Deployment and releases
-description: "How a build reaches Cloudflare, why GitHub records the deployment, how the live site is watched, and what a release tag has to agree with."
-updated: "2026-11-01"
+description: "How a build reaches Cloudflare, why GitHub records the deployment, how the live site is watched, what a release tag has to agree with, and where the printable guide ships."
+updated: "2026-11-03"
 order: 16
 ---
 
@@ -145,6 +145,16 @@ search should land on.
 `check:release`'s real question is **reachability** — every root-absolute URL the entry
 page names must be in the archive, and every manifest icon with it — because a missing
 `_astro` chunk draws a page that never hydrates.
+
+The Release also carries **`guide.pdf`** — the printable guide built from `/guide` — as a
+seventh file beside the six archives. It is deliberately **not** in `dist/`: at the
+captures' native resolution it is about 27 MiB, past Cloudflare's 25 MiB per-asset limit,
+so the site deploys the page (noindex, out of the sitemap and the offline shell) and the
+docs hub links to
+`https://github.com/HappyPaul55/everythingstar/releases/latest/download/guide.pdf`. The
+release workflow runs `bun run guide:pdf` after `bun run build` (which has already taken
+the captures) and attaches `release/guide.pdf`; `check:docs` fails if a PDF is ever put
+in `dist/`.
 
 The archive step is deterministic: sorted entries, the commit's timestamp on every file,
 `zip -X` and a bare gzip header, so the same `dist/` is the same bytes twice. The

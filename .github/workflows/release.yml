@@ -78,8 +78,10 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ hashFiles('bun.lock') }}
       - name: Install Chromium
         run: bunx playwright install --with-deps chromium
-      # `dist/`, then `dist/sw.js`, then the three archives in `release/`.
+      # `dist/`, then `dist/sw.js`, then the printable guide in `release/`, then the
+      # three archives beside it.
       - run: bun run build
+      - run: bun run guide:pdf
       - run: bun run release:assets
       # The same gate CI runs: each archive holds its plan, its page names nothing
       # it has not got, and the zip and the tar.gz agree.
@@ -95,6 +97,7 @@ jobs:
             release/arcade.tar.gz \
             release/website.zip \
             release/website.tar.gz \
+            release/guide.pdf \
             --title "EverythingStar $GITHUB_REF_NAME" \
             --generate-notes \
             --verify-tag \

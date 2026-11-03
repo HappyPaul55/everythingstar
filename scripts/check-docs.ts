@@ -17,6 +17,10 @@
  *   documentation shipped with the game, which is the one thing it must not do.
  *   `privacy.html` is the exception and is asserted the other way: the game's own
  *   notice must still open offline.
+ * - the **printable guide** (`/guide`) is built and carries every player, charter
+ *   and notice chapter, but is noindex, out of the sitemap and out of the offline
+ *   shell; no `guide.pdf` is in `dist/`, because the PDF is a release asset past
+ *   Cloudflare's per-file cap.
  *
  * The source's own rules — frontmatter, a unique `order`, every relative link and
  * image — are `src/lib/docs/content.test.ts`, which runs in `bun test`.
@@ -24,7 +28,8 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import docshots from "../docshots.config";
-import { DOCS_ROOT, docHref } from "../src/lib/docs/paths";
+import { DOCS_ROOT, docHref, docSectionOf } from "../src/lib/docs/paths";
+import { guideAnchor } from "../src/lib/docs/guide";
 
 const ROOT = process.cwd();
 const DIST = join(ROOT, "dist");
@@ -140,8 +145,60 @@ for (const page of built) {
   }
 }
 
-console.log("\ndocumentation screenshots");
+console.log("\nthe printable guide");
 
+const guide = read(join(DIST, "guide.html"));
+check("dist/guide.html is built", guide !== null);
+if (guide) {
+  check(
+    "the guide is noindex",
+    guide.includes('<meta name="robots" content="noindex'),
+    "it is the documentation again; the sectioned pages are what search should find",
+  );
+  check("the guide is not in the sitemap", !sitemapPaths.has("/guide"));
+  check(
+    "the guide is not in the offline shell",
+    !sw.includes('"/guide.html"') && !sw.includes('"/guide"'),
+  );
+  check(
+    "the guide ships no island",
+    !guide.includes("astro-island") && !guide.includes("component-url="),
+  );
+  check(
+    "the guide has the contents page",
+    guide.includes('id="guide-contents"'),
+    "the print step prints every chapter from this one page",
+  );
+  check(
+    "the guide links the release PDF",
+    guide.includes("releases/latest/download/guide.pdf"),
+    "the PDF is a release asset, not a deploy",
+  );
+
+  // Every chapter the guide is supposed to print is in the page: the PDF is
+  // built from this HTML, so a missing section would be a shorter book.
+  const chapters = ids.filter((id) => {
+    const section = docSectionOf(id);
+    return section === "players" || section === "charters" || section === "other";
+  });
+  check("the guide has chapters to print", chapters.length > 0, `${chapters.length} found`);
+  for (const id of chapters) {
+    check(
+      `the guide carries ${id}`,
+      guide.includes(`data-doc-id="${id}"`) && guide.includes(`id="${guideAnchor(id)}"`),
+    );
+  }
+}
+// The PDF is deliberately not in `dist/`: the captures put it well past
+// Cloudflare's 25 MiB per-file cap, so it ships as a release asset and the
+// deploy only carries the page it is printed from.
+check(
+  "no guide PDF is deployed",
+  !existsSync(join(DIST, "guide.pdf")),
+  "release/guide.pdf is the artifact; dist/ must stay deployable",
+);
+
+console.log("\ndocumentation screenshots");
 check(
   "the pages name at least one screenshot",
   shotFiles.size > 0,

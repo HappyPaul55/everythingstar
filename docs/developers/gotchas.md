@@ -1,7 +1,7 @@
 ---
 title: Gotchas
 description: "The rules that have already been broken once: the vocabulary, the track format, the parsers, the stems, the stage geometry and the local records."
-updated: "2026-11-01"
+updated: "2026-11-03"
 order: 3
 ---
 
@@ -2083,6 +2083,18 @@ A reference, and a long one: it is the reasoning behind the code, kept because e
   `![…](/docs/test-output/…)`, and do not commit the folder. The Astro dev toolbar
   is disabled in `astro.config.mjs` for the same reason: it is a floating overlay
   at the foot of every page, and the captures run against the dev server.
+- **The printable guide is generated, never a second copy.** `/guide` renders the
+  player, charter and notice documents once more for a book; the sections, order and
+  chapter anchors come from `src/lib/docs/guide.ts`, and there is no hand-written
+  contents list to drift. `bun run guide:pdf` prints the **built** page to
+  `release/guide.pdf` — it prints the desktop capture (the open disclosure), makes
+  every chapter's
+  heading ids unique, rewrites cross-document links to chapter anchors, and fails on
+  a missing capture or a placeholder. The PDF **never enters `dist/`**: at the
+  captures' native resolution it is ~37 MiB, past Cloudflare's 25 MiB per-asset cap,
+  so it is a release asset and `check:docs` fails if one appears in the build. The
+  developers' pages are deliberately absent; a reader with the game needs players,
+  charters and the notices.
 - **A sound that never answers must not hold the run — and a sound that is only
   slow must not be abandoned.** `StageClock` waits for a registered source while it
   is buffering — right for a moment, fatal for a run. A folder whose every stem

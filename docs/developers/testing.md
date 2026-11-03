@@ -1,7 +1,7 @@
 ---
 title: Testing
-description: "The gates a change has to pass: the unit suite, the browser suite and its rule, the documentation captures, the build gates, and what only a real browser can prove."
-updated: "2026-11-01"
+description: "The gates a change has to pass: the unit suite, the browser suite and its rule, the documentation captures, the build gates, the printable guide's PDF, and what only a real browser can prove."
+updated: "2026-11-03"
 order: 13
 ---
 
@@ -21,6 +21,7 @@ bun run build            # static build into dist/ (captures the docs screenshot
 bun run build:quick      # the static build with whatever captures are on disk
 bun run docs:shots       # capture the documentation's screenshots (Playwright)
 bun run docs:bundle      # copy captures from public/ into a built dist/
+bun run guide:pdf        # print dist/guide.html to release/guide.pdf
 bun run preview          # serve the built site
 bun run check            # astro check — the app's type gate
 bun run lint             # oxlint — the lint gate
@@ -70,7 +71,17 @@ out of `astro check`, and the test config includes them with the runner's types.
 - **`check:docs`** — a built page per Markdown file in `docs/`, each with the site shell
   and a canonical, in the sitemap, shipping no island and absent from the offline
   shell; every screenshot the page names present in `dist/`; plus the privacy, terms
-  and accessibility notices, which the installed game must still carry.
+  and accessibility notices, which the installed game must still carry. It also holds
+  the printable guide: `/guide` is built, noindex, out of the sitemap and the offline
+  shell, carries every player, charter and notice chapter, links the release PDF, and
+  no `guide.pdf` has been put in `dist/`.
+- **`guide:pdf`** — prints the built `/guide` to `release/guide.pdf`. It is not a
+  size gate but it fails on a missing capture or a placeholder, which is why it runs
+  **after** the captures: in CI that is the package job (after `docs:bundle`), in
+  `release.yml` after `bun run build`. The PDF is not in `dist/`: it is ~27 MiB at
+  the captures' native resolution, past Cloudflare's 25 MiB per-asset limit, so it is
+  a release asset (see [Deployment](deployment.md#the-release-archives)). `verify`
+  runs it, and the release workflow attaches the result.
 - **`budget`** — `dist/_astro` JavaScript, the **initial `/play` graph** raw and
   gzipped, `dist/` as a whole and `public/audio`, and a walk of the initial graph that
   fails if a source-translator marker has leaked into it.
@@ -79,10 +90,11 @@ out of `astro check`, and the test config includes them with the runner's types.
   formats agree, and every root-absolute URL its entry page names is inside it. See
   [Deployment and releases](deployment.md#the-release-archives).
 
-The budget was measured on 2026-11-01: 707 KiB of `_astro` JS, an initial graph of
-572 KiB raw / 185 KiB gzipped across 22 files, 17.8 MiB in `dist/` and 8.8 MiB of
-audio. The caps sit just above those numbers — 710 KiB, 580 KiB, 190 KiB, 20 MiB,
-10 MiB. The **whole-build cap is the one that keeps moving**, raised when the
+The budget was last measured on 2026-11-03, after the printable guide's page joined
+the build: 707 KiB of `_astro` JS, an initial graph of 572 KiB raw / 185 KiB gzipped
+across 22 files, 18.2 MiB in `dist/` and 8.8 MiB of audio. The caps sit just above
+those numbers — 710 KiB, 580 KiB, 190 KiB, 20 MiB, 10 MiB. The **whole-build cap is
+the one that keeps moving**, raised when the
 documentation landed and again for its pictures: the [note-types page](../charters/note-types.md)
 in charters, then the screens across the loop, the players and the charter, each
 captured on desktop and mobile. A prose page and a screenshot are upload and

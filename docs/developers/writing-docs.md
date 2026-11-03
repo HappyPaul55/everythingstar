@@ -1,7 +1,7 @@
 ---
 title: Writing docs
-description: "How this documentation is written and built: one Markdown source for GitHub and the site, the frontmatter, the link rules, the four sections, the screenshot tests and the checks."
-updated: "2026-10-31"
+description: "How this documentation is written and built: one Markdown source for GitHub and the site, the frontmatter, the link rules, the four sections, the captures, the printable guide and the checks."
+updated: "2026-11-03"
 order: 5
 ---
 
@@ -31,8 +31,8 @@ is the one place that rule lives.
 ```yaml
 ---
 title: Writing docs
-description: "How this documentation is written and built: one Markdown source for GitHub and the site, the frontmatter, the link rules, the four sections, the screenshot tests and the checks."
-updated: "2026-10-31"
+description: "How this documentation is written and built: one Markdown source for GitHub and the site, the frontmatter, the link rules, the four sections, the captures, the printable guide and the checks."
+updated: "2026-11-03"
 order: 5
 ---
 ```
@@ -130,6 +130,45 @@ test(
 variant, bundles them into the built site and holds the references and the tests
 together.
 
+## The printable guide
+
+`/guide` is the same documentation as one paper page: every **player** and
+**charter** document, then the **notices**, with a cover, a contents page and a
+chapter per document. The developers' pages are left out — they are about changing
+the game, and a reader who needs them has the site.
+
+- `src/lib/docs/guide.ts` decides the sections and each chapter's anchor
+  (`players/songs` → `doc-players-songs`); it is pure and unit-tested, so the page,
+  the contents and the print step cannot disagree.
+- `src/pages/guide.astro` is a **bare page**: no site header, footer, install prompt
+  or worker. It is `noindex` and stays out of the sitemap and the offline shell; the
+  sectioned pages are what a search result should land on. The docs hub links to it.
+- `scripts/guide-pdf.ts` serves the built `dist/`, opens `/guide` in Chromium and
+  writes `release/guide.pdf` (`bun run guide:pdf`). It prints the **desktop**
+  capture — the open disclosure — makes each chapter's heading ids unique, rewrites
+  every link between documents to the chapter it became, and fails if a capture is
+  missing or a placeholder is on the page. The phone capture stays a disclosure on
+  the web page and is not printed: beside a desk frame it is mostly empty page at
+  A4 width. Chromium writes the page numbers, the heading outline and a tagged
+  (accessible) PDF; the script adds the metadata a viewer shows (author, subject,
+  keywords, language, XMP) with `pdf-lib`.
+
+**The PDF is a release asset, not a deploy.** It is ~37 MiB at the captures'
+native resolution, and Cloudflare refuses any static asset over 25 MiB, so
+`dist/guide.pdf` must not exist; `check:docs` fails if it does. The docs hub links
+to `github.com/HappyPaul55/everythingstar/releases/latest/download/guide.pdf`, which
+the release workflow attaches beside the six archives. The page itself is deployed,
+so a reader can print it from a browser.
+
+There are **no page numbers in the contents**: Chromium's print engine has no
+`target-counter`, so the contents links to chapters and the PDF's own outline is the
+navigation. The footer carries the page number and the total.
+
+Prints are made after the captures exist: `bun run build` (`docs:shots` first) then
+`bun run guide:pdf`, or the package job's `docs:bundle` then `guide:pdf`. A build
+without captures prints placeholder-free but image-less pages and the script refuses
+it.
+
 ## Adding a page
 
 1. Write `docs/<section>/<name>.md` with the four frontmatter fields.
@@ -153,7 +192,8 @@ somewhere to land.
   `resolveDocLink` — the rules are pure and tested in `src/lib/docs/paths.ts`.
 - `src/pages/docs/[...slug].astro` builds a page per sectioned document;
   `src/pages/[...legal].astro` builds the notices at the site root; `src/pages/docs/index.astro`
-  builds the hub.
+  builds the hub; `src/pages/guide.astro` builds the printable guide from
+  `src/lib/docs/guide.ts`.
 - `src/layouts/DocsLayout.astro` is the frame: sidebar, article, table of contents,
   updated line, edit link and pager.
 
@@ -161,8 +201,11 @@ somewhere to land.
 
 - `src/lib/docs/paths.test.ts` — the URL and link arithmetic.
 - `src/lib/docs/nav.test.ts` — grouping, ordering and the pager.
+- `src/lib/docs/guide.test.ts` — the guide's sections and chapter anchors.
 - `src/lib/docs/content.test.ts` — every document's frontmatter, a unique `order`, every
   relative link and image, and no page outside a section.
 - `scripts/check-docs.ts` — the built site: a page per document, the site shell, a
   canonical, the sitemap, no island script, and nothing in the service worker's
-  precache.
+  precache. It also proves the guide is built, noindex, out of the sitemap and the
+  offline shell, carries every player, charter and notice chapter, links the release
+  PDF, and that no `guide.pdf` has been put in `dist/`.

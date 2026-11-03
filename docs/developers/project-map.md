@@ -1,7 +1,7 @@
 ---
 title: Project map
 description: "Where everything lives: every module, what it owns, and the seam it sits behind — the file-by-file map of the game, the site and the scripts."
-updated: "2026-10-31"
+updated: "2026-11-03"
 order: 2
 ---
 
@@ -46,6 +46,11 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   id to its URL (`/docs/...`, or `/privacy` for a notice), relative link rewriting,
   the sidebar's groups and the page's neighbours. Tested beside them: `paths.test.ts`,
   `nav.test.ts`, and `content.test.ts` for the source's own links and frontmatter.
+- `src/pages/guide.astro` + `src/lib/docs/guide.ts` — **the printable guide**: every
+  player and charter document plus the notices on one paper page, grouped and anchored
+  by the pure module. `scripts/guide-pdf.ts` (`bun run guide:pdf`) prints the built
+  page to `release/guide.pdf`, a release asset rather than a deploy. See
+  [Writing docs](writing-docs.md#the-printable-guide).
 - `src/lib/docshots/config.ts` + `capture.ts` — the capture side: the variant
   list `docshots.config.ts` declares, and the automatic fixture that reads a
   test's `doc` annotation, takes the WebP in the test's teardown and writes it to

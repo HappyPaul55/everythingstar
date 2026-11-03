@@ -88,7 +88,9 @@ what that controller's controls mean.
   changes; [Writing docs](docs/developers/writing-docs.md) is the system. A screenshot
   is a Playwright test in `tests/e2e/docs` and a `[description](shot:<id>)` reference
   in the page; the capture jobs make the images, `bun run docs:bundle` puts them in the
-  build, and neither they nor `.docshots/` are committed.
+  build, and neither they nor `.docshots/` are committed. The printable guide is
+  generated from the same pages (`bun run guide:pdf` → `release/guide.pdf`); the PDF is
+  a release asset, never in `dist/`.
 
 ## Commands
 
@@ -102,6 +104,7 @@ bun run build            # captures the docs screenshots, then builds into dist/
 bun run build:quick      # the static build with whatever captures are on disk
 bun run docs:shots       # capture the documentation's screenshots (Playwright)
 bun run docs:bundle      # copy captures into a built dist/ before check:docs
+bun run guide:pdf        # print dist/guide.html to release/guide.pdf
 bun run docs:library     # refresh the capture fixture from the published FOSS library
 bun run verify           # the gate in one command (CI splits it into parallel jobs)
 bun run version          # v<package.json>+<sha>

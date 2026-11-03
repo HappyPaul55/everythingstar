@@ -1,0 +1,457 @@
+/* ------------------------------------------------------------------
+   The printable guide (`/guide`)
+   One paper page holding every player and charter document plus the
+   notices, so `scripts/guide-pdf.ts` can print the whole thing in one
+   pass. The screen rules are a readable column; the print rules are the
+   book: A4, a chapter per document, and the desktop capture — the open
+   screenshot disclosure — at the width of the page.
+------------------------------------------------------------------ */
+.guide {
+  background: var(--color-paper);
+  color: var(--color-ink);
+}
+.guide__page {
+  width: 100%;
+  max-width: 52rem;
+  margin-inline: auto;
+  padding: 2.5rem 1.25rem 4rem;
+}
+
+/* The cover ------------------------------------------------------- */
+.guide-cover {
+  padding-bottom: 2rem;
+  border-bottom: 2px solid var(--color-ink);
+}
+.guide-cover__kicker {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.guide-cover__title {
+  margin: 0.35rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.6rem, 8vw, 4.2rem);
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+}
+.guide-cover__lede {
+  max-width: 42rem;
+  margin: 0.9rem 0 0;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: var(--color-ink-soft);
+}
+.guide-cover__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.25rem;
+  margin: 1.1rem 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+}
+.guide-cover__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0;
+}
+.guide-cover__action {
+  display: inline-block;
+  padding: 0.5rem 0.9rem;
+  border: 2px solid var(--color-ink);
+  border-radius: var(--radius-brand);
+  background: var(--color-yellow);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+.guide-cover__action + .guide-cover__action {
+  background: transparent;
+}
+
+/* The introduction and the contents ------------------------------- */
+.guide-intro {
+  max-width: 46rem;
+  margin-top: 2rem;
+}
+.guide-contents {
+  margin-top: 2rem;
+}
+.guide-contents__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+}
+.guide-contents__group {
+  margin-top: 1.5rem;
+}
+.guide-contents__section {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 700;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid var(--color-yellow);
+}
+.guide-contents__lede {
+  margin: 0.45rem 0 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--color-muted);
+}
+.guide-contents__list {
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+}
+.guide-contents__link {
+  display: grid;
+  gap: 0.1rem;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.guide-contents__name {
+  font-weight: 700;
+}
+.guide-contents__description {
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--color-muted);
+}
+.guide-contents__link:hover .guide-contents__name {
+  text-decoration: underline;
+  text-decoration-color: var(--color-yellow);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+/* A chapter ------------------------------------------------------- */
+.guide-chapter {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--color-ink);
+}
+.guide-chapter__head {
+  max-width: 46rem;
+}
+.guide-chapter__section {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.guide-chapter__title {
+  margin: 0.2rem 0 0;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  line-height: 1.05;
+}
+.guide-chapter__lede {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--color-ink-soft);
+}
+.guide-chapter__updated {
+  margin-top: 2rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(12, 13, 10, 0.16);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+}
+.guide .doc {
+  max-width: 46rem;
+  margin-top: 1.5rem;
+}
+
+/* The colophon ---------------------------------------------------- */
+.guide-colophon {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--color-ink);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--color-ink-soft);
+}
+.guide-colophon p {
+  margin: 0.5rem 0 0;
+}
+.guide-colophon__title {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+}
+.guide-colophon__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  color: var(--color-muted);
+}
+.guide-colophon a {
+  color: inherit;
+}
+
+/* ------------------------------------------------------------------
+   Print
+   The site's own print rules (`global.css`) drop the chrome, flatten the
+   palette and expose external URLs. The guide adds the book's shape: a
+   page per chapter, no breaks inside a figure or a table, and both
+   captured variants visible with their labels.
+------------------------------------------------------------------ */
+@media print {
+  @page {
+    size: A4;
+    margin: 18mm 16mm 22mm;
+  }
+
+  .guide {
+    font-size: 10.5pt;
+  }
+  .guide__page {
+    max-width: none;
+    padding: 0;
+  }
+
+  /* The cover is the first page's head, not a page of its own. */
+  .guide-cover {
+    padding-bottom: 8mm;
+    margin-bottom: 6mm;
+    border-bottom: 1.5pt solid #000 !important;
+  }
+  .guide-cover__kicker {
+    font-size: 8pt;
+  }
+  .guide-cover__title {
+    font-size: 42pt;
+  }
+  .guide-cover__lede {
+    max-width: none;
+    font-size: 11pt;
+  }
+  .guide-cover__meta {
+    font-size: 8pt;
+  }
+
+  .guide-intro {
+    max-width: none;
+    margin-top: 0;
+  }
+  .guide-contents {
+    break-before: page;
+    margin-top: 0;
+  }
+  .guide-contents__title {
+    font-size: 22pt;
+  }
+  .guide-contents__group {
+    margin-top: 6mm;
+    break-inside: avoid;
+  }
+  .guide-contents__section {
+    font-size: 11pt;
+    border-bottom: 1pt solid #000 !important;
+    padding-bottom: 1mm;
+  }
+  .guide-contents__lede {
+    font-size: 9pt;
+  }
+  .guide-contents__list {
+    gap: 1.5mm;
+  }
+  .guide-contents__item {
+    break-inside: avoid;
+  }
+  .guide-contents__link {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .guide-contents__name {
+    font-size: 10.5pt;
+  }
+  .guide-contents__description {
+    font-size: 8.5pt;
+  }
+  .guide-contents__link:hover .guide-contents__name {
+    text-decoration: none;
+  }
+
+  .guide-chapter {
+    break-before: page;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .guide-chapter__head {
+    max-width: none;
+    padding-bottom: 4mm;
+    margin-bottom: 5mm;
+    border-bottom: 1pt solid #000 !important;
+    break-after: avoid;
+  }
+  .guide-chapter__section {
+    font-size: 8pt;
+  }
+  .guide-chapter__title {
+    font-size: 24pt;
+  }
+  .guide-chapter__lede {
+    font-size: 10pt;
+  }
+  .guide-chapter__updated {
+    margin-top: 6mm;
+    font-size: 8pt;
+    border-top: 0.5pt solid #999 !important;
+  }
+  .guide .doc {
+    max-width: none;
+    margin-top: 0;
+  }
+
+  /* Prose in a book: tighter than the screen, still airy enough to read. */
+  .guide .doc p,
+  .guide .doc li {
+    font-size: 10.5pt;
+    line-height: 1.5;
+    color: #000 !important;
+    orphans: 3;
+    widows: 3;
+  }
+  .guide .doc h2 {
+    margin-top: 7mm;
+    font-size: 15pt;
+    border-bottom: 0.75pt solid #000 !important;
+    break-after: avoid;
+  }
+  .guide .doc h3 {
+    margin-top: 5mm;
+    font-size: 12pt;
+    break-after: avoid;
+  }
+  .guide .doc h4 {
+    break-after: avoid;
+  }
+  .guide .doc pre {
+    padding: 2.5mm 3mm;
+    border: 0.5pt solid #999 !important;
+    border-radius: 0;
+    font-size: 8.5pt;
+    line-height: 1.4;
+    break-inside: avoid;
+  }
+  .guide .doc table {
+    font-size: 8.5pt;
+    break-inside: auto;
+  }
+  .guide .doc tr,
+  .guide .doc figure,
+  .guide .doc blockquote,
+  .guide .doc li {
+    break-inside: avoid;
+  }
+  .guide .doc thead {
+    display: table-header-group;
+  }
+  .guide .doc th,
+  .guide .doc td {
+    padding: 1.5mm 2mm;
+    border-bottom: 0.5pt solid #999 !important;
+  }
+  .guide .doc blockquote {
+    padding: 2mm 3mm;
+    border-left: 2pt solid #000 !important;
+    border-radius: 0;
+  }
+  .guide .doc code {
+    background: transparent !important;
+    padding: 0;
+  }
+  .guide .doc a {
+    border-bottom: 0;
+    text-decoration: underline;
+    text-underline-offset: 1.5pt;
+  }
+  /* The PDF's links are clickable; the URL after every external one would
+     make a 90-page chapter of links unreadable. The colophon names the
+     places a reader would type. */
+  .guide a[href^="http"]::after {
+    content: none;
+  }
+
+  /* One picture per shot. The guide's page still offers the phone capture as a
+     disclosure, but a closed one does not print, so the book carries the desk
+     screen at the width the page has for it. */
+  .guide .doc .doc-shot {
+    display: block;
+    margin: 5mm 0;
+    break-inside: avoid;
+  }
+  .guide .doc .doc-shot__variant {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent !important;
+  }
+  .guide .doc .doc-shot__variant + .doc-shot__variant {
+    margin-top: 0;
+  }
+  .guide .doc .doc-shot__variant > summary {
+    display: none;
+  }
+  .guide .doc .doc-shot img,
+  .guide .doc .doc-shot > p img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 130mm;
+    object-fit: contain;
+    object-position: top left;
+    border: 0.5pt solid #999 !important;
+    border-radius: 0;
+    break-inside: avoid;
+  }
+  .guide .doc .doc-shot > p {
+    margin: 0;
+  }
+  .guide .doc .doc-shot figcaption {
+    margin-top: 1.5mm;
+    font-size: 8.5pt;
+    color: #333 !important;
+  }
+
+  .guide-colophon {
+    break-before: page;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+    font-size: 9pt;
+  }
+  .guide-colophon__title {
+    font-size: 9pt;
+  }
+  .guide-colophon__meta {
+    font-size: 8pt;
+  }
+}
