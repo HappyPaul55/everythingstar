@@ -1,7 +1,7 @@
 ---
 title: Playlist API
 description: "The wire contract a playlist library or an on-demand search endpoint implements: the three documents, URL resolution, CORS, timing, and an acceptance checklist."
-updated: "2026-11-01"
+updated: "2026-11-03"
 order: 7
 ---
 
@@ -236,7 +236,7 @@ offer a slot that the song cannot fill.
   A freeform note inside a vocals chart (`row: null`) is spoken/rapped and judged on
   presence.
 - `chartType: "lyrics"` means the words carry **no pitch**. There is no singer score; the
-  words are **typed** (typing is scored) or read in Listen. See [§5.2](#52-the-melody).
+  words are **typed** (typing is scored) or read in Listen. See [§5.2](#52-the-melody-vocals-or-lyrics).
 - `parts` is `1`–`3` — solo, duet or trio. It must match the melody chart's `parts`. The
   game clamps it to 1–3; a fourth harmony is shared across the three on stage.
 

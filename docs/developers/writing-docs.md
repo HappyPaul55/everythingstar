@@ -153,7 +153,7 @@ the game, and a reader who needs them has the site.
   (accessible) PDF; the script adds the metadata a viewer shows (author, subject,
   keywords, language, XMP) with `pdf-lib`.
 
-**The PDF is a release asset, not a deploy.** It is ~37 MiB at the captures'
+**The PDF is a release asset, not a deploy.** It is ~27 MiB at the captures'
 native resolution, and Cloudflare refuses any static asset over 25 MiB, so
 `dist/guide.pdf` must not exist; `check:docs` fails if it does. The docs hub links
 to `github.com/HappyPaul55/everythingstar/releases/latest/download/guide.pdf`, which

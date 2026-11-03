@@ -1,7 +1,7 @@
 ---
 title: Commits and pull requests
 description: "How a change is written down: the commit and pull request shape, the pinned actions and dependency rule, and how to report a problem without opening a public issue."
-updated: "2026-10-28"
+updated: "2026-11-03"
 order: 12
 ---
 
@@ -40,7 +40,7 @@ React major is read before it is merged, not swept in with five others. Action u
 are grouped the same way.
 
 An action is pinned to a commit sha with its version beside it in a comment
-(`actions/checkout@<sha> # v5`), and the repository requires that pinning: an unpinned
+(`actions/checkout@<sha> # v7.0.1`), and the repository requires that pinning: an unpinned
 action is refused at push. A new action is added the same way — resolve the tag to its
 sha, put the version in the comment — and Dependabot keeps it current from there.
 

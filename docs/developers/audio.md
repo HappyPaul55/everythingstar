@@ -429,7 +429,7 @@ star-power moment left (the gauge filling is drawn, not sounded). The run's fram
 when the stage's entrance opens, one per unique part and panned across the band;
 `win` / `fail` / `best` at the results) is wired too.
 
-**Nothing is waiting on a file.** Every type resolves to at least one sound, and the
+**Nothing is waiting on a file.** Every type the game plays resolves to at least one sound, and the
 game's rule still holds for the future: asking for a type nothing can play is
 **silence, not an error**, so a cue can be wired ahead of its asset without breaking a
 screen. A replacement is a file in `public/audio/` plus its manifest entry.

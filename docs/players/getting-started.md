@@ -1,7 +1,7 @@
 ---
 title: Getting started
 description: "What EverythingStar is, how to open it, and how a visit goes: choose a song, build a band and play. No account and nothing to install."
-updated: "2026-10-31"
+updated: "2026-11-03"
 order: 1
 ---
 
@@ -59,7 +59,7 @@ EverythingStar does not need installing. To open it like an app, choose **Option
 
 ## Download a copy
 
-Every [release](https://github.com/HappyPaul55/everythingstar/releases) also carries the game as a folder: a standalone `game` (the stage alone) and `arcade` (the attract loop), as a zip and a tar.gz. Serve one from a web server at a domain's root — opening it from the file system is a page with no JavaScript, because the build addresses everything from `/`. Downloading songs is still the installed game's job.
+Every [release](https://github.com/HappyPaul55/everythingstar/releases) also carries the game as a folder: a standalone `game` (the stage alone) and `arcade` (the attract loop), as a zip and a tar.gz, plus the whole site and the printable `guide.pdf`. Serve one from a web server at a domain's root — opening it from the file system is a page with no JavaScript, because the build addresses everything from `/`. Downloading songs is still the installed game's job.
 
 ## No account, and nothing sent
 

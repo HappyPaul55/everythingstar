@@ -1,7 +1,7 @@
 ---
 title: Setting up
 description: "Bun, the repository, the dev server and the gate: everything a new contributor needs to run the game and prove a change before opening a pull request."
-updated: "2026-10-31"
+updated: "2026-11-03"
 order: 10
 ---
 
@@ -26,6 +26,7 @@ bun run check            # astro check (the app's type gate)
 bun run typecheck:tests  # tsc over src/**/*.test.ts
 bun test                 # unit tests
 bun run build            # static build into dist/, then dist/sw.js
+bun run guide:pdf        # print the built guide to release/guide.pdf
 bun run check:pwa        # the manifest, the worker and every game-only page
 bun run check:docs       # the built documentation, the sitemap and the offline shell
 bun run budget           # dist/, audio and initial-JS size caps
@@ -48,9 +49,9 @@ bun run import --from <charts> --to <library>   # a folder of charts into the th
 bun run icons / bun run fonts                   # regenerate the icon set / self-hosted fonts
 ```
 
-CI (`.github/workflows/ci.yml`) runs one `build`, a `unit` job and six browser
-shards — three per engine, Chromium and Firefox side by side — on every pull request and
-on `main`; the shards also take the documentation
-screenshots, and a final `package` job joins them to the build. The required checks are
+CI (`.github/workflows/ci.yml`) runs one `build`, a `unit` job, six behavioural browser
+shards — three per engine, Chromium and Firefox side by side — and two separate capture
+jobs; the capture jobs take the documentation screenshots, and a final `package` job
+joins them to the build. The required checks are
 `verify` and `e2e`; the local `bun run verify` remains the one-command gate.
 [Testing](testing.md) says what each gate is for and what only a browser can prove.

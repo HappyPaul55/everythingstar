@@ -1,9 +1,9 @@
 /**
  * Bump `package.json`'s version, and say how to release it.
  *
- * This writes one value and nothing else: the branch, the pull request and the
- * tag are a person's decisions, so the command prints them rather than doing
- * them. Run it as `bun run version:bump patch|minor|major`.
+ * This writes one value and nothing else: the branch and the pull request are a
+ * person's decisions; the tag and the release follow when the change merges and
+ * CI on `main` succeeds. Run it as `bun run version:bump patch|minor|major`.
  */
 import { nextVersion } from "./version";
 
@@ -32,5 +32,4 @@ console.log("");
 console.log("Next steps:");
 console.log(`  1. Create a branch named release/v${next}.`);
 console.log(`  2. Open a pull request titled "chore(release): v${next}".`);
-console.log("  3. Merge it.");
-console.log(`  4. Tag the merge commit v${next} and push the tag.`);
+console.log("  3. Merge it. CI tags the merge commit and publishes the release.");
