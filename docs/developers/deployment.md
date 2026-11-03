@@ -174,7 +174,7 @@ the GitHub Release is its home.
 ## The rules that keep it that way
 
 - **Actions are pinned to commit shas.** Every `uses:` in `.github/workflows/` is a sha
-  with the version in a comment (`actions/checkout@<sha> # v5`);
+  with the version in a comment (`actions/checkout@<sha> # v7.0.1`);
   `sha_pinning_required` refuses an unpinned one at push, and
   `.github/dependabot.yml` keeps the pins current — weekly, with minor and patch bumps
   grouped and a major on its own. The actionlint job lints the workflows from a pinned

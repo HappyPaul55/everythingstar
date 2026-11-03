@@ -26,7 +26,7 @@ are fetched by the browser from a URL the player gave it.
 | the rules that have already been broken once | [Gotchas](docs/developers/gotchas.md) |
 | the cache, folders, downloads and local records | [Libraries and local records](docs/developers/library.md) |
 | what is built and what is out of scope | [Status](docs/developers/status.md) |
-| the words the code keeps to | [Vocabulary](docs/developers/gotchas.md) (first entry) |
+| the words the code keeps to | [House rules](docs/developers/contributing-code.md) |
 | running it, the gates | [Setting up](docs/developers/contributing-setup.md) |
 | the gates and what only a browser can prove | [Testing](docs/developers/testing.md) |
 | a screen, a chart source, a convention | [House rules](docs/developers/contributing-code.md) |
@@ -42,7 +42,8 @@ are fetched by the browser from a URL the player gave it.
 
 **player, panel, highway, column, part, role, chart, seat, controller, layout.** "Lane"
 used to mean two things and the confusion showed up in every conversation about the
-stage, so it is gone. A **player** is someone on stage; a **seat** is their one place in
+stage, so it is gone from prose and new names; `LaneChart`/`LaneNote` remain in the track
+model and are not to be renamed. A **player** is someone on stage; a **seat** is their one place in
 the band (`Player.seat`), so "Player 3" means the same person on the band screen, on the
 stage, in the plan and in the results; a **panel** is their 1:1 area; a **highway** is
 the scrolling note area inside it; a **column** is one vertical lane of that highway; a
@@ -55,7 +56,8 @@ what that controller's controls mean.
 ## The rules
 
 - **`bun run verify` is the gate.** Lint, knip, `astro check`, the tests' typecheck, the
-  unit tests, the build, the PWA and docs checks, the budget — in that order. CI runs
+  unit tests, the build, the printable guide's PDF, the PWA and docs checks, the budget,
+  the release archives — in that order. CI runs
   one `build` (plus the installed-game test), a `unit` job, three behavioural browser
   shards per engine (Chromium and Firefox, side by side) and two capture jobs, then a
   `package` job that joins the build to the
@@ -138,7 +140,8 @@ shas, and the full contract is
   detail belongs in `docs/developers/`.
 - **Do not add generated content to `docs/`**, and do not copy a page between GitHub and
   the site: there is one file.
-- **A change that touches a rule in `docs/developers/gotchas.md`** updates that entry.
-  The file is long on purpose: each rule was learned the hard way.
+- **Most rules live with their area; `docs/developers/gotchas.md` is the residue.** A
+  change that touches one updates it. The page holds only the traps a test cannot state,
+  not a second manual.
 - **Never commit `dist/`, `.astro/`, `test-results/` or `.wrangler/`.** The build output
   is disposable; the source is not.

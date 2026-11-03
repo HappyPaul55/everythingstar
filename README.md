@@ -70,7 +70,7 @@ Use **[Bun](https://bun.sh)** for everything — `bun` and `bunx`, never `npm` o
 ```bash
 bun install
 bun run dev              # http://localhost:4321 — the game is /play
-bun run verify           # lint, knip, types, tests, build, PWA, budget
+bun run verify           # lint, knip, types, tests, build, guide PDF, PWA, docs, budget, archives
 bun run test:e2e         # browser tests (starts its own dev server)
 ```
 
@@ -88,7 +88,8 @@ inventory are in [`tests/e2e/README.md`](tests/e2e/README.md).
   contract is [Playlist API](docs/developers/playlist-api.md), and
   `bun run playlist:check <url>` holds a document to the game's own reader.
 - **Download a copy.** Every release attaches three archives — a standalone `game`, a
-  standalone `arcade` and the whole `website` — from the
+  standalone `arcade` and the whole `website`, each as a zip and a tar.gz — plus the
+  printable `guide.pdf`, from the
   [releases page](https://github.com/HappyPaul55/everythingstar/releases). The
   standalone folders address everything from an origin's root, so serve one from a
   web root rather than opening it from disk.

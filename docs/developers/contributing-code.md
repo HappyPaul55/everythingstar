@@ -1,7 +1,7 @@
 ---
 title: House rules
 description: "The conventions a change keeps to: pure engines, a screen is session state, tests beside the rule, and the two recipes for a new chart source or a new screen."
-updated: "2026-10-28"
+updated: "2026-11-03"
 order: 11
 ---
 
@@ -21,7 +21,8 @@ order: 11
    note area; a **column** is one lane of it; a **part** is a melodic line; a
    **role** is what a melody player does with one; a **chart** is one instrument at
    one difficulty; a **controller** is what a player holds; a **layout** is what its
-   controls mean. "Lane" is not a synonym for any of these.
+   controls mean. "Lane" is not a synonym for any of these; `LaneChart`/`LaneNote`
+   remain the track model's own names and are not to be renamed.
 4. **All copy goes through `t()` or `localePath()`.** English ships alone today, but
    a hard-coded string is a future refactor, not a shortcut. The dictionary is
    `src/i18n/ui/en.game.ts` (or `en.site.ts`/`en.charter.ts` for that surface).
@@ -42,9 +43,9 @@ order: 11
    components that follow the playhead write to the DOM themselves. Do not add a
    `requestAnimationFrame` loop per component, and do not put the playhead in React
    state.
-9. **Three kinds of local state, kept apart.** The **band** (per seat), the **board**
-   (per song) and the **settings** (this browser). A setting is a behaviour, never a
-   piece of the game.
+9. **Four local records, kept apart.** The **band** (per seat), the **board**
+   (per song), the **settings** (this browser) and the **first-run hints**. A setting is
+   a behaviour, never a piece of the game.
 10. **No build-time secrets, no environment variables.** There is nothing to
     configure: the deploy is static assets and every runtime URL comes from the player.
 

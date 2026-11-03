@@ -69,15 +69,15 @@ A status page ages; `updated` at the foot of this page is when it was last true.
   music as a playlist per screen, a whoosh on every screen change, every button, a
   smaller cue when the pointer or focus moves onto a control, the
   typing feedback, **a preview when a song is picked**, a **quiet crowd while paused**,
-  an **error when a player's channel goes out**, the combo milestone and hero
-  sparkle, the score count-up and star power's spend,
+  an **error when a player's channel goes out**, the hero sparkle,
+  the score count-up and star power's spend,
   the **band's own entrance** (one per unique part, panned across the stage) —
   with a manifest, per-file measured trims and credits, four **streamed Ogg/Opus
   menu beds**, and a public-domain crowd loop for the pause. The **menu's** music
   ducks under a sting (the band's entrance is the deliberate exception) and a run's
   own stems never do: a cue is a sound beside the song, not a hand on its fader. The
   master has **music, ambience and sound
-  effect families** of its own. Every type has a file; the six stings are a
+  effect families** of its own. Every cue the game plays has a file; the six stings are a
   **generated chiptune first pass** (CC0) and the four `hype_*` entrances are CC0
   Freesound recordings, all replaceable file-for-file, and
   `audio.md` carries the brief for commissioning better ones.
@@ -98,7 +98,7 @@ The built-in index is read fresh once per visit; a browser seeded with the old l
   notices, on one paper page with a cover, contents and a chapter per document, and
   `bun run guide:pdf` prints it to `release/guide.pdf` — a tagged PDF with an outline,
   full metadata and the desktop screenshots. The PDF is attached to each GitHub
-  Release rather than deployed: at native capture resolution it is ~37 MiB, past
+  Release rather than deployed: at native capture resolution it is ~27 MiB, past
   Cloudflare's per-asset limit. The page itself is noindex and out of the sitemap and
   the offline shell.
 
@@ -210,7 +210,7 @@ What is built in each area, and the boundaries that are deliberate rather than g
   player's whammy buys eight seconds of double score, on top of the combo multiplier.
   The gauge **filling** is silent: it is drawn on the rail, and a swell for it was a
   sound over the song rather than in it.
-- **Every type has a file.** The six stings the game was waiting on —
+- **Every cue the game plays has a file.** The six stings the game was waiting on —
   `win`, `fail`, `best`, `miss`, `type_miss` and `meter_activate` — are
   now a **generated chiptune first pass** (CC0, credited in the manifest), so no cue is
   silent; the four `hype_*` entrances are CC0 Freesound recordings. All of them are
@@ -349,8 +349,8 @@ plays whoever nobody is holding.
 The plan is for the engines to share one engine contract (as the sibling TypeStar
 build does), so a new way to play is a new engine file, not a new branch everywhere.
 
-The game itself is complete, and every cue has a file. What remains is **optional
-polish and other projects**:
+The game itself is complete, and every cue the game plays has a file. What remains is
+**optional polish and other projects**:
 
 1. **Commission the six stings** if the generated chiptune first pass is not the
    identity wanted. They are wired; a better file dropped into `public/audio/` and

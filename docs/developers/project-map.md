@@ -125,7 +125,7 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   untouched. The plan is pure and unit-tested, the builder is copying and compressing,
   and the gate holds an archive to its plan and to what its page names — a missing
   `_astro` chunk is a download that draws and never hydrates. `bun run verify` runs both,
-  and `.github/workflows/release.yml` attaches the six files to the GitHub Release.
+  and `.github/workflows/release.yml` attaches the six archives plus `guide.pdf` to the GitHub Release.
 - `src/components/game/pwa/install.ts` + `useInstall.ts` — the install prompt captured
   by the inline head listener (Chromium fires it once, early) and adopted at session
   mount; the Options row offers it, iOS gets instructions, and the native shell gets no
@@ -539,5 +539,5 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   self-hosted fonts, the dist/audio size caps, the social cards' source layout and
   renderer, and the documentation gate.
 - `.github/workflows/ci.yml` — CI installs with a frozen lockfile and splits the
-  checks across `build`, `unit`, four browser shards and `package`; the `verify` job
-  joins them into the one required check.
+  checks across `build`, `unit`, six behavioural browser shards (three per engine) and
+  two capture jobs, then `package`; `verify` and `e2e` are the required checks.

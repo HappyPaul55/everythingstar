@@ -1,7 +1,7 @@
 ---
 title: Architecture
 description: "The loop, the screen machine and the one stage: how EverythingStar is laid out, what is mounted for every screen, and where the seams are."
-updated: "2026-11-01"
+updated: "2026-11-03"
 order: 1
 ---
 
@@ -178,7 +178,8 @@ fallback, not a stop an ordinary run makes.
   run went (the notes hit of what was judged, the accuracy, the best combo), then
   **a card per player** in band order — what they took, at what level, their score,
   their own stars and average multiplier, and their own notes, accuracy and combo —
-  and where the run sits in this browser's history for the song. The best line is
+  a **brag card** for a kept run, and where the run sits in this browser's history for
+  the song. The best line is
   **for this band** — the same instruments at the same levels, with the words sung or
   typed the same way — while the history below stays the song's own across lineups,
   and each row says which lineup it was under the date and band size.
@@ -276,10 +277,11 @@ The island is one React root, but not everything it can do belongs in the first
 download. The **source translators** (`src/lib/game/sources/parse.ts` and the MIDI,
 `.chart`, StepMania, UltraStar and lyric readers behind it) are fetched with
 `await import(...)` only when a folder or `.sng` package is first read, and
-**`PlaylistsDialog`**, **`DownloadsDialog`**, **`CalibrationDialog`**, **`IntentDialog`**
-and the dev **`BandControls`** are `React.lazy` with a null `Suspense` fallback. A
-player who opens the JSON library and never presses Calibrate, opens Downloads, follows
-a link or uses `?dev=1` does not pay for any of it.
+**`PlaylistsDialog`**, **`DownloadsDialog`**, **`CalibrationDialog`**, **`PracticeDialog`**,
+**`IntentDialog`**, **`BragCardDialog`**, the lazy profile import and the dev
+**`BandControls`** are `React.lazy` (or `await import(...)`) with a null `Suspense`
+fallback. A player who opens the JSON library and never presses Calibrate, opens
+Downloads, follows a link or uses `?dev=1` does not pay for any of it.
 
 That matters because `/play` is the page the game starts on: the initial JavaScript
 graph is **572 KiB raw / 185 KiB gzipped across 22 files**, and every static import
@@ -321,6 +323,10 @@ saved.
   under `players/`, `charters/` and `developers/`: plain Astro, no island, in the
   sitemap. The collection base is `./docs` at the repository root, so the same
   Markdown is what GitHub shows. See [Writing docs](writing-docs.md).
+- `/guide` — the **printable guide**: every player and charter page plus the notices
+  on one paper page, noindex and out of the sitemap and offline shell.
+  `scripts/guide-pdf.ts` prints it to `release/guide.pdf` for the release, not the
+  deploy. See [Writing docs](writing-docs.md#the-printable-guide).
 - `/privacy`, `/terms`, `/copyright`, `/credits`, `/accessibility` — the **notices**,
   authored in `docs/other/` but served at the site root because they are not
   documentation and `/privacy` is load-bearing (the footer, the offline shell and the
