@@ -121,10 +121,13 @@ Cloudflare static assets, built and uploaded by GitHub Actions after CI succeeds
 `main` (`site-dist` → `bunx wrangler deploy`), configured by `wrangler.jsonc`; `dist/`
 and nothing else. GitHub records the automatic deployment in
 `.github/workflows/ci.yml` (the manual `deploy.yml` is the rollback path), watches
-the live site daily (`production-check.yml`), and refuses a release tag that disagrees
-with `package.json` or is not on `main` — a tag builds that commit and attaches the six
-archives (`game`, `arcade` and `website`, each zip and tar.gz) to the GitHub Release.
-`main` is PR-only, actions are pinned to commit shas, and the full contract is
+the live site daily (`production-check.yml`), and releases automatically: when a PR
+changes `package.json`'s version and that merge's CI run on `main` succeeds,
+`.github/workflows/release.yml` tags the commit and attaches the six archives
+(`game`, `arcade` and `website`, each zip and tar.gz) plus `guide.pdf` to the GitHub
+Release. A hand-pushed `v*` tag still publishes when it agrees with `package.json` and
+is on `main`; anything else is refused. `main` is PR-only, actions are pinned to commit
+shas, and the full contract is
 [Deployment and releases](docs/developers/deployment.md).
 
 ## Working notes
