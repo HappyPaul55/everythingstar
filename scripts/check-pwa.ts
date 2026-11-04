@@ -278,11 +278,22 @@ for (const page of ["app.html", "arcade.html", "embed.html", "open.html"]) {
     `dist/${page} links the manifest`,
     /<link[^>]+rel="manifest"[^>]+href="\/manifest.webmanifest"/.test(html),
   );
+  // Astro emits the registration as an external module (`assetsInlineLimit: 0`
+  // keeps every asset out of the HTML for the CSP), so read the module the page
+  // names rather than looking for the source text in the page.
+  const moduleSources = [...html.matchAll(/<script\b[^>]*>/gi)]
+    .map((match) => match[0])
+    .filter((tag) => /type="module"/.test(tag))
+    .map((tag) => /src="([^"]+)"/.exec(tag)?.[1])
+    .filter((src): src is string => Boolean(src));
+  const moduleText = moduleSources
+    .map((src) => read(join(DIST, src.replace(/^\/+/, ""))) ?? "")
+    .join("\n");
   check(
     `dist/${page} registers the worker`,
-    /<script[^>]+type="module"/.test(html) &&
-      html.includes("serviceWorker") &&
-      html.includes("/sw.js"),
+    moduleSources.length > 0 &&
+      moduleText.includes("serviceWorker") &&
+      moduleText.includes("/sw.js"),
   );
   check(
     `dist/${page} is not indexable`,

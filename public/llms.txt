@@ -1,0 +1,23 @@
+# EverythingStar
+
+> A free browser rhythm game on one stage: instruments on guitar, bass, keys and drums, lyric typing on a keyboard, and karaoke. No account needed.
+
+EverythingStar is a static, no-account rhythm game published by HappyPaul55. The marketing pages are plain HTML; the game itself runs entirely in the browser at `/play`. There is no sign-in, no analytics, no advertising and no cookies of its own.
+
+## Main pages
+
+- [EverythingStar](https://everythingstar.happypaul55.com/): the home page — what the game is and how it plays.
+- [Play](https://everythingstar.happypaul55.com/play): the game stage — instruments, typing and vocals.
+- [Arcade](https://everythingstar.happypaul55.com/arcade): the live window of the game.
+- [Charter](https://everythingstar.happypaul55.com/charter): the chart editor and how to make a chart.
+- [Documentation](https://everythingstar.happypaul55.com/docs): player and developer guides.
+- [Privacy Policy](https://everythingstar.happypaul55.com/privacy): what the game keeps and sends.
+- [Terms](https://everythingstar.happypaul55.com/terms): the terms of use.
+- [Copyright](https://everythingstar.happypaul55.com/copyright): the copyright notice.
+- [Credits](https://everythingstar.happypaul55.com/credits): authors, licences and acknowledgements.
+- [Accessibility](https://everythingstar.happypaul55.com/accessibility): what the game does for keyboard, screen reader, gamepad and low-vision players.
+
+## Elsewhere
+
+- [Source code](https://github.com/HappyPaul55/everythingstar): the AGPL-3.0 repository.
+- [HappyPaul55](https://www.happypaul55.com): the publisher.

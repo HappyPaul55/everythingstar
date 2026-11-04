@@ -1,5 +1,8 @@
 # Cloudflare redirects
 # https://developers.cloudflare.com/workers/static-assets/redirects/
 #
-# Nothing needs redirecting yet — add one line per redirect, e.g.:
-# /old-path   /new-path   301
+# One rule per line: /old-path   /new-path   301
+#
+# `/accessibility` is a real, linked page (built from docs/other/accessibility.md
+# and precached for offline play), so it is deliberately not redirected.
+/cookies   /privacy   301
