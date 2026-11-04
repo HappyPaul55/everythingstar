@@ -10,7 +10,8 @@
  * which is the only way to show the prompt from the game's own Install button.
  *
  * Inline on purpose: a bundled module is deferred, which is the race this exists to
- * remove. The CSP already allows inline scripts (`script-src 'unsafe-inline'`).
+ * remove. The build hashes this block into the CSP (`src/integrations/csp-hashes.mjs`),
+ * so it runs without `'unsafe-inline'`.
  */
 ---
 

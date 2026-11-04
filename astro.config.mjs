@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { readVersion } from "./scripts/version.ts";
 import { docIdFromPath, resolveDocLink } from "./src/lib/docs/paths.ts";
 import { docsShots } from "./src/lib/docs/shots.ts";
+import cspHashes from "./src/integrations/csp-hashes.mjs";
 
 const buildVersion = readVersion();
 
@@ -41,7 +42,9 @@ export default defineConfig({
   devToolbar: { enabled: false },
   build: {
     format: "file",
-    inlineStylesheets: "always",
+    // External CSS so the CSP can forbid inline styles; `csp-hashes` then
+    // allows the inline scripts Astro emits for the island and the PWA.
+    inlineStylesheets: "never",
   },
   trailingSlash: "never",
   integrations: [
@@ -57,6 +60,7 @@ export default defineConfig({
         !/^https?:\/\/[^/]+\/(?:app|arcade|embed|open|charter|guide|404|500)\/?$/.test(page),
     }),
     react(),
+    cspHashes(),
   ],
   markdown: {
     // The docs have tables, code and commands; the light theme is the paper
@@ -83,6 +87,11 @@ export default defineConfig({
   },
   vite: {
     define: { __BUILD_VERSION__: JSON.stringify(buildVersion) },
+    build: {
+      // Never turn an asset into a `data:` URI: it would be an inline resource
+      // the CSP has to allow.
+      assetsInlineLimit: 0,
+    },
     plugins: [tailwindcss()],
   },
 });
