@@ -30,7 +30,7 @@ const docsLinks = {
     const id = docIdFromPath(fileURLToPath(ctx.fileURL));
     if (!id) return;
     const target = resolveDocLink(id, node.url);
-    if (target !== node.url) ctx.setProperty(node, "url", target);
+    if (target !== node.url) ctx.setField(node, "url", target);
   },
 };
 
