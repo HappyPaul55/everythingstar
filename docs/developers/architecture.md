@@ -268,7 +268,9 @@ rather than the 671 KiB JPEG it replaced.
     being lower; a refusal is not an error, it is a band that plays itself (the
     score rail says so), and nothing leaves the device.
 - **Lanes region** — one panel per player (guitar, bass, drums, keys, dance),
-  side by side. Each panel holds the score (left), the note highway (centre) and
+  side by side. They wrap only when the stage is too narrow for one row, and a
+  panel left alone on the last row is centred rather than stranded in its first
+  column. Each panel holds the score (left), the note highway (centre) and
   the info rail (right — the power meter, a full-height bar). A highway note is a
   **button**: it is hit where it lands. The pads are one pointer surface — the hit
   row captures the pointer, not the pad — so a finger already on the line may

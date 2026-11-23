@@ -1,5 +1,5 @@
 import { useT } from "../../../i18n/react";
-import type { PanelGrid } from "../../../lib/game/band/layout";
+import { loneLastPanel, type PanelGrid } from "../../../lib/game/band/layout";
 import { lanePlayers, type BandSetup } from "../../../lib/game/band/types";
 import type { HighwayView, NoteStyle } from "../../../lib/game/settings";
 import { PlayerPanel } from "./PlayerPanel";
@@ -58,6 +58,13 @@ export function LanesRegion({
   const empty = grid.columns === 0 || grid.width === 0;
   if (empty && !tooSmall) return null;
 
+  const players = lanePlayers(setup);
+  // A grid that wraps with one panel left over — three instruments in a 2×2, as
+  // the arcade's band is on a portrait stage — would leave that panel in the first
+  // column. It spans the row and centres itself instead, so the band reads as a
+  // balanced group rather than a grid with a hole.
+  const loneLast = loneLastPanel(players.length, grid.columns);
+
   return (
     // A **group**, not a region: the thing that is a landmark here is each
     // player's own panel, and a region around them would name the same place a
@@ -77,12 +84,17 @@ export function LanesRegion({
             gap,
           }}
         >
-          {lanePlayers(setup).map((player) => (
+          {players.map((player, index) => (
             <PlayerPanel
               key={player.id}
               player={player}
               width={grid.width}
               height={grid.height}
+              place={
+                loneLast && index === players.length - 1
+                  ? { gridColumn: "1 / -1", justifySelf: "center" }
+                  : undefined
+              }
               view={view}
               noteStyle={noteStyle}
               noteSpeed={noteSpeed}
