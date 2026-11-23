@@ -3,7 +3,7 @@ import { disableFullscreen, installFixtures } from "./fixture";
 import { enterGame } from "./helpers";
 
 /**
- * The two branches off the menu, and the rule that Escape is "back".
+ * The branches off the menu, and the rule that Escape is "back".
  *
  * These are round trips nothing else in the loop knows about, and they are the
  * part most likely to regress: a branch that can get somewhere else, or a key

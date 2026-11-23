@@ -8,22 +8,22 @@ import {
   type KeyboardEvent,
   type RefObject,
 } from "react";
-import type { SongGroup } from "../../../lib/game/jukebox";
+import type { SongGroup } from "../../../lib/game/songList";
 import {
   WINDOW_OVERSCAN,
   anchorTop,
-  buildJukeboxLayout,
+  buildSongListLayout,
   itemAtOffset,
-  jukeboxWindow,
+  songListWindow,
   letterAtOffset,
   letterOffset,
   rowFrom,
   scrollTopForItem,
-  type JukeboxHeights,
-  type JukeboxLayout,
-  type JukeboxSection,
-  type JukeboxWindow,
-} from "../../../lib/game/jukeboxWindow";
+  type SongListHeights,
+  type SongListLayout,
+  type SongListSection,
+  type SongListWindow,
+} from "../../../lib/game/songListWindow";
 import type { Song } from "../../../lib/game/song";
 import { focusStageTarget } from "../ui/nav";
 
@@ -38,10 +38,10 @@ import { focusStageTarget } from "../ui/nav";
 const MEASURE_RETRY_MS = 200;
 
 /**
- * The jukebox list's DOM orchestration: measuring, windowing, scrolling and focus.
+ * The song list's DOM orchestration: measuring, windowing, scrolling and focus.
  *
  * The list is one long column of a few hundred rows, and only the rows around the
- * viewport are mounted (`src/lib/game/jukeboxWindow.ts` is the arithmetic). This
+ * viewport are mounted (`src/lib/game/songListWindow.ts` is the arithmetic). This
  * hook is the other half: it measures one heading and one row off the real
  * stylesheet, keeps the window in step with the scroller, holds the scroll
  * position by identity when the library changes under it, and moves focus through
@@ -57,7 +57,7 @@ const MEASURE_RETRY_MS = 200;
  * song — that rule is why the placement flag is held here, beside the focus it
  * qualifies, rather than in the screen.
  */
-export interface JukeboxListInput {
+export interface SongListInput {
   /** The filtered groups, in the order they are drawn. */
   shown: SongGroup[];
   /** The words in the search field: a change to them starts the list at the top. */
@@ -74,15 +74,15 @@ export interface JukeboxListInput {
   follow?: boolean;
 }
 
-export interface JukeboxList {
+export interface SongList {
   /** The scrolling box: its own scroll position is the window's input. */
   scroller: RefObject<HTMLDivElement | null>;
   /** The measured heading and row, or null before they can be read. */
-  heights: JukeboxHeights | null;
+  heights: SongListHeights | null;
   /** What to mount, or null until the heading and row have been measured. */
-  range: JukeboxWindow | null;
+  range: SongListWindow | null;
   /** The window's sections, or the first frame of rows before it can be built. */
-  sections: JukeboxSection[];
+  sections: SongListSection[];
   /** The letter the list is showing, so the index can say where you are. */
   current: string | null;
   /** Jump to a letter by its layout offset. */
@@ -95,13 +95,13 @@ export interface JukeboxList {
   markTyped: () => void;
 }
 
-export function useJukeboxList({
+export function useSongList({
   shown,
   query,
   chosen,
   ready,
   follow = false,
-}: JukeboxListInput): JukeboxList {
+}: SongListInput): SongList {
   const scroller = useRef<HTMLDivElement | null>(null);
   /**
    * The window's geometry.
@@ -112,7 +112,7 @@ export function useJukeboxList({
    * breakpoint, a font arriving or a zoom settles back into the same arithmetic
    * instead of drifting from the CSS.
    */
-  const [heights, setHeights] = useState<JukeboxHeights | null>(null);
+  const [heights, setHeights] = useState<SongListHeights | null>(null);
   const [scroll, setScroll] = useState({ top: 0, viewport: 0 });
   /**
    * A row an arrow or Tab has just moved to. It is mounted even when it is far
@@ -124,7 +124,7 @@ export function useJukeboxList({
    * screen seating the chosen song — so it must not select or preview it.
    */
   const silentPlacement = useRef(false);
-  const layoutRef = useRef<JukeboxLayout | null>(null);
+  const layoutRef = useRef<SongListLayout | null>(null);
   const scrollRef = useRef(scroll);
   const shownRef = useRef<SongGroup[]>([]);
   /** The filter the list was last built for; a change to it is a new list. */
@@ -169,13 +169,13 @@ export function useJukeboxList({
   }, []);
 
   const layout = useMemo(
-    () => (heights ? buildJukeboxLayout(shown, heights) : null),
+    () => (heights ? buildSongListLayout(shown, heights) : null),
     [shown, heights],
   );
   const range = useMemo(
     () =>
       layout
-        ? jukeboxWindow(
+        ? songListWindow(
             layout,
             scroll.top,
             scroll.viewport,
@@ -188,7 +188,7 @@ export function useJukeboxList({
   /** A first frame of rows, before the one heading and row have been measured. */
   const previewSections = useMemo(() => {
     if (range || shown.length === 0) return [];
-    const sections: JukeboxSection[] = [];
+    const sections: SongListSection[] = [];
     let budget = 24;
     for (let index = 0; index < shown.length && budget > 0; index += 1) {
       const take = Math.min(shown[index].entries.length, budget);
@@ -367,7 +367,7 @@ export function useJukeboxList({
     const active = document.activeElement;
     const waiting =
       active === document.body ||
-      (active instanceof HTMLElement && active.id === "jukebox-search");
+      (active instanceof HTMLElement && active.id === "song-list-search");
     if (!waiting) {
       autoFocused.current = true;
       return;
@@ -376,7 +376,7 @@ export function useJukeboxList({
       const current = document.activeElement;
       const stillWaiting =
         current === document.body ||
-        (current instanceof HTMLElement && current.id === "jukebox-search");
+        (current instanceof HTMLElement && current.id === "song-list-search");
       autoFocused.current = true;
       if (!stillWaiting) return;
       const at = chosen ? layout.rows.get(chosen.id) : undefined;

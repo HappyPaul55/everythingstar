@@ -14,6 +14,7 @@ const SCREEN_ROOT: Record<Screen, string> = {
   options: ".screen--options",
   credits: ".screen--credits",
   songs: ".screen--songs",
+  jukebox: ".screen--jukebox",
   band: ".screen--band",
   loading: ".screen--loading",
   countdown: ".band__stage",
@@ -159,7 +160,7 @@ export function focusStageTarget(element: HTMLElement, options: FocusOptions = {
     // `overflow: hidden` by a few dozen pixels (and, once the stage was clipped,
     // the `/play` document to the footer), leaving the progress bar off the top
     // and a strip of backdrop at the bottom. The pages keep their scroll: the
-    // jukebox's list and a dialog's first field may genuinely be below the fold.
+    // song list's list and a dialog's first field may genuinely be below the fold.
     if (!element.closest(".band__stage")) {
       element.scrollIntoView({ block: "nearest", inline: "nearest" });
     }

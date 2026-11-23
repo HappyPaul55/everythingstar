@@ -15,7 +15,7 @@ import { enterGame, waitForStage } from "./helpers";
  * The game copies what the player chooses into its own Origin Private File System
  * and reads it with the folder scanner. These tests hand the hidden inputs real
  * files, as a browser without `showDirectoryPicker` would, and then check the two
- * things an import promises: the song is in the jukebox and plays, and the copy
+ * things an import promises: the song is in the song list and plays, and the copy
  * survives a reload.
  */
 async function openPlaylists(page: Page): Promise<void> {

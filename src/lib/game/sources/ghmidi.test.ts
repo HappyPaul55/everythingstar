@@ -209,7 +209,7 @@ describe("readGameMidi", () => {
   });
 
   test("a song whose file states no length gets one from its own notes", () => {
-    // Some early charts have no `song_length` at all, and a jukebox full of
+    // Some early charts have no `song_length` at all, and a song list full of
     // `0:00` is worse than an approximate length.
     const bare = readGameMidi({ bytes: song(), ini: readIni("[song]\nname = No Length\n") });
     expect(bare.meta.durationMs).toBeGreaterThan(5000);

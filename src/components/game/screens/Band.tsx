@@ -52,7 +52,7 @@ import { activeRoot, defaultFocus, focusStageTarget } from "../ui/nav";
  * singing always has, and nothing at all for lyrics, which is free play.
  *
  * A box remembers what it was given even when the song has moved on, so walking
- * back to the jukebox and picking another song does not throw the band away.
+ * back to the song list and picking another song does not throw the band away.
  */
 interface Props {
   song: Song;

@@ -145,10 +145,11 @@ export function channelOf(type: string): Channel {
  * thing the mixer must never do.
  */
 export function bedFor(screen: Screen): string | null {
-  // The jukebox is a preview booth, not a room with a house band: a song's own
+  // Songs is a preview booth, not a room with a house band: a song's own
   // preview is the only music there. A song with nothing to preview is silent,
-  // rather than falling back to the menu bed behind the list.
-  if (screen === "songs") return null;
+  // rather than falling back to the menu bed behind the list. The Jukebox is the
+  // same idea with the whole song: the song *is* the music.
+  if (screen === "songs" || screen === "jukebox") return null;
   return onStage(screen) ? null : "background";
 }
 

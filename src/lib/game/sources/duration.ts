@@ -5,7 +5,7 @@
  * `song_length` in their `song.ini` at all, and a MIDI has nowhere to put one — so
  * the answer has to come from the notes themselves: the last thing that sounds, plus
  * a tail for the noise after it. A stated length always wins; this is only the
- * fallback, and it is better than a song that reads `0:00` in the jukebox.
+ * fallback, and it is better than a song that reads `0:00` in the song list.
  */
 
 import type { LaneChart, MelodyChart } from "../track";

@@ -55,7 +55,7 @@ caps are a separate rule inside the package.
 
 A playlist can also be a **search endpoint** rather than a catalogue. `ondemand: true`
 in its manifest (or `ondemand: { "param": "search" }` to name a parameter other than
-`q`) says it can be asked for a song; the jukebox's search field sends the words as
+`q`) says it can be asked for a song; Songs' search field sends the words as
 `?q=…`, built through `URL` so an existing query string and a hash are kept. The
 answer is the same playlist document, read against its query URL, with each song
 still belonging to the source that was asked. Results are a **session's working
@@ -88,7 +88,7 @@ Play on (or one that plays silence).
 
 A **`.sng` member** — a cover, a stem, a chart inside a package — is read and unmasked
 out of the file when something asks for it, and the result is kept for the visit in a
-**32 MB** cache (`localObjectUrl`), because a jukebox asks for the same cover on every
+**32 MB** cache (`localObjectUrl`), because Songs asks for the same cover on every
 pass. A member is also held to the same **128 MB** package ceiling as a downloaded one:
 a local package has no download to check, so the member's own length is the only
 bound. Without it a 2 GB container could ask the tab for 2 GB of array.
@@ -106,7 +106,7 @@ that fails, deletes the copy. A picked folder is never copied or deleted.
 
 **Offline downloads** are the one place that copies audio. The website and the native
 app share one contract: each registers a worker, and both serve the same
-`everythingstar-offline-v1` Cache Storage bucket. The jukebox's now-playing slot offers
+`everythingstar-offline-v1` Cache Storage bucket. Songs' now-playing slot offers
 **Download** and the toolbar opens a **Downloads** manager; saving a song writes its
 playlist, song document, every chart for every part, every stem, its art and its preview
 into that bucket (`src/components/game/library/downloads.ts`). The site's own `/sw.js` —
@@ -127,7 +127,7 @@ whatever the cached type says (so an old poisoned copy can be replaced), and a s
 that answers `/search?q=…` or `/songs/abc` is judged by the cached response's own
 content type.
 A download is a single **page-wide job**: it keeps running when the player walks from the
-jukebox to the band, a screen that mounts mid-download sees it already in progress, and
+Songs to the band, a screen that mounts mid-download sees it already in progress, and
 the Downloads dialog offers **Cancel**. It is also all or nothing: a cancelled, failed or
 over-quota attempt deletes what it wrote. **A whole playlist can be saved the same way**:
 each enabled catalogue row in the Playlists dialog offers **Save playlist offline**, which
@@ -158,7 +158,7 @@ level plus whether a words player sang or typed — a stable, unlocalised, sorte
 such as `drums:hard+guitar:expert+words:normal:sing` (`lineupKey`). Seat order does
 not change it. `bestFor`/`topFor` take an optional lineup; with it only that band's
 runs count, and without it the song-wide best across lineups is still what the
-jukebox shows. An entry saved before lineups were recorded has no key, so it is its
+Songs shows. An entry saved before lineups were recorded has no key, so it is its
 own group and never matches a specific lineup. The results screen compares the new
 score with the best **for this band** and shows the last few runs song-wide
 (`recentFor`, newest first), each row naming its lineup. The **band** is remembered

@@ -105,12 +105,12 @@ export interface Engine {
   /**
    * The **ambience** bed, which runs independently of the music: the room's murmur
    * while the run is paused. It comes and goes on its own channel, so a menu bed or a
-   * jukebox preview can never take the room with it. A looped bank loops; asking for
+   * preview can never take the room with it. A looped bank loops; asking for
    * the same bed again does nothing.
    */
   ambience: (type: string | null) => Promise<void>;
   /**
-   * A song's **jukebox preview**: a streamed file that takes the music channel over
+   * A song's **preview**: a streamed file that takes the music channel over
    * from the bed while it plays, then hands it back. Null stops it.
    */
   preview: (track: PreviewSource | null) => void;
@@ -128,7 +128,7 @@ export interface Engine {
   dispose: () => void;
 }
 
-/** What a jukebox preview plays, and where in the file it starts. */
+/** What a preview plays, and where in the file it starts. */
 export interface PreviewSource {
   url: string;
   startMs?: number;
@@ -193,7 +193,7 @@ export function createEngine(onBed?: (id: string | null) => void): Engine {
   const musicBed = bedSlot();
   const ambienceBed = bedSlot();
   /**
-   * The jukebox preview's **one** element and its **one** graph source. Clicking
+   * The preview's **one** element and its **one** graph source. Clicking
    * through a few hundred rows is a few hundred previews, and a new element and node
    * per preview is a few hundred nodes the graph can never let go of — so they are
    * made once, on the first preview, and only the `src` changes after that.
@@ -324,7 +324,7 @@ export function createEngine(onBed?: (id: string | null) => void): Engine {
     if (disposed) return Promise.resolve();
     const slot =
       type === null ? fallback : channelOf(type) === "ambience" ? ambienceBed : musicBed;
-    // A music bed and a jukebox preview are one channel's guests; the room's bed is
+    // A music bed and a preview are one channel's guests; the room's bed is
     // nobody's rival and must survive both.
     if (slot === musicBed) stopPreview(false);
     slot.wanted = type;
@@ -458,13 +458,13 @@ export function createEngine(onBed?: (id: string | null) => void): Engine {
   /**
    * A song's preview: the music channel's guest, not its owner.
    *
-   * The bed gives way while it plays, and comes back when the jukebox is left or
+   * The bed gives way while it plays, and comes back when Songs is left or
    * another screen asks for a bed (`bed` calls `stopPreview`). The clip is
    * **streamed through a media element**, like a bed, and routed into the music
    * channel, so the master fader and the channel level apply to it exactly as they
    * do to the menu music. Nothing here decodes a four-minute file into memory.
    *
-   * A preview **repeats until it is replaced or the jukebox is left**. A master
+   * A preview **repeats until it is replaced or Songs is left**. A master
    * fallback returns to the same `previewStartMs` cue rather than the start of the
    * file, so the loop is the same part of the song each time.
    *
@@ -507,7 +507,7 @@ export function createEngine(onBed?: (id: string | null) => void): Engine {
 
     const element = previewElementFor();
     if (!element) {
-      // A file the graph cannot take is a preview the jukebox does without: the bed
+      // A file the graph cannot take is a preview Songs does without: the bed
       // comes back rather than the room going quiet.
       wantedPreview = null;
       void bed(musicBed.wanted);

@@ -3,6 +3,7 @@ import type { Screen } from "../../../lib/game/screens";
 import type { GameSession } from "../useGameSession";
 import { Band } from "./Band";
 import { Credits } from "./Credits";
+import { Jukebox } from "./Jukebox";
 import { Loading } from "./Loading";
 import { Menu } from "./Menu";
 import { Options } from "./Options";
@@ -24,7 +25,7 @@ export interface ScreenCredits {
   licenseUrl: string;
 }
 
-type PageView = (session: GameSession, credits: ScreenCredits) => ReactNode;
+type PageView = (session: GameSession, credits: ScreenCredits, arcade: boolean) => ReactNode;
 type OverlayView = (session: GameSession) => ReactNode;
 
 /**
@@ -40,7 +41,7 @@ function isStageScreen(screen: Screen): screen is StageScreen {
 }
 
 /**
- * The pages: the welcome, the menu and its two branches, the jukebox, the band
+ * The pages: the welcome, the menu and its branches, the song list, the band
  * screen, the load and the results. Each is a screen of its own with the whole
  * viewport to itself — a page is not the stage, and the stage must not mount
  * behind one.
@@ -61,12 +62,14 @@ const PAGES: Record<PageScreen, PageView> = {
       }}
     />
   ),
-  menu: (session) => (
+  menu: (session, _credits, arcade) => (
     <Menu
       onQuickPlay={() => session.dispatch("enter")}
+      onJukebox={() => session.dispatch("jukebox")}
       onOptions={() => session.dispatch("options")}
       onCredits={() => session.dispatch("credits")}
       onBack={() => session.dispatch("back")}
+      arcade={arcade}
     />
   ),
   options: (session) => (
@@ -98,6 +101,7 @@ const PAGES: Record<PageScreen, PageView> = {
       attract={session.attract}
     />
   ),
+  jukebox: (session) => <Jukebox session={session} />,
   band: (session) =>
     session.song ? (
       <Band
@@ -166,12 +170,15 @@ const STAGE_OVERLAYS: Record<StageScreen, OverlayView | null> = {
 export function ScreenPage({
   session,
   credits,
+  arcade = false,
 }: {
   session: GameSession;
   credits: ScreenCredits;
+  /** The `/arcade` entry: the charter is not part of the demo. */
+  arcade?: boolean;
 }) {
   if (isStageScreen(session.screen)) return null;
-  return PAGES[session.screen](session, credits);
+  return PAGES[session.screen](session, credits, arcade);
 }
 
 /** The pause, for the stage's overlay slot. */

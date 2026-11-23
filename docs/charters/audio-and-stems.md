@@ -1,6 +1,6 @@
 ---
 title: Audio and stems
-description: "The song's own sound: stems and mix presets, which file is the song, how a miss ducks a part, the jukebox preview, and how to assemble a folder."
+description: "The song's own sound: stems and mix presets, which file is the song, how a miss ducks a part, the preview, and how to assemble a folder."
 updated: "2026-10-31"
 order: 5
 ---
@@ -30,7 +30,7 @@ The contract is [§4.2 of the wire format](../developers/playlist-api.md#42-audi
 - **`source`** is `stems` (the ordinary case) or `youtube` (the video is the music). Omitted means `stems`.
 - **`stems`** is one entry per file: an `id`, a `url`, an optional `name`, an optional **`instrument`**. A stem without one is a **master** or backing, never ducked by a miss.
 - **`mixPresets`** is keyed by name, each naming stem ids. **`full`** is the whole song; **`stems`** is the parts alone.
-- **`preview`** is a short jukebox clip, not a stem; **`previewStartMs`** on the song is where a preview starts without one.
+- **`preview`** is a short preview clip, not a stem; **`previewStartMs`** on the song is where a preview starts without one.
 
 ## Which file is the song
 
@@ -100,7 +100,7 @@ A singer replaces the song's voice; the **guide vocal** setting controls the voc
 
 Only a separate vocal stem named by the **vocals** part in `audioControl` can be affected; a one-master song keeps its voice.
 
-## The jukebox preview
+## The preview
 
 Choosing a song plays a reminder:
 
@@ -108,7 +108,7 @@ Choosing a song plays a reminder:
 - Otherwise the song's **master**, from `previewStartMs` — the named cue, or the beginning.
 - A song with **only parts and no whole mix** has nothing to preview. One instrument is a preview of the wrong thing.
 
-The clip is streamed, loops until another row is chosen or the jukebox is left, and is never mixed into the run or ducked. A local file becomes an object URL, the previous one revoked.
+The clip is streamed, loops until another row is chosen or Songs is left, and is never mixed into the run or ducked. A local file becomes an object URL, the previous one revoked.
 
 ## YouTube as the music
 
@@ -135,7 +135,7 @@ For someone with a recording and a chart:
 3. **Keep them at one level.** Per-stem gain is not applied: 6 dB louder in the file is 6 dB louder in the game.
 4. **Name them by the table** in [Folder layout](folder-layout.md): `song.ogg`, `guitar.ogg`, `bass.ogg`, `drums.ogg` or `drums_1..4.ogg`, `vocals.ogg`, `harmony.ogg`. An unknown name is not a stem.
 5. **Ship a master with parts on a one- or two-instrument song** — the backing. On a multitrack the parts are the song; if yours is a true full mix, say so in `full`.
-6. **Add a preview clip** — the hook, from its start; without one the jukebox plays the master from the song's cue.
+6. **Add a preview clip** — the hook, from its start; without one Songs plays the master from the song's cue.
 7. **Make the length true.** `durationMs` should match the audio; the clock follows the sound and ends with the **last** stem.
 8. **Choose a format.** MP3 or AAC/M4A are safest, OGG/Opus works in modern browsers, WAV works and is large; serve **Range** for comfortable seeking.
 9. **Say which part owns which stem** in `audioControl`, or a miss ducks nothing.

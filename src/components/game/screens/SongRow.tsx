@@ -1,16 +1,16 @@
 import { useT } from "../../../i18n/react";
-import { songChips } from "../../../lib/game/jukebox";
+import { songChips } from "../../../lib/game/songList";
 import type { Song } from "../../../lib/game/song";
 import { SongCover } from "../library/SongCover";
 import { formatClock } from "../band/StageClock";
 
 /**
- * One song in the jukebox: its cover, how long it is, its name and artist, and what it
- * offers. The row is the whole control — pressing it selects the song — so the jukebox
+ * One song in the song list: its cover, how long it is, its name and artist, and what it
+ * offers. The row is the whole control — pressing it selects the song — so the song list
  * needs no icons and nothing to decode.
  *
  * **What the row does not carry is the point of it.** It used to lead with the song's
- * slot code and end with this browser's best: the slot is the jukebox's own address and
+ * slot code and end with this browser's best: the slot is the song list's own address and
  * is said again on the now-playing display, and a score belongs with the numbers rather
  * than beside a title, so neither earns a column here. What is left is what the song
  * *is* — how long, what it is called, who it is by, and what there is to play on it.
@@ -29,7 +29,7 @@ interface Props {
   song: Song;
   selected: boolean;
   opensDialog?: boolean;
-  /** The first row is where the jukebox starts when a controller walks in. */
+  /** The first row is where the song list starts when a controller walks in. */
   defaultFocus?: boolean;
   /** Moving onto a row with Tab or the arrows chooses it and previews it. */
   onFocus?: () => void;
@@ -66,7 +66,7 @@ export function SongRow({
       onClick={(event) => {
         // Keyboard Enter, Space and a pad's A arrive as a click with no detail;
         // a real mouse/touch press has one. The former confirms the row (Next:
-        // your band); the latter auditions it and stays in the jukebox.
+        // your band); the latter auditions it and stays in the song list.
         if (event.detail === 0 && onStart) onStart();
         else onSelect();
       }}

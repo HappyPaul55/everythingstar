@@ -1,5 +1,5 @@
 /**
- * The jukebox's **window**: which part of a song list is in the DOM.
+ * The song list's **window**: which part of a song list is in the DOM.
  *
  * The list is one long column — a letter heading, its rows, the next heading —
  * and a library can be a folder of two thousand songs. `Songs.tsx` used to mount
@@ -25,11 +25,11 @@
  * Nothing here reads the DOM. Heights come in, offsets and spacers go out.
  */
 
-import type { SongGroup } from "./jukebox";
+import type { SongGroup } from "./songList";
 import { clamp as clampNumber } from "./math";
 
 /** How tall one item is. Measured by the screen; different per breakpoint. */
-export interface JukeboxHeights {
+export interface SongListHeights {
   /** One letter heading (`.song-group__letter`). */
   header: number;
   /** One song row (`.song-row`). */
@@ -37,7 +37,7 @@ export interface JukeboxHeights {
 }
 
 /** One heading or one row, in list order. */
-export interface JukeboxItem {
+export interface SongListItem {
   kind: "letter" | "song";
   /** The letter this item files under. */
   letter: string;
@@ -54,7 +54,7 @@ export interface JukeboxItem {
 }
 
 /** One letter's place in the list: a heading and the rows under it. */
-export interface JukeboxGroup {
+export interface SongListGroup {
   letter: string;
   /** Flat index of the heading. */
   header: number;
@@ -67,12 +67,12 @@ export interface JukeboxGroup {
 }
 
 /** The whole list, flattened, with every item's top. */
-export interface JukeboxLayout {
-  heights: JukeboxHeights;
-  items: JukeboxItem[];
+export interface SongListLayout {
+  heights: SongListHeights;
+  items: SongListItem[];
   /** `offsets[i]` is the top of item `i`; `offsets[items.length]` is the total. */
   offsets: number[];
-  groups: JukeboxGroup[];
+  groups: SongListGroup[];
   total: number;
   /** A row's flat index, by song id — what focus and the arrows follow. */
   rows: Map<string, number>;
@@ -82,7 +82,7 @@ export interface JukeboxLayout {
 export const WINDOW_OVERSCAN = 4;
 
 /** The header and its rows, as the window renders them. */
-export interface JukeboxSection {
+export interface SongListSection {
   /** Index into `layout.groups`. */
   group: number;
   /** First and last+1 entry index in that group that are mounted. */
@@ -97,7 +97,7 @@ export interface JukeboxSection {
 }
 
 /** What to render, and the spacers that stand in for everything else. */
-export interface JukeboxWindow {
+export interface SongListWindow {
   /** Flat index of the first item in the mounted range, inclusive. */
   start: number;
   /** Flat index just past the mounted range. */
@@ -106,10 +106,10 @@ export interface JukeboxWindow {
   top: number;
   /** Height of the spacer after the last rendered row. */
   bottom: number;
-  sections: JukeboxSection[];
+  sections: SongListSection[];
 }
 
-const EMPTY_WINDOW: JukeboxWindow = {
+const EMPTY_WINDOW: SongListWindow = {
   start: 0,
   end: 0,
   top: 0,
@@ -124,15 +124,15 @@ const EMPTY_WINDOW: JukeboxWindow = {
  * (`groupSongs` filters), but the layout does not assume it: a heading with no
  * rows still occupies its heading height.
  */
-export function buildJukeboxLayout(
+export function buildSongListLayout(
   groups: readonly SongGroup[],
-  heights: JukeboxHeights,
-): JukeboxLayout {
+  heights: SongListHeights,
+): SongListLayout {
   const header = Math.max(0, heights.header);
   const row = Math.max(0, heights.row);
-  const items: JukeboxItem[] = [];
+  const items: SongListItem[] = [];
   const offsets: number[] = [];
-  const built: JukeboxGroup[] = [];
+  const built: SongListGroup[] = [];
   const rows = new Map<string, number>();
   let top = 0;
 
@@ -181,7 +181,7 @@ export function buildJukeboxLayout(
 }
 
 /** The item at a scroll offset: the last one whose top is at or above it. */
-export function itemAtOffset(layout: JukeboxLayout, offset: number): number {
+export function itemAtOffset(layout: SongListLayout, offset: number): number {
   const count = layout.items.length;
   if (count === 0) return 0;
   const at = clamp(offset, 0, layout.total);
@@ -206,7 +206,7 @@ export function itemAtOffset(layout: JukeboxLayout, offset: number): number {
  * the top rather than a frame later.
  */
 export function letterAtOffset(
-  layout: JukeboxLayout,
+  layout: SongListLayout,
   offset: number,
   slack = 8,
 ): string | null {
@@ -220,7 +220,7 @@ export function letterAtOffset(
 }
 
 /** Where a letter's heading is, or null if the filtered list has no such group. */
-export function letterOffset(layout: JukeboxLayout, letter: string): number | null {
+export function letterOffset(layout: SongListLayout, letter: string): number | null {
   const group = layout.groups.find((entry) => entry.letter === letter);
   return group ? group.top : null;
 }
@@ -239,13 +239,13 @@ export function letterOffset(layout: JukeboxLayout, letter: string): number | nu
  * to `layout.total`, which is what keeps the scrollbar stable and the scroll
  * position exact as the window slides.
  */
-export function jukeboxWindow(
-  layout: JukeboxLayout,
+export function songListWindow(
+  layout: SongListLayout,
   scrollTop: number,
   viewportHeight: number,
   overscan = WINDOW_OVERSCAN,
   ensure: number | null = null,
-): JukeboxWindow {
+): SongListWindow {
   const count = layout.items.length;
   if (count === 0) return EMPTY_WINDOW;
 
@@ -274,7 +274,7 @@ export function jukeboxWindow(
   // the viewport: the caller is scrolling there at the same time, and a Home/End
   // jump must not mount the list in between.
   if (ensure !== null && ensure >= 0 && ensure < count && (ensure < start || ensure >= end)) {
-    return jukeboxWindow(
+    return songListWindow(
       layout,
       layout.offsets[ensure] ?? 0,
       viewportHeight,
@@ -285,7 +285,7 @@ export function jukeboxWindow(
 
   const firstGroup = layout.items[start].group;
   const lastGroup = layout.items[end - 1].group;
-  const sections: JukeboxSection[] = [];
+  const sections: SongListSection[] = [];
   for (let groupIndex = firstGroup; groupIndex <= lastGroup; groupIndex += 1) {
     const group = layout.groups[groupIndex];
     const firstRow = group.header + 1;
@@ -314,7 +314,7 @@ export function jukeboxWindow(
  * the list, which is what lets Tab leave the list rather than wrap.
  */
 export function rowFrom(
-  layout: JukeboxLayout,
+  layout: SongListLayout,
   from: number,
   step: number,
 ): number | null {
@@ -336,7 +336,7 @@ export function rowFrom(
  * result is clamped so the last row is still reachable at the end of the list.
  */
 export function scrollTopForItem(
-  layout: JukeboxLayout,
+  layout: SongListLayout,
   index: number,
   viewportHeight: number,
   scrollTop: number,
@@ -369,8 +369,8 @@ export function scrollTopForItem(
  * letter, and a letter that has gone too means the top.
  */
 export function anchorTop(
-  previous: JukeboxLayout,
-  next: JukeboxLayout,
+  previous: SongListLayout,
+  next: SongListLayout,
   offset: number,
 ): number {
   const item = previous.items[itemAtOffset(previous, offset)];

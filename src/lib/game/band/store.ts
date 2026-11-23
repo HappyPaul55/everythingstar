@@ -1,7 +1,7 @@
 /**
  * The band, remembered between visits.
  *
- * A jukebox should know who is on stage from one song to the next: walking back
+ * A band should know who is on stage from one song to the next: walking back
  * to the band screen to an empty stage every time would be its own small betrayal.
  * So the plan is kept in this browser's storage — no account, and the same "local
  * for now" decision as the score board. Everything except the two storage calls is

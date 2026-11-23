@@ -67,7 +67,7 @@ test("the source parsers are not fetched while the JSON library is browsed", asy
     "the page is on the Vite dev server",
   ).toBe(true);
 
-  // The welcome, the menu and the jukebox all run without a translator.
+  // The welcome, the menu and the song list all run without a translator.
   expect(parserRequests(served)).toEqual([]);
 
   await page.getByRole("button", { name: /Quick Play/ }).click();

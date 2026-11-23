@@ -25,7 +25,7 @@ conformance.
 - **Escape is back** — out of a dialog, off a screen, and out of a run (where it
   pauses). In fullscreen the browser keeps Escape for itself, so leaving fullscreen
   pauses the run instead of dropping the player into a moving song. A text field
-  keeps its own Escape: the jukebox's search clears rather than leaving the screen.
+  keeps its own Escape: Songs' search clears rather than leaving the screen.
 - **The marketing and notice pages are plain and work without JavaScript.** They
   have a skip link, real landmarks and a mobile menu built from `<details>`. The
   game itself is one React island and does need JavaScript.
@@ -95,7 +95,7 @@ These are honest boundaries, not a list of things that will arrive.
   coming: the song and the part ducking out are feedback, not instruction. A player
   who cannot see the highway cannot play it as intended.
 - **A screen reader can operate the site and the game's menus** — the welcome, the
-  menu, Options, the jukebox, the band screen, the dialogs and the results — but
+  menu, Options, Songs, the band screen, the dialogs and the results — but
   the falling notes themselves are not described.
 - **Singing needs a microphone.** Typing the words is the keyboard alternative, and
   it keeps its own score, chosen per player on the band screen.

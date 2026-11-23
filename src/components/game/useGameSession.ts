@@ -25,7 +25,7 @@ import {
   type Settings,
 } from "../../lib/game/settings";
 import { songArt, songForId, type Song } from "../../lib/game/song";
-import { EMPTY_MELODY } from "../../lib/game/source";
+import { EMPTY_MELODY, type SourceSongDoc } from "../../lib/game/source";
 import { loadBoard, type SavedRun } from "../../lib/game/scores";
 import {
   clampPractice,
@@ -62,6 +62,7 @@ import {
   type Seat,
   type SongLoad,
 } from "./library/useSongTrack";
+import { useJukebox, type JukeboxController } from "./jukebox/useJukebox";
 
 /**
  * How long a settings change waits before it is written down. The state is
@@ -69,6 +70,9 @@ import {
  * input event.
  */
 const SETTINGS_SAVE_MS = 200;
+
+/** A band with nobody on stage, for the screens that are not a run. */
+const NO_BAND: BandSetup = { players: [] };
 
 /**
  * What the attract demo asks of a session.
@@ -87,6 +91,36 @@ export interface AttractSession {
 }
 
 /**
+ * What the island's audio and stage are playing right now.
+ *
+ * The run and the Jukebox are two ways to have a song open. They share the one
+ * clock, the one mixer and the one song-audio registry, so the shell reads the
+ * active playback from here rather than from the run's own fields. On every
+ * screen but the Jukebox this is the run's song; on the Jukebox it is the song
+ * the listener is on.
+ */
+export interface Playback {
+  song: Song | null;
+  doc: SourceSongDoc | null;
+  track: Track;
+  setup: BandSetup;
+  /** A song whose video is the music, with the level and speed of this screen. */
+  youtubeAudio: {
+    videoId: string;
+    volume: number;
+    musicLevel: number;
+    lagMs: number;
+    rate: number;
+    practice: boolean;
+  } | null;
+  media: StageMedia;
+  /** A singer is taking the vocal, so the guide vocal is held out of the mix. */
+  sung: boolean;
+  rate: number;
+  practice: PracticePlan | null;
+}
+
+/**
  * Everything the island's screens share, and the effects that keep it true.
  *
  * This is **state and effects only** — no screen is rendered here. The island's
@@ -97,7 +131,7 @@ export interface AttractSession {
  * It owns the **screen** (welcome, songs, band, a run, the results), the **library**
  * the songs come from, the song that is chosen and the band playing it. **One screen
  * at a time, and only one of them is the stage**: the song, and the stage entrance
- * and the pause that happen around it. The welcome, the jukebox, the band screen, the
+ * and the pause that happen around it. The welcome, the song list, the band screen, the
  * load and the results are **pages of their own**, with the whole viewport to
  * themselves — a menu drawn over a running song is a menu with a song in the way.
  *
@@ -129,11 +163,11 @@ export interface GameSession {
    * marketing page's keyboard with it.
    */
   focus: boolean;
-  /** A phone gets the jukebox's own one-column layout and no default song. */
+  /** A phone gets the song list's own one-column layout and no default song. */
   phoneLayout: boolean;
-  /** The jukebox was entered from a run, so the song is one already played. */
+  /** The song list was entered from a run, so the song is one already played. */
   returningToSongs: boolean;
-  /** The song the URL or the jukebox asked for, resolved against the library. */
+  /** The song the URL or the song list asked for, resolved against the library. */
   wantedId: string;
   setWantedId: Dispatch<SetStateAction<string>>;
   plan: BandPlan;
@@ -168,6 +202,10 @@ export interface GameSession {
   library: Library;
   /** A link waiting for an answer, or the answer it got. */
   intent: IntentController;
+  /** The listening mode: the queue, the shuffle and its own loader. */
+  jukebox: JukeboxController;
+  /** What is playing now, whichever half of the game asked for it. */
+  playback: Playback;
   song: Song | null;
   sounds: Sounds;
   setup: BandSetup;
@@ -198,7 +236,7 @@ export function useGameSession(attract: AttractSession | null = null): GameSessi
   const silent = attract?.silent ?? false;
   const [screen, setScreen] = useState<Screen>("welcome");
   const [phoneLayout, setPhoneLayout] = useState(false);
-  /** The jukebox is being entered from a run, not from the menu. */
+  /** The song list is being entered from a run, not from the menu. */
   const [returnedToSongs, setReturnedToSongs] = useState(false);
   const [wantedId, setWantedId] = useState("");
   const [plan, setPlan] = useState<BandPlan>(firstBand);
@@ -233,13 +271,18 @@ export function useGameSession(attract: AttractSession | null = null): GameSessi
   // A link this page was opened with — or one the native shell handed over — is a
   // question, not an instruction; the dialog answers it.
   const intent = useIntent(library, screen);
+  // The listening mode. It owns its own queue, shuffle and loader; on every
+  // other screen it is idle but keeps the queue for the next visit to the
+  // Jukebox.
+  const jukeboxActive = screen === "jukebox";
+  const jukebox = useJukebox(library, jukeboxActive);
   // The home window pretends to be a phone whatever the iframe's width settles at;
   // the rest of the session follows the real breakpoint.
   const compact = attractPlayers === 1 || phoneLayout;
   const song = useMemo(
     () =>
       songForId(library.songs, wantedId) ??
-      // The phone's jukebox asks for a song rather than assuming one; every other
+      // The phone's song list asks for a song rather than assuming one; every other
       // screen keeps the first song, so crossing the breakpoint mid-screen cannot
       // take the band's song away.
       (compact && screen === "songs" ? null : (library.songs[0] ?? null)),
@@ -282,15 +325,35 @@ export function useGameSession(attract: AttractSession | null = null): GameSessi
       })),
     [setup],
   );
-  // Nothing is fetched while the jukebox is up: browsing is not playing. Once a
+  // Nothing is fetched while the song list is up: browsing is not playing. Once a
   // song is picked its charts come down behind the band screen, so pressing Play
-  // is usually instant — and nothing is fetched on the way *to* the jukebox either,
-  // which is what the menu and its two branches are.
+  // is usually instant — and nothing is fetched on the way *to* the song list either,
+  // which is what the menu and its branches are.
   const load = useSongTrack(song, seats, wantsCharts(screen));
   const track: Track = useMemo(
     () => load.track ?? shellTrack(song),
     [load.track, song],
   );
+
+  /**
+   * The song the island is playing: the run's on every screen but the Jukebox,
+   * and the listener's on the Jukebox. The stage, the mixer and the song-audio
+   * registry all read this one shape, so there is no second audio path.
+   */
+  const playbackSong = jukeboxActive ? jukebox.current : song;
+  const playbackLoad = jukeboxActive ? jukebox.load : load;
+  const jukeboxTrack = jukebox.track;
+  const jukeboxCurrent = jukebox.current;
+  const playbackTrack: Track = useMemo(
+    () =>
+      jukeboxActive
+        ? (jukeboxTrack ?? shellTrack(jukeboxCurrent))
+        : track,
+    [jukeboxActive, jukeboxTrack, jukeboxCurrent, track],
+  );
+  const playbackSetup: BandSetup = jukeboxActive ? NO_BAND : setup;
+  const playbackPractice = jukeboxActive ? null : practice;
+  const playbackRate = playbackPractice?.speed ?? 1;
 
   /**
    * The stage's entrance: one hype per unique part, and a song that does not begin
@@ -334,19 +397,22 @@ export function useGameSession(attract: AttractSession | null = null): GameSessi
           ),
     [attractActive, setup, track.melody, settings.guideVocal],
   );
+  const playbackSung = jukeboxActive ? false : sung;
 
-  // What a run plays against: the song's own video, or its art, or the game's own
-  // artwork — the same ladder the menus fall back on. Whether the song's own is
-  // *wanted* is a setting, not a song's property. `useArtUrl` is what makes a cover
-  // read from a folder loadable at all.
-  const stageArt = useArtUrl(song ? (load.doc?.art ?? songArt(song)) : null);
+  // What the open song plays against: the song's own video, or its art, or the
+  // game's own artwork — the same ladder the menus fall back on. Whether the
+  // song's own is *wanted* is a setting, not a song's property. `useArtUrl` is
+  // what makes a cover read from a folder loadable at all.
+  const stageArt = useArtUrl(
+    playbackSong ? (playbackLoad.doc?.art ?? songArt(playbackSong)) : null,
+  );
   /**
    * A song whose **video is the music**: no stems, and the official player supplies
    * both the sound and the backdrop. Null for every ordinary song, so nothing else
    * changes. The video setting may hide it — the player still runs behind the art.
    */
   const youtubeAudio = useMemo(() => {
-    const doc = load.doc;
+    const doc = playbackLoad.doc;
     if (
       silent ||
       !doc ||
@@ -360,16 +426,17 @@ export function useGameSession(attract: AttractSession | null = null): GameSessi
       volume: settings.volume,
       musicLevel: settings.levels.music,
       lagMs: settings.audioLagMs,
-      rate: practice?.speed ?? 1,
-      practice: practice !== null,
+      rate: playbackRate,
+      practice: playbackPractice !== null,
     };
   }, [
     silent,
-    load.doc,
+    playbackLoad.doc,
     settings.volume,
     settings.levels.music,
     settings.audioLagMs,
-    practice,
+    playbackRate,
+    playbackPractice,
   ]);
   const media = useMemo<StageMedia>(
     () =>
@@ -378,15 +445,45 @@ export function useGameSession(attract: AttractSession | null = null): GameSessi
       // streams a video, even a song that names one.
       youtubeAudio && settings.video
         ? { kind: "youtube", id: youtubeAudio.videoId }
-        : backdropFor(song, settings.video && !silent, stageArt),
-    [youtubeAudio, settings.video, silent, song, stageArt],
+        : backdropFor(playbackSong, settings.video && !silent, stageArt),
+    [youtubeAudio, settings.video, silent, playbackSong, stageArt],
+  );
+
+  /**
+   * The one shape the island's audio and stage read. On the Jukebox it is the
+   * listener's song and an empty band; on every other screen it is the run's.
+   */
+  const playback = useMemo<Playback>(
+    () => ({
+      song: playbackSong,
+      doc: playbackLoad.doc,
+      track: playbackTrack,
+      setup: playbackSetup,
+      youtubeAudio,
+      media,
+      sung: playbackSung,
+      rate: playbackRate,
+      practice: playbackPractice,
+    }),
+    [
+      playbackSong,
+      playbackLoad.doc,
+      playbackTrack,
+      playbackSetup,
+      youtubeAudio,
+      media,
+      playbackSung,
+      playbackRate,
+      playbackPractice,
+    ],
   );
   // The API script is worth fetching as soon as the song is known to need it:
   // the player itself is created on the countdown, and a script that is already
   // there is a countdown that is not waiting for YouTube.
+  const youtubeVideoId = youtubeAudio?.videoId ?? null;
   useEffect(() => {
-    if (youtubeAudio) void loadYouTubeApi().catch(() => undefined);
-  }, [youtubeAudio?.videoId]);
+    if (youtubeVideoId) void loadYouTubeApi().catch(() => undefined);
+  }, [youtubeVideoId]);
 
   useEffect(() => {
     // The game no longer puts its screen in the address bar. An old link may still
@@ -469,7 +566,7 @@ export function useGameSession(attract: AttractSession | null = null): GameSessi
   useEffect(() => {
     const previous = previousScreen.current;
     previousScreen.current = screen;
-    // Coming back to the jukebox from a run is returning to a song already chosen;
+    // Coming back to the song list from a run is returning to a song already chosen;
     // arriving from the menu is arriving at the top. A phone uses this to reopen the
     // now-playing panel for the song it just played instead of looking unselected.
     setReturnedToSongs(
@@ -670,6 +767,8 @@ export function useGameSession(attract: AttractSession | null = null): GameSessi
     bandRef,
     library,
     intent,
+    jukebox,
+    playback,
     song,
     sounds,
     setup,

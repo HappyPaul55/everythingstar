@@ -1,9 +1,9 @@
 import { useT } from "../../../i18n/react";
-import { songChips } from "../../../lib/game/jukebox";
+import { songChips } from "../../../lib/game/songList";
 import type { Song } from "../../../lib/game/song";
 
 /**
- * What a song offers, as chips — shared by the jukebox's rows and its now-playing
+ * What a song offers, as chips — shared by the song list's rows and its now-playing
  * slot so the two can never describe a song differently. `songChips` owns the
  * list; this only draws it.
  */
@@ -27,7 +27,7 @@ export function SongChips({ song, className }: Props) {
 
   return (
     <>
-      <span className={`${className} jukebox__chips--full`}>
+      <span className={`${className} song-list__chips--full`}>
         {chips.map((key) => (
           <span
             className={key === "song.vocals" ? "song-chip song-chip--vocals" : "song-chip"}
@@ -38,7 +38,7 @@ export function SongChips({ song, className }: Props) {
         ))}
       </span>
       <span
-        className={`${className} jukebox__chips--compact`}
+        className={`${className} song-list__chips--compact`}
         role="group"
         aria-label={chips.map((key) => t(key)).join(", ")}
       >

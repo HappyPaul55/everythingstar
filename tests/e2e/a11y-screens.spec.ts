@@ -3,13 +3,13 @@ import { SONG_TITLE, disableFullscreen, installFixtures } from "./fixture";
 import { describeViolations, seriousViolations } from "./axe";
 
 /**
- * The welcome, the menu and the jukebox's own dialog.
+ * The welcome, the menu and the song list's own dialog.
  *
  * The screen machine is walked rather than mounted screen by screen: the
- * FocusLayer, the menu and the jukebox dialog are the product's, and an audit of
+ * FocusLayer, the menu and the song list dialog are the product's, and an audit of
  * a test-only mount would not be an audit of what a player gets.
  */
-test("welcome, menu, songs, options and the Playlists dialog have no critical or serious violations", async ({
+test("welcome, menu, the Jukebox, songs, options and the Playlists dialog have no critical or serious violations", async ({
   context,
   page,
 }) => {
@@ -33,13 +33,27 @@ test("welcome, menu, songs, options and the Playlists dialog have no critical or
   expect(describeViolations(options)).toBe("");
 
   await page.getByRole("button", { name: "Back to the menu" }).click();
+  await page.getByRole("button", { name: /Jukebox/ }).click();
+  await expect(page.getByRole("heading", { name: "Jukebox" })).toBeVisible();
+  const jukebox = await seriousViolations(page);
+  expect(describeViolations(jukebox)).toBe("");
+
+  await page.getByRole("button", { name: "Pick a song" }).click();
+  const picker = page.getByRole("dialog", { name: "Pick a song" });
+  await expect(picker).toBeVisible();
+  const jukeboxPicker = await seriousViolations(page);
+  expect(describeViolations(jukeboxPicker)).toBe("");
+  await page.keyboard.press("Escape");
+  await expect(picker).toBeHidden();
+  await page.getByRole("button", { name: "Back to the menu" }).click();
+
   await page.getByRole("button", { name: /Quick Play/ }).click();
   await expect(page.getByRole("heading", { name: "Pick a song" })).toBeVisible();
   await expect(page.getByRole("button", { name: new RegExp(SONG_TITLE) })).toBeVisible();
   const songs = await seriousViolations(page);
   expect(describeViolations(songs)).toBe("");
 
-  // The Playlists dialog is the jukebox's own `NativeDialog`: focus trap, Escape
+  // The Playlists dialog is the song list's own `NativeDialog`: focus trap, Escape
   // and its opener are the product's, so it is audited in place rather than
   // through a test-only mount.
   await page.getByRole("button", { name: /^Playlists/ }).click();

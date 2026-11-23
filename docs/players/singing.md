@@ -2,7 +2,7 @@
 title: Singing
 description: "Singing in EverythingStar: the microphone, the guide vocal, how notes are judged, duets and what is never recorded."
 updated: "2026-10-31"
-order: 5
+order: 6
 ---
 
 Vocals is karaoke on the same stage. Choose **Vocals** for a words player on a pitched song, and the melody appears as a piano roll with the words beneath it. You sing into a microphone, and each note is judged on how much of its own length you held in tune.

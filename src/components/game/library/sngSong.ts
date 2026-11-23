@@ -2,7 +2,7 @@
  * The band's load of a `.sng` package.
  *
  * A package is not a song document and its chart, but the same thing in one file:
- * take it from the one-visit package cache (the jukebox's preview may already have
+ * take it from the one-visit package cache (the song list's preview may already have
  * fetched it), read its index, and let the pure reader turn its chart and stems into
  * the source a folder would have produced. The audio and cover are object URLs, and
  * the load owns them until it is replaced.

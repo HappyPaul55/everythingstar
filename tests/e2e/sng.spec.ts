@@ -10,7 +10,7 @@ import { enterGame, startRun } from "./helpers";
 /**
  * One package, two readers.
  *
- * The jukebox fetches a `.sng` to play a row's preview; opening the band then wants
+ * The song list fetches a `.sng` to play a row's preview; opening the band then wants
  * the same bytes for its chart and stems. The one-visit cache means the package is
  * requested **once**, so the test counts the route hits rather than inspecting the
  * cache from outside — the network is the behaviour a player pays for.

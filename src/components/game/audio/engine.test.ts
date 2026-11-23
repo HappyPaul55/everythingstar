@@ -1,7 +1,7 @@
 /**
  * The mixer's resource rules, held to with fakes rather than a browser.
  *
- * A jukebox is a list you click through, so the preview is the one path in the
+ * A song list is a list you click through, so the preview is the one path in the
  * engine that is asked for hundreds of times in a session. These tests pin what it
  * may create (one element, one node), the order the element is configured in
  * (`crossOrigin` before `src`), and that the graph can be let go of.
@@ -239,7 +239,7 @@ async function settle(): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-describe("a jukebox preview", () => {
+describe("a preview", () => {
   test("two previews reuse one element and one graph source", async () => {
     const engine = createEngine();
     await engine.start();

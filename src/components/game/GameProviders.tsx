@@ -87,7 +87,9 @@ export function GameProviders({
         crowd={crowd}
         enabled={audio}
       >
-        <SongAudioStatusProvider preload={screen === "band" || screen === "loading"}>
+        <SongAudioStatusProvider
+          preload={screen === "band" || screen === "loading" || screen === "jukebox"}
+        >
           <StageClockProvider durationMs={track.durationMs}>
             <StageControlsProvider setup={setup} track={track} screen={screen}>
               <SongProvider track={track} seed={seed} doc={doc}>

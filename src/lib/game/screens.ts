@@ -16,7 +16,7 @@
  * to it, so nothing else has to know they exist.
  *
  * Choosing a song and choosing a band are **two screens**, in that order: a
- * jukebox picker wants the room a few hundred titles need, and a band wants the
+ * song list picker wants the room a few hundred titles need, and a band wants the
  * room a slot per player needs. Neither wants to be half of one panel, and both
  * have a way back to the previous step.
  *
@@ -31,6 +31,7 @@ export type Screen =
   | "options"
   | "credits"
   | "songs"
+  | "jukebox"
   | "band"
   | "loading"
   | "countdown"
@@ -39,7 +40,7 @@ export type Screen =
   | "results";
 
 /**
- * Every screen, in the order a session reaches them — with the menu's two branches
+ * Every screen, in the order a session reaches them — with the menu's branches
  * beside it, since where a screen sits in this list is where it sits in the loop.
  */
 export const SCREENS: Screen[] = [
@@ -48,6 +49,7 @@ export const SCREENS: Screen[] = [
   "options",
   "credits",
   "songs",
+  "jukebox",
   "band",
   "loading",
   "countdown",
@@ -61,7 +63,9 @@ export type ScreenEvent =
   | "enter" // the welcome's one button, and the menu's way on to the songs
   | "options" // the menu's settings branch
   | "credits" // and its thanks branch
+  | "jukebox" // the menu's listening branch
   | "open" // a song was chosen; on to the band
+  | "songs" // the Jukebox's way to Songs when the library has nothing to play
   | "play" // the band is ready
   | "start" // the band and its sound are ready, so no load screen is needed
   | "back" // back the way you came
@@ -77,10 +81,17 @@ export type ScreenEvent =
 
 const TRANSITIONS: Record<Screen, Partial<Record<ScreenEvent, Screen>>> = {
   welcome: { enter: "menu" },
-  menu: { enter: "songs", options: "options", credits: "credits", back: "welcome" },
+  menu: {
+    enter: "songs",
+    jukebox: "jukebox",
+    options: "options",
+    credits: "credits",
+    back: "welcome",
+  },
   options: { back: "menu" },
   credits: { back: "menu" },
   songs: { open: "band", back: "menu" },
+  jukebox: { back: "menu", songs: "songs" },
   band: { play: "loading", start: "countdown", back: "songs", quit: "songs" },
   loading: { loaded: "countdown", quit: "songs" },
   countdown: { go: "playing", quit: "songs" },
@@ -109,6 +120,7 @@ export function backEventFor(screen: Screen): ScreenEvent | null {
     case "options":
     case "credits":
     case "songs":
+    case "jukebox":
     case "band":
       return "back";
     case "loading":
@@ -144,7 +156,7 @@ export function pausesOnFullscreenEnd(
  * The stage's frame loop is a `requestAnimationFrame`, and a hidden tab stops one
  * — while the song's media elements keep playing. Without this the clock follows
  * the sound on return and the run has silently missed everything in between. Only
- * a **running** song is paused: the welcome, the menus, the jukebox, the band, the
+ * a **running** song is paused: the welcome, the menus, the song list, the band, the
  * load, the countdown, a pause already up and the results all keep their state,
  * because none of them has a transport running away unseen. Hiding a tab is not
  * the same as leaving the window (no blur here), since alt-tabbing to another
@@ -186,10 +198,10 @@ export function opensRun(screen: Screen, previous: Screen | null): boolean {
 /**
  * Does this screen want the song's **charts**?
  *
- * Browsing is not playing: the jukebox reads the playlist and nothing else, and so
+ * Browsing is not playing: the song list reads the playlist and nothing else, and so
  * does everything before it. A run's charts start coming down while the band screen
  * is up, so that pressing Play is usually instant. **Nothing is fetched on the way
- * to the jukebox** — which is what the menu and its two branches are.
+ * to the song list** — which is what the menu and its branches are.
  *
  * The **results** keep the charts too. A replay is a second run of the same song,
  * and releasing the track when the results come up would make it fetch again — the
@@ -204,7 +216,7 @@ export function wantsCharts(screen: Screen): boolean {
  * Is the **stage** up for this screen?
  *
  * Only for the part of the loop that *is* the stage: the countdown, the song, and a
- * pause in it. Everything else — the welcome, the menu and its branches, the jukebox,
+ * pause in it. Everything else — the welcome, the menu and its branches, the song list,
  * the band screen, the load and the results — is a page of its own, with the whole
  * viewport to itself, because a menu drawn over a running song is a menu with a song
  * in the way. The countdown and the pause are the exceptions to *that*, because they

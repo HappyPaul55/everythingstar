@@ -114,7 +114,7 @@ export function useAttract({ session, config, active, onActivate, onStop }: Prop
   }, [active, goTo, onStop]);
 
   // The demo only ever sits on the loop's screens. If anything else is reached
-  // (a resized page, a dev jump), put it back on the jukebox.
+  // (a resized page, a dev jump), put it back on the song list.
   useEffect(() => {
     if (!active) return;
     if (
@@ -127,7 +127,7 @@ export function useAttract({ session, config, active, onActivate, onStop }: Prop
     }
   }, [active, screen, goTo]);
 
-  // The jukebox pass: look at a couple of songs, settle on one, open its band.
+  // The song list pass: look at a couple of songs, settle on one, open its band.
   useEffect(() => {
     if (!active || screen !== "songs") return;
     const playable = playableAttractSongs(songs);

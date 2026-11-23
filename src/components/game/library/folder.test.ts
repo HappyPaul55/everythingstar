@@ -467,7 +467,7 @@ describe("readFolder", () => {
     expect(songs[0].durationMs).toBe(210000);
   });
 
-  test("records a jukebox clip beside a song, and never calls it a stem", async () => {
+  test("records a preview clip beside a song, and never calls it a stem", async () => {
     const songs = await readFolder(
       directory("root", {
         "Band - One": {
@@ -666,7 +666,7 @@ describe("readFolder", () => {
     expect(files?.chart).toBe("notes.chart");
 
     // Played from the same file: re-picking with `findSheet` alone would open the
-    // UltraStar sheet here, which is a different song from the one on the jukebox.
+    // UltraStar sheet here, which is a different song from the one on the song list.
     const source = await readLocalSource(songs[0].doc);
     expect(source?.meta.title).toBe("A Song");
     expect(source?.lanes.length).toBeGreaterThan(0);

@@ -1,7 +1,7 @@
 import { capturePlaylists, test } from "../support";
 
 test(
-  "the playlists dialog, over the jukebox",
+  "the playlists dialog, over the song list",
   {
     annotation: [{ type: "doc", description: "playlists" }],
   },

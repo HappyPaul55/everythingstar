@@ -230,7 +230,7 @@ export function StageControlsProvider({ setup, track, screen, children }: Props)
 
   // A run's input is drained on its own frames. Off the stage nothing drains, and
   // the plan is still built from the band: every arrow and bound letter pressed in
-  // the jukebox used to sit in a seat's queue until the next run applied it. A
+  // the song list used to sit in a seat's queue until the next run applied it. A
   // release left over from minutes ago is not a press anybody made.
   useEffect(() => {
     if (!isRunScreen(screen)) queues.current.clear();

@@ -143,7 +143,7 @@ export interface SourceAudio {
   /** A named mix: the stem ids to play together. `full` is the whole song. */
   mixPresets: MixPreset[];
   /**
-   * A clip a folder made for a jukebox, when it has one. **Not a stem**: nothing mixes
+   * A clip a folder made for a song list, when it has one. **Not a stem**: nothing mixes
    * it into the song and a miss never mutes it. It is played from its own start; a
    * song without one previews its master instead (`previewFor`).
    */
@@ -463,7 +463,7 @@ function readAudio(
   };
 }
 
-/** A jukebox clip, resolved against the document that named it. */
+/** A preview clip, resolved against the document that named it. */
 function readPreview(
   value: unknown,
   base: string,
@@ -1082,7 +1082,20 @@ export function partStems(doc: Pick<SourceSongDoc, "audio">): string[] {
   ).urls;
 }
 
-/** What a jukebox can play to remind somebody what a song is. */
+/**
+ * Can this song make a sound at all?
+ *
+ * A Jukebox has no charts to fall back on: a song with no stems and no video is
+ * a title that would sit in silence for its whole length. The song's own document
+ * is the only authority, so the Jukebox asks before it starts — and skips a song
+ * that cannot play instead of pretending it did.
+ */
+export function docCanPlay(doc: Pick<SourceSongDoc, "audio">): boolean {
+  if (doc.audio.source === "youtube") return true;
+  return fullMixStems(doc).length > 0;
+}
+
+/** What a song list can play to remind somebody what a song is. */
 export interface SongPreview {
   url: string;
   /** Where the clip starts in its file: 0 for a clip, the song's cue otherwise. */
@@ -1090,7 +1103,7 @@ export interface SongPreview {
 }
 
 /**
- * The sound a jukebox plays for a song it is only **offering**.
+ * The sound a song list plays for a song it is only **offering**.
  *
  * A folder's **preview clip** is already the right thing — a short reminder — so it is
  * played from its own start. Without one, the song's **master** is played from its

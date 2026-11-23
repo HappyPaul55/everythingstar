@@ -2,7 +2,7 @@
 title: Typing
 description: "Typing the words in EverythingStar: the three levels, what counts as a mistake, the forgiving skips and the words-a-minute read-out."
 updated: "2026-10-31"
-order: 4
+order: 5
 ---
 
 Typing is the words on your keyboard. On a pitched song a words player can choose **sing** or **Type**; on a song with no pitch, typing is the only way to play the words. You type each word as it is due, and a typist keeps their own score, combo and run.

@@ -9,7 +9,7 @@ import { activeRoot, defaultFocus, focusStageTarget } from "./nav";
  * region, and once by putting focus on the control that screen starts with.
  *
  * A single island that swaps screens has no page load to announce itself. Without
- * this, moving from the menu to the jukebox leaves focus on a button that no
+ * this, moving from the menu to the song list leaves focus on a button that no
  * longer exists, and the browser's answer is `<body>` — silent to a screen reader
  * and a long way from the first control for a keyboard or a pad.
  */
@@ -21,13 +21,13 @@ interface Props {
 export function ScreenFocus({ screen, song }: Props) {
   const t = useT();
   const [announcement, setAnnouncement] = useState("");
-  // The song changes while the same screen is up (picking a row in the jukebox,
+  // The song changes while the same screen is up (picking a row in the song list,
   // for one). That updates what is being described, but it must not steal focus
   // from the row the player just pressed. `previous` is what makes a branch a
   // round trip: coming back from Options lands on Options, not on Quick Play.
   const lastScreen = useRef<Screen | null>(null);
   // The label is read at the moment the screen changes. A song picked in the
-  // jukebox is announced by the row that has focus, not by re-announcing the
+  // song list is announced by the row that has focus, not by re-announcing the
   // screen title over it; the band and the results name their song because they
   // are new screens.
   const songRef = useRef(song);
@@ -92,6 +92,8 @@ function screenLabel(screen: Screen, song: Song | null, t: ReturnType<typeof use
       return t("screen.credits");
     case "songs":
       return t("screen.songsTitle");
+    case "jukebox":
+      return song ? `${t("screen.jukeboxTitle")} — ${song.title}` : t("screen.jukeboxTitle");
     case "band":
       return song ? `${t("screen.bandTitle")} — ${song.title}` : t("screen.bandTitle");
     case "loading":

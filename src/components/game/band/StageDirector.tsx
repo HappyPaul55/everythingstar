@@ -73,7 +73,8 @@ export function StageDirector({
   // A new run: the playhead goes back to the top and the last song's scores are
   // forgotten, so the results screen can never show somebody else's run. A band
   // that is already loaded goes straight to the countdown, so the reset belongs to
-  // a countdown that **opens** a run, not only to the load page.
+  // a countdown that **opens** a run, not only to the load page. The Jukebox has
+  // its own director and its own saved position, so it keeps that position.
   useEffect(() => {
     if (screen === "loading") clockRef.current.seek(0);
   }, [screen]);
@@ -95,7 +96,7 @@ export function StageDirector({
       clockRef.current.seek(plan?.startMs ?? 0);
       return;
     }
-    if (!isRunScreen(screen)) clockRef.current.seek(0);
+    if (!isRunScreen(screen) && screen !== "jukebox") clockRef.current.seek(0);
   }, [screen]);
 
   // The run has begun with a plan waiting: apply its speed and tell the session.
@@ -118,15 +119,20 @@ export function StageDirector({
   // makes a pause a pause rather than a slower song. The screen is the only
   // trigger: the clock's own play/pause state must not re-issue this command.
   //
+  // The Jukebox is the exception to "not playing": it is a page, but its own
+  // `JukeboxDirector` owns the transport, and this one must not pause it. It does
+  // still pause on the way out, which is what stops the music when the screen goes.
+  //
   // The song's stems are the other condition on **starting**. The band has already
   // waited for them, but a path that skipped the band (the attract demo, a replay)
   // still must not count down against silence. Once the run is moving, a stem that
   // stalls is the source rule's job; this is a start gate, not a mid-run brake.
   useEffect(() => {
-    if (screen !== "playing") {
+    if (screen !== "playing" && screen !== "jukebox") {
       clockRef.current.pause();
       return;
     }
+    if (screen === "jukebox") return;
     if (audio.ready || clockRef.current.playing) clockRef.current.play();
     else clockRef.current.pause();
   }, [screen, audio.ready]);

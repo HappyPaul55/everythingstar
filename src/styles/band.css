@@ -32,7 +32,7 @@
   }
   /* --- The stage's own scrollbars ---
      One thin bar in the stage's colours: the browser's is wide enough to break
-     the frame it sits in, and the jukebox's song list makes that plain. Both
+     the frame it sits in, and the song list's song list makes that plain. Both
      spellings are set, because `scrollbar-width` does not inherit and the WebKit
      pseudo-elements are what a Safari predating the standard still reads. Scoped
      to the stage, so the paper pages keep their own. */
@@ -164,8 +164,8 @@
   /* Rows inside a scroller lose an outside ring to the scroller's edge. */
   .band .song-row:focus-visible,
   .band .song-row[data-nav-focus],
-  .band .jukebox__letter:focus-visible,
-  .band .jukebox__letter[data-nav-focus] {
+  .band .song-list__letter:focus-visible,
+  .band .song-list__letter[data-nav-focus] {
     outline-offset: -3px;
   }
   @media (forced-colors: active) {
@@ -2182,7 +2182,7 @@
   }
 
   /* --- Screens (the loop around a run) ---
-     **One at a time, and only one of them is the stage.** The welcome, the jukebox,
+     **One at a time, and only one of them is the stage.** The welcome, the song list,
      the band screen, the load and the results are pages of their own, filling the
      island's frame with the whole viewport to themselves; the pause is `--over`,
      scrimmed over the running stage, because it is something that happens *during*
@@ -3354,17 +3354,17 @@
     cursor: var(--cursor-not-allowed), not-allowed;
   }
 
-  /* --- The jukebox ---
+  /* --- The song list ---
      A few hundred songs is a list you navigate, not a grid you browse: one
      column, filed under its letter, with the index to get to a letter and the
      search to get to a song. The song goes in the slot on the right. */
-  .jukebox {
+  .song-list {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
     gap: clamp(0.7rem, 2vmin, 1.4rem);
   }
-  .jukebox__list {
+  .song-list__list {
     flex: 1 1 34rem;
     min-width: 0;
   }
@@ -3379,12 +3379,12 @@
       grid-template-rows: auto minmax(0, 1fr);
       min-height: 0;
     }
-    .jukebox__heading {
+    .song-list__heading {
       grid-column: 1;
       grid-row: 1;
       min-width: 0;
     }
-    .screen__panel--songs > .jukebox {
+    .screen__panel--songs > .song-list {
       grid-column: 1 / -1;
       grid-row: 2;
       display: flex;
@@ -3392,7 +3392,7 @@
       align-items: stretch;
       min-height: 0;
     }
-    .screen__panel--songs > .jukebox__selection {
+    .screen__panel--songs > .song-list__selection {
       grid-column: 2;
       grid-row: 1;
       display: grid;
@@ -3401,19 +3401,19 @@
       gap: 0.4rem;
       min-width: 0;
     }
-    .screen__panel--songs .jukebox__list {
+    .screen__panel--songs .song-list__list {
       display: flex;
       flex: 1 1 0;
       flex-direction: column;
       min-height: 0;
     }
-    .screen__panel--songs .jukebox__scroller {
+    .screen__panel--songs .song-list__scroller {
       flex: 1 1 0;
       height: auto;
       min-height: 0;
       overflow-y: auto;
     }
-    .screen__panel--songs .jukebox__display {
+    .screen__panel--songs .song-list__display {
       display: grid;
       grid-column: 1;
       grid-row: 1;
@@ -3430,7 +3430,7 @@
       min-width: 0;
       padding: 0.65rem;
     }
-    .screen__panel--songs .jukebox__now-playing {
+    .screen__panel--songs .song-list__now-playing {
       grid-area: now-playing;
       display: flex;
       align-items: baseline;
@@ -3443,14 +3443,14 @@
       height: 2.5rem;
       margin: 0;
     }
-    .screen__panel--songs .jukebox__duration {
+    .screen__panel--songs .song-list__duration {
       min-width: 0;
       margin: 0;
     }
-    .screen__panel--songs .jukebox__headline {
+    .screen__panel--songs .song-list__headline {
       display: contents;
     }
-    .screen__panel--songs .jukebox__title {
+    .screen__panel--songs .song-list__title {
       grid-area: title;
       min-width: 0;
       max-width: 100%;
@@ -3461,11 +3461,11 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .screen__panel--songs .jukebox__display[data-has-song="false"] .jukebox__title {
+    .screen__panel--songs .song-list__display[data-has-song="false"] .song-list__title {
       grid-area: title;
       grid-column: 1 / -1;
     }
-    .screen__panel--songs .jukebox__artist {
+    .screen__panel--songs .song-list__artist {
       grid-area: artist;
       min-width: 0;
       font-size: 0.68rem;
@@ -3473,20 +3473,20 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .screen__panel--songs .jukebox__offline {
+    .screen__panel--songs .song-list__offline {
       grid-area: offline;
       margin-top: 0.1rem;
     }
-    .screen__panel--songs .jukebox__chips {
+    .screen__panel--songs .song-list__chips {
       grid-area: chips;
       min-width: 0;
       margin: 0;
       gap: 0.2rem;
     }
-    .screen__panel--songs .jukebox__chips--full {
+    .screen__panel--songs .song-list__chips--full {
       display: none;
     }
-    .screen__panel--songs .jukebox__chips--compact {
+    .screen__panel--songs .song-list__chips--compact {
       display: flex;
       flex: 0 1 auto;
       flex-wrap: nowrap;
@@ -3494,17 +3494,17 @@
       overflow: hidden;
       white-space: nowrap;
     }
-    .screen__panel--songs .jukebox__chips--compact .song-chip {
+    .screen__panel--songs .song-list__chips--compact .song-chip {
       flex: none;
       padding: 0.08rem 0.25rem;
       font-size: 0.45rem;
       letter-spacing: 0.04em;
       white-space: nowrap;
     }
-    .screen__panel--songs .jukebox__history {
+    .screen__panel--songs .song-list__history {
       display: none;
     }
-    .screen__panel--songs .jukebox__next {
+    .screen__panel--songs .song-list__next {
       grid-column: 2;
       grid-row: 1;
       display: flex;
@@ -3519,13 +3519,13 @@
       text-orientation: upright;
       letter-spacing: 0.08em;
     }
-    .screen__panel--songs .jukebox__next-full {
+    .screen__panel--songs .song-list__next-full {
       display: none;
     }
-    .screen__panel--songs .jukebox__next-compact {
+    .screen__panel--songs .song-list__next-compact {
       display: inline;
     }
-    .screen__panel--songs .jukebox__next {
+    .screen__panel--songs .song-list__next {
       margin-top: 0;
     }
   }
@@ -3537,11 +3537,11 @@
       grid-template-rows: auto minmax(0, 1fr);
       min-height: 0;
     }
-    .jukebox__heading {
+    .song-list__heading {
       grid-column: 1 / -1;
       grid-row: 1;
     }
-    .screen__panel--songs > .jukebox {
+    .screen__panel--songs > .song-list {
       grid-column: 1;
       grid-row: 2;
       display: flex;
@@ -3549,7 +3549,7 @@
       align-items: stretch;
       min-height: 0;
     }
-    .screen__panel--songs > .jukebox__selection {
+    .screen__panel--songs > .song-list__selection {
       grid-column: 2;
       grid-row: 2;
       align-self: stretch;
@@ -3557,7 +3557,7 @@
       flex-direction: column;
       min-height: 0;
     }
-    .screen__panel--songs .jukebox__list {
+    .screen__panel--songs .song-list__list {
       align-self: stretch;
       display: flex;
       flex: 1 1 auto;
@@ -3566,21 +3566,21 @@
     }
     /* Stretched, but never squeezed: on a viewport too short for the column's own
        contents, the page scrolls rather than the panel painting over itself. */
-    .jukebox__display {
+    .song-list__display {
       flex: 1 1 auto;
       min-height: 0;
     }
-    .jukebox__scroller {
+    .song-list__scroller {
       flex: 1 1 auto;
       height: auto;
       min-height: 12rem;
     }
     /* The way on to the band is outside the now-playing surface. */
-    .jukebox__next {
+    .song-list__next {
       margin-top: auto;
     }
   }
-  .jukebox__search {
+  .song-list__search {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -3590,44 +3590,44 @@
   /* What the on-demand playlists are doing, under the field that asked them. It is
      a line of its own rather than part of the toolbar: a search in flight must not
      move the field the player is typing in. */
-  .jukebox__search-state {
+  .song-list__search-state {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.35rem 0.7rem;
     margin: -0.15rem 0 0.5rem;
   }
-  .jukebox__search-line {
+  .song-list__search-line {
     margin: 0;
     font-family: var(--font-mono);
     font-size: 0.66rem;
     color: rgba(250, 250, 244, 0.62);
   }
-  .jukebox__search-line.is-warn {
+  .song-list__search-line.is-warn {
     color: var(--color-yellow);
   }
-  .jukebox__search-error {
+  .song-list__search-error {
     color: rgba(250, 250, 244, 0.5);
   }
-  .jukebox__search-retry {
+  .song-list__search-retry {
     padding: 0.12rem 0.45rem;
     font-size: 0.62rem;
   }
   /* The list's toolbar: how to find a song, and where the songs come from. */
-  .jukebox__playlists {
+  .song-list__playlists {
     flex: none;
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
   }
-  .jukebox__playlists-count {
+  .song-list__playlists-count {
     padding: 0 0.35rem;
     font-size: 0.62rem;
     color: var(--color-ink);
     background: var(--color-yellow);
     border-radius: var(--radius-pill);
   }
-  .jukebox__search-label {
+  .song-list__search-label {
     font-family: var(--font-mono);
     font-size: 0.6rem;
     font-weight: 700;
@@ -3635,7 +3635,7 @@
     text-transform: uppercase;
     color: rgba(250, 250, 244, 0.62);
   }
-  .jukebox__input {
+  .song-list__input {
     flex: 1 1 12rem;
     min-width: 0;
     padding: 0.45rem 0.6rem;
@@ -3646,7 +3646,7 @@
     border: 1px solid rgba(250, 250, 244, 0.28);
     border-radius: var(--radius-inner);
   }
-  .jukebox__input:focus-visible {
+  .song-list__input:focus-visible {
     border-color: var(--color-yellow);
   }
   /* On a phone the toolbar is the field and the button, side by side. The label is not
@@ -3654,7 +3654,7 @@
      width the field and the button need to share a row — but it stays in the document,
      because a placeholder is not a name. */
   @media (max-width: 40rem) {
-    .jukebox__search-label {
+    .song-list__search-label {
       position: absolute;
       width: 1px;
       height: 1px;
@@ -3664,11 +3664,11 @@
     }
     /* A lower floor for the field, so the pair fits a small phone's width as one row
        rather than the button dropping to a line of its own. */
-    .jukebox__search .jukebox__input {
+    .song-list__search .song-list__input {
       flex-basis: 7rem;
     }
   }
-  .jukebox__scroller {
+  .song-list__scroller {
     position: relative;
     /* A page of its own now, so the list takes the height the stage used to leave
        over — but not more than the panel can hold without a second scroller. */
@@ -3683,14 +3683,14 @@
   }
   /* The windowed list's stand-ins. `Songs.tsx` measures one heading and one row
      (the row's three tiers are set by the breakpoints beside `.song-row` below)
-     and `jukeboxWindow.ts` turns the counts outside the mounted slice into these
+     and `songListWindow.ts` turns the counts outside the mounted slice into these
      two heights. Height only — they hold no content, so the scrollbar and every
      letter's offset are exactly those of the whole list. */
-  .jukebox__spacer {
+  .song-list__spacer {
     width: 100%;
     pointer-events: none;
   }
-  .jukebox__empty {
+  .song-list__empty {
     margin: 0;
     padding: 1.2rem;
     font-family: var(--font-mono);
@@ -3740,7 +3740,7 @@
     --song-time-width: 2.4rem;
     /* One row height per breakpoint. Every line is nowrap and ellipsised, so the
        heading and the row the window measures are the heights of all their
-       neighbours; `jukeboxWindow.ts` depends on that to place the spacers. */
+       neighbours; `songListWindow.ts` depends on that to place the spacers. */
     display: grid;
     grid-template-columns:
       var(--song-art-size) var(--song-time-width) minmax(0, 1.1fr) minmax(0, 0.9fr) 17rem;
@@ -3931,7 +3931,7 @@
      **stretched to their height** and its letters share it out between them: a
      column of letters the height of the list beside it is a column of targets you
      cannot miss, rather than a stub that stops a third of the way down. */
-  .jukebox__index {
+  .song-list__index {
     display: flex;
     flex-direction: column;
     align-self: stretch;
@@ -3945,14 +3945,14 @@
   /* On a phone the index would take a third of the width and leave the list too
      narrow to read; the search box is the way through it there. */
   @media (max-width: 48rem) {
-    .jukebox__index {
+    .song-list__index {
       display: none;
     }
   }
-  .jukebox__index[data-idle="true"] {
+  .song-list__index[data-idle="true"] {
     opacity: 0.4;
   }
-  .jukebox__letter {
+  .song-list__letter {
     /* An equal share of the column, whatever height that is — so the index fills
        its height the way the list fills its own. It is a flex box itself, so the
        letter sits in the middle of the share it was given rather than at its top. */
@@ -3975,25 +3975,25 @@
     border-radius: var(--radius-inner);
     cursor: pointer;
   }
-  .jukebox__letter:hover:not(:disabled),
-  :root:not([data-game-input="pointer"]) .jukebox__letter:focus-visible:not(:disabled),
-  .jukebox__letter[data-nav-focus]:not(:disabled) {
+  .song-list__letter:hover:not(:disabled),
+  :root:not([data-game-input="pointer"]) .song-list__letter:focus-visible:not(:disabled),
+  .song-list__letter[data-nav-focus]:not(:disabled) {
     color: var(--color-ink);
     background: var(--color-yellow);
   }
-  .jukebox__letter:disabled {
+  .song-list__letter:disabled {
     color: rgba(250, 250, 244, 0.28);
     /* A letter the list has no songs under is not pressable — but it is still our
        arrow, not the desktop's. */
     cursor: var(--cursor-arrow), default;
   }
-  .jukebox__letter.is-active {
+  .song-list__letter.is-active {
     color: var(--color-ink);
     background: var(--color-yellow);
   }
 
-  /* The slot on the front: what the jukebox is holding. */
-  .jukebox__display {
+  /* The slot on the front: what the song list is holding. */
+  .song-list__display {
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
@@ -4004,7 +4004,7 @@
     border-radius: var(--radius-brand);
     overflow: hidden;
   }
-  .jukebox__label {
+  .song-list__label {
     margin: 0;
     font-family: var(--font-mono);
     font-size: 0.58rem;
@@ -4013,13 +4013,13 @@
     text-transform: uppercase;
     color: rgba(250, 250, 244, 0.55);
   }
-  .jukebox__now-playing {
+  .song-list__now-playing {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     gap: 0.5rem;
   }
-  .jukebox__duration {
+  .song-list__duration {
     margin: 0;
     font-family: var(--font-mono);
     font-size: 0.72rem;
@@ -4027,37 +4027,37 @@
     letter-spacing: 0.08em;
     color: var(--color-yellow);
   }
-  .jukebox__title {
+  .song-list__title {
     margin: 0.2rem 0 0;
     font-family: var(--font-display);
     font-size: clamp(1.2rem, 3vmin, 1.7rem);
     line-height: 1.1;
     color: var(--color-cream);
   }
-  .jukebox__artist {
+  .song-list__artist {
     margin: 0;
     font-size: 0.78rem;
     color: rgba(250, 250, 244, 0.66);
   }
   /* The optional third thing to do with the song on the front: keep it for a
      flight. One line beside the artist; the Downloads dialog owns the list. */
-  .jukebox__offline {
+  .song-list__offline {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.35rem 0.6rem;
     margin-top: 0.25rem;
   }
-  .jukebox__offline-btn {
+  .song-list__offline-btn {
     min-height: 44px;
     padding: 0.35rem 0.65rem;
     font-size: 0.6rem;
     letter-spacing: 0.06em;
   }
-  .jukebox__offline-btn > span[aria-hidden] {
+  .song-list__offline-btn > span[aria-hidden] {
     color: var(--color-yellow);
   }
-  .jukebox__offline-state {
+  .song-list__offline-state {
     margin: 0;
     font-family: var(--font-mono);
     font-size: 0.6rem;
@@ -4066,38 +4066,38 @@
     text-transform: uppercase;
     color: var(--color-yellow);
   }
-  .jukebox__offline-state > span[aria-hidden] {
+  .song-list__offline-state > span[aria-hidden] {
     margin-right: 0.15rem;
   }
-  .jukebox__offline-progress {
+  .song-list__offline-progress {
     display: flex;
     flex: 1 1 8rem;
     flex-direction: column;
     gap: 0.25rem;
     min-width: 8rem;
   }
-  .jukebox__offline-bar {
+  .song-list__offline-bar {
     height: 0.3rem;
     overflow: hidden;
     background: rgba(250, 250, 244, 0.18);
     border-radius: var(--radius-pill);
   }
-  .jukebox__offline-bar > span {
+  .song-list__offline-bar > span {
     display: block;
     height: 100%;
     background: var(--color-yellow);
     transition: width 0.2s ease-out;
   }
-  .jukebox__offline-note {
+  .song-list__offline-note {
     margin: 0;
     font-size: 0.62rem;
     line-height: 1.35;
     color: rgba(250, 250, 244, 0.58);
   }
-  .jukebox__offline-note.is-warn {
+  .song-list__offline-note.is-warn {
     color: var(--color-yellow);
   }
-  .jukebox__offline-retry {
+  .song-list__offline-retry {
     padding: 0;
     font: inherit;
     color: var(--color-yellow);
@@ -4241,30 +4241,30 @@
     margin: 0;
     color: rgba(250, 250, 244, 0.7);
   }
-  .jukebox__chips {
+  .song-list__chips {
     display: flex;
     flex-wrap: wrap;
     gap: 0.25rem;
     margin: 0.4rem 0 0;
   }
-  .jukebox__chips--compact {
+  .song-list__chips--compact {
     display: none;
   }
-  .jukebox__selection {
+  .song-list__selection {
     flex: none;
     display: flex;
     flex-direction: column;
     gap: 0.6rem;
     min-width: 0;
   }
-  .jukebox__history {
+  .song-list__history {
     flex: 1 1 7rem;
     min-height: 0;
     margin-top: 0.25rem;
     overflow: hidden;
     border-top: 1px dashed rgba(250, 250, 244, 0.2);
   }
-  .jukebox__history-table {
+  .song-list__history-table {
     display: block;
     width: 100%;
     border-collapse: collapse;
@@ -4274,22 +4274,22 @@
     line-height: 1.2;
     color: rgba(250, 250, 244, 0.78);
   }
-  .jukebox__history-table thead,
-  .jukebox__history-table tbody {
+  .song-list__history-table thead,
+  .song-list__history-table tbody {
     display: block;
   }
-  .jukebox__history-table tbody {
+  .song-list__history-table tbody {
     max-height: 100%;
     overflow: hidden;
   }
-  .jukebox__history-table tr {
+  .song-list__history-table tr {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 3.6rem 4rem;
     align-items: center;
     height: 1.45rem;
   }
-  .jukebox__history-table th,
-  .jukebox__history-table td {
+  .song-list__history-table th,
+  .song-list__history-table td {
     min-width: 0;
     overflow: hidden;
     padding: 0.1rem 0.2rem;
@@ -4297,26 +4297,26 @@
     white-space: nowrap;
     text-overflow: ellipsis;
   }
-  .jukebox__history-table th {
+  .song-list__history-table th {
     color: rgba(250, 250, 244, 0.48);
     font-size: 0.52rem;
     font-weight: 400;
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
-  .jukebox__history-table td:last-child,
-  .jukebox__history-table th:last-child {
+  .song-list__history-table td:last-child,
+  .song-list__history-table th:last-child {
     text-align: right;
   }
-  .jukebox__history-table tr.jukebox__history-empty td {
+  .song-list__history-table tr.song-list__history-empty td {
     grid-column: 1 / -1;
     text-align: center;
     color: rgba(250, 250, 244, 0.55);
   }
-  .jukebox__next {
+  .song-list__next {
     width: 100%;
   }
-  .jukebox__next-compact {
+  .song-list__next-compact {
     display: none;
   }
   @media (max-width: 40rem) {
@@ -4325,7 +4325,7 @@
     .screen__panel--songs {
       min-height: 0;
     }
-    .screen__panel--songs > .jukebox {
+    .screen__panel--songs > .song-list {
       display: flex;
       flex: 1 1 auto;
       flex-direction: column;
@@ -4334,28 +4334,28 @@
       width: 100%;
       min-height: 0;
     }
-    .screen__panel--songs .jukebox__list {
+    .screen__panel--songs .song-list__list {
       display: flex;
       flex: 1 1 auto;
       flex-direction: column;
       width: 100%;
       min-height: 0;
     }
-    .screen__panel--songs .jukebox__scroller {
+    .screen__panel--songs .song-list__scroller {
       flex: 1 1 0;
       height: auto;
       min-height: 0;
       overflow-y: auto;
     }
-    .screen--songs .jukebox__selection {
+    .screen--songs .song-list__selection {
       display: none;
     }
-    .jukebox__song-dialog .jukebox__selection {
+    .song-list__song-dialog .song-list__selection {
       display: flex;
       width: 100%;
       gap: 0.7rem;
     }
-    .jukebox__song-dialog .song-art--panel {
+    .song-list__song-dialog .song-art--panel {
       width: clamp(7rem, 32vw, 10rem);
       max-width: 100%;
       aspect-ratio: 1 / 1;
@@ -5016,7 +5016,7 @@
     transition: none;
   }
 
-  /* --- The playlists (a dialog over the jukebox) ---
+  /* --- The playlists (a dialog over the song list) ---
      Where the songs come from: one row a playlist, each saying what it gave us and
      when, with the two things a reader can do about it. The dialog is the same one
      the controller settings use, wider, because a URL wants the room. */
@@ -5109,7 +5109,7 @@
     display: flex;
     gap: 0.4rem;
   }
-  .playlists__add-row .jukebox__input {
+  .playlists__add-row .song-list__input {
     flex: 1 1 auto;
     min-width: 0;
   }
@@ -5144,7 +5144,7 @@
     flex: 1 1 auto;
   }
 
-  /* --- Song chips: what a song offers, on its row and in the jukebox's slot --- */
+  /* --- Song chips: what a song offers, on its row and in the song list's slot --- */
   .song-chip {
     padding: 0.1rem 0.4rem;
     font-family: var(--font-mono);
@@ -5719,9 +5719,701 @@
   .band-controls__button:hover {
     background: var(--color-yellow);
   }
+
+  /* --- The menu's side door: the Jukebox ---
+     A listening mode is not a fourth way to play, so it sits under the three
+     doors as one smaller, quieter control: a record, its name and a line of what
+     it does. The disc turns when the row is hovered or focused, which is the one
+     piece of motion the menu's side door needs. */
+  .menu__entry--side {
+    margin-top: clamp(0.15rem, 0.8vmin, 0.45rem);
+  }
+  .screen--menu .menu__item--side {
+    min-height: clamp(3rem, 6.4vmin, 3.8rem);
+    padding: 0.5rem 0.8rem;
+    color: var(--color-cream);
+    background: rgba(12, 13, 10, 0.58);
+    border: 1px solid rgba(250, 250, 244, 0.22);
+    font-size: clamp(0.9rem, 1.5vw, 1.1rem);
+    transform: perspective(900px) rotateY(-7deg) rotateX(1deg);
+  }
+  .screen--menu .menu__item--side:hover,
+  :root:not([data-game-input="pointer"]) .screen--menu .menu__item--side:focus-visible,
+  .screen--menu .menu__item--side[data-nav-focus] {
+    border-color: var(--color-yellow);
+    background: rgba(255, 212, 0, 0.12);
+    box-shadow: 0.3rem 0.3rem 0 0 var(--color-yellow);
+    translate: -0.12rem -0.12rem;
+  }
+  .menu__item--side .menu__name {
+    color: var(--color-cream);
+  }
+  .menu__item--side .menu__hint {
+    color: rgba(250, 250, 244, 0.62);
+  }
+  .menu__item--side .menu__arrow {
+    color: var(--color-yellow);
+  }
+  .menu__disc {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex: none;
+    position: relative;
+    border-radius: 50%;
+    background: repeating-radial-gradient(
+      circle at 50% 50%,
+      rgba(250, 250, 244, 0.16) 0 1px,
+      rgba(12, 13, 10, 0.9) 1px 2px
+    );
+    border: 1px solid rgba(250, 250, 244, 0.28);
+  }
+  .menu__disc::after {
+    content: "";
+    position: absolute;
+    inset: 34%;
+    border-radius: 50%;
+    background: var(--color-yellow);
+  }
+  .menu__item--side:hover .menu__disc,
+  :root:not([data-game-input="pointer"]) .menu__item--side:focus-visible .menu__disc,
+  .menu__item--side[data-nav-focus] .menu__disc {
+    animation: jukebox-spin 3.2s linear infinite;
+  }
+
+  /* --- The Jukebox ---
+     A record and its words: the cover is the label, the timed lines are the
+     reading column, and the queue is the player's own list. Wide screens put the
+     record beside the words; a portrait screen stacks them. The record is
+     decoration and the words are text, so the layout never depends on the disc. */
+  .screen--jukebox {
+    align-items: stretch;
+    overflow: auto;
+    background:
+      radial-gradient(90% 70% at 14% 12%, rgba(255, 212, 0, 0.13), transparent 64%),
+      radial-gradient(80% 70% at 92% 100%, rgba(34, 224, 255, 0.08), transparent 62%),
+      linear-gradient(180deg, rgba(10, 11, 8, 0.58), rgba(10, 11, 8, 0.84));
+  }
+  .jukebox-screen {
+    min-height: 0;
+    gap: clamp(0.7rem, 2vmin, 1.4rem);
+  }
+  .jukebox__heading {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    flex: none;
+  }
+  .jukebox__heading .screen__title {
+    margin: 0;
+  }
+  .jukebox__heading-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
+  .jukebox__heading-action {
+    min-height: 44px;
+  }
+  .jukebox__queue-count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    margin-left: 0.4rem;
+    padding: 0 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: var(--color-ink);
+    background: var(--color-yellow);
+    border-radius: var(--radius-pill);
+  }
+  .jukebox__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(14rem, 0.82fr) minmax(0, 1.18fr);
+    gap: clamp(1.2rem, 4vw, 4rem);
+    align-items: stretch;
+  }
+  .jukebox__disc-column {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.7rem, 2vmin, 1.2rem);
+  }
+  .jukebox__record {
+    width: min(100%, 26rem);
+    aspect-ratio: 1;
+    position: relative;
+    filter: drop-shadow(0 1.4rem 1.8rem rgba(0, 0, 0, 0.5));
+  }
+  .jukebox__record--small {
+    width: min(100%, 9rem);
+  }
+  .jukebox__disc {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background:
+      repeating-radial-gradient(
+        circle at 50% 50%,
+        rgba(250, 250, 244, 0.13) 0 1.5px,
+        rgba(12, 13, 10, 0.96) 1.5px 3px
+      ),
+      radial-gradient(circle at 30% 24%, #2c2c2c, #0b0c09 72%);
+    box-shadow:
+      inset 0 0 0 1px rgba(250, 250, 244, 0.16),
+      0 0 3rem rgba(0, 0, 0, 0.45);
+    animation: jukebox-spin 9s linear infinite;
+    animation-play-state: paused;
+  }
+  .jukebox__record.is-playing .jukebox__disc {
+    animation-play-state: running;
+  }
+  .jukebox__disc::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 205deg,
+      transparent 0 42deg,
+      rgba(250, 250, 244, 0.07) 52deg,
+      transparent 62deg,
+      transparent 218deg,
+      rgba(250, 250, 244, 0.045) 230deg,
+      transparent 242deg
+    );
+    pointer-events: none;
+  }
+  .jukebox__label {
+    position: relative;
+    width: 54%;
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 50%;
+    background: var(--color-yellow);
+    box-shadow:
+      inset 0 0 0 2px rgba(12, 13, 10, 0.46),
+      0 0 0 1px rgba(250, 250, 244, 0.12);
+  }
+  .jukebox__label .song-art {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+  }
+  .jukebox__label .song-art__img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+  .jukebox__label .song-art__tile {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    font-size: 1.35rem;
+  }
+  .jukebox__spindle {
+    position: absolute;
+    z-index: 1;
+    width: 7%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--color-ink);
+    box-shadow: 0 0 0 2px rgba(250, 250, 244, 0.28);
+    pointer-events: none;
+  }
+  .jukebox__transport {
+    width: min(100%, 26rem);
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+  .jukebox__control {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex: none;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 1px solid rgba(250, 250, 244, 0.26);
+    background: rgba(250, 250, 244, 0.07);
+    color: var(--color-cream);
+    font-size: 0.84rem;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background-color 0.18s var(--ease-brand),
+      border-color 0.18s var(--ease-brand),
+      color 0.18s var(--ease-brand);
+  }
+  .jukebox__control:hover,
+  :root:not([data-game-input="pointer"]) .jukebox__control:focus-visible,
+  .jukebox__control[data-nav-focus] {
+    border-color: var(--color-yellow);
+    color: var(--color-yellow);
+  }
+  .jukebox__control:focus-visible,
+  .jukebox__control[data-nav-focus] {
+    outline: 3px solid var(--color-yellow);
+    outline-offset: 3px;
+  }
+  .jukebox__control--play {
+    width: 3.4rem;
+    height: 3.4rem;
+    background: var(--color-yellow);
+    border-color: var(--color-yellow);
+    color: var(--color-ink);
+  }
+  .jukebox__control--play:hover,
+  :root:not([data-game-input="pointer"]) .jukebox__control--play:focus-visible,
+  .jukebox__control--play[data-nav-focus] {
+    background: var(--color-cream);
+    border-color: var(--color-cream);
+    color: var(--color-ink);
+  }
+  .jukebox__timeline {
+    flex: 1;
+    min-width: 0;
+  }
+  .jukebox__progress {
+    height: 0.32rem;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
+    background: rgba(250, 250, 244, 0.14);
+  }
+  .jukebox__progress span {
+    display: block;
+    height: 100%;
+    background: var(--color-yellow);
+    border-radius: inherit;
+    transition: width 0.25s linear;
+  }
+  .jukebox__time {
+    margin: 0.2rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    color: rgba(250, 250, 244, 0.62);
+  }
+  .jukebox__up-next {
+    width: min(100%, 26rem);
+    text-align: center;
+  }
+  .jukebox__up-next-line {
+    margin: 0;
+    font-size: 0.74rem;
+    font-weight: 650;
+    color: var(--color-cream);
+  }
+  .jukebox__queue-hint-line {
+    margin: 0.12rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.56rem;
+    letter-spacing: 0.05em;
+    color: rgba(250, 250, 244, 0.48);
+  }
+  .jukebox__words-column {
+    min-width: 0;
+    min-height: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .jukebox__track {
+    flex: none;
+  }
+  .jukebox__eyebrow {
+    margin: 0 0 0.1rem;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-yellow);
+  }
+  .jukebox__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 3.3vw, 3.5rem);
+    font-weight: 400;
+    line-height: 0.98;
+    letter-spacing: -0.01em;
+    color: var(--color-cream);
+  }
+  .jukebox__artist {
+    margin: 0.16rem 0 0;
+    font-size: 0.78rem;
+    color: rgba(250, 250, 244, 0.64);
+  }
+  .jukebox__pending,
+  .jukebox__failed {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 0.64rem;
+    color: var(--color-yellow);
+  }
+  .jukebox__failed {
+    color: #ff9a9a;
+  }
+  .jukebox__lyrics {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.6rem 0.2rem 0.6rem 0;
+    scroll-behavior: smooth;
+    mask-image: linear-gradient(
+      180deg,
+      transparent 0,
+      #000 7%,
+      #000 93%,
+      transparent 100%
+    );
+  }
+  .jukebox__lyrics.is-empty,
+  .jukebox__lyrics.is-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    mask-image: none;
+  }
+  .jukebox__lyrics-note {
+    margin: 0;
+    max-width: 28rem;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: rgba(250, 250, 244, 0.56);
+    text-align: center;
+  }
+  .jukebox__line {
+    --line-part: var(--color-accent);
+    margin: 0;
+    padding: 0.3rem 0 0.3rem 0.8rem;
+    border-left: 3px solid rgba(250, 250, 244, 0.1);
+    font-size: clamp(0.98rem, 1.55vw, 1.3rem);
+    line-height: 1.36;
+    color: rgba(250, 250, 244, 0.4);
+    transition:
+      color 0.25s var(--ease-brand),
+      border-color 0.25s var(--ease-brand);
+  }
+  .jukebox__line.is-part-1 {
+    --line-part: var(--color-yellow);
+  }
+  .jukebox__line.is-part-2 {
+    --line-part: #ff7ab8;
+  }
+  .jukebox__line.is-duet {
+    border-left-color: color-mix(in srgb, var(--line-part) 52%, transparent);
+  }
+  .jukebox__line.is-active {
+    border-left-color: var(--line-part);
+    color: var(--color-cream);
+    font-weight: 650;
+  }
+  .jukebox__word.is-sung {
+    color: var(--color-yellow);
+  }
+  .jukebox__empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    text-align: center;
+    color: rgba(250, 250, 244, 0.7);
+  }
+  .jukebox__empty p {
+    margin: 0;
+    max-width: 30rem;
+    line-height: 1.5;
+  }
+  .jukebox__youtube {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* The picker: the song list and the player's queue in one dialog. The list is
+     the same windowed list as Songs, so the dialog is a different frame around
+     the same rows rather than a second reader. */
+  .jukebox__picker-panel {
+    width: min(54rem, 94vw);
+    max-height: min(84dvh, 48rem);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .jukebox__tabs {
+    display: flex;
+    gap: 0.3rem;
+    flex: none;
+    padding-bottom: 0.55rem;
+    border-bottom: 1px solid rgba(250, 250, 244, 0.14);
+  }
+  .jukebox__tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 44px;
+    padding: 0.35rem 0.8rem;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.68);
+    background: transparent;
+    border: 1px solid rgba(250, 250, 244, 0.18);
+    border-radius: var(--radius-inner);
+    cursor: pointer;
+  }
+  .jukebox__tab:hover,
+  .jukebox__tab:focus-visible {
+    border-color: var(--color-yellow);
+    color: var(--color-yellow);
+  }
+  .jukebox__tab.is-active {
+    color: var(--color-ink);
+    background: var(--color-yellow);
+    border-color: var(--color-yellow);
+  }
+  .jukebox__tab-count {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.2rem;
+    height: 1.2rem;
+    padding: 0 0.25rem;
+    font-size: 0.58rem;
+    color: var(--color-ink);
+    background: var(--color-cream);
+    border-radius: var(--radius-pill);
+  }
+  .jukebox__tab.is-active .jukebox__tab-count {
+    background: var(--color-ink);
+    color: var(--color-yellow);
+  }
+  .jukebox__tab-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+    padding-top: 0.55rem;
+  }
+  .jukebox__tab-panel[hidden] {
+    display: none;
+  }
+  .jukebox__picker-search {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex: none;
+    padding-bottom: 0.45rem;
+  }
+  .jukebox__picker-label {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(250, 250, 244, 0.58);
+  }
+  .jukebox__picker-search .song-list__input {
+    flex: 1;
+  }
+  .jukebox__picker-state {
+    flex: none;
+    font-size: 0.66rem;
+    color: rgba(250, 250, 244, 0.72);
+  }
+  .jukebox__picker-state p {
+    margin: 0.2rem 0;
+  }
+  .jukebox__picker-state .is-warn {
+    color: #ff9a9a;
+  }
+  .jukebox__picker-retry {
+    margin-left: 0.4rem;
+  }
+  .jukebox__picker-list {
+    flex: 1 1 auto;
+    min-height: 12rem;
+    max-height: 48vh;
+    overflow: auto;
+    border: 1px solid rgba(250, 250, 244, 0.14);
+    border-radius: var(--radius-inner);
+    background: rgba(12, 13, 10, 0.5);
+  }
+  /* The dialog's letter headings are quiet: the yellow band is the page's own
+     sticky heading, and in a dialog over a record it reads as four loud bars. */
+  .jukebox__picker-list .song-group__letter {
+    color: var(--color-yellow);
+    background: rgba(12, 13, 10, 0.94);
+    border-top: 1px solid rgba(250, 250, 244, 0.12);
+  }
+  .jukebox__picker-list .song-group__count,
+  .jukebox__picker-list .song-group__count::before {
+    color: rgba(250, 250, 244, 0.46);
+  }
+  .jukebox__picker-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 1.2rem 0.6rem;
+    text-align: center;
+  }
+  .jukebox__picker-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    flex: none;
+    padding-top: 0.55rem;
+  }
+  .jukebox__picker-status {
+    min-height: 1.1em;
+    margin: 0.25rem 0 0;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--color-yellow);
+  }
+  .jukebox__queue-hint {
+    margin: 0 0 0.55rem;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    color: rgba(250, 250, 244, 0.62);
+  }
+  .jukebox__queue-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 52vh;
+    overflow: auto;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid rgba(250, 250, 244, 0.14);
+    border-radius: var(--radius-inner);
+    background: rgba(12, 13, 10, 0.5);
+  }
+  .jukebox__queue-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title remove"
+      "artist remove";
+    align-items: center;
+    gap: 0 0.7rem;
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid rgba(250, 250, 244, 0.08);
+  }
+  .jukebox__queue-row:last-child {
+    border-bottom: none;
+  }
+  .jukebox__queue-title {
+    grid-area: title;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 0.8rem;
+    color: var(--color-cream);
+  }
+  .jukebox__queue-artist {
+    grid-area: artist;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 0.66rem;
+    color: rgba(250, 250, 244, 0.56);
+  }
+  .jukebox__queue-remove {
+    grid-area: remove;
+  }
+  .jukebox__queue-clear {
+    flex: none;
+    align-self: flex-start;
+    margin-top: 0.55rem;
+  }
+
+  @media (max-width: 60rem), (orientation: portrait) {
+    .jukebox__body {
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+    }
+    .jukebox__disc-column {
+      justify-content: flex-start;
+    }
+    .jukebox__record {
+      width: min(58vw, 17rem);
+    }
+    .jukebox__words-column {
+      height: auto;
+      min-height: 0;
+    }
+    .jukebox__lyrics {
+      max-height: 38vh;
+      min-height: 11rem;
+    }
+    .jukebox__transport,
+    .jukebox__up-next {
+      width: min(100%, 22rem);
+    }
+  }
+  @media (max-width: 40rem) {
+    .jukebox__heading-actions {
+      width: 100%;
+      margin-left: 0;
+    }
+    .jukebox__heading-action {
+      flex: 1 1 auto;
+    }
+    .jukebox__title {
+      font-size: clamp(1.65rem, 9vw, 2.4rem);
+    }
+    .jukebox__picker-list {
+      max-height: 38vh;
+    }
+    .jukebox__queue-list {
+      max-height: 42vh;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .jukebox__disc,
+    .menu__item--side:hover .menu__disc,
+    :root:not([data-game-input="pointer"]) .menu__item--side:focus-visible .menu__disc,
+    .menu__item--side[data-nav-focus] .menu__disc {
+      animation: none;
+    }
+    .jukebox__lyrics {
+      scroll-behavior: auto;
+    }
+  }
 }
 
 /* Outside the layer: keyframes are not a component style. */
+@keyframes jukebox-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
 @keyframes band-spin {
   to {
     transform: rotate(1turn);

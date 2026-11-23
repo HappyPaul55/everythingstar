@@ -9,17 +9,24 @@ A status page ages; `updated` at the foot of this page is when it was last true.
 
 ## What works end to end today
 
-- **The loop**: welcome → **menu** (with **options** and **credits** off it) → jukebox →
-  band → loading → **stage entrance** → run → pause →
+- **The loop**: welcome → **menu** (with **options**, **credits** and the **Jukebox**
+  off it) → Songs → band → loading → **stage entrance** → run → pause →
   results, inside one island (no reloads), with the band, the settings and the scores kept
   on this device and a fullscreen session surviving the whole thing.
+- **The Jukebox**: the menu's listening door. It shuffles the whole library, plays
+  one song through the same clock and mixer as a run, draws the song's cover as the
+  label of a turning record, and reads its timed lyrics beside it (under it in
+  portrait). Its picker can **Play now**, **Play next** or **Add to queue**; the queue
+  is only the listener's picks and the shuffle fills the gaps. Changing a song keeps
+  the current one playing until the next is ready, a prefetched next song shortens the
+  gap, a YouTube-backed song plays audio-only, and leaving saves the position.
 - **The library**: songs come from **playlists** — JSON files at URLs, seeded once
   with **EverythingStar FOSS** and added by the player — read as the three documents a
   real library will
   serve (a playlist is the index, a song document is what a song is, a chart document is
   the notes), cached in IndexedDB under a shape version with a small metadata index
   beside each body, with a player's playlist re-fetched only on demand. A
-  playlist can be **on demand**: the game asks it with `?q=` as the jukebox is searched.
+  playlist can be **on demand**: the game asks it with `?q=` as Songs is searched.
   A song can also name a **YouTube video as its music** (`audio.source: "youtube"`): the
   official IFrame player supplies both the sound and the backdrop, and the stage follows
   its playhead. No stream is extracted or served. An entry can also point its `song` at a
@@ -29,13 +36,13 @@ A status page ages; `updated` at the foot of this page is when it was last true.
   **copied into this browser's own storage** (the Origin Private File System, up to
   512 MB an import) and read by the same folder scanner, so the songs join the library
   beside the playlists — and are still there next visit, without a permission prompt.
-- **Offline downloads** (website and native app): the jukebox can save a song — its
+- **Offline downloads** (website and native app): Songs can save a song — its
   playlist, song document, every chart, every stem, its art and preview — into Cache
   Storage, and the site's own `/sw.js` — or the app's worker — serves them back to media
   elements, byte ranges included, so the song plays with no connection. Both register a
   worker that serves the same `everythingstar-offline-v1` bucket, so the action appears in
   the browser too. A download is one **page-wide job** that keeps going if the player
-  leaves the jukebox and can be **cancelled**; a song found through an on-demand search
+  leaves Songs and can be **cancelled**; a song found through an on-demand search
   is still listed after a reload because the offline records are merged into the library
   last. YouTube-backed songs and songs already in a local folder are refused rather than
   half-saved. A whole **playlist** can be saved from the Playlists dialog with **Save
@@ -167,18 +174,45 @@ What is built in each area, and the boundaries that are deliberate rather than g
   is the sound of that stop** — it plays the first time a part goes out (not on every
   miss), and on a one-master song it plays too: nothing actually ducks, but the part
   would have gone out.
-- **Choosing a song plays it.** Moving onto a jukebox row, clicking it or pressing its
+- **Choosing a song plays it.** Moving onto a song row, clicking it or pressing its
   confirmation key starts that song's **preview**: the chart folder's `preview.ogg`
   clip if it has one, otherwise its **master** from the song's own `previewStartMs` (`previewFor`). A
   song with only parts and no whole mix has nothing to preview — except a `.sng` package,
   whose first audio member is the only sound it has and is better than a silent row — and
   one with no audio at all says nothing. The preview streams through the mixer's **music**
-  channel and **loops** until another row is chosen or the jukebox is left; a local file is
+  channel and **loops** until another row is chosen or Songs is left; a local file is
   read into an object URL and the previous one released. A **`.sng` package** is held for
   the rest of the visit in a bounded in-memory cache (two packages, 64 MB), so opening
   the band reads the same bytes rather than downloading the package again — a second
-  reader in one visit, not persistence. The jukebox has no menu bed behind
+  reader in one visit, not persistence. Songs has no menu bed behind
   it, so a song with no preview is silent rather than playing the room's music.
+
+**Jukebox — built**
+
+- **A record made of the cover.** The Jukebox uses the song's own artwork as the
+  record's centre label (the drawn initials tile when it has none), and the disc turns
+  only while the transport is moving. Reduced motion stops it. The timed words are
+  the song's own `melody.lines`, with the active line and word read from the same
+  `activeLineIndex`/`activeWordIndex` the stage uses; a duet keeps one line with a
+  coloured rule, and an instrumental says so rather than leaving an empty column.
+- **The queue is the listener's, the shuffle is not.** `src/lib/game/jukebox.ts` keeps
+  a `queue` of user picks and a separate shuffled `bag` of fillers. Next takes the
+  queue first, then the bag; a filler is never written into the queue. Play now
+  interrupts without clearing the queue, Play next unshifts, Add appends without
+  duplicates, and a failed prefetch leaves a queued song alone until its own turn.
+- **A change keeps the song playing.** The current song is not stopped when another
+  is chosen: its document and words are loaded while it plays, and the switch is made
+  as soon as the new sound can play. The shuffle's next song is prefetched while one plays. Leaving
+  pauses and records the playhead; coming back resumes that position with the queue
+  intact. A document with no playable sound, or a stem that fails, is named and
+  skipped rather than played in silence.
+- **One app, one clock.** The Jukebox is a screen in the same island as Quick Play and
+  the band's Karaoke, not a second page or a separate root. It shares the library,
+  settings, mixer and `StageClock`; `SongAudio` plays the full mix, the menu bed is
+  off, and nothing reaches the board or the judging. The picker is the one lazy piece.
+- **Songs is the picker; Jukebox is the listener.** The old informal name for the
+  song list is gone from the code (`songList.ts`, `songListWindow.ts`, `useSongList`)
+  and from the docs, so "Jukebox" means exactly one screen.
 
 **Audio — complete**
 
@@ -189,7 +223,7 @@ What is built in each area, and the boundaries that are deliberate rather than g
   the part out until the phrase or lyric line it was dropped in has finished.
 - **The pause has a crowd.** The mixer holds a bed per channel, so the ambience
   channel plays a public-domain room while the run waits, and nothing else asks for it;
-  the jukebox's preview never stops it. There are no applause reactions — a run is the
+  Songs' preview never stops it. There are no applause reactions — a run is the
   song, and the player's own stem is the feedback. The **Crowd** toggle in Options
   turns the pause's room off.
 - **Music ducks under a sting.** The three channels have their own levels (Options:

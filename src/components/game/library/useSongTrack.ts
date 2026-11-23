@@ -55,7 +55,7 @@ const IDLE: SongLoad = { doc: null, track: null, status: "idle", problems: [] };
 export function useSongTrack(
   song: Song | null,
   seats: readonly Seat[],
-  /** Nothing is fetched while the jukebox is up: browsing is not playing. */
+  /** Nothing is fetched while the song list is up: browsing is not playing. */
   enabled: boolean,
 ): SongLoad {
   const [load, setLoad] = useState<SongLoad>(IDLE);

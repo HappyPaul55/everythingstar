@@ -21,7 +21,7 @@ import type { StemRole } from "./types";
  * whole mix plays every stem at once, so a kit named in four files has to be four stems
  * or the sum is a song with one drum in it.
  *
- * **`preview.ogg` is not a stem**: it is the jukebox clip (`PREVIEW_NAMES`), a
+ * **`preview.ogg` is not a stem**: it is the preview clip (`PREVIEW_NAMES`), a
  * short reminder of the song that nothing mixes into the track and a miss never
  * mutes. `song_original.ogg` is a second whole mix, so it is the last thing looked
  * for rather than something to add to the others.
@@ -106,7 +106,7 @@ export const AUDIO_NAMES: [StemRole, string[]][] = [
 ];
 
 /**
- * The clip a chart folder makes for a jukebox, best first.
+ * The clip a chart folder makes for a song list, best first.
  *
  * It is **not a stem**: it is a short reminder of the song, played from its own
  * start, and it is never part of the mix and never muted. A song without one falls
@@ -160,7 +160,7 @@ const IGNORED_TEXT_NAMES =
  * `notes.mid` and a stray `song.txt`, a Clone Hero folder with a `.chart`, a
  * StepMania folder with a `.sm`. Choosing a different one when the folder is
  * *listed* and when it is *played* makes the stage play a different song from the
- * one the jukebox named, so the order lives here and nowhere else: `notes.mid`,
+ * one the song list named, so the order lives here and nowhere else: `notes.mid`,
  * then any `.chart`, then any `.sm`, then the text sheet `findSheet` picks. The
  * folder reader, the local reader and the importer all ask this one question.
  */

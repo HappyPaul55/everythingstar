@@ -1,8 +1,8 @@
 /**
- * The jukebox's view of offline downloads.
+ * The song list's view of offline downloads.
  *
  * The **job** is not this hook's: it lives in `downloads.ts` so a download keeps
- * running when the player walks from the jukebox to the band and the screen that
+ * running when the player walks from the song list to the band and the screen that
  * started it unmounts. This hook is a reader of that one job and of the record it
  * writes, which is what lets a screen that mounts mid-download see it already in
  * progress rather than start a second one.
@@ -62,7 +62,7 @@ export interface OfflineController {
   downloadPlaylist: (songs: readonly Song[], source: string) => void;
   remove: (id: string) => void;
   clear: () => void;
-  /** Stop the download in flight; the jukebox's Cancel button. */
+  /** Stop the download in flight; the song list's Cancel button. */
   cancel: () => void;
 }
 
@@ -81,7 +81,7 @@ export function useOffline(): OfflineController {
     setSupported(offlineSupported());
     refresh();
 
-    // The boot claims the page after the worker activates. The jukebox can be
+    // The boot claims the page after the worker activates. The song list can be
     // mounted before that on a very fast first paint; this makes the action
     // appear when it becomes true rather than requiring a reload.
     const changed = () => setSupported(offlineSupported());

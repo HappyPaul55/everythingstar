@@ -4,7 +4,7 @@ import {
   disableFullscreen,
   installFixtures,
 } from "./fixture";
-import { waitForPlaying } from "./helpers";
+import { enterGame, waitForPlaying } from "./helpers";
 
 /**
  * The arcade entry, left to play itself.
@@ -38,6 +38,23 @@ test("the arcade plays a perfect machine run and leaves the board alone", async 
     await page.evaluate(() => localStorage.getItem("everythingstar:scores:v2")),
   ).toBeNull();
   expect(leaked, "unexpected external requests").toEqual([]);
+});
+
+/**
+ * The arcade is the demo, not a chart-making tool: its menu has no Charter door.
+ */
+test("the arcade menu has no charter door, and the game menu still does", async ({
+  context,
+  page,
+}) => {
+  await installFixtures(context);
+  await disableFullscreen(page);
+  await enterGame(page, "/arcade");
+  await expect(page.getByRole("navigation", { name: "Main menu" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Charter mode" })).toHaveCount(0);
+
+  await enterGame(page, "/play");
+  await expect(page.getByRole("link", { name: "Charter mode" })).toHaveCount(1);
 });
 
 /**

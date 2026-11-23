@@ -71,9 +71,48 @@ interface SongDoc {
   artist: { id: string; name: string };
   durationMs: number;
   previewStartMs: number;
-  audio: { source: "stems"; stems: never[]; mixPresets: Record<string, never> };
+  audio: {
+    source: "stems";
+    stems: {
+      id: string;
+      name: string;
+      url: string;
+      instrument: null;
+      defaultGainDb: number;
+      offsetMs: number;
+    }[];
+    mixPresets: Record<string, { stemIds: string[] }>;
+  };
   parts: Part[];
   sections?: { timeMs: number; name: string }[];
+}
+
+const AUDIO_URL = new URL("audio/jukebox.wav", DOCS_PLAYLIST_URL).href;
+
+/** A short steady tone, so a Jukebox capture has a real song clock. */
+function wav(seconds: number): Uint8Array {
+  const rate = 22_050;
+  const frames = Math.round(rate * seconds);
+  const dataBytes = frames * 2;
+  const out = Buffer.alloc(44 + dataBytes);
+  out.write("RIFF", 0);
+  out.writeUInt32LE(36 + dataBytes, 4);
+  out.write("WAVE", 8);
+  out.write("fmt ", 12);
+  out.writeUInt32LE(16, 16);
+  out.writeUInt16LE(1, 20);
+  out.writeUInt16LE(1, 22);
+  out.writeUInt32LE(rate, 24);
+  out.writeUInt32LE(rate * 2, 28);
+  out.writeUInt16LE(2, 32);
+  out.writeUInt16LE(16, 34);
+  out.write("data", 36);
+  out.writeUInt32LE(dataBytes, 40);
+  for (let i = 0; i < frames; i += 1) {
+    const value = Math.sin((2 * Math.PI * 220 * i) / rate) * 0.16 * 32767;
+    out.writeInt16LE(Math.round(value), 44 + i * 2);
+  }
+  return out;
 }
 
 const PLAYLIST = JSON.parse(
@@ -146,7 +185,7 @@ function vocalsChart(entry: Entry) {
   return { schemaVersion: 1, chartType: "vocals", parts: 1, rows: 6, rootMidi: 60, lines, notes };
 }
 
-function songDoc(entry: Entry): SongDoc {
+function songDoc(entry: Entry, withAudio = false): SongDoc {
   const parts: Part[] = [];
 
   for (const instrument of entry.offer.instruments) {
@@ -188,7 +227,22 @@ function songDoc(entry: Entry): SongDoc {
     artist: entry.artist,
     durationMs: entry.durationMs,
     previewStartMs: entry.previewStartMs,
-    audio: { source: "stems", stems: [], mixPresets: {} },
+    audio: withAudio
+      ? {
+          source: "stems",
+          stems: [
+            {
+              id: "stem_master",
+              name: "Master",
+              url: AUDIO_URL,
+              instrument: null,
+              defaultGainDb: 0,
+              offsetMs: 0,
+            },
+          ],
+          mixPresets: { full: { stemIds: ["stem_master"] } },
+        }
+      : { source: "stems", stems: [], mixPresets: {} },
     parts,
     ...(entry.id === "jonathan-coulton-code-monkey" ? { sections: CODE_MONKEY_SECTIONS } : {}),
   };
@@ -205,7 +259,7 @@ function chartBody(chart: ChartRef, entry: Entry) {
 /**
  * One song shortened for a capture that has to reach the end of a run.
  *
- * The published songs are minutes long, which is right for a jukebox and a
+ * The published songs are minutes long, which is right for a song list and a
  * highway but not for a results screen: the capture would spend the whole test
  * listening to it. The title, artist and art stay the record's; only the length,
  * and the charts generated from it, are the fixture's.
@@ -213,6 +267,8 @@ function chartBody(chart: ChartRef, entry: Entry) {
 interface DocsFixtureOptions {
   shortSongId?: string;
   shortDurationMs?: number;
+  /** Give these songs a real (tiny) master, for a capture that has to play one. */
+  audioSongId?: string | string[];
 }
 
 function responses(options: DocsFixtureOptions = {}): Record<string, unknown> {
@@ -224,13 +280,23 @@ function responses(options: DocsFixtureOptions = {}): Record<string, unknown> {
   const routes: Record<string, unknown> = {
     [DOCS_PLAYLIST_URL]: { ...PLAYLIST, songs },
   };
+  const audio = new Set(
+    Array.isArray(options.audioSongId)
+      ? options.audioSongId
+      : options.audioSongId
+        ? [options.audioSongId]
+        : [],
+  );
+  if (audio.size > 0) {
+    routes[AUDIO_URL] = { body: wav(30), contentType: "audio/wav" };
+  }
 
   for (const entry of songs) {
     if (entry.art) {
       routes[new URL(entry.art, DOCS_PLAYLIST_URL).href] = cover(entry.id);
     }
     const docUrl = new URL(entry.song, DOCS_PLAYLIST_URL).href;
-    const doc = songDoc(entry);
+    const doc = songDoc(entry, audio.has(entry.id));
     routes[docUrl] = doc;
     for (const part of doc.parts) {
       for (const chart of part.charts) {

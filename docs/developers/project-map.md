@@ -162,7 +162,10 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
 - `src/components/game/useGameSession.ts` — **the session**: the screen and its
   dispatch, the library, the chosen song, the band plan and counts, the board,
   settings, the dev flag, fullscreen, the loaded track and the backdrop, with the
-  effects that keep them true. State and effects only; no screen is rendered here.
+  effects that keep them true. It also owns the **Jukebox** controller and the
+  **playback** seam: the active song, document, track, band, YouTube player and
+  media, so the run and the listening mode share one clock and one audio path.
+  State and effects only; no screen is rendered here.
   `useGameSession(attract)` borrows the session for the demo: a generated plan (not
   the remembered one), `humans` ignored, `perfect` on, `silent` where asked, the guide
   vocal kept, and `focus` off for the homepage window.
@@ -210,8 +213,11 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   with its charts and sound already in hand goes straight to the countdown with the
   `start` event; the load page remains for the attract demo and as the fallback.
   `opensRun` includes the band as a run-opening entry, so the direct start still gets
-  its entrance. Pure and unit-tested; components only render the screen they are
-  handed. The screen is session state: it is not mirrored into the URL.
+  its entrance. The **Jukebox** is a branch off the menu (`menu → jukebox`, back to
+  the menu), and the `songs` event is its one-way path to Songs when the library has
+  nothing to play; it is not a stage screen and `wantsCharts` is false for it. Pure
+  and unit-tested; components only render the screen they are handed. The screen is
+  session state: it is not mirrored into the URL.
 - `src/lib/game/practice.ts` — **practice**, pure and tested: a `PracticePlan`
   (a span, a 0.5–1.0 speed in 0.1 steps and a loop flag), the clamping/parsing
   that keeps one inside its song, and `practiceSections` (the song's sections,
@@ -276,15 +282,16 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   engines: `fillMeter`/`missMeter`/`drainMeter`, so a band cannot read two meters that
   fill or drain differently.
 - `src/components/game/screens/**` — the screens: `Welcome`, `Menu` (Quick Play,
-  Options, Credits), `Options` (audio lag, picture lag and their measured
+  Jukebox, Options, Credits), `Options` (audio lag, picture lag and their measured
   calibrations, the master volume and the music/ambience/sfx family levels, guide
   vocal, pause crowd, note
   speed, backdrop, backdrop dim, drifting lights, tap style, note view, note style,
   player setup)
   and `CalibrationDialog` (the eight-click Sound measurement and the twelve-crossing
   Picture measurement over Options),
-  `Credits` (read out of the sound manifest), `Songs` (the jukebox:
-  the search, the A–Z index, the now-playing slot and the way to the playlists),
+  `Credits` (read out of the sound manifest), `Songs` (the search, the A–Z index,
+  the now-playing slot and the way to the playlists), `Jukebox` (the listening
+  screen: the cover-as-record, the timed words, the transport and the queue),
   `SongRow`, `Band` (a slot
   per player, each with its own controller settings behind a gear), `SlotSettings`
   (one player's device and their learned mapping), `playerBits` (the two things a
@@ -298,6 +305,16 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   entrance. They read what they
   need from context (the run board, the song, the clock) and take callbacks for
   everything else.
+- `src/components/game/jukebox/**` — the Jukebox's parts: `useJukebox` (the
+  current song, the queue, the shuffle, the staged next song and the loader),
+  `JukeboxDirector` (the one clock's Jukebox transport: seat, play, end), `Vinyl`
+  (the cover-as-label record), `JukeboxLyrics` (the timed reading column),
+  `JukeboxTransport` (play/pause, next, progress) and `JukeboxPicker` (the lazy
+  searchable picker and queue dialog). `screens/Jukebox.tsx` draws them.
+- `src/lib/game/jukebox.ts` — the Jukebox's **pure rules**: the current song, the
+  player's `queue`, the shuffled `bag` of fillers, the `failed` set, the saved
+  position, and the Play now/Play next/Add/Next decisions. A filler is never
+  written into the queue; a failed prefetch leaves a queued song alone.
 - `src/pages/charter.astro` + `src/components/charter/**` — **the charter island**, a tool at `/charter` rather than a screen in the run loop. It opens a song and every chart it carries, draws up to eight 2D panes, adds and moves notes by pointer, links a selected pair of notes as a **slide**, records keyboard/gamepad/MIDI takes, and downloads a Clone Hero `.chart`. Its clock and `SongAudio` are its own; the band, judging, score board and mixer are not mounted. See [Charter](charter.md).
 - `src/lib/game/charter/**` — the charter's pure rules: `grid.ts` (BPM, subdivision, snapping, bar lines), `edit.ts` (the canonical note list and every edit, including copy/paste, cross-chart paste and dropping a stale slide link), `record.ts` (a take of the game's own actions into notes), and `exportChart.ts` (the whole set as a `.chart`, naming the slides it cannot write). Unit-tested beside them.
 - `src/styles/charter.css` — the charter's own look, imported only by `/charter`; it keeps the stage's tokens and never reaches a marketing page or `/play`.
@@ -310,12 +327,13 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   against the playlist's own URL, and `mergeSongs` for several playlists into one
   library. `src/lib/game/source.ts` is the other two documents — a **song document**
   (its audio, its parts, where its charts live) and a **chart document** (the notes,
-  into our own format) — plus `assembleTrack` and `sourceChartFor`.
+  into our own format) — plus `assembleTrack`, `sourceChartFor` and `docCanPlay`
+  (whether a song has any sound at all, which is the Jukebox's start gate).
 - `src/components/game/library/**` — the library at the seam: `store.ts` (the one
   place that touches IndexedDB and the one place that fetches), `useLibrary` (the
   playlists, the folders, the merge, the on-demand refresh), `useSongTrack` (a song and
   the charts its band needs, into a `Track` — or a raw source, or a folder, parsed
-  straight into one), `useSongPreview` (the clip a jukebox row plays when it is picked),
+  straight into one), `useSongPreview` (the clip a song row plays when it is picked),
   `folder.ts` (reading a folder off this machine, and **importing files into OPFS**),
   `localImport.ts` (the pure root/path/cap arithmetic an import is built from),
   `drop.ts` (a dropped folder walked with `webkitGetAsEntry`), `sng.ts` (fetching a
@@ -338,9 +356,11 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   one-shots decoded. The welcome warms it (`engine.prepare`: the graph built
   **suspended**, every cue decoded and the opening bed downloaded, chosen by the pure
   `soundsToWarm`), and the first gesture only resumes it. `mix.ts` holds the pure rules
-  (which channel a type plays on, which screens want a bed). A **jukebox preview** is a
+  (which channel a type plays on, which screens want a bed). A **preview** is a
   streamed media element on the **music** channel — `engine.preview` — that loops until
-  another row is chosen or the jukebox is left; the jukebox itself asks for no bed.
+  another row is chosen or Songs is left; Songs itself asks for no bed. The
+  **Jukebox** is the other screen with no bed: its song is the music, played by
+  `SongAudio` on the one clock, with no preview loop and no judging.
 - `src/lib/game/audio/drift.ts` — **how a song's stems are kept in line**, pure and
   tested: the hold, nudge-by-rate and seek thresholds (`driftAction`), read by
   `SongAudio`, which plays the stems and follows one of them with the clock.
@@ -355,26 +375,26 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
 - `src/lib/game/band/media.ts` + `flares.ts` (and `BackdropFlares.tsx`) — **the backdrop**:
   `StageMedia`, the ladder `backdropFor` walks (a song's video, then its art, then ours),
   `DEFAULT_BACKDROP`, and the plan for the room's drifting lights.
-- `src/lib/game/jukebox.ts` — the jukebox's own maths, pure and tested: which
+- `src/lib/game/songList.ts` — the song list's own maths, pure and tested: which
   letter a title files under, what a song's slot is called (`A·03`), and what a
   search matches — **title, artist or album**, through one accent-folding
   normalisation, with **one typo** forgiven against a word of those fields when a
   four-character, single-word query matches nothing exactly. The result is still a
   yes or no, so the groups, the order and the slot codes never move. A few hundred
   songs is a list you navigate, and this is what makes it navigable.
-- `src/lib/game/jukeboxWindow.ts` — the jukebox's **window**, pure and tested: the
+- `src/lib/game/songListWindow.ts` — the song list's **window**, pure and tested: the
   mounted item range, the spacer heights that stand in for the rows outside it,
-  a letter's offset, and the row step focus follows. `useJukeboxList` measures one
+  a letter's offset, and the row step focus follows. `useSongList` measures one
   heading and one row and `Songs.tsx` renders only this slice.
-- `src/components/game/screens/useJukeboxList.ts` — the jukebox list's **DOM
+- `src/components/game/screens/useSongList.ts` — the song list's **DOM
   orchestration**, so `Songs.tsx` keeps the toolbar, the search, the preview and
   the rows: the scroller ref, the measured heading and row (and the retry for a
   frame that misses them), the mounted window, identity-based scroll anchoring,
   the silent seating of the chosen row, and the ArrowUp/ArrowDown and Tab handling
   that can only see mounted rows.
 - `src/lib/game/band/store.ts` — the band **remembered** between visits, in this
-  browser's storage: a jukebox should know who is on stage from one song to the
-  next. Pure except `loadPlan`/`savePlan`.
+  browser's storage: a band should know who is on stage from one song to the next.
+  Pure except `loadPlan`/`savePlan`.
 - `src/components/game/band/RunBoard.tsx` — where every run publishes its totals
   (`usePublishRun`/`usePublishRuns`) so the results screen has real numbers.
   Publish-only: nothing here is ever read back into judging.

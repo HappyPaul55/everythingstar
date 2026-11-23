@@ -76,28 +76,28 @@ A picture of the game is a Playwright test that carries a `doc` annotation, and
 the page names the same id:
 
 ```markdown
-[The jukebox: an A–Z index down the side, song rows with their length and offers, and the now-playing panel on the right.](shot:jukebox "The jukebox, with a row picked")
+[Songs: an A–Z index down the side, song rows with their length and offers, and the now-playing panel on the right.](shot:songs "Songs, with a row picked")
 ```
 
 ```ts
-import { captureJukebox, test } from "../support";
+import { captureSongs, test } from "../support";
 
 test(
-  "the jukebox shows its index, rows and now-playing panel",
-  { annotation: [{ type: "doc", description: "jukebox" }] },
+  "Songs shows its index, rows and now-playing panel",
+  { annotation: [{ type: "doc", description: "songs" }] },
   async ({ context, page }) => {
-    await captureJukebox(context, page);
+    await captureSongs(context, page);
   },
 );
 ```
 
 - The link **text is the alt** and is required; the link **title is the caption**
-  and is optional; `shot:jukebox` is the id.
+  and is optional; `shot:songs` is the id.
 - One spec per shot, in `tests/e2e/docs/`; the `doc` annotation is the only thing
   a capture test adds.
 - **Desktop and mobile are the default.** Every shot is captured once for each
   variant in `docshots.config.ts`, because a phone is where a highway's framing, a
-  menu's overflow and a jukebox's sheet actually fail. Add a picture because it
+  menu's overflow and a Songs' sheet actually fail. Add a picture because it
   shows something a reader needs, not because a screen has two shapes.
 - Two annotations narrow a shot without code, and both are the exception:
   - `{ type: "doc-viewport", description: "mobile" }` — only for a variant a
@@ -111,7 +111,7 @@ test(
     is the note, the hit line and the pads.
 - The test drives the screen through a journey helper — the same helpers the
   behavioural suite uses, so a capture and a test that asserts the same screen
-  cannot drift apart: `captureJukebox`, `captureGuitarHighway`,
+  cannot drift apart: `captureSongs`, `captureGuitarHighway`,
   `captureBandScreen`, `captureSinger`, `capturePhonePads`
   (`tests/e2e/docs-screens.ts`), the duet and lyrics fixtures
   (`tests/e2e/docs-charts.ts`), `captureNoteType` (`tests/e2e/note-guide.ts`),
@@ -122,7 +122,7 @@ test(
 - Use `/app` (the game alone) rather than `/play` (the site shell around it).
 - The fixture is the **published FOSS library**, not an invented one:
   `installDocsFixtures` serves a snapshot of its playlist and cover art, so the
-  jukebox, the band and the stage show real songs. Code Monkey is the one song
+  Songs, the band and the stage show real songs. Code Monkey is the one song
   with guitar, bass, drums and vocals, so the stage captures use it.
 - GitHub shows the link text rather than the picture — the page is the site's.
 

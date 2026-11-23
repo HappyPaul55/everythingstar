@@ -2,7 +2,7 @@
 title: Options
 description: "Every setting in EverythingStar: lag and its calibration, volume, visuals, haptics, installation and your profile."
 updated: "2026-10-31"
-order: 9
+order: 10
 ---
 
 Options holds what belongs to **this browser** rather than a song. Each change is saved at once, with no account, and applies to every run. <kbd>Escape</kbd> or a gamepad's B goes back to the menu.
@@ -43,7 +43,7 @@ The master never reaches zero: a fader dragged to nothing lands at about −60 d
 
 ### Crowd
 
-The murmur of a venue while the run is **paused**, on its own channel. It is the pause menu's alone: never over the song, and none on the menus, the jukebox or the results. Off leaves the pause silent.
+The murmur of a venue while the run is **paused**, on its own channel. It is the pause menu's alone: never over the song, and none on the menus, Songs or the results. Off leaves the pause silent.
 
 ## Notes and the highway
 
@@ -99,7 +99,7 @@ One row per seat, saying what that player holds. The gear opens the same control
 - iPhone and iPad have no prompt: **Share → Add to Home Screen**.
 - A browser that installs only from its own menu says so, and inside the Android app the row is absent because the app is already installed.
 
-Installing does not download songs; those are saved one at a time in the jukebox — [Downloads](songs.md#downloads).
+Installing does not download songs; those are saved one at a time in Songs — [Downloads](songs.md#downloads).
 
 ## Your profile
 

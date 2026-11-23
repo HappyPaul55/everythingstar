@@ -136,7 +136,7 @@ the game's own, by the author. The icons are generated from
 in `scripts/og-card.html` and rendered at 1200×630.
 
 A **song's** cover is not the game's: it belongs to the song's source and is
-credited there. Where a song has no art, the jukebox draws its own tile — the
+credited there. Where a song has no art, Songs draws its own tile — the
 initials on the song's accent colour.
 
 ## Software

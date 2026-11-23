@@ -1,228 +1,300 @@
 /**
- * The jukebox: how a list of songs becomes an indexed one.
+ * The **Jukebox**: what plays next when nobody is choosing.
  *
- * Pure, so what "A–Z" means — which letter a title files under, what a song's slot
- * is called, what a search matches — is unit-tested rather than buried in a
- * component. A real library replaces the songs, not this: it works on the **song**
- * the library hands it, and knows nothing about where the list came from.
+ * The Jukebox is a listening mode, not a run: it plays a song, shows its words
+ * and moves on. This module is the whole decision — which song is playing, what
+ * the player queued, what the shuffle offers when the queue runs dry — and it is
+ * pure, so the rules are unit-tested rather than spread through effects.
+ *
+ * Two lists, deliberately apart:
+ *
+ * - `queue` is the **player's** list. It only ever holds songs they chose with
+ *   Play now, Play next or Add to queue.
+ * - `bag` is the **shuffle**: a shuffled order of the library. A song from the
+ *   bag is a filler, and a filler is never written into `queue`. That is what
+ *   makes the queue count mean "songs I picked" rather than "songs that happen
+ *   to be coming".
+ *
+ * `failed` remembers songs that would not play, so one broken file cannot trap
+ * the mode in a skip loop. A failure is forgotten when the player asks for that
+ * song again by name.
+ *
+ * The current song is an id, not a `Song`: the library is the authority, and a
+ * playlist refresh can change what an id means. `reconcile` is how the lists
+ * follow it.
  */
 
-import type { MessageKey } from "../../i18n";
-import { INSTRUMENTS } from "./track";
-import { songHasPitch, songParts, type Song } from "./song";
+import { hashUnit } from "./hash";
 
-/**
- * The index's order — and, because the list files itself by the same letters, the
- * **list's** order too.
- *
- * `#` comes first because that is where a title that does not begin with a letter
- * files (digits and punctuation), and music libraries put those first. Whatever
- * this array says, the list and the index agree: `groupSongs` walks it, so the two
- * cannot drift apart.
- */
-export const INDEX_LETTERS: string[] = [
-  "#",
-  ..."ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""),
-];
-
-/**
- * Which letter a title files under.
- *
- * The first character is folded first: `Écoute` and `Café` file under E and C, the
- * same rule the search uses, rather than under `#` while the index promises
- * accents are folded. A digit, a symbol or a script this index has no letter for
- * is `#`.
- */
-export function letterOf(title: string): string {
-  const first = title
-    .trim()
-    .normalize("NFD")
-    .replace(/\p{M}+/gu, "")
-    .charAt(0)
-    .toUpperCase();
-  return first >= "A" && first <= "Z" ? first : "#";
+export interface JukeboxState {
+  /** The song playing now, or null before the first one. */
+  current: string | null;
+  /** The player's own list, in play order. Fillers never enter it. */
+  queue: string[];
+  /** The shuffled fillers still to come. */
+  bag: string[];
+  /** Songs that would not play; skipped until asked for by name again. */
+  failed: string[];
+  /** Which shuffle round the bag belongs to, so a refill is a new order. */
+  round: number;
+  /** Where the current song was when the Jukebox was left, in ms. */
+  positionMs: number;
 }
 
-/** One song, with the jukebox's own address for it. */
-export interface SongEntry {
-  song: Song;
-  /** `A·03`: the letter it files under, and its place there. */
-  slot: string;
+export const EMPTY_JUKEBOX: JukeboxState = {
+  current: null,
+  queue: [],
+  bag: [],
+  failed: [],
+  round: 0,
+  positionMs: 0,
+};
+
+/**
+ * A shuffled copy of `ids`.
+ *
+ * Seeded rather than `Math.random`, so a test can say what a round is and a
+ * session can have its own order without storing it. Ties fall back to the id so
+ * two songs that hash alike still have one answer.
+ */
+export function shuffleIds(ids: readonly string[], seed: string): string[] {
+  return ids
+    .map((id) => ({ id, order: hashUnit(`${seed}:${id}`) }))
+    .sort((a, b) => a.order - b.order || a.id.localeCompare(b.id))
+    .map((entry) => entry.id);
 }
 
-export interface SongGroup {
-  letter: string;
-  entries: SongEntry[];
+/** Does this list already contain the id? */
+function has(list: readonly string[], id: string): boolean {
+  return list.includes(id);
+}
+
+/** Remove an id from a list, keeping the order of what stays. */
+function without(list: readonly string[], id: string): string[] {
+  return list.filter((entry) => entry !== id);
 }
 
 /**
- * Songs by title, filed under their letter, each with its slot code.
+ * A fresh filler order.
  *
- * The letters come out in `INDEX_LETTERS` order rather than in whatever order the
- * titles happen to collate in: a title that begins with punctuation files under
- * `#`, and `localeCompare` would otherwise have sorted it among the letters.
+ * Songs the player queued are left out: they have their own turn, and hearing
+ * one twice because it was also a filler is the kind of "shuffle" a listener
+ * notices. Failed songs and the current song are left out for the same reason.
+ * If that leaves nothing — a one-song library, or every song queued — the
+ * current song is the honest filler rather than silence.
  */
-export function groupSongs(songs: readonly Song[]): SongGroup[] {
-  const byLetter = new Map<string, Song[]>();
-  for (const song of songs) {
-    const letter = letterOf(song.title);
-    const list = byLetter.get(letter);
-    if (list) list.push(song);
-    else byLetter.set(letter, [song]);
+function refill(
+  state: JukeboxState,
+  songIds: readonly string[],
+  seed: string,
+): { bag: string[]; round: number } {
+  const excluded = new Set([...state.queue, ...state.failed]);
+  if (state.current) excluded.add(state.current);
+  const pool = songIds.filter((id) => !excluded.has(id));
+  const fallback = pool.length > 0
+    ? pool
+    : songIds.filter((id) => !state.failed.includes(id));
+  const round = state.round + 1;
+  return { bag: shuffleIds(fallback, `${seed}:${round}`), round };
+}
+
+/** The next song, from the queue first and the shuffle after it. */
+function takeNext(
+  state: JukeboxState,
+  songIds: readonly string[],
+  seed: string,
+): { next: string | null; queue: string[]; bag: string[]; round: number } {
+  if (state.queue.length > 0) {
+    return {
+      next: state.queue[0] ?? null,
+      queue: state.queue.slice(1),
+      bag: state.bag,
+      round: state.round,
+    };
   }
-  return INDEX_LETTERS.filter((letter) => byLetter.has(letter)).map((letter) => {
-    const entries = [...(byLetter.get(letter) ?? [])]
-      .sort((a, b) => a.title.localeCompare(b.title, "en"))
-      .map((song, index) => ({
-        song,
-        slot: `${letter}·${String(index + 1).padStart(2, "0")}`,
-      }));
-    return { letter, entries };
-  });
-}
-
-/**
- * How a search compares text: **one normalisation for the query and the fields**,
- * so `Café` and `cafe` are the same word. NFD splits an accented letter into its
- * letter and its mark, the marks are dropped, case goes, and runs of whitespace
- * become one space — so a title written with a double space still matches a query
- * typed with one.
- */
-function normaliseSearch(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\p{M}]/gu, "")
-    .replace(/\s+/gu, " ")
-    .trim();
-}
-
-/**
- * Whether two words are one edit apart: a substitution, an insertion, a deletion,
- * or a swap of two neighbours. A transposition counts as one edit because that is
- * how a hand types — `neon` for `enon` is one slip, not two. Anything further is
- * not a typo this search forgives.
- */
-function withinOneEdit(a: string, b: string): boolean {
-  const left = Array.from(a);
-  const right = Array.from(b);
-  if (Math.abs(left.length - right.length) > 1) return false;
-
-  if (left.length === right.length) {
-    let first = -1;
-    for (let at = 0; at < left.length; at += 1) {
-      if (left[at] !== right[at]) {
-        first = at;
-        break;
-      }
-    }
-    if (first < 0) return true;
-    // A swapped pair: both neighbours are there, the other way round.
-    if (
-      left[first + 1] === right[first] &&
-      left[first] === right[first + 1]
-    ) {
-      return sameFrom(left, right, first + 2);
-    }
-    return sameFrom(left, right, first + 1);
+  if (state.bag.length > 0) {
+    return {
+      next: state.bag[0] ?? null,
+      queue: state.queue,
+      bag: state.bag.slice(1),
+      round: state.round,
+    };
   }
-
-  const longer = left.length > right.length ? left : right;
-  const shorter = left.length > right.length ? right : left;
-  let at = 0;
-  while (at < shorter.length && longer[at] === shorter[at]) at += 1;
-  for (let index = at; index < shorter.length; index += 1) {
-    if (longer[index + 1] !== shorter[index]) return false;
-  }
-  return true;
-}
-
-/** Whether the two arrays agree from `from` onwards. */
-function sameFrom(
-  left: readonly string[],
-  right: readonly string[],
-  from: number,
-): boolean {
-  for (let at = from; at < left.length; at += 1) {
-    if (left[at] !== right[at]) return false;
-  }
-  return true;
+  const filled = refill(state, songIds, seed);
+  return {
+    next: filled.bag[0] ?? null,
+    queue: state.queue,
+    bag: filled.bag.slice(1),
+    round: filled.round,
+  };
 }
 
 /**
- * What a search matches: the song's **title, artist or album**.
+ * What would play next, without changing anything.
  *
- * A field containing the query is the ordinary search. When none does, a single
- * typo is forgiven against any word of those fields — but only for a query of at
- * least four characters with no spaces, because `ant` is too short for a guess to
- * be worth anything and a multi-word query is a phrase to find rather than a word
- * to misspell. The result is still a yes or no: the matched songs keep their
- * order, their A–Z groups and their slot codes, so nothing is ranked.
+ * The preloader asks this while the current song is still playing. `advance`
+ * takes the same answer, so the song prepared in the background is the song
+ * that starts.
  */
-export function matches(song: Song, query: string): boolean {
-  const needle = normaliseSearch(query);
-  if (!needle) return true;
-  const fields = [song.title, song.artist.name, song.album?.name ?? ""]
-    .map(normaliseSearch)
-    .filter(Boolean);
-  if (fields.some((field) => field.includes(needle))) return true;
-  if (Array.from(needle).length < 4 || needle.includes(" ")) return false;
-  return fields.some((field) =>
-    field.split(" ").some((word) => withinOneEdit(word, needle)),
-  );
+export function peekNext(
+  state: JukeboxState,
+  songIds: readonly string[],
+  seed: string,
+): string | null {
+  return takeNext(state, songIds, seed).next;
+}
+
+/** Start the Jukebox if nothing is playing: the queue first, then the shuffle. */
+export function startJukebox(
+  state: JukeboxState,
+  songIds: readonly string[],
+  seed: string,
+): JukeboxState {
+  if (state.current !== null) return state;
+  return advance(state, songIds, seed);
+}
+
+/** Move on to the next song: the queue head, or the next filler. */
+export function advance(
+  state: JukeboxState,
+  songIds: readonly string[],
+  seed: string,
+): JukeboxState {
+  const taken = takeNext(state, songIds, seed);
+  return {
+    ...state,
+    current: taken.next,
+    queue: taken.queue,
+    bag: taken.bag,
+    round: taken.round,
+    positionMs: 0,
+  };
 }
 
 /**
- * What a song offers, as chips, **in the order it offers it**.
+ * Play this song now.
  *
- * Additions only: a solo is what a song is unless it says otherwise, and a song
- * with vocals shows the words too, so `Lyrics` is not said as well — the list is
- * what this song has *besides* the ordinary.
- *
- * **Difficulty is deliberately not here.** It is a chart's, not a song's: a song
- * can be easy on the guitar and hard to sing, so a player chooses their difficulty
- * per part on the band screen instead.
+ * The queue is not cleared: it is the player's list, and interrupting one song
+ * is not a reason to throw the rest away. The new current does leave the queue
+ * and the bag, so it cannot come round twice on the strength of having been
+ * asked for.
  */
-export function songChips(song: Song): MessageKey[] {
-  const chips: MessageKey[] = [];
-  if (songParts(song) > 1) chips.push("song.duet");
-  if (song.offer.voice) chips.push(songHasPitch(song) ? "song.vocals" : "song.lyrics");
-  for (const instrument of song.offer.instruments) {
-    // A lead and a rhythm guitar are two parts and both worth naming; the role is
-    // the name, so the list does not say "Guitar" twice.
-    chips.push(
-      instrument.role === "lead"
-        ? "band.leadGuitar"
-        : instrument.role === "rhythm"
-          ? "band.rhythmGuitar"
-          : INSTRUMENTS[instrument.kind].labelKey,
-    );
-  }
-  return chips;
+export function playNow(state: JukeboxState, id: string): JukeboxState {
+  return {
+    ...state,
+    current: id,
+    queue: without(state.queue, id),
+    bag: without(state.bag, id),
+    failed: without(state.failed, id),
+    positionMs: 0,
+  };
 }
 
 /**
- * The groups a search keeps. A slot is a song's place in the whole jukebox, so a
- * filtered list keeps the codes it had — a song does not move because the list
- * around it changed.
+ * Put this song at the front of the player's queue.
  *
- * `keep` is for an on-demand playlist's answer: a resolver may legitimately find a
- * song whose title and artist do not contain the words that were typed, and hiding
- * it because the **local** filter does not match would throw away the very result
- * the player asked for. Those entries stay filed under their own letter.
+ * With nothing playing it is the next song, so it starts now. A song already in
+ * the queue is moved to the front rather than duplicated.
  */
-export function searchSongs(
-  groups: readonly SongGroup[],
-  query: string,
-  keep?: ReadonlySet<string>,
-): SongGroup[] {
-  if (!query.trim()) return [...groups];
-  return groups
-    .map((group) => ({
-      letter: group.letter,
-      entries: group.entries.filter(
-        (entry) => matches(entry.song, query) || keep?.has(entry.song.id),
-      ),
-    }))
-    .filter((group) => group.entries.length > 0);
+export function playNext(state: JukeboxState, id: string): JukeboxState {
+  if (state.current === null) return playNow(state, id);
+  if (state.current === id) return state;
+  return {
+    ...state,
+    queue: [id, ...without(state.queue, id)],
+    bag: without(state.bag, id),
+    failed: without(state.failed, id),
+  };
+}
+
+/**
+ * Add this song to the end of the player's queue.
+ *
+ * A song already queued or playing is left where it is: pressing Add twice is a
+ * double press, not a request to hear it twice.
+ */
+export function enqueue(state: JukeboxState, id: string): JukeboxState {
+  if (state.current === id || has(state.queue, id)) return state;
+  return {
+    ...state,
+    queue: [...state.queue, id],
+    bag: without(state.bag, id),
+    failed: without(state.failed, id),
+  };
+}
+
+/** Remove one song from the player's queue. */
+export function removeFromQueue(state: JukeboxState, id: string): JukeboxState {
+  return { ...state, queue: without(state.queue, id) };
+}
+
+/** Empty the player's queue. What is playing keeps playing. */
+export function clearQueue(state: JukeboxState): JukeboxState {
+  return { ...state, queue: [] };
+}
+
+/**
+ * A song would not play.
+ *
+ * It is remembered so the shuffle leaves it alone, and if it was the current
+ * song the mode moves on at once. Asking for it by name again clears the mark
+ * (`playNow`, `playNext`, `enqueue`), because a player may have fixed the file.
+ */
+export function markFailed(
+  state: JukeboxState,
+  id: string,
+  songIds: readonly string[],
+  seed: string,
+): JukeboxState {
+  const failed = has(state.failed, id) ? state.failed : [...state.failed, id];
+  const next: JukeboxState = {
+    ...state,
+    failed,
+    queue: without(state.queue, id),
+    bag: without(state.bag, id),
+  };
+  return next.current === id ? advance(next, songIds, seed) : next;
+}
+
+/**
+ * A filler would not play.
+ *
+ * The shuffle remembers it so it is not offered again, but the player's queue is
+ * left alone: a song the listener queued is theirs even if the prefetch that
+ * happened to be looking at it failed. If it really cannot play, it will be
+ * named when its own turn comes.
+ */
+export function markFillerFailed(state: JukeboxState, id: string): JukeboxState {
+  return {
+    ...state,
+    failed: has(state.failed, id) ? state.failed : [...state.failed, id],
+    bag: without(state.bag, id),
+  };
+}
+
+/** Follow a library that changed under the mode. */
+export function reconcile(
+  state: JukeboxState,
+  songIds: readonly string[],
+): JukeboxState {
+  const known = new Set(songIds);
+  const current = state.current !== null && known.has(state.current) ? state.current : null;
+  return {
+    ...state,
+    current,
+    queue: state.queue.filter((id) => known.has(id)),
+    bag: state.bag.filter((id) => known.has(id)),
+    failed: state.failed.filter((id) => known.has(id)),
+  };
+}
+
+/** Where the current song was when the screen was left. */
+export function setPosition(state: JukeboxState, positionMs: number): JukeboxState {
+  const at = Number.isFinite(positionMs) ? Math.max(0, positionMs) : 0;
+  return state.positionMs === at ? state : { ...state, positionMs: at };
+}
+
+/** How many songs the player has waiting. Fillers are not counted. */
+export function queueCount(state: JukeboxState): number {
+  return state.queue.length;
 }

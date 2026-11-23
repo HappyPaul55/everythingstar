@@ -168,11 +168,12 @@ describe("crowdFor", () => {
 });
 
 describe("bedFor", () => {
-  test("the pages want the background bank, except the preview booth", () => {
+  test("the pages want the background bank, except the preview booth and the Jukebox", () => {
     for (const screen of ["welcome", "band", "loading", "results"] as const) {
       expect(bedFor(screen)).toBe("background");
     }
     expect(bedFor("songs")).toBeNull();
+    expect(bedFor("jukebox")).toBeNull();
   });
 
   test("the stage wants none: the song is what plays there", () => {
@@ -183,7 +184,7 @@ describe("bedFor", () => {
 
   test("the two rules cover every screen the game has", () => {
     for (const screen of SCREENS) {
-      const silent = screen === "songs" || onStage(screen);
+      const silent = screen === "songs" || screen === "jukebox" || onStage(screen);
       expect(bedFor(screen)).toBe(silent ? null : "background");
     }
   });

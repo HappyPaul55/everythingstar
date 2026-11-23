@@ -37,19 +37,66 @@ async function startPlayerCapture(
   return leaked;
 }
 
-/** The jukebox, with a row selected so both halves are in the picture. */
-export async function captureJukebox(context: BrowserContext, page: Page): Promise<void> {
+/** The Jukebox: a record with its cover, the timed words and the queue behind it. */
+export async function captureJukeboxMode(
+  context: BrowserContext,
+  page: Page,
+): Promise<void> {
+  const leaked = await installDocsFixtures(context, {
+    audioSongId: ["jonathan-coulton-code-monkey", "jonathan-coulton-ikea"],
+  });
+  await disableFullscreen(page);
+  await enterGame(page, "/app");
+  await page.getByRole("button", { name: /Jukebox/ }).click();
+  await expect(page.getByRole("heading", { name: "Jukebox" })).toBeVisible();
+
+  // Choose the one song with sound in the docs library, by name. The picker's
+  // search is the same one Songs uses; this is also the picture's path.
+  await page.getByRole("button", { name: "Pick a song" }).click();
+  const picker = page.getByRole("dialog", { name: "Pick a song" });
+  await picker.getByRole("searchbox", { name: "find a song" }).fill("Code Monkey");
+  const row = picker.getByRole("button", { name: /Code Monkey/ }).first();
+  await expect(row).toBeVisible({ timeout: 20_000 });
+  await row.click();
+  await picker.getByRole("button", { name: "Play now" }).click();
+  await expect(page.locator(".jukebox__title")).toHaveText("Code Monkey", {
+    timeout: 20_000,
+  });
+  await expect(page.locator(".jukebox__line.is-active")).toBeVisible({
+    timeout: 10_000,
+  });
+  // A beat into the first line, so the active word is on screen and the record
+  // is unmistakably moving.
+  await page.waitForTimeout(1_500);
+  expectNoExternalRequests(leaked);
+}
+
+/** The Jukebox's picker: the library and the queue behind one button. */
+export async function captureJukeboxPicker(
+  context: BrowserContext,
+  page: Page,
+): Promise<void> {
+  const leaked = await startPlayerCapture(context, page);
+  await page.getByRole("button", { name: /Jukebox/ }).click();
+  await expect(page.getByRole("heading", { name: "Jukebox" })).toBeVisible();
+  await page.getByRole("button", { name: "Pick a song" }).click();
+  await expect(page.getByRole("dialog", { name: "Pick a song" })).toBeVisible();
+  expectNoExternalRequests(leaked);
+}
+
+/** The song list, with a row selected so both halves are in the picture. */
+export async function captureSongs(context: BrowserContext, page: Page): Promise<void> {
   const leaked = await startPlayerCapture(context, page);
 
   await page.getByRole("button", { name: /Quick Play/ }).click();
   await expect(page.getByRole("heading", { name: "Pick a song" })).toBeVisible();
-  // The letter rail is part of the jukebox on a wide screen; a phone's list is
+  // The letter rail is part of the song list on a wide screen; a phone's list is
   // the screen, so the stylesheet hides the 27-letter column there. It is the
   // same box either way, and the rows below are the picture's other half.
-  await expect(page.locator(".jukebox__index")).toHaveCount(1);
+  await expect(page.locator(".song-list__index")).toHaveCount(1);
 
   await page.getByRole("button", { name: /Code Monkey/ }).first().click();
-  await expect(page.locator(".jukebox__selection .jukebox__title")).toHaveText("Code Monkey");
+  await expect(page.locator(".song-list__selection .song-list__title")).toHaveText("Code Monkey");
   expectNoExternalRequests(leaked);
 }
 
@@ -205,7 +252,7 @@ export async function captureOptions(
   expectNoExternalRequests(leaked);
 }
 
-/** The jukebox's Playlists dialog: the sources the library is read from. */
+/** The song list's Playlists dialog: the sources the library is read from. */
 export async function capturePlaylists(
   context: BrowserContext,
   page: Page,

@@ -117,7 +117,7 @@ export interface Library {
   /** Fetch again - one playlist, or all of them. Never asked for on its own. */
   refresh: (url?: string) => void;
   /**
-   * Ask the **on-demand** playlists for a song. The jukebox's search field is what
+   * Ask the **on-demand** playlists for a song. The song list's search field is what
    * calls this; nothing asks on a screen load, and a search that fails is retried
    * by hand rather than by a hidden loop.
    */
@@ -196,7 +196,7 @@ export function canForget(row: FolderRow): boolean {
  *
  * A playlist or a pinned song that has not answered is one thing; a folder being
  * walked or copied is the other, and a large import can spend its first seconds
- * there. Counting only the playlists let the jukebox show its empty state while a
+ * there. Counting only the playlists let the song list show its empty state while a
  * folder was plainly being read, so a folder row counts until it is **finished** —
  * `ready` and no reconnect walking it. A locked or failed row is an answer, not a
  * wait, and does not keep the library loading.

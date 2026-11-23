@@ -1,7 +1,7 @@
 /**
  * The mock song list — the content behind the default playlist, and nothing else.
  *
- * A jukebox needs a few hundred songs before an index means anything, so the list
+ * A song list needs a few hundred songs before an index means anything, so the list
  * is **generated**: a handful written by hand for the songs worth naming, then
  * every pairing of two word lists. It is deterministic, so every machine gets the
  * same list, and it is throwaway with the rest of `mock/` — a real playlist replaces

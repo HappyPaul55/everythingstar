@@ -117,7 +117,7 @@ E
 - The note types are `:` a normal syllable, `*` a **golden** note (pitched, and a hero), `R` a rap syllable (no pitch, judged on presence), `G` a golden rap syllable, and `F` a **freestyle** syllable, which is dropped.
 - `-` is a phrase break. A **leading space** starts a new word; a leading **`~`** continues the current one. UltraStar's `-` is punctuation, not a join.
 - `P1`/`P2` switch voice, on their own line or at a note line's start. Two voices are read; a third is named and ignored.
-- `#AUDIO`/`#MP3`/`#COVER` and `#VIDEO` resolve against the chart's address when it has one. `#PREVIEWSTART` sets the jukebox cue; `#YEAR` is read; `#TITLE`, `#ARTIST` and `#ALBUM` name the song.
+- `#AUDIO`/`#MP3`/`#COVER` and `#VIDEO` resolve against the chart's address when it has one. `#PREVIEWSTART` sets Songs cue; `#YEAR` is read; `#TITLE`, `#ARTIST` and `#ALBUM` name the song.
 - `#RELATIVE:yes` means the gap and phrase markers are in beats rather than milliseconds.
 
 It carries one tempo: a changing file is read at its opening tempo and told so. A folder's `audio.mp3`/`audio.ogg` is the master, because the header often names a file that is not there.

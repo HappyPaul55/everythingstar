@@ -19,7 +19,7 @@ offline play.
 
 ## What it is
 
-- **The whole loop, in one island.** Welcome → menu → jukebox → band → stage entrance →
+- **The whole loop, in one island.** Welcome → menu → Songs → band → stage entrance →
   run → pause → results, with no page reloads and one fullscreen session across it.
 - **Three ways to play, judged per player.** Falling-note highways with chords, hopos,
   sustains, star power and drum fills; Typing with TypeStar's forgiving rules; Vocals
@@ -40,8 +40,8 @@ offline play.
 
 | | |
 | --- | --- |
-| ![Karaoke: a piano roll with the words sliding under its notes.](https://everythingstar.happypaul55.com/docs/test-output/singer-desktop.webp) | ![The jukebox: an A–Z index, the song list and the now-playing panel.](https://everythingstar.happypaul55.com/docs/test-output/jukebox-desktop.webp) |
-| **Vocals.** A piano roll with the words under its notes, judged on the pitch held across each note. | **The jukebox.** A list you navigate: A–Z index, search, duration and what each song offers. |
+| ![Karaoke: a piano roll with the words sliding under its notes.](https://everythingstar.happypaul55.com/docs/test-output/singer-desktop.webp) | ![Songs: an A–Z index, song rows and the now-playing panel.](https://everythingstar.happypaul55.com/docs/test-output/songs-desktop.webp) |
+| **Vocals.** A piano roll with the words under its notes, judged on the pitch held across each note. | **The Songs screen.** A list you navigate: A–Z index, search, duration and what each song offers. |
 | ![The band screen: one character box per player.](https://everythingstar.happypaul55.com/docs/test-output/band-screen-desktop.webp) | ![A phone playing a guitar highway, the score above it.](https://everythingstar.happypaul55.com/docs/test-output/phone-pads-mobile.webp) |
 | **The band.** One box per player: what they take, how hard, and the controller in their hands. | **On a phone.** The pads are the controls; a lone highway takes the whole width. |
 

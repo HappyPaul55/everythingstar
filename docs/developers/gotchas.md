@@ -78,8 +78,29 @@ state, or that have caught us more than once.
 - A box answers for its own width. `.slot` is a container and its pickers stack by
   `@container`; do not size a box's insides with a media query. The one-column phone
   rule is the exception that proves it.
-- The jukebox builds after the first paint: only the window is mounted, and the rows
+- Songs builds after the first paint: only the window is mounted, and the rows
   arrive after the loading line has drawn.
+
+## The Jukebox
+
+- The Jukebox is **not the stage**. It is a page in the same island, but its song is
+  played by the one `StageClock` and `SongAudio`; `JukeboxDirector` is its transport,
+  and `StageDirector` must leave the clock alone while the Jukebox is up (it pauses on
+  the way out). Do not add a second frame loop or a second audio element set.
+- The **queue is the player's**, the **bag is the shuffle's**. Never write a filler
+  into the queue. A failed prefetch removes the song from the shuffle, not from a
+  queue it may have been added to in the meantime.
+- A song change is a **staged** change: the current song keeps playing until the next
+  document, words and sound can play. Do not swap the current id on the press; a
+  failed pending song must leave the current one running and say which failed.
+- The record's `art` is `doc.art ?? undefined`: `null` is "no cover" to `SongCover` and
+  would hide the song's own art. The cover is the label, and the disc turns only while
+  `clock.playing`; reduced motion stops it.
+- The picker's list is the same windowed list as Songs. Its silent seating must not
+  change the chosen row: `focusIsSilent()` is what keeps a list that is still building
+  from selecting a different song under the player.
+- The Jukebox asks for **no menu bed**. Its song is the music; a bed under it is the
+  one thing the mixer must not do.
 
 ## Input and focus
 

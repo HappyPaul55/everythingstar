@@ -43,7 +43,7 @@
     {
       "name": "Play",
       "short_name": "Play",
-      "description": "Open the jukebox and pick a song.",
+      "description": "Open the song list and pick a song.",
       "url": "/app",
       "icons": [
         {

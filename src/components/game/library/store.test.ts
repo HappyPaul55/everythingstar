@@ -608,7 +608,7 @@ describe("the cache's storage", () => {
     await writeCache(url, "song", doc, "content-hash");
     expect(calls).toHaveLength(1);
 
-    // The band's load and the jukebox's preview read it with that revision: a hit,
+    // The band's load and the song list's preview read it with that revision: a hit,
     // not a refetch, which is what makes a pinned song playable offline.
     await expect(cachedJson(url, "song", false, "content-hash")).resolves.toEqual(doc);
     expect(calls).toHaveLength(1);

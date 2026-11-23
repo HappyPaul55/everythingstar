@@ -2,7 +2,7 @@
  * The one-visit cache for `.sng` packages.
  *
  * A package is tens of megabytes and two readers want the same bytes in one visit:
- * the jukebox fetches it to play a row's preview, and the band fetches it again to
+ * the song list fetches it to play a row's preview, and the band fetches it again to
  * take its chart and stems. This is the second read in the same visit, **not**
  * persistence — nothing here goes near IndexedDB or localStorage.
  *
@@ -33,7 +33,7 @@ export interface SngCacheLoad<T> {
 }
 
 /**
- * Two packages, 64 MB. One covers the jukebox's preview and the other covers a
+ * Two packages, 64 MB. One covers the song list's preview and the other covers a
  * song whose band is being opened; a package bigger than 64 MB can still be played,
  * it simply will not be the one that stays.
  */
@@ -80,7 +80,7 @@ export class SngCache<T> {
    *
    * The shared fetch is **not tied to one caller's signal**. A caller that leaves
    * stops waiting at once, and the download is aborted only when the last waiter
-   * has gone — so closing the jukebox while the band is opening cannot cancel the
+   * has gone — so closing the song list while the band is opening cannot cancel the
    * bytes the band is waiting for. A caller that has aborted never receives a value.
    */
   async load(url: string, signal?: AbortSignal): Promise<T | null> {

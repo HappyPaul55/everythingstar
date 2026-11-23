@@ -268,7 +268,7 @@ export function SongAudioStatusProvider({ preload, children }: Props) {
     apply();
   }, [apply]);
 
-  // A page that wants the song starts fetching; leaving it (a run, the jukebox)
+  // A page that wants the song starts fetching; leaving it (a run, the song list)
   // hands the elements back to the transport and puts every muted prime to rest.
   useEffect(() => {
     if (preload) {

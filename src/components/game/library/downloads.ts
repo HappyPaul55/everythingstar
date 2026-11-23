@@ -125,7 +125,7 @@ export interface OfflineQueueState {
 /**
  * The one job the downloader is running for the whole page.
  *
- * It lives outside the hook on purpose: the jukebox unmounts when the player walks
+ * It lives outside the hook on purpose: the song list unmounts when the player walks
  * to the band, and an in-flight download must not become a second download when
  * they walk back. `busy` covers a removal or a clear as well, because both write
  * the same record a download is about to write.
@@ -257,7 +257,7 @@ function serialiseRecord<T>(task: () => T): Promise<T> {
 export interface OfflineUrls {
   /** The playlist, song document and every chart. */
   documents: string[];
-  /** Stems and the jukebox preview. */
+  /** Stems and the preview. */
   audio: string[];
   /** Cover art and the artist/album fallbacks. All best-effort. */
   art: string[];
@@ -477,7 +477,7 @@ export function collectSongUrls(song: Song, doc: SourceSongDoc): OfflineUrls {
  *
  * A download is a **copy** of a song, not another source: if a playlist, a folder
  * or a link already lists that id, that row is the song and the download must not
- * put a second one in the jukebox. But an on-demand search result exists nowhere
+ * put a second one in the song list. But an on-demand search result exists nowhere
  * else once the search results are gone — its summary lives only in the offline
  * record — so appending it is what makes a saved song visible after a reload.
  */
@@ -546,7 +546,7 @@ export interface DownloadOptions {
 /**
  * Fetch a song's entire document set into Cache Storage and record it.
  *
- * The playlist is required: without it the jukebox has no row to play from on
+ * The playlist is required: without it the song list has no row to play from on
  * a cold offline start. Every chart and stem is required for the same reason —
  * a song that only half works offline is worse than one clearly not saved. Art
  * and the preview are optional; a missing cover must not fail a download.
@@ -770,7 +770,7 @@ export async function downloadSong(
     for (const url of pendingDocuments) {
       await put(url, "document", true, "documents");
     }
-    // The jukebox clip is a preview, not part of the song: a missing or broken
+    // The preview clip is a preview, not part of the song: a missing or broken
     // one must not fail a download whose charts and stems are all there.
     const previewUrl = read.doc.audio.preview;
     for (const url of pendingAudio) {
@@ -860,7 +860,7 @@ async function clearOffline(): Promise<void> {
  *
  * `false` means the press was refused: one job at a time is what keeps two
  * attempts from sharing a record and deleting each other's URLs. The job outlives
- * the hook that asked, so the jukebox unmounting does not end it.
+ * the hook that asked, so the song list unmounting does not end it.
  */
 export function startDownload(song: Song): boolean {
   if (job) return false;

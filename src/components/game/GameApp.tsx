@@ -33,7 +33,7 @@ import {
  * survives every screen change and the stage can come and go with the song.
  *
  * **One screen at a time, and only one of them is the stage**: the song, and the
- * countdown and the pause that happen during it. The welcome, the jukebox, the
+ * countdown and the pause that happen during it. The welcome, the song list, the
  * band screen, the load and the results are **pages of their own**, with the whole
  * viewport to themselves — a menu drawn over a running song is a menu with a song
  * in the way. The countdown and the pause are children **inside** `BandStage`.
@@ -161,10 +161,10 @@ function GameApp({ credits, attract = false }: Props) {
         onVolume={(level) => session.changeSettings({ volume: level })}
         levels={session.settings.levels}
         crowd={session.settings.crowd}
-        setup={session.setup}
-        track={session.track}
-        seed={session.song?.seed ?? 0}
-        doc={session.load.doc}
+        setup={session.playback.setup}
+        track={session.playback.track}
+        seed={session.playback.song?.seed ?? 0}
+        doc={session.playback.doc}
         perfect={session.perfect}
         audio={!session.silent}
       >
@@ -186,15 +186,15 @@ function GameApp({ credits, attract = false }: Props) {
             music *is* the playhead. A YouTube-backed song is the same idea with the
             video as the source, and the player lives with the backdrop rather than
             here. A silent demo has neither: the frame clock is the song. */}
-        {session.silent || session.youtubeAudio ? null : (
+        {session.silent || session.playback.youtubeAudio ? null : (
           <SongAudio
-            doc={session.load.doc}
+            doc={session.playback.doc}
             volume={session.settings.volume}
             musicLevel={session.settings.levels.music}
             lagMs={session.settings.audioLagMs}
-            sung={session.sung}
-            rate={session.practice?.speed ?? 1}
-            practice={session.practice !== null}
+            sung={session.playback.sung}
+            rate={session.playback.rate}
+            practice={session.playback.practice !== null}
           />
         )}
 
@@ -205,7 +205,7 @@ function GameApp({ credits, attract = false }: Props) {
         {session.stage ? (
           <BandStage
             setup={session.setup}
-            media={session.media}
+            media={session.playback.media}
             view={session.settings.view}
             noteStyle={session.settings.noteStyle}
             noteSpeed={session.settings.noteSpeed}
@@ -213,7 +213,7 @@ function GameApp({ credits, attract = false }: Props) {
             backdropDim={session.settings.backdropDim}
             tap={session.settings.tap}
             haptics={session.settings.haptics}
-            youtube={session.youtubeAudio}
+            youtube={session.playback.youtubeAudio}
             practice={session.practice}
           >
             <StageOverlay session={session} />
@@ -221,9 +221,9 @@ function GameApp({ credits, attract = false }: Props) {
         ) : null}
 
         {/* The pages, which are the game's roomy half: the board the welcome opens
-            on to, its two branches, choosing a song, saying who is playing it, and
+            on to, its branches, choosing a song, saying who is playing it, and
             what came of it. */}
-        <ScreenPage session={session} credits={credits} />
+        <ScreenPage session={session} credits={credits} arcade={attract} />
 
         {/* A link's question, over whatever screen it arrived on. The press that
             answers it is the only thing that changes the library. */}
@@ -253,7 +253,7 @@ function GameApp({ credits, attract = false }: Props) {
             {session.dev ? (
               <Suspense fallback={null}>
                 <BandControls
-                  setup={session.setup}
+                  setup={session.playback.setup}
                   humans={session.humans}
                   onHumans={session.setHumans}
                   video={session.settings.video}
@@ -274,7 +274,7 @@ function GameApp({ credits, attract = false }: Props) {
             focus where that screen starts. The homepage's window is a picture and
             must not take the page's focus, so it says nothing and places nothing. */}
         {session.focus ? (
-          <ScreenFocus screen={session.screen} song={session.song} />
+          <ScreenFocus screen={session.screen} song={session.playback.song} />
         ) : null}
       </GameProviders>
     </div>

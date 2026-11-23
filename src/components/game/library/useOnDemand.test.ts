@@ -6,7 +6,7 @@ import { blankRecord, readRecord, writeRecord } from "./useOnDemand";
  *
  * The queries below are the names a plain `{}` answers from `Object.prototype`,
  * which is how `constructor` once came back as a function and `new Set(...)` threw
- * while the jukebox rendered.
+ * while the song list rendered.
  */
 const HOSTILE = ["constructor", "toString", "__proto__"];
 

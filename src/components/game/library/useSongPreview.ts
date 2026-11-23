@@ -4,14 +4,14 @@ import { useAudio } from "../audio/StageAudio";
 import { resolvePreview, type FoundPreview } from "./preview";
 
 /**
- * Play the song a jukebox row has chosen.
+ * Play the song a song list row has chosen.
  *
  * A list of a few hundred titles is a list of names, and a name does not remind
  * anybody what a song sounds like — so choosing one **plays something**: the chart folder's
  * preview clip where it has one, otherwise the master from the song's own preview
  * cue (`previewFor`). The mixer gives it the music channel, the clip repeats until
- * another row is chosen or the jukebox is left, and a song with no preview leaves
- * the jukebox silent rather than putting the menu bed behind it.
+ * another row is chosen or the song list is left, and a song with no preview leaves
+ * the song list silent rather than putting the menu bed behind it.
  *
  * `request` is the choice, not only the song: choosing the same row again restarts
  * its preview rather than doing nothing. A local clip is read into an object URL —
@@ -19,7 +19,7 @@ import { resolvePreview, type FoundPreview } from "./preview";
  * once the new preview has it, so moving through a collection does not keep a
  * folder's worth of audio alive.
  *
- * A `.sng` package is fetched as a whole, because the jukebox may not have had to
+ * A `.sng` package is fetched as a whole, because the song list may not have had to
  * read it before: its `preview.*`, its master and its cover are all members of one
  * file. That fetch goes through the one-visit package cache, so opening the band
  * takes the same bytes rather than downloading them again. The cover is handed back
@@ -104,7 +104,7 @@ export function useSongPreview(song: Song | null, request: number): PreviewView 
     };
   }, [song, request, preview]);
 
-  // Leaving the jukebox is not a reason to leave a preview playing over the band
+  // Leaving the song list is not a reason to leave a preview playing over the band
   // screen — or to keep the file it read in memory.
   useEffect(
     () => () => {

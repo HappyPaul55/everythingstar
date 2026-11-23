@@ -81,7 +81,7 @@ A song can list, open, run its notes and be **silent** — the one failure a pla
 
 - **A bare `#MP3` name.** In a browser folder a relative name resolves against the folder. In an **imported library** the stem URL comes from the folder table, so an unknown file is not a stem; if `#MP3` names it, the URL is written without a base and points beside the song document. Rename it `audio.mp3`/`audio.ogg` and re-import, or list it.
 - **A 0-byte or truncated master.** A name cannot show it. When the mix will not play, the stage falls back to the parts, so a folder with a broken `song.ogg` still has a song.
-- **Parts and no master** on a song that wants a preview: the run plays them, and the jukebox has nothing to audition.
+- **Parts and no master** on a song that wants a preview: the run plays them, and Songs has nothing to audition.
 - **A master that is the whole song beside parts.** The convention assumes the master is the backing on one or two instruments; if yours is a full mix, say so in the `full` preset, or ship it alone.
 - **A mix naming no stem the song has** falls back to every stem, so the sound is wrong rather than missing.
 

@@ -1,7 +1,7 @@
 /**
  * A page's shot reference, rendered.
  *
- * The page says `[the description](shot:jukebox "caption")`; this replaces the
+ * The page says `[the description](shot:songs "caption")`; this replaces the
  * paragraph with the figure: one `<details>` per configured variant, and a plain
  * image for a shot taken in one shape only.
  *
@@ -12,7 +12,7 @@
  * when nothing has been captured yet.
  *
  * The test lives in `tests/e2e/docs` with `annotation: [{ type: "doc",
- * description: "jukebox" }]`; there is no manifest and no generated code. The
+ * description: "songs" }]`; there is no manifest and no generated code. The
  * capture directory is under `public/`, so the image is served as written.
  */
 import { existsSync } from "node:fs";

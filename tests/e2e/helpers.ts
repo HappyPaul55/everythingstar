@@ -37,7 +37,7 @@ export async function waitForPlaying(page: Page): Promise<void> {
 /**
  * Pick the song and carry it to the band screen.
  *
- * `song` is a title fragment. Omit it to take whatever the jukebox offers — the
+ * `song` is a title fragment. Omit it to take whatever the song list offers — the
  * first row — which is what a player who presses Next without picking does. A
  * spec that needs to read the row (the now-playing slot, the artist) clicks it
  * itself and then calls `startRun`.

@@ -6,10 +6,10 @@ import docshots from "../../../docshots.config";
 /**
  * The capture side of a documentation screenshot.
  *
- * A test carries `annotation: [{ type: "doc", description: "jukebox" }]`; an
+ * A test carries `annotation: [{ type: "doc", description: "songs" }]`; an
  * automatic fixture in `tests/e2e/support.ts` reads it, and this writes the WebP
  * in the test's own teardown, once per Playwright project, only when the test
- * passed. The page names the same id with `[description](shot:jukebox)`.
+ * passed. The page names the same id with `[description](shot:songs)`.
  */
 export interface DocShot {
   id: string;

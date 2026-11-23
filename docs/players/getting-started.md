@@ -30,11 +30,14 @@ Every visit follows the same path, and no step reloads the page:
 
 **welcome → menu → songs → band → entrance → run → results**
 
-[The menu: Quick Play, Options and Credits, with the stage's backdrop behind them.](shot:menu)
+The **Jukebox** is a branch off the menu rather than a step in that run: it plays on its own and comes back when you leave.
+
+[The menu: Quick Play, Jukebox, Options and Credits, with the stage's backdrop behind them.](shot:menu)
 
 - **Welcome** is the name and one button, **Enter the stage**.
-- **Menu** has three doors: **Quick Play** (the jukebox), **Options** and **Credits**; Escape, or a gamepad's B, goes back a step.
-- **Songs** is the jukebox: the library under its letters, with a search, a now-playing panel and a preview of each row. [Songs and playlists](songs.md) covers it.
+- **Menu** has three big doors — **Quick Play**, **Options** and **Credits** — and a smaller **Jukebox** door for listening; Escape, or a gamepad's B, goes back a step.
+- **Songs** is where Quick Play finds a song: the library under its letters, with a search, a now-playing panel and a preview of each row. [Songs and playlists](songs.md) covers it.
+- **Jukebox** is the listening mode: a shuffled song, its cover on a turning record and its timed words, with a queue of your own picks. [Jukebox](jukebox.md) covers it.
 - **Band** is who is playing: a box per player with what they take and how hard. Four boxes to begin with, and an empty band can choose **Listen**. [Instruments](instruments.md), [Typing](typing.md) and [Singing](singing.md) cover the ways to play.
 - **The entrance** is the stage arriving — the room, then the highways and the words, while the band's own sound plays. There is no 3-2-1 count; the song starts when it can play through.
 - **The run** is the song, and **Pause** (<kbd>Escape</kbd>, or Start on a gamepad) opens resume, restart, practice and leave, scrimmed over the stage rather than replacing it.

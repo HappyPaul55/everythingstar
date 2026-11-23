@@ -14,7 +14,7 @@ import {
  * The Downloads manager: what is saved, how much room it takes, and the way to
  * let it go.
  *
- * The dialog is reached from the jukebox toolbar. It is deliberately about the
+ * The dialog is reached from the song list toolbar. It is deliberately about the
  * device's downloads rather than the current song — the now-playing slot has
  * its own Download button — so opening it never changes what is selected.
  *

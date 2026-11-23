@@ -1,11 +1,11 @@
 ---
 title: Songs and playlists
-description: "The jukebox: finding a song, previews, playlists and folders, imported files, .sng packages and downloads for offline play."
+description: "The Songs screen: finding a song, previews, playlists and folders, imported files, .sng packages and downloads for offline play."
 updated: "2026-10-31"
 order: 2
 ---
 
-A song is a document — title, artist, length, parts and audio — reached through a **playlist**. The jukebox is where you find one; the Playlists dialog is where songs come from.
+A song is a document — title, artist, length, parts and audio — reached through a **playlist**. Songs is where you find one; the Playlists dialog is where songs come from.
 
 ## Finding a song
 
@@ -13,7 +13,7 @@ The list is one column of rows filed under each title's first letter: `#` first 
 
 A row carries the cover or a tile with the song's initials, the length at the head of the title line (`3:04  A Talk with George`), the title and artist, and what the song offers: `vocals` or `lyrics`, `duet`, and the instruments with a chart. Only additions are named, so a solo song does not say "solo" and vocals imply lyrics.
 
-[The jukebox: song rows, and the chosen song's art, length and recent runs in the now-playing panel.](shot:jukebox)
+[The Songs screen: song rows, and the chosen song's art, length and recent runs in the now-playing panel.](shot:songs)
 
 ### Moving through the list
 
@@ -37,7 +37,7 @@ Moving onto a row plays a short clip: the chart folder's `preview` clip or the s
 
 ## Playlists
 
-**Playlists** is the jukebox's toolbar button. Its badge counts the sources that are **on** — enabled playlists and folders — so a switched-off playlist is a row in the dialog, not a number on the button.
+**Playlists** is the toolbar button beside the song list. Its badge counts the sources that are **on** — enabled playlists and folders — so a switched-off playlist is a row in the dialog, not a number on the button.
 
 [The Playlists dialog: the built-in library and the playlists switched on, each with its song count.](shot:playlists)
 
@@ -100,7 +100,7 @@ A remote package is kept in memory, two at a time, after it is read, so opening 
 A download keeps a song on this device so it plays with no connection. **Download** is in the now-playing panel: it resolves the playlist, document, charts, stems (each part's audio), art and preview into Cache Storage, and the service worker serves them back, byte ranges included, so the song seeks and plays as online.
 
 - **It needs a worker in control.** The button appears only when the game's worker serves the page — the installed game, or the website on a secure address (`https` or `localhost`) with an active worker. Without one the game says downloads are unavailable rather than saving half a song.
-- **It is one job for the page, and all or nothing.** Leaving the jukebox does not cancel it; progress follows the song. Cancelling it, a failure or a full device deletes everything the attempt wrote, and a quota failure says there is not enough storage.
+- **It is one job for the page, and all or nothing.** Leaving Songs does not cancel it; progress follows the song. Cancelling it, a failure or a full device deletes everything the attempt wrote, and a quota failure says there is not enough storage.
 - **YouTube-backed songs are refused**, because their sound is the video player rather than files the game can store. A song in a local folder is already on the device.
 - **A whole playlist can be saved** with **Save playlist offline** in the Playlists dialog: one song at a time, saying how many it cannot save, and stopping at a full device with the songs it kept. It is cancellable too.
 
@@ -113,3 +113,7 @@ A downloaded song is listed after a reload, including one found through an on-de
 An empty band is allowed. With no players on stage the button says **Listen**, and the song plays with its words on screen, unscored: no run is published, nothing reaches the results and nothing goes on the board. A lyrics-only song is read this way, and so is a song you want to hear.
 
 [An unscored Listen run: the song's words on the melody region, with no players on stage and no score.](shot:listen)
+
+## Just listening
+
+If you do not want a band or a score, the menu's **Jukebox** door shuffles the whole library and shows each song's words on a record. Its queue is your own list of songs; the shuffle fills the gaps. See [Jukebox](jukebox.md).

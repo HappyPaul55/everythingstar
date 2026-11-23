@@ -161,7 +161,7 @@ Before handing a library to a player:
 - [ ] The band screen offers exactly the entry's `offer`, and Play starts the run.
 - [ ] One chart per instrument at one level loads, first and last notes inside the audio.
 - [ ] A miss ducks the right part and it returns — or, on a one-master song, the error cue plays on.
-- [ ] The jukebox row shows a real length, a cover and a preview, and the run's clock follows the sound to the real end.
+- [ ] The song row shows a real length, a cover and a preview, and the run's clock follows the sound to the real end.
 - [ ] Every song's licence and credit are recorded, and the audio is one you may serve.
 - [ ] A re-import writes the same ids; a changed chart has a changed entry (or a `revision`).
 - [ ] The library works from a clean browser with no cache.

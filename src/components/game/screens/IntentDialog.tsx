@@ -12,7 +12,7 @@ import { NativeDialog } from "../ui/NativeDialog";
  * the **host** rather than the whole address so the player can see who they are
  * about to fetch from. A playlist is read by the library and reports its count; a
  * song is read before it is kept, so a refusal is said here rather than discovered
- * in a jukebox row that cannot be opened.
+ * in a song list row that cannot be opened.
  *
  * Working is deliberately not dismissible — a request is already out, and a
  * second question would replace this one without an answer.
