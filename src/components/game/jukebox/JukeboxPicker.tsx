@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useT } from "../../../i18n/react";
 import { focusIsSilent } from "../ui/nav";
 import {
@@ -58,6 +58,8 @@ export function JukeboxPicker({
   const [tab, setTab] = useState<"songs" | "queue">(initialTab);
   const [query, setQuery] = useState("");
   const [chosen, setChosen] = useState<Song | null>(current);
+  const chosenRef = useRef<Song | null>(chosen);
+  chosenRef.current = chosen;
   const [status, setStatus] = useState<string>("");
   const [ready, setReady] = useState(false);
 
@@ -94,19 +96,22 @@ export function JukeboxPicker({
   const target = chosen ?? current;
   const canQueue = target !== null && target.id !== current?.id;
   const canNext = canQueue;
+  const actionTarget = () => chosenRef.current ?? current;
   const reading = !ready || (library.loading && library.songs.length === 0);
   const nothing =
     ready && !library.loading && library.songs.length === 0 && !searching;
 
   const add = () => {
-    if (!target || !canQueue) return;
-    onEnqueue(target);
+    const pick = actionTarget();
+    if (!pick || pick.id === current?.id) return;
+    onEnqueue(pick);
     setStatus(t("screen.jukeboxAdded"));
   };
   const next = () => {
-    if (!target || !canNext) return;
-    onPlayNext(target);
-    setStatus(t("screen.jukeboxNextStatus", { title: target.title }));
+    const pick = actionTarget();
+    if (!pick || pick.id === current?.id) return;
+    onPlayNext(pick);
+    setStatus(t("screen.jukeboxNextStatus", { title: pick.title }));
   };
 
   return (
@@ -298,7 +303,8 @@ export function JukeboxPicker({
             aria-disabled={!target}
             data-sound="select"
             onClick={() => {
-              if (target) onPlayNow(target);
+              const pick = actionTarget();
+              if (pick) onPlayNow(pick);
             }}
           >
             {t("screen.jukeboxPlayNow")}

@@ -42,9 +42,7 @@ export async function captureJukeboxMode(
   context: BrowserContext,
   page: Page,
 ): Promise<void> {
-  const leaked = await installDocsFixtures(context, {
-    audioSongId: ["jonathan-coulton-code-monkey", "jonathan-coulton-ikea"],
-  });
+  const leaked = await installDocsFixtures(context, { audioAll: true });
   await disableFullscreen(page);
   await enterGame(page, "/app");
   await page.getByRole("button", { name: /Jukebox/ }).click();

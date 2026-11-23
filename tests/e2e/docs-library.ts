@@ -269,6 +269,8 @@ interface DocsFixtureOptions {
   shortDurationMs?: number;
   /** Give these songs a real (tiny) master, for a capture that has to play one. */
   audioSongId?: string | string[];
+  /** Give every song the tiny master, so a behavioural test never scans silence. */
+  audioAll?: boolean;
 }
 
 function responses(options: DocsFixtureOptions = {}): Record<string, unknown> {
@@ -287,7 +289,7 @@ function responses(options: DocsFixtureOptions = {}): Record<string, unknown> {
         ? [options.audioSongId]
         : [],
   );
-  if (audio.size > 0) {
+  if (audio.size > 0 || options.audioAll) {
     routes[AUDIO_URL] = { body: wav(30), contentType: "audio/wav" };
   }
 
@@ -296,7 +298,7 @@ function responses(options: DocsFixtureOptions = {}): Record<string, unknown> {
       routes[new URL(entry.art, DOCS_PLAYLIST_URL).href] = cover(entry.id);
     }
     const docUrl = new URL(entry.song, DOCS_PLAYLIST_URL).href;
-    const doc = songDoc(entry, audio.has(entry.id));
+    const doc = songDoc(entry, options.audioAll === true || audio.has(entry.id));
     routes[docUrl] = doc;
     for (const part of doc.parts) {
       for (const chart of part.charts) {

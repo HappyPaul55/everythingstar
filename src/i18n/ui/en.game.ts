@@ -67,6 +67,7 @@ export const enGame = {
   "screen.jukeboxQueueHint": "Only songs you choose are in the queue.",
   "screen.jukeboxUpNext": "Up next",
   "screen.jukeboxShuffling": "Shuffling the rest",
+  "screen.jukeboxProgress": "Song progress",
   "screen.jukeboxPlayNow": "Play now",
   "screen.jukeboxPlayNext": "Play next",
   "screen.jukeboxAddQueue": "Add to queue",

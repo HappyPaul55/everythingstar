@@ -56,6 +56,7 @@ export function JukeboxTransport({ durationMs, ready, onNext }: Props) {
         <div
           className="jukebox__progress"
           role="progressbar"
+          aria-label={t("screen.jukeboxProgress")}
           aria-valuemin={0}
           aria-valuemax={durationMs}
           aria-valuenow={Math.round(timeMs)}

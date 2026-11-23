@@ -8,17 +8,13 @@ import { enterGame } from "./helpers";
  * the record turns only while the transport is moving, and the queue is only
  * what the listener chose.
  *
- * The docs library is the published FOSS one; only Code Monkey is given a tiny
- * master here, because the other fixtures are deliberately silent. Choosing it
- * by name is therefore both the way to get a song with sound and the way to get
- * one whose vocals chart gives the capture words.
+ * The docs library is the published FOSS one, with the tiny master on every song
+ * so the shuffle never spends the test scanning silent titles. Code Monkey is
+ * still chosen by name because its vocals chart gives the test real words.
  */
-const CODE_MONKEY = "jonathan-coulton-code-monkey";
 
 async function openJukebox(context: BrowserContext, page: Page) {
-  await installDocsFixtures(context, {
-    audioSongId: [CODE_MONKEY, "jonathan-coulton-ikea"],
-  });
+  await installDocsFixtures(context, { audioAll: true });
   await disableFullscreen(page);
   await enterGame(page, "/app");
   await page.getByRole("button", { name: /Jukebox/ }).click();
@@ -34,6 +30,7 @@ async function playCodeMonkey(page: Page) {
   const row = picker.getByRole("button", { name: /Code Monkey/ }).first();
   await expect(row).toBeVisible({ timeout: 20_000 });
   await row.click();
+  await expect(row).toHaveAttribute("aria-pressed", "true");
   await picker.getByRole("button", { name: "Play now" }).click();
   await expect(page.locator(".jukebox__title")).toHaveText("Code Monkey", {
     timeout: 20_000,
