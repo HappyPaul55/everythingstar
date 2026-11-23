@@ -147,7 +147,7 @@ export interface Settings {
    * Whether the **room's crowd** plays while the run is **paused**: the murmur of a
    * venue, on the ambience channel, so a pause feels like standing in the room rather
    * than in silence. It is the pause menu's alone — never a crowd over the song, and
-   * the menus and jukebox have none. Off leaves the pause silent.
+   * the menus and song list have none. Off leaves the pause silent.
    */
   crowd: boolean;
   /**

@@ -2,7 +2,7 @@
  * A playlist **checked**: what a provider's document says, and what the game's
  * reader had to skip.
  *
- * The authority is `readPlaylist` in `playlist.ts` — the same reader the jukebox
+ * The authority is `readPlaylist` in `playlist.ts` — the same reader the song list
  * and the band use — so a document this says is ready is one the game will list.
  * `docs/playlist.schema.json` is the advisory shape beside it: an editor can catch
  * a typo before the game does, but a schema cannot say what resolves, what is

@@ -29,7 +29,7 @@ and every panel's score, combo and meter follow its own run, with every singer a
 typist scored on their own too.
 
 The `Dev` chip drives it — the transport, the scrub bar, the read-outs, and the
-screen jumper. A song plays from the jukebox through the band screen; the band screen
+screen jumper. A song plays from Songs through the band screen; the band screen
 is where a player finds their keys, and the stage's entrance is the band's own hype and
 slide. Escape or Start pauses.
 

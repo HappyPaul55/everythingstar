@@ -13,9 +13,9 @@ import {
 } from "./helpers";
 
 /**
- * The jukebox as a screen: search Escape, the chosen song on return, the phone breakpoint, and the lone player's portrait rails.
+ * The song list as a screen: search Escape, the chosen song on return, the phone breakpoint, and the lone player's portrait rails.
  */
-test("Escape in the search field clears it instead of leaving the jukebox", async ({
+test("Escape in the search field clears it instead of leaving the song list", async ({
   context,
   page,
 }) => {
@@ -39,7 +39,7 @@ test("Escape in the search field clears it instead of leaving the jukebox", asyn
   expect(leaked, "unexpected external requests").toEqual([]);
 });
 
-test("coming back to the jukebox keeps the song that was chosen", async ({
+test("coming back to the song list keeps the song that was chosen", async ({
   context,
   page,
 }) => {
@@ -92,7 +92,7 @@ test("crossing the phone breakpoint on the band screen keeps its song", async ({
   const songLine = page.locator(".screen--band .screen__lede");
   await expect(songLine).toContainText(SONG_TITLE);
 
-  // The phone's jukebox is the one screen that wants no default song. Crossing
+  // The phone's song list is the one screen that wants no default song. Crossing
   // the breakpoint on the band screen must not take the band's song away.
   await page.setViewportSize({ width: 375, height: 720 });
   await expect(band).toBeVisible();

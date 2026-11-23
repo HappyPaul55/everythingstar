@@ -137,7 +137,7 @@ export function parseBoard(raw: string | null): SavedRun[] {
  * A stored entry is only trusted for the fields a saved run has and the screens
  * draw.
  *
- * The results and the jukebox print the date, the score and how many played; a row
+ * The results and the song list print the date, the score and how many played; a row
  * missing one of those is not a run a screen can draw, and accepting it used to put
  * "Invalid Date" in the history. `title` and each player's `label` are what this
  * game writes even where a screen reads the song's own title, so a record without
@@ -238,7 +238,7 @@ export function recentFor(
  *
  * With a `lineup`, the answer is the best **for this band**; without one, it is the
  * song-wide best across every lineup, which is still the useful headline for a
- * jukebox. An entry saved before lineups were recorded has no key, so it is its own
+ * song list. An entry saved before lineups were recorded has no key, so it is its own
  * group: it counts in the song-wide view and never matches a specific lineup.
  */
 export function bestFor(

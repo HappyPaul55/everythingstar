@@ -3,7 +3,7 @@
  *
  * The pad moves the browser's real focus in DOM order, not by geometry. Paging
  * normally wraps at the ends, which suits a short screen with a handful of
- * controls. The jukebox is the exception: only the rows around the viewport are
+ * controls. The song list is the exception: only the rows around the viewport are
  * mounted, so wrapping from the last mounted row to the first control on the
  * screen would read as a teleport. With `wrap` false a page past an end stays
  * where it is, and the list's own arrow/Tab stepping remains the way through the

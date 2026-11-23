@@ -54,7 +54,7 @@ https://example.com/library/
 | Field | Required | Meaning |
 | --- | --- | --- |
 | `id` | yes | The stable, unique key, shared with the song document. |
-| `title` | yes | What the jukebox shows and files by first letter. |
+| `title` | yes | What Songs shows and files by first letter. |
 | `artist` | yes in practice | An object `{ id?, name, art? }` or a bare name. |
 | `album` | no | `{ id?, name, year?, art? }`. |
 | `durationMs` | yes in practice | The length the row shows; `0` reads `0:00`. |
@@ -224,7 +224,7 @@ Limits, enforced by the game's reader:
 - A **`.sng` package** is capped at **128 MB**.
 - A body is read as a stream. A host that declares a small `Content-Length` and sends more is cut off at the cap.
 
-CORS is required for the documents, and audio should serve it too — the jukebox preview sets `crossOrigin`:
+CORS is required for the documents, and audio should serve it too — the preview sets `crossOrigin`:
 
 ```text
 Access-Control-Allow-Origin: *
@@ -274,7 +274,7 @@ A document can change under the same URL; to make the game notice, **change the 
 bun run playlist:check https://example.com/library/playlist.json
 ```
 
-It reads with the jukebox's reader, applies the URL policy and 8 MB cap, prints the name, songs and every problem, and exits `1` if there is one; `--json` prints the record for a build step.
+It reads with Songs' reader, applies the URL policy and 8 MB cap, prints the name, songs and every problem, and exits `1` if there is one; `--json` prints the record for a build step.
 
 It reads **one playlist**, so it cannot prove a chart URL answers, a `laneCount` matches its notes, or the audio plays; [Publishing](publishing.md) and the wire format's [acceptance checklist](../developers/playlist-api.md#11-acceptance-checklist) walk those.
 

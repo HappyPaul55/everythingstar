@@ -91,7 +91,7 @@ There are **three behaviours** of the same document shape:
 | Kind | Base document | What the game does |
 | --- | --- | --- |
 | **Catalogue** | `songs` is a list; no `ondemand` | Lists the songs. No search request is ever made. |
-| **On-demand** | `ondemand` is present, and `songs` is empty or absent | Lists nothing from the base; **asks the same URL with a query** when somebody types in the jukebox. |
+| **On-demand** | `ondemand` is present, and `songs` is empty or absent | Lists nothing from the base; **asks the same URL with a query** when somebody types in Songs. |
 | **Both** | `ondemand` is present **and** `songs` is non-empty | Lists the base songs, and searches on top of them. |
 
 "Both" is the ordinary case for a provider that ships a starter selection and can find
@@ -301,7 +301,7 @@ the spelling `onDemand`; use `ondemand`.
 
 ### 3.2 The search request
 
-When somebody types in the jukebox, each enabled on-demand playlist is asked **in
+When somebody types in Songs, each enabled on-demand playlist is asked **in
 parallel**:
 
 ```
@@ -370,7 +370,7 @@ Return the **same playlist document shape**:
 ### 3.4 What the game does with the answer
 
 - Results **accumulate for the visit**: searching "Timber", then "Shape", leaves both songs
-  in the jukebox until reload.
+  in Songs until reload.
 - Results are held **in memory only** and are never written to the playlist cache. A reload
   starts from the capability again, which is what "no entries by default" means.
 - Results are merged with every other playlist **by `id`**, first source wins. A duplicate
@@ -379,7 +379,7 @@ Return the **same playlist document shape**:
   cannot collide.
 - A result is shown under its **title's letter**, A–Z, like any other song. There is no
   separate "search results" section.
-- The jukebox's local text filter is forgiving: a result returned for the current query is
+- Songs' local text filter is forgiving: a result returned for the current query is
   shown even if its title and artist do not literally contain the words typed. A resolver
   may therefore return "Cover of the Century" for "Timber" and it will still appear.
 - A query a source has already answered is not asked again for the rest of the visit.
@@ -514,7 +514,7 @@ it is not a finished entry.
 | `source` | string | optional (default `stems`) | `stems` for the song's own files; `youtube` when the video is the music. See [§4.6](#46-youtube-backed-songs). |
 | `stems` | array | for `stems` | The audio files. |
 | `mixPresets` | object | for `stems` | Named mixes. |
-| `preview` | string URL | optional | A short clip for the jukebox. |
+| `preview` | string URL | optional | A short clip for Songs. |
 
 **`stems`** is an array of files:
 
@@ -561,7 +561,7 @@ give each part an `audioControl` (see [§4.4](#44-audiocontrol)).
 A **YouTube-backed song** has no files at all: `audio.source` is `"youtube"` and the video
 is the music. See [§4.6](#46-youtube-backed-songs).
 
-**`preview`** is an optional short clip. If absent, the jukebox uses the stem whose id is
+**`preview`** is an optional short clip. If absent, Songs uses the stem whose id is
 exactly **`stem_master`**, from `previewStartMs`; if there is no such stem, it uses any
 stem with `instrument: null` from the same cue. If even that is absent, the song has no
 audition. **`stem_master` is the conventional id**, so keeping it makes the fallback
@@ -724,7 +724,7 @@ Rules for this mode:
   but the player keeps playing: turning off a backdrop must not take the music with it.
 - **One stream means no part muting.** `audioControl` has nothing to control: a miss has
   no channel to take out. The game still raises its error cue, and the song plays on.
-- There is **no jukebox preview** by default; the row is silent because there are no stems
+- There is **no preview** by default; the row is silent because there are no stems
   and no file to play. An `audio.preview` clip may still be supplied if the service has a
   licensed excerpt; otherwise the row is silent until the song is played.
 - The service must check that the video is **embeddable** (`status.embeddable`) and
@@ -773,7 +773,7 @@ and preview cue — so no separate text file is needed.
 What the service should know:
 
 - **The playlist entry is still the summary.** The game lists from it and does not download
-  every package to draw the jukebox. Include `title`, `artist`, `durationMs` and `offer` for
+  every package to draw the picker. Include `title`, `artist`, `durationMs` and `offer` for
   a complete row and a playable band screen. If `offer` is absent, the band screen learns it
   when the package arrives, but the row has no chips until then.
 - **`art` is still recommended.** A remote package's embedded cover is read only when the
@@ -1076,7 +1076,7 @@ A simple `GET` with no custom headers does **not** trigger a preflight. If you a
 depend on one.
 
 Media is fetched by `<audio>`, `<img>` and `<video>`. Cross-origin playback generally works
-without CORS, but the jukebox preview is routed through Web Audio and sets
+without CORS, but the preview is routed through Web Audio and sets
 `crossOrigin="anonymous"`, so **serve audio with CORS too**. Artwork needs no CORS for an
 `<img>`, but it is harmless.
 
@@ -1122,7 +1122,7 @@ and expect a second request; the game will treat the placeholder as the result.
 
 The 400 ms debounce and the 2-character floor mean a service sees a modest number of
 requests. Still, cache by query and by source id, and return a sane number of results
-(roughly 1–50 per query; the jukebox is a list, not a firehose).
+(roughly 1–50 per query; the picker is a list, not a firehose).
 
 ### 6.5 IDs are forever
 
@@ -1238,7 +1238,7 @@ The dialog shows **Example karaoke — on demand**. No songs are listed.
 }
 ```
 
-The jukebox adds one row: **3:52 Timber — Pitbull feat. Ke$ha — vocals**. (An answer may
+The picker adds one row: **3:52 Timber — Pitbull feat. Ke$ha — vocals**. (An answer may
 carry any number of entries; this example returns the one match.) The relative `song` and
 `art` resolve against the query URL's path:
 
@@ -1492,7 +1492,7 @@ The game's reader is the authority, and it is a command away:
 bun run playlist:check https://example.com/playlist.json
 ```
 
-It reads the document with the **same** `readPlaylist` the jukebox and the band use,
+It reads the document with the **same** `readPlaylist` that Songs and the band use,
 holds the address to the game's URL policy, and bounds the body at the same 8 MB with the
 same 30-second idle deadline. It prints the playlist's name, the songs it would list and
 **every problem the reader found**, and exits `1` if there is one or if the document is not
@@ -1533,7 +1533,7 @@ Run through this before handing the service to a player.
 - [ ] Spaces, `&`, `+`, `#`, accents and emoji in the query arrive intact.
 - [ ] A slow request shows **Searching…**, then the result or a failure with **Try again**.
 - [ ] A 500/429 with CORS headers is shown as that status, not "Failed to fetch".
-- [ ] Two searches in a row add both songs to the jukebox.
+- [ ] Two searches in a row add both songs to the picker.
 - [ ] A reload clears the search results and starts from the capability again.
 - [ ] The same query twice does not duplicate a row.
 
@@ -1563,7 +1563,7 @@ Run through this before handing the service to a player.
 - [ ] `durationMs` matches the audio — or, for a YouTube song, the video.
 - [ ] Every `audio.stems[].url` plays and supports Range.
 - [ ] `mixPresets.full` names a real stem (or the master).
-- [ ] `preview` or a master stem (`stem_master`, or any stem with `instrument: null`) gives the jukebox an audition.
+- [ ] `preview` or a master stem (`stem_master`, or any stem with `instrument: null`) gives the song row an audition.
 - [ ] Every chart listing's `url` returns the right `chartType`.
 - [ ] `laneCount`, `bpm`, `offsetMs` are on the **listing**.
 - [ ] A part with `audioControl` names real stem ids, and the master is not controlled.
@@ -1579,7 +1579,7 @@ Run through this before handing the service to a player.
   highway.
 - [ ] The video's own captions are not fighting the game's lyrics.
 - [ ] A miss leaves the sound playing; there is no part to mute.
-- [ ] The jukebox row is silent (or plays a licensed `audio.preview` clip if supplied).
+- [ ] The song row is silent (or plays a licensed `audio.preview` clip if supplied).
 - [ ] The run ends when the video ends.
 - [ ] A captions-only entry is a `lyrics` chart; a `vocals` chart is only used when a real
   pitch contour exists.

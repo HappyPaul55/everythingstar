@@ -3,7 +3,7 @@
  *
  * A playlist is the library's index, but a link may name **one song** — a song
  * document that a provider serves without a playlist around it. This turns that
- * document into the summary the jukebox draws, so the song lists, opens, plays and
+ * document into the summary the song list draws, so the song lists, opens, plays and
  * downloads exactly like one a playlist named.
  *
  * `from` is the document itself: a pinned song has no playlist, and the field is

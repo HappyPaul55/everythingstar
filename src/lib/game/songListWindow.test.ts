@@ -1,18 +1,18 @@
 import { describe, expect, test } from "bun:test";
 import type { Song } from "./song";
-import type { SongGroup } from "./jukebox";
+import type { SongGroup } from "./songList";
 import {
   anchorTop,
-  buildJukeboxLayout,
+  buildSongListLayout,
   itemAtOffset,
-  jukeboxWindow,
+  songListWindow,
   letterAtOffset,
   letterOffset,
   rowFrom,
   scrollTopForItem,
-  type JukeboxLayout,
-  type JukeboxWindow,
-} from "./jukeboxWindow";
+  type SongListLayout,
+  type SongListWindow,
+} from "./songListWindow";
 
 /** A song as the window reads it: only its id matters here. */
 function song(id: string): Song {
@@ -54,7 +54,7 @@ const PHONE = { header: 20, row: 68 };
  * heading and the mounted rows of every section. It must equal `layout.total`
  * for the scrollbar to be honest at every position.
  */
-function mountedHeight(layout: JukeboxLayout, window: JukeboxWindow): number {
+function mountedHeight(layout: SongListLayout, window: SongListWindow): number {
   const sections = window.sections.reduce(
     (sum, section) =>
       sum +
@@ -67,18 +67,18 @@ function mountedHeight(layout: JukeboxLayout, window: JukeboxWindow): number {
 }
 
 /** How many rows a window mounts. */
-function mountedRows(window: JukeboxWindow): number {
+function mountedRows(window: SongListWindow): number {
   return window.sections.reduce((sum, section) => sum + section.to - section.from, 0);
 }
 
-describe("buildJukeboxLayout", () => {
+describe("buildSongListLayout", () => {
   test("an empty list has no items and no height", () => {
-    const layout = buildJukeboxLayout([], WIDE);
+    const layout = buildSongListLayout([], WIDE);
     expect(layout.items).toEqual([]);
     expect(layout.groups).toEqual([]);
     expect(layout.offsets).toEqual([0]);
     expect(layout.total).toBe(0);
-    expect(jukeboxWindow(layout, 0, 400)).toEqual({
+    expect(songListWindow(layout, 0, 400)).toEqual({
       start: 0,
       end: 0,
       top: 0,
@@ -88,7 +88,7 @@ describe("buildJukeboxLayout", () => {
   });
 
   test("one heading per group, then its rows, with running offsets", () => {
-    const layout = buildJukeboxLayout([group("A", 3), group("B", 2)], WIDE);
+    const layout = buildSongListLayout([group("A", 3), group("B", 2)], WIDE);
     expect(layout.items.map((item) => `${item.kind}:${item.letter}:${item.entry}`)).toEqual([
       "letter:A:-1",
       "song:A:0",
@@ -108,17 +108,17 @@ describe("buildJukeboxLayout", () => {
   });
 
   test("a group's rows are found by their own id", () => {
-    const layout = buildJukeboxLayout([group("A", 2), group("B", 1)], WIDE);
+    const layout = buildSongListLayout([group("A", 2), group("B", 1)], WIDE);
     expect(layout.items[layout.rows.get("b-0") ?? 0].letter).toBe("B");
   });
 });
 
-describe("jukeboxWindow", () => {
+describe("songListWindow", () => {
   const groups = [group("A", 10), group("B", 10), group("C", 10), group("D", 10)];
 
   test("a list shorter than the window mounts all of it", () => {
-    const layout = buildJukeboxLayout([group("A", 2), group("B", 1)], WIDE);
-    const window = jukeboxWindow(layout, 0, 900);
+    const layout = buildSongListLayout([group("A", 2), group("B", 1)], WIDE);
+    const window = songListWindow(layout, 0, 900);
     expect(window.start).toBe(0);
     expect(window.end).toBe(layout.items.length);
     expect(window.top).toBe(0);
@@ -131,8 +131,8 @@ describe("jukeboxWindow", () => {
   });
 
   test("at the top the window starts on the first heading and the bottom is a spacer", () => {
-    const layout = buildJukeboxLayout(groups, WIDE);
-    const window = jukeboxWindow(layout, 0, 200);
+    const layout = buildSongListLayout(groups, WIDE);
+    const window = songListWindow(layout, 0, 200);
     expect(window.start).toBe(0);
     expect(window.end).toBeLessThan(layout.items.length);
     expect(window.top).toBe(0);
@@ -142,8 +142,8 @@ describe("jukeboxWindow", () => {
   });
 
   test("in the middle the window is a bounded slice with spacers on both sides", () => {
-    const layout = buildJukeboxLayout(groups, WIDE);
-    const window = jukeboxWindow(layout, 700, 200);
+    const layout = buildSongListLayout(groups, WIDE);
+    const window = songListWindow(layout, 700, 200);
     expect(window.start).toBeGreaterThan(0);
     expect(window.end).toBeLessThan(layout.items.length);
     expect(window.top).toBeGreaterThan(0);
@@ -156,8 +156,8 @@ describe("jukeboxWindow", () => {
   });
 
   test("at the bottom the window ends on the last row and the top is a spacer", () => {
-    const layout = buildJukeboxLayout(groups, WIDE);
-    const window = jukeboxWindow(layout, layout.total, 200);
+    const layout = buildSongListLayout(groups, WIDE);
+    const window = songListWindow(layout, layout.total, 200);
     expect(window.end).toBe(layout.items.length);
     expect(window.start).toBeGreaterThan(0);
     expect(window.bottom).toBe(0);
@@ -169,25 +169,25 @@ describe("jukeboxWindow", () => {
   });
 
   test("overscan mounts a few rows beyond each edge and no more", () => {
-    const layout = buildJukeboxLayout(groups, WIDE);
-    const window = jukeboxWindow(layout, 700, 200, 4);
+    const layout = buildSongListLayout(groups, WIDE);
+    const window = songListWindow(layout, 700, 200, 4);
     const visibleRows = Math.ceil((200 + WIDE.row) / WIDE.row);
     expect(mountedRows(window)).toBeGreaterThanOrEqual(visibleRows);
     expect(mountedRows(window)).toBeLessThanOrEqual(visibleRows + 2 * 4 + 2);
     // The slice is stable while the scroll stays inside its row: a few pixels
     // down does not re-cut the window, and a whole row down moves one item.
-    const nudged = jukeboxWindow(layout, 705, 200, 4);
+    const nudged = songListWindow(layout, 705, 200, 4);
     expect(nudged.start).toBe(window.start);
     expect(nudged.end).toBe(window.end);
-    const rowDown = jukeboxWindow(layout, 700 + WIDE.row, 200, 4);
+    const rowDown = songListWindow(layout, 700 + WIDE.row, 200, 4);
     expect(rowDown.start).toBe(window.start + 1);
   });
 
   test("an ensured row is mounted even when it is far outside the window", () => {
-    const layout = buildJukeboxLayout(groups, WIDE);
+    const layout = buildSongListLayout(groups, WIDE);
     const target = layout.rows.get("d-5");
     expect(target).toBeDefined();
-    const window = jukeboxWindow(layout, 0, 200, 4, target ?? null);
+    const window = songListWindow(layout, 0, 200, 4, target ?? null);
     expect(target ?? -1).toBeGreaterThanOrEqual(window.start);
     expect(target ?? -1).toBeLessThan(window.end);
     expect(mountedHeight(layout, window)).toBe(layout.total);
@@ -195,9 +195,9 @@ describe("jukeboxWindow", () => {
   });
 
   test("the spacers reconstruct the whole list at every scroll position", () => {
-    const layout = buildJukeboxLayout(groups, WIDE);
+    const layout = buildSongListLayout(groups, WIDE);
     for (let scrollTop = -100; scrollTop <= layout.total + 100; scrollTop += 17) {
-      const window = jukeboxWindow(layout, scrollTop, 213, 5);
+      const window = songListWindow(layout, scrollTop, 213, 5);
       expect(mountedHeight(layout, window)).toBe(layout.total);
       expect(window.start).toBeGreaterThanOrEqual(0);
       expect(window.end).toBeLessThanOrEqual(layout.items.length);
@@ -208,10 +208,10 @@ describe("jukeboxWindow", () => {
   test("the three breakpoints each keep the same exact geometry", () => {
     const layoutLike = [group("A", 30), group("B", 30), group("C", 30)];
     for (const heights of [WIDE, MID, PHONE]) {
-      const layout = buildJukeboxLayout(layoutLike, heights);
+      const layout = buildSongListLayout(layoutLike, heights);
       expect(layout.total).toBe(3 * heights.header + 90 * heights.row);
       for (const fraction of [0, 0.15, 0.5, 0.9, 1]) {
-        const window = jukeboxWindow(layout, layout.total * fraction, 420, 4);
+        const window = songListWindow(layout, layout.total * fraction, 420, 4);
         expect(mountedHeight(layout, window)).toBe(layout.total);
         const visibleRows = Math.ceil(420 / heights.row) + 1;
         expect(mountedRows(window)).toBeLessThanOrEqual(visibleRows + 2 * 4 + 2);
@@ -221,7 +221,7 @@ describe("jukeboxWindow", () => {
 });
 
 describe("letterAtOffset", () => {
-  const layout = buildJukeboxLayout([group("A", 10), group("B", 10), group("C", 10)], WIDE);
+  const layout = buildSongListLayout([group("A", 10), group("B", 10), group("C", 10)], WIDE);
 
   test("names the group whose heading has reached the top", () => {
     expect(letterAtOffset(layout, 0, 0)).toBe("A");
@@ -243,7 +243,7 @@ describe("letterAtOffset", () => {
 });
 
 describe("rowFrom", () => {
-  const layout = buildJukeboxLayout([group("A", 2), group("B", 2)], WIDE);
+  const layout = buildSongListLayout([group("A", 2), group("B", 2)], WIDE);
 
   test("moves row to row and skips the heading between groups", () => {
     const first = layout.rows.get("a-1") ?? 0;
@@ -255,7 +255,7 @@ describe("rowFrom", () => {
 });
 
 describe("scrollTopForItem", () => {
-  const layout = buildJukeboxLayout([group("A", 20)], WIDE);
+  const layout = buildSongListLayout([group("A", 20)], WIDE);
 
   test("leaves a row in view alone", () => {
     const row = layout.rows.get("a-4") ?? 0;
@@ -289,16 +289,16 @@ describe("scrollTopForItem", () => {
     const last = layout.rows.get("a-19") ?? 0;
     const top = scrollTopForItem(layout, last, 200, 0);
     expect(top).toBe(layout.total - 200);
-    const window = jukeboxWindow(layout, top, 200);
+    const window = songListWindow(layout, top, 200);
     expect(window.end).toBe(layout.items.length);
   });
 });
 
 describe("anchorTop", () => {
   test("keeps the song that was at the top, wherever a refresh moved it", () => {
-    const before = buildJukeboxLayout([group("A", 4), group("B", 4)], WIDE);
+    const before = buildSongListLayout([group("A", 4), group("B", 4)], WIDE);
     // The row at the top is `a-2`, and the new list has one more song above it.
-    const after = buildJukeboxLayout(
+    const after = buildSongListLayout(
       [
         {
           letter: "A",
@@ -319,8 +319,8 @@ describe("anchorTop", () => {
   });
 
   test("falls back to the letter when the song has gone", () => {
-    const before = buildJukeboxLayout([group("A", 4), group("B", 4)], WIDE);
-    const after = buildJukeboxLayout([group("B", 4)], WIDE);
+    const before = buildSongListLayout([group("A", 4), group("B", 4)], WIDE);
+    const after = buildSongListLayout([group("B", 4)], WIDE);
     const at = before.rows.get("a-2") ?? 0;
     // A's heading is gone with A, so the list starts at the top again.
     expect(anchorTop(before, after, before.offsets[at] ?? 0)).toBe(0);
@@ -339,7 +339,7 @@ describe("anchorTop", () => {
 
 describe("itemAtOffset", () => {
   test("names the item containing an offset and clamps at the ends", () => {
-    const layout = buildJukeboxLayout([group("A", 2), group("B", 2)], WIDE);
+    const layout = buildSongListLayout([group("A", 2), group("B", 2)], WIDE);
     expect(itemAtOffset(layout, -50)).toBe(0);
     expect(itemAtOffset(layout, 0)).toBe(0);
     expect(itemAtOffset(layout, 25)).toBe(1);

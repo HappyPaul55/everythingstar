@@ -1,6 +1,6 @@
 import { useMemo, useState, type SyntheticEvent } from "react";
 import { useT } from "../../i18n/react";
-import { groupSongs, searchSongs } from "../../lib/game/jukebox";
+import { groupSongs, searchSongs } from "../../lib/game/songList";
 import type { Song } from "../../lib/game/song";
 import type { Library } from "../game/library/useLibrary";
 

@@ -86,7 +86,7 @@ test("a MIDI seat plays notes through the stage's input route", async ({
   await installFakeMidi(page);
   await enterGame(page);
 
-  // Nothing was asked for on load: the menu, the jukebox and the band screen cost
+  // Nothing was asked for on load: the menu, the song list and the band screen cost
   // no permission at all.
   expect(
     await page.evaluate(() => (window as unknown as { __midiCalls?: number }).__midiCalls ?? 0),

@@ -2,7 +2,7 @@
 title: Practice
 description: "Practising a stretch of a song at a slower speed, with or without a loop, and why practice never reaches the score board."
 updated: "2026-10-31"
-order: 8
+order: 9
 ---
 
 Practice plays a stretch of a song at a speed you choose, as often as you like: the bar you keep dropping, the chorus you cannot sing yet, or the whole song at 70%. The stage and pause are ordinary; only the start, stop and speed change.

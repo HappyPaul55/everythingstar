@@ -60,7 +60,7 @@ export interface AudioApi {
   /** Play a one-shot, by type. `rate` pitches it and `pan` places it. */
   play: (type: string, options?: PlayOptions) => void;
   /**
-   * A song's jukebox preview, replacing the bed while it plays. Null stops it and
+   * A song's preview, replacing the bed while it plays. Null stops it and
    * hands the music channel back.
    */
   preview: (track: PreviewSource | null) => void;

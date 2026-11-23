@@ -14,7 +14,7 @@ import {
 } from "./helpers";
 
 /**
- * The screen machine, end to end: one song through the loop, and the pause's quick panel. Split from the practice and jukebox walks so a shard can run them on different workers.
+ * The screen machine, end to end: one song through the loop, and the pause's quick panel. Split from the practice and song list walks so a shard can run them on different workers.
  */
 test("plays the fixture song through the whole loop, pausing and resuming", async ({
   context,

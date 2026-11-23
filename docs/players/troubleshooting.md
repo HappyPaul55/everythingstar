@@ -2,7 +2,7 @@
 title: Troubleshooting
 description: "What to try when EverythingStar has no sound, will not start, loses a part, refuses a playlist or forgets your scores."
 updated: "2026-10-31"
-order: 10
+order: 11
 ---
 
 Most problems come down to one of four things: the browser has had no gesture yet, a file that did not arrive, a setting doing what it says, or the browser clearing something. If a first attempt fails, try a reload, a second song and a second browser: those tell you whether the fault is the game, the song or the browser.
@@ -95,7 +95,7 @@ An import copies files into the browser's storage, bounded on purpose:
 
 ## A song offers no chart for my instrument
 
-- **The song may not have that part.** The jukebox row says what a song offers, and the band screen hides modes it has no chart for.
+- **The song may not have that part.** The song row says what a song offers, and the band screen hides modes it has no chart for.
 - **The chart may have failed validation.** One that fails the checks is dropped and named as `instrument/difficulty: problem` on the band and loading screens; that costs its part, not the run.
 - **A local folder may need a rescan.** Press **Reconnect**; a missed file is picked up.
 - **A remembered band can ask for a role or level the song lacks.** The game uses the nearest level, and a seat with no role takes the lead guitar; with no guitar, the box says **not in this song**.
@@ -126,7 +126,7 @@ An import copies files into the browser's storage, bounded on purpose:
 
 Scores are local, so they live and die with this browser's storage.
 
-- **The board is per song and per lineup.** The jukebox's line is this band's best — the same instruments at the same levels, with the words sung or typed the same way. The history beneath is the song's across lineups, so an Expert score can sit above an Easy one without being that band's best.
+- **The board is per song and per lineup.** Songs' line is this band's best — the same instruments at the same levels, with the words sung or typed the same way. The history beneath is the song's across lineups, so an Expert score can sit above an Easy one without being that band's best.
 - **Some runs are never saved.** Practice, Listen, the attract demo, a lost run and a stage that judged nobody do not reach the board.
 - **A run is lost** when the band hit fewer than half of at least ten judged notes or words; it is a verdict on the results screen, not a mid-song fail.
 - **Private browsing and cleared site data remove the board**, with settings, band, imports and downloads.

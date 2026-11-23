@@ -35,7 +35,7 @@ const songUrl = `${ROOT}songs/${SONG_ID}.json`;
 const chartUrl = `${ROOT}songs/charts/${SONG_ID}/guitar-easy.json`;
 
 /**
- * The package fixture: one chart and no stems, so the jukebox's preview fetch and
+ * The package fixture: one chart and no stems, so the song list's preview fetch and
  * the band's load are the two readers the one-visit cache exists for.
  *
  * It is built here rather than checked in as a binary: the bytes are a header, a
@@ -228,7 +228,7 @@ const RESPONSES: Record<string, unknown> = {
 
 /**
  * The **large** fixture: a deterministic library of 2,000 songs, one letter at
- * a time, so the jukebox's window can be tested against the size it exists for.
+ * a time, so the song list's window can be tested against the size it exists for.
  *
  * The tiny fixture above stays the default for every other spec. This one is
  * only a playlist (plus one silent song document for previews), because the
@@ -387,7 +387,7 @@ export async function installFixtures(context: BrowserContext): Promise<string[]
 
 /**
  * The same library, with a read-out of how many times the `.sng` package itself was
- * requested. That number is the point: the jukebox's preview and the band's load
+ * requested. That number is the point: the song list's preview and the band's load
  * must share one download.
  */
 export async function installSngFixtures(

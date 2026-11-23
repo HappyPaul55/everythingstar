@@ -30,7 +30,7 @@ export interface ParseSourceInput {
   ini?: IniValues | null;
   /** The audio found beside it, by the role each file plays. */
   stems?: Partial<Record<StemRole, string>>;
-  /** A jukebox clip found beside it, when there is one. Not a stem. */
+  /** A preview clip found beside it, when there is one. Not a stem. */
   preview?: string | null;
   /** The art found beside it. */
   art?: string | null;

@@ -4,7 +4,7 @@
  * A playlist is the library's index, and a shared song may have none. A pinned
  * song is therefore a source of its own: its URL is remembered (the same store as
  * the playlists), its document is read through the library cache, and the summary
- * the jukebox draws comes from the document itself (`pinnedSong`).
+ * the song list draws comes from the document itself (`pinnedSong`).
  *
  * The hook is a reader and a small registry. Nothing here fetches outside
  * `cachedJson`, so the one-fetch-path rule still holds, and a pinned song that was
@@ -52,7 +52,7 @@ export interface PinnedSongs {
 
 /**
  * `others` is what the playlists and folders already list: pinning one of those
- * songs would put a second copy in the jukebox, so the press says "already"
+ * songs would put a second copy in the song list, so the press says "already"
  * instead. It is read from a ref, because a callback must not capture an old
  * library.
  */
@@ -101,7 +101,7 @@ export function usePinned(others: readonly Song[]): PinnedSongs {
         }
         const song = pinnedSong(doc, url);
         // The document is cached by its **content**, and this is the one reader that
-        // knows what that is: `useSongTrack` and the jukebox's preview ask for it with
+        // knows what that is: `useSongTrack` and the song list's preview ask for it with
         // `song.revision`, so writing the body without it would leave every later read
         // a miss — a pinned song that always refetches, and never plays offline.
         await writeCache(url, "song", body, song.revision);

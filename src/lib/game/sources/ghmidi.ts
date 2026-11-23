@@ -119,7 +119,7 @@ export function readGameMidi(input: GameMidiInput): ParsedSource {
   source.lanes = readLanes(doc, problems);
   source.melody = readVoice(doc, meta.id, problems);
   // A length the file states always wins; a chart that never says gets one from its
-  // own notes, or it would read `0:00` in the jukebox.
+  // own notes, or it would read `0:00` in the song list.
   if (source.meta.durationMs <= 0) {
     source.meta.durationMs =
       Math.max(contentDuration(source.lanes, source.melody), endMarkerMs(doc)) + SONG_TAIL_MS;

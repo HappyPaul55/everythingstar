@@ -12,13 +12,13 @@ This is the map you read before changing the loop or the stage. The file-by-file
 EverythingStar is a **single island**: one screen at a time, moving between them never
 reloads the page, and a **fullscreen** session survives the whole loop. Only one of
 those screens is the **stage** (the song, and the pause during it); the welcome, the
-**menu** and its two branches, the jukebox, the band screen, the load and the results
+**menu** and its branches, Songs, the Jukebox, the band screen, the load and the results
 are **pages of their own**, with the whole viewport to themselves — a menu drawn over a
 running song is a menu with a song in the way. The loop is:
 
 ```
 welcome → menu → songs → band → (loading) → entrance → playing → results → songs
-            ↕ options / credits                      ↕ paused
+            ↕ options / credits / Jukebox             ↕ paused
 ```
 
 Opening the band starts the song's charts **and its stems**. **Play is the loader**:
@@ -31,10 +31,11 @@ fallback, not a stop an ordinary run makes.
   unlocks audio. Until the mixer has warmed — every cue decoded and the opening bed
   downloaded, on a suspended graph so nothing sounds early — the button reads
   **Loading…** and is disabled, so entering is not the thing that waits for the sound.
-- **Menu** — the board the welcome opens on to: **Quick Play** (the jukebox), **Options**
-  and **Credits**. The wordmark sits beside three large, tilted choices on desktop; on
-  phones the wordmark moves above them. Options and Credits are round trips, and Escape
-  (or a pad's B) goes back a step from every screen that has one.
+- **Menu** — the board the welcome opens on to: **Quick Play** (Songs), **Jukebox**,
+  **Options** and **Credits**. The wordmark sits beside three large, tilted choices on
+  desktop and a smaller Jukebox door under them; on phones the wordmark moves above
+  them. Every door is a round trip, and Escape (or a pad's B) goes back a step from
+  every screen that has one.
 - **Options** — the handful of things that belong to a player rather than to a song, kept
   in this browser (`src/lib/game/settings.ts`): **audio lag** (a stepper, ±300 ms in
   5 ms steps, with a **Calibrate** dialog that measures it from eight clicks and writes
@@ -86,7 +87,7 @@ fallback, not a stop an ordinary run makes.
   again, so the two cannot drift. Every shipped file now carries a credit — the four
   beds included, as the author's own Suno generations — and a file that arrived without
   one would be *said* rather than hidden.
-- **Songs** (the jukebox) — the library in one column, filed under their letter,
+- **Songs** — the library in one column, filed under their letter,
   with an A–Z index down the side, a search over **titles, artists and albums** —
   accents folded, so `Café` finds `cafe`, and one typo forgiven on a long single
   word — and the chosen song in a **now playing** panel. A list you navigate, not a grid you
@@ -118,7 +119,7 @@ fallback, not a stop an ordinary run makes.
   sing, and each slot on the band screen chooses its own. The list and the
   **now-playing** column share one height on a wide screen, with the list scrolling
   inside it and the way on to the band below the now-playing surface.
-- **Playlists** (a button in the jukebox's corner, opening a native dialog) - where
+- **Playlists** (a button in Songs' corner, opening a native dialog) - where
   the songs come from: each playlist with its song count, when it was last read,
   anything it could not be read for, and what a reader can do about it - **Refresh**
   it (or all of them), **Disable** the built-in EverythingStar FOSS playlist (its row
@@ -130,6 +131,20 @@ fallback, not a stop an ordinary run makes.
   EverythingStar FOSS. An **on-demand** playlist says so instead of a song count: it
   is asked for songs by the search field rather than listing them, and what it finds
   lasts for the visit.
+- **Jukebox** — the listening mode, a page of its own off the menu. It shuffles the
+  whole library, plays one song through the same **`StageClock`** and `SongAudio` as a
+  run, and draws the song's **cover as the label of a spinning record** with its timed
+  lines beside it — under it in portrait. The cover is the artwork the library already
+  has; a song with none keeps the drawn tile. It is **not** a run: no band, no charts,
+  no judging, no board, and the mixer's bed is off. The **queue** is the listener's
+  own picks (`src/lib/game/jukebox.ts`), and the shuffle is a separate bag: a filler is
+  never written into the queue. Play now, Play next and Add to queue are the picker's
+  three answers; the picker reuses Songs' windowed list and is lazy. Changing a song
+  keeps the current one playing while the next document and words are loaded, then
+  switches as soon as its sound can play; the next song is prefetched while one plays. A song with no playable
+  sound is named and skipped rather than played in silence. Leaving pauses and saves
+  the position; coming back resumes it with the queue intact. A YouTube-backed song
+  uses the same audio-only player as the stage.
 - **Band** — who is on stage, **a character box each**: an instrument (guitar, bass,
   drums, simple keys, dance) or **the place at the words** — singing or typing on a
   pitched song, typing on a lyrics-only song — and the difficulty that fits it. *Only
@@ -184,8 +199,8 @@ fallback, not a stop an ordinary run makes.
   typed the same way — while the history below stays the song's own across lineups,
   and each row says which lineup it was under the date and band size.
 
-Choosing a song and choosing a band are **two screens in sequence** on purpose: a
-jukebox wants the room a few hundred titles need and a band wants the room a slot
+Choosing a song and choosing a band are **two screens in sequence** on purpose: Songs
+wants the room a few hundred titles need and a band wants the room a slot
 per player needs, and one panel doing both was what the first attempt got wrong.
 
 ## The stage
@@ -278,10 +293,11 @@ download. The **source translators** (`src/lib/game/sources/parse.ts` and the MI
 `.chart`, StepMania, UltraStar and lyric readers behind it) are fetched with
 `await import(...)` only when a folder or `.sng` package is first read, and
 **`PlaylistsDialog`**, **`DownloadsDialog`**, **`CalibrationDialog`**, **`PracticeDialog`**,
-**`IntentDialog`**, **`BragCardDialog`**, the lazy profile import and the dev
-**`BandControls`** are `React.lazy` (or `await import(...)`) with a null `Suspense`
-fallback. A player who opens the JSON library and never presses Calibrate, opens
-Downloads, follows a link or uses `?dev=1` does not pay for any of it.
+**`IntentDialog`**, **`BragCardDialog`**, **`JukeboxPicker`**, the lazy profile import
+and the dev **`BandControls`** are `React.lazy` (or `await import(...)`) with a null
+`Suspense` fallback. A player who opens the JSON library and never presses Calibrate,
+opens Downloads, follows a link, opens the Jukebox's picker or uses `?dev=1` does not
+pay for any of it.
 
 That matters because `/play` is the page the game starts on: the initial JavaScript
 graph is **572 KiB raw / 185 KiB gzipped across 22 files**, and every static import
@@ -300,7 +316,7 @@ saved.
   ships no JavaScript: the window is a same-origin iframe and the link over it is the
   page's one script-free control.
 - `/play` — the **public game page**: the same game island, the welcome, the menu and its
-  two branches, the jukebox and the band screen, a run and its results, all over one
+  branches, Songs, the Jukebox and the band screen, a run and its results, all over one
   persistent stage. It sits in the site shell, so the marketing header and footer frame
   the stage, and fullscreen puts them aside. Unlike the game-only entries below it is
   **indexable**, with the site's canonical/Open Graph metadata, and it is in the
@@ -310,7 +326,8 @@ saved.
 - `/arcade` — the **attract entry**: game-only, `noindex`, and the page the homepage's
   live window embeds. Left idle on the welcome it starts the demo; any input returns to
   the welcome. `?players=1`, `?sound=0|1|auto`, `?demo=1` and `?chrome=0` shape the
-  same document for the homepage window; it is not in the sitemap.
+  same document for the homepage window; it is not in the sitemap. Its menu has no
+  **Charter** door: the arcade is the game playing itself, not a chart-making tool.
 - `/embed` — the **native app's entry**: the same game-only page at a URL of its own, so
   an old WebView cache, service worker or task can never hand the app a website page from
   `/play`, `/app` or `/open`. The APK bundles `embed.html`; `noindex` and not in the

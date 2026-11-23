@@ -26,11 +26,15 @@ describe("screenAfter", () => {
     expect(screenAfter("results", "replay")).toBe("countdown");
   });
 
-  test("the menu's two branches are round trips", () => {
+  test("the menu's branches are round trips", () => {
     expect(screenAfter("menu", "options")).toBe("options");
     expect(screenAfter("options", "back")).toBe("menu");
     expect(screenAfter("menu", "credits")).toBe("credits");
     expect(screenAfter("credits", "back")).toBe("menu");
+    expect(screenAfter("menu", "jukebox")).toBe("jukebox");
+    expect(screenAfter("jukebox", "back")).toBe("menu");
+    // The empty Jukebox sends a player to Songs to find a playlist.
+    expect(screenAfter("jukebox", "songs")).toBe("songs");
     // And back out of the menu is the title it came from.
     expect(screenAfter("menu", "back")).toBe("welcome");
   });
@@ -80,7 +84,7 @@ describe("screenAfter", () => {
 describe("backEventFor", () => {
   test("one key is the way back through the whole loop", () => {
     expect(backEventFor("welcome")).toBeNull();
-    for (const screen of ["menu", "options", "credits", "songs", "band"] as Screen[]) {
+    for (const screen of ["menu", "options", "credits", "songs", "jukebox", "band"] as Screen[]) {
       expect(backEventFor(screen)).toBe("back");
     }
     for (const screen of ["loading", "countdown", "results"] as Screen[]) {
@@ -179,8 +183,15 @@ describe("wantsCharts", () => {
     expect(wantsCharts("results")).toBe(true);
   });
 
-  test("the way to the jukebox fetches nothing", () => {
-    for (const screen of ["welcome", "menu", "options", "credits", "songs"] as Screen[]) {
+  test("the way to Songs and the Jukebox fetches no run charts", () => {
+    for (const screen of [
+      "welcome",
+      "menu",
+      "options",
+      "credits",
+      "songs",
+      "jukebox",
+    ] as Screen[]) {
       expect(wantsCharts(screen)).toBe(false);
     }
   });
@@ -198,6 +209,7 @@ describe("onStage", () => {
       "options",
       "credits",
       "songs",
+      "jukebox",
       "band",
       "loading",
       "results",

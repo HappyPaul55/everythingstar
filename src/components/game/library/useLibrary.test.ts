@@ -88,7 +88,7 @@ describe("canForget", () => {
 describe("libraryLoading", () => {
   test("a folder still being read keeps the library loading", () => {
     // A big import can spend its first seconds copying and scanning with nothing to
-    // list yet: counting only playlists showed the jukebox's empty state over it.
+    // list yet: counting only playlists showed the song list's empty state over it.
     expect(libraryLoading([], [], [row("scan", "scanning")])).toBe(true);
     expect(libraryLoading([], [], [row("copy", "copying")])).toBe(true);
     // A reconnect is a walk in progress too.

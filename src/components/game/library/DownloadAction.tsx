@@ -11,7 +11,7 @@ import {
 /**
  * The now-playing slot's download control.
  *
- * It is deliberately one compact line: the jukebox already asks for a song and
+ * It is deliberately one compact line: the song list already asks for a song and
  * then a band, and this is an optional third thing to do with the song on the
  * front. A downloaded song says so instead of offering the action again; the
  * Downloads dialog is where it can be removed.
@@ -58,18 +58,18 @@ export function DownloadAction({
   const percent = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
 
   return (
-    <div className="jukebox__offline" data-downloaded={entry ? "true" : "false"}>
+    <div className="song-list__offline" data-downloaded={entry ? "true" : "false"}>
       {entry ? (
-        <p className="jukebox__offline-state">
+        <p className="song-list__offline-state">
           <span aria-hidden="true">✓</span> {t("screen.downloaded")}
         </p>
       ) : busy ? (
-        <div className="jukebox__offline-progress">
-          <p className="jukebox__offline-state" role="status">
+        <div className="song-list__offline-progress">
+          <p className="song-list__offline-state" role="status">
             {t("screen.downloading", { done, total })}
           </p>
           <div
-            className="jukebox__offline-bar"
+            className="song-list__offline-bar"
             role="progressbar"
             aria-label={t("screen.downloading", { done, total })}
             aria-valuemin={0}
@@ -82,23 +82,23 @@ export function DownloadAction({
       ) : allowed.ok ? (
         <button
           type="button"
-          className="band-btn jukebox__offline-btn"
+          className="band-btn song-list__offline-btn"
           data-sound="select"
           onClick={onDownload}
         >
           <span aria-hidden="true">↓</span> {t("screen.download")}
         </button>
       ) : (
-        <p className="jukebox__offline-note">{t(failureKey(allowed.reason))}</p>
+        <p className="song-list__offline-note">{t(failureKey(allowed.reason))}</p>
       )}
 
       {error && !entry ? (
-        <p className="jukebox__offline-note is-warn" role="status">
+        <p className="song-list__offline-note is-warn" role="status">
           {t(failureKey(error))}{" "}
           {allowed.ok && error !== "youtube" && error !== "local" ? (
             <button
               type="button"
-              className="jukebox__offline-retry"
+              className="song-list__offline-retry"
               onClick={onDownload}
             >
               {t("screen.downloadRetry")}

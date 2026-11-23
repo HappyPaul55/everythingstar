@@ -11,7 +11,7 @@ import type { Song } from "../../../lib/game/song";
 import { previewFor, readSongDoc, type SongPreview } from "../../../lib/game/source";
 
 /**
- * What a jukebox row can play, or null when it cannot be read.
+ * What a song list row can play, or null when it cannot be read.
  *
  * A preview is somebody else's file, fetched from somebody else's host, and none
  * of it is trusted: a song document that is not one, a `.sng` that will not open,
@@ -44,7 +44,7 @@ export async function resolvePreview(
 /**
  * `URL.createObjectURL`, or null where this browser will not make one.
  *
- * A refusal is a preview the jukebox does without, exactly like a file that does
+ * A refusal is a preview the song list does without, exactly like a file that does
  * not arrive: it must not become an unhandled rejection above the row.
  */
 export function safeObjectUrl(make: () => string | null): string | null {
@@ -83,7 +83,7 @@ async function previewSource(song: Song, signal?: AbortSignal): Promise<FoundPre
  * made first: a browser that cannot make one has no preview at all, while one that
  * refuses only the cover still plays the sound.
  *
- * The package reader arrives with this module's first package: a jukebox row for a
+ * The package reader arrives with this module's first package: a song list row for a
  * JSON song must not download it to ask whether it needs it.
  */
 async function previewSng(song: Song, signal?: AbortSignal): Promise<FoundPreview | null> {

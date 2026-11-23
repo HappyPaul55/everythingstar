@@ -27,7 +27,7 @@ at the repository root is the short orientation for any change, and it links bac
 - **Accessibility.** Focus order, screen-reader announcements, reduced motion,
   contrast, touch targets. These are product requirements here, not polish.
 - **Engine and stage work.** Highways and notes, typing, singing, the mixer, the
-  jukebox.
+  song list.
 - **Documentation.** If a sentence in the README or a page in this documentation has
   drifted from the code, that is a bug.
 

@@ -59,7 +59,7 @@ it is the one to publish, and the one the native app recognises.
 3. **Add** is the only thing that changes the library. **Not now** closes the question and
    nothing else happens.
 4. A playlist becomes a source like any other: it is listed in **Playlists**, can be
-   refreshed, disabled or removed, and its songs join the jukebox. A song becomes a
+   refreshed, disabled or removed, and its songs join Songs. A song becomes a
    library entry of its own, listed under **Playlists → Songs from links**, where it can be
    refreshed or removed.
 5. A link arriving while a song is running is held until the game is back on a page; it
@@ -233,7 +233,7 @@ find in a search.
       made until **Add**.
 - [ ] **Not now** adds nothing, and a reload does not ask again.
 - [ ] **Add** lists the playlist in the Playlists dialog with its name and count; its songs
-      are in the jukebox.
+      are in Songs.
 - [ ] `?song=<encoded>` shows **Add this song?**, and **Add** lists the song under
       **Songs from links**.
 - [ ] A relative address, `javascript:`, a credentialled URL, both parameters, or a target

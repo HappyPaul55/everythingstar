@@ -9,6 +9,7 @@ import {
 } from "./track";
 import {
   assembleTrack,
+  docCanPlay,
   fullMixStems,
   offerFromDoc,
   previewFor,
@@ -112,7 +113,7 @@ describe("readSongDoc", () => {
     );
     expect(doc?.audio.stems[1].instrument).toBe("lead_guitar");
     expect(doc?.audio.mixPresets).toEqual([{ id: "full", stemIds: ["stem_master"] }]);
-    // The jukebox clip is resolved like every other file the song names.
+    // The preview clip is resolved like every other file the song names.
     expect(doc?.audio.preview).toBe(
       "https://everythingstar.test/playlist/songs/audio/preview.ogg",
     );
@@ -1367,6 +1368,42 @@ describe("fullMixStems", () => {
 
   test("a song with no audio is a song with nothing to play", () => {
     expect(fullMixStems(audio([], []))).toEqual([]);
+  });
+});
+
+describe("docCanPlay", () => {
+  const stem = {
+    id: "stem_master",
+    name: "Master",
+    url: "song.ogg",
+    instrument: null,
+    defaultGainDb: 0,
+    offsetMs: 0,
+  };
+  const doc = (audio: SourceSongDoc["audio"]) => ({ audio });
+
+  test("a stem is a sound, whether it is a master or a part", () => {
+    expect(
+      docCanPlay(
+        doc({ source: "stems", stems: [stem], mixPresets: [], preview: null }),
+      ),
+    ).toBe(true);
+  });
+
+  test("a YouTube song is a sound without a stem", () => {
+    expect(
+      docCanPlay(
+        doc({ source: "youtube", stems: [], mixPresets: [], preview: null }),
+      ),
+    ).toBe(true);
+  });
+
+  test("no stems and no video is a title that would play silence", () => {
+    expect(
+      docCanPlay(
+        doc({ source: "stems", stems: [], mixPresets: [], preview: null }),
+      ),
+    ).toBe(false);
   });
 });
 

@@ -56,11 +56,12 @@ things that need a page.
 | `fullscreen.spec.ts` | 1 | entering the stage takes the whole screen and the shell stands aside; leaving it during a run pauses where the song was |
 | `import.spec.ts` | 2 | a copy into OPFS that survives a reload; the directory input's file list |
 | `intent.spec.ts` | 4 | `?playlist=` / `?song=` read from the address, confirmed, added, and stripped |
-| `jukebox-window.spec.ts` | 1 | a 2,000-song list windowed in the DOM |
+| `song-list-window.spec.ts` | 1 | a 2,000-song list windowed in the DOM |
+| `jukebox-mode.spec.ts` | 3 | the Jukebox record, timed words and resume; the queue vs the shuffle; the picker not pausing the song |
 | `keyboard.spec.ts` | 1 | a `keydown`'s own timestamp projected onto the song clock; a chord |
 | `keys-view.spec.ts` | 2 | the words riding the pitch roll's own translated layer, and a lyrics-only song with no roll |
-| `loop.spec.ts` | 9 | the screen machine end to end, the pause's quick panel, the practice loop, Listen, the search field's Escape, jukebox focus, a breakpoint, portrait rails |
-| `menu.spec.ts` | 2 | the menu's two branches, Escape as back, both calibration dialogs |
+| `loop.spec.ts` | 9 | the screen machine end to end, the pause's quick panel, the practice loop, Listen, the search field's Escape, Songs focus, a breakpoint, portrait rails |
+| `menu.spec.ts` | 2 | the menu's branches, Escape as back, both calibration dialogs |
 | `mic-ask.spec.ts` | 2 | Play makes no `getUserMedia` call for a remembered singer; choosing Vocals does, and a refusal is said in the seat |
 | `midi.spec.ts` | 3 | Web MIDI as an event route, learning a mapping, a refusal that changes nothing |
 | `note-style.spec.ts` | 1 | the setting reaching the highway's drawing |

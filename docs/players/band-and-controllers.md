@@ -2,10 +2,10 @@
 title: Band and controllers
 description: "Who plays what: seats, instruments, difficulty, singing or typing, and the controllers each player can use."
 updated: "2026-10-31"
-order: 6
+order: 7
 ---
 
-Choosing a song and a band are two screens: the jukebox decides **what**, the band screen **who** and **how hard**. A **player** is somebody on stage, and their **seat** is their place — so Player 3 means the same person in the box, on the stage and in the results.
+Choosing a song and a band are two screens: Songs decides **what**, the band screen **who** and **how hard**. A **player** is somebody on stage, and their **seat** is their place — so Player 3 means the same person in the box, on the stage and in the results.
 
 [The band screen: a character box per player with what they take, their level and controller gear, and Play at the foot of the screen.](shot:band-screen)
 

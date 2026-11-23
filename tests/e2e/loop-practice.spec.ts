@@ -112,10 +112,10 @@ test("practises a stretch at 80%, loops it, and leaves no score behind", async (
     pausedAgain.getByRole("button", { name: "Practice", exact: true }),
   ).toBeFocused();
 
-  // Leaving practice leaves the jukebox's history exactly as it was.
+  // Leaving practice leaves the song list's history exactly as it was.
   await pausedAgain.getByRole("button", { name: "Leave the stage" }).click();
   await expect(page.getByRole("heading", { name: "Pick a song" })).toBeVisible();
-  await expect(page.locator(".jukebox__history")).toContainText("no score yet");
+  await expect(page.locator(".song-list__history")).toContainText("no score yet");
 
   expect(leaked, "unexpected external requests").toEqual([]);
 });
@@ -186,11 +186,11 @@ test("Listen leaves the board alone: no run, no score, no best", async ({
   // kept, and Listen keeps nothing.
   await expect(page.getByRole("button", { name: "Brag card" })).toHaveCount(0);
 
-  // Back in the jukebox the song's history is still empty — the Listen run was
+  // Back in the song list the song's history is still empty — the Listen run was
   // never written down.
   await page.getByRole("button", { name: "Change song" }).click();
   await expect(page.getByRole("heading", { name: "Pick a song" })).toBeVisible();
-  await expect(page.locator(".jukebox__history")).toContainText("no score yet");
+  await expect(page.locator(".song-list__history")).toContainText("no score yet");
 
   expect(leaked, "unexpected external requests").toEqual([]);
 });

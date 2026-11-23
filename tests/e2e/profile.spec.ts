@@ -89,11 +89,11 @@ test("importing a profile replaces the four records, reloads, and leaves the lib
   await disableFullscreen(page);
   await enterGame(page);
 
-  // Read the library once, so the jukebox has fetched and cached it before the
+  // Read the library once, so the song list has fetched and cached it before the
   // import. The profile must not change any of this.
   await page.getByRole("button", { name: /Quick Play/ }).click();
   await expect(page.getByRole("button", { name: new RegExp(SONG_TITLE) })).toBeVisible();
-  // The product's own Back, not Escape: the jukebox search keeps its Escape, and
+  // The product's own Back, not Escape: the song list search keeps its Escape, and
   // which control has focus when this lands was a race the retry sometimes won.
   await page.getByRole("button", { name: "Back to the menu" }).click();
   await expect(page.getByRole("navigation", { name: "Main menu" })).toBeVisible();

@@ -92,7 +92,7 @@ function readSource(folder: SongFolder, root: string, audioBase: string, id: str
   }
 
   const fallbackTitle = basename(dir);
-  // A jukebox clip is not a stem: it is named in the song document so the jukebox can
+  // A preview clip is not a stem: it is named in the song document so Songs can
   // play it, and nothing mixes it into a run.
   const previewFile = findFile(dir, PREVIEW_NAMES);
   // One door, exactly as the game has: the importer used to keep its own switch and

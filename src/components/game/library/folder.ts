@@ -72,7 +72,7 @@ export interface LocalSongFiles {
   ini: string | null;
   audio: Partial<Record<StemRole, string>>;
   art: string | null;
-  /** A jukebox clip beside the chart, when the chart folder has one. Not a stem. */
+  /** A preview clip beside the chart, when the chart folder has one. Not a stem. */
   preview?: string | null;
   /** The chart and audio live inside one `.sng`, not beside it. */
   package?: boolean;
@@ -636,7 +636,7 @@ export function localSongFiles(url: string): LocalSongFiles | null {
 }
 
 /**
- * What a jukebox can play for a local song, without parsing a chart again.
+ * What a song list can play for a local song, without parsing a chart again.
  *
  * The clip the chart folder ships wins; otherwise the **master** is used from the
  * song's own
@@ -670,7 +670,7 @@ export function localPreview(
 /**
  * The clip a folder record from an older build did not know about.
  *
- * A record names the files a song was read with, but one written before the jukebox
+ * A record names the files a song was read with, but one written before the song list
  * looked for a clip names none — and re-listing every song at restore is exactly the
  * walk the record exists to avoid. So the clip is asked of the folder directly, once,
  * when it is first wanted: one file handle per candidate name, on a click.
@@ -1056,7 +1056,7 @@ async function readSong(
   });
   if (!source) return null;
   // A `.txt` with no chart and no timed lines is a changelog or an empty sheet, not
-  // a song: offering it would put a title on the jukebox that nobody can play.
+  // a song: offering it would put a title on the song list that nobody can play.
   if (!hasSomethingToPlay(source)) return null;
   // A copy with no `song.ini` is named by the folder it sits in.
   attribute(source, folderName);
@@ -1128,7 +1128,7 @@ async function readSngSong(
   });
   if (!source) return null;
   // The same rule as a folder read: a package whose chart names nothing to play is
-  // not a song on the jukebox.
+  // not a song on the song list.
   if (!hasSomethingToPlay(source)) return null;
   attribute(source, folderName || fallbackTitle);
 
@@ -1274,7 +1274,7 @@ async function localSng(url: string): Promise<LocalSng | null> {
 /**
  * Members already read out of a package, kept for the visit.
  *
- * A jukebox row asks for its cover on every pass, and a package member is read and
+ * A song list row asks for its cover on every pass, and a package member is read and
  * unmasked from the file each time: two copies of the member per request, for the
  * same bytes. The cache is bounded, because a package may hold stems tens of
  * megabytes long and holding all of them would be worse than reading one twice.
@@ -1353,7 +1353,7 @@ async function parseLocal(input: {
   ini: IniValues | null;
   audio: Partial<Record<StemRole, string>>;
   art: string | null;
-  /** A jukebox clip beside the chart, when the folder has one. */
+  /** A preview clip beside the chart, when the folder has one. */
   preview: string | null;
   fallbackTitle: string;
 }): Promise<ParsedSource | null> {

@@ -11,7 +11,7 @@ case, and commits are small and single-purpose:
 ```
 fix(audio): keep stems in phase on start and resume
 feat(stage): put a lone player's rails above the highway on a portrait phone
-refactor(jukebox): extract the list window hook
+refactor(song list): extract the list window hook
 docs: bring the handover in step with the quality pass
 ```
 

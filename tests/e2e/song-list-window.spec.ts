@@ -9,7 +9,7 @@ import {
 import { enterGame } from "./helpers";
 
 /**
- * The jukebox at a library's real size.
+ * The song list at a library's real size.
  *
  * A folder off this machine is not a playlist of a few hundred: 2,000 songs is
  * the number the windowed list exists for. This spec opens that library and
@@ -28,7 +28,7 @@ test("windows a library of 2,000 songs", async ({ context, page }) => {
   await page.getByRole("button", { name: /Quick Play/ }).click();
   await expect(page.getByRole("heading", { name: "Pick a song" })).toBeVisible();
 
-  const scroller = page.locator(".jukebox__scroller");
+  const scroller = page.locator(".song-list__scroller");
   const rows = scroller.locator(".song-row");
 
   // The list is built after the screen is up; the first row is the proof it has
@@ -63,7 +63,7 @@ test("windows a library of 2,000 songs", async ({ context, page }) => {
   }
   expect(scrolledBack).toBe(true);
   const aboveHeading = await page.evaluate(() => {
-    const box = document.querySelector<HTMLElement>(".jukebox__scroller");
+    const box = document.querySelector<HTMLElement>(".song-list__scroller");
     const row = document.activeElement;
     if (!box || !(row instanceof HTMLElement) || !row.matches(".song-row")) return null;
     const frame = box.getBoundingClientRect();
@@ -89,7 +89,7 @@ test("windows a library of 2,000 songs", async ({ context, page }) => {
       });
       if ((await last.count()) === 0) return false;
       return last.evaluate((row) => {
-        const box = row.closest<HTMLElement>(".jukebox__scroller");
+        const box = row.closest<HTMLElement>(".song-list__scroller");
         if (!box) return false;
         const frame = box.getBoundingClientRect();
         const at = row.getBoundingClientRect();
@@ -114,7 +114,7 @@ test("windows a library of 2,000 songs", async ({ context, page }) => {
   await expect
     .poll(async () =>
       page.evaluate(() => {
-        const box = document.querySelector<HTMLElement>(".jukebox__scroller");
+        const box = document.querySelector<HTMLElement>(".song-list__scroller");
         const header = [
           ...document.querySelectorAll<HTMLElement>(".song-group__letter"),
         ].find((node) => node.querySelector("span")?.textContent === "T");
@@ -128,7 +128,7 @@ test("windows a library of 2,000 songs", async ({ context, page }) => {
     .toBe(true);
 
   const visibleTitles = await page.evaluate(() => {
-    const box = document.querySelector<HTMLElement>(".jukebox__scroller");
+    const box = document.querySelector<HTMLElement>(".song-list__scroller");
     if (!box) return [];
     const rect = box.getBoundingClientRect();
     return [...box.querySelectorAll<HTMLElement>(".song-row")]
@@ -153,7 +153,7 @@ test("windows a library of 2,000 songs", async ({ context, page }) => {
     ),
   );
   const start = await page.evaluate(() => {
-    const box = document.querySelector<HTMLElement>(".jukebox__scroller");
+    const box = document.querySelector<HTMLElement>(".song-list__scroller");
     if (!box) return null;
     const rect = box.getBoundingClientRect();
     const inside = [...box.querySelectorAll<HTMLElement>(".song-row")].filter(

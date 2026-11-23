@@ -155,7 +155,7 @@ describe("writeSource", () => {
     const doc = byPath.get("songs/nine-lives.json") as Record<string, unknown>;
     expect(doc.schemaVersion).toBe(1);
     const audio = doc.audio as { preview?: string };
-    // A jukebox clip is not a stem, and the document says where it is.
+    // A preview clip is not a stem, and the document says where it is.
     expect(audio.preview).toBe("preview.ogg");
     const parts = doc.parts as { role: string; audioControl: { controlledStemIds?: string[] } | null }[];
     expect(parts[0].role).toBe("guitar");

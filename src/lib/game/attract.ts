@@ -32,7 +32,7 @@ export const ATTRACT_STOPS = 3;
 /** The idle before a page that is left alone starts playing itself, in ms. */
 export const ATTRACT_IDLE_MS = 30_000;
 
-/** A beat for the jukebox's own list to build before the first row is chosen. */
+/** A beat for the song list's own list to build before the first row is chosen. */
 export const ATTRACT_SETTLE_MS = 400;
 
 /** How long it rests on each song it is thinking about. */

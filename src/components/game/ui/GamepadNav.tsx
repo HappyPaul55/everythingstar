@@ -175,7 +175,7 @@ export function GamepadNav({ screen, dispatch }: Props) {
         if (current === "loading" || current === "countdown") {
           // B is a fret on every chart with four or more columns, and a player's
           // hand is already on them during the entrance. Abandoning the run to the
-          // jukebox from a button that also plays a note is a trap; leaving is
+          // song list from a button that also plays a note is a trap; leaving is
           // Escape's, or the pause's.
           if (actions.includes("back") && current === "loading") dispatch("quit");
           continue;
@@ -306,7 +306,7 @@ function move(screen: Screen, direction: Direction): void {
 
 /**
  * Move through the controls in DOM order. A short screen wraps at the ends; the
- * jukebox does not, because only the mounted rows are in `controls` and wrapping
+ * song list does not, because only the mounted rows are in `controls` and wrapping
  * from the last of them to the screen's first control is a teleport rather than
  * a page. Its own arrows and Tab step through the rest of the window.
  */

@@ -7,7 +7,7 @@
  * the URL of the package is not the URL of its cover or its stems.
  *
  * A package fetched here is kept for the **rest of the visit** in a small in-memory
- * cache (`sngCache.ts`), because two readers want it — the jukebox's preview and the
+ * cache (`sngCache.ts`), because two readers want it — the song list's preview and the
  * band's load. Nothing is written to IndexedDB or localStorage: the package carries
  * the song's audio, and this is the second read in one visit, not a library.
  *
@@ -54,7 +54,7 @@ async function fetchPackage(
 }
 
 /**
- * The package cache both readers share: the jukebox's preview and the band's load
+ * The package cache both readers share: the song list's preview and the band's load
  * ask for the same URL, and the second one gets the first one's bytes.
  *
  * The limits and the LRU bookkeeping are in `sngCache.ts`; this is only the loader.
@@ -87,7 +87,7 @@ export function sngObjectUrl(
 }
 
 /**
- * What a package can preview, in the order a jukebox wants it.
+ * What a package can preview, in the order a song list wants it.
  *
  * The chart folder's own `preview.*` is a clip and starts at zero. Otherwise the master is
  * the song, from the package's `preview_start_time`. A package with only parts has

@@ -2,7 +2,7 @@
 title: On a phone
 description: "Playing EverythingStar on a phone: tapping the pads, portrait screens, installing it and keeping songs available offline."
 updated: "2026-10-31"
-order: 7
+order: 8
 ---
 
 EverythingStar plays on a phone: the stage fits the screen, the hit markers become controls, and a song can be kept on the device. Nothing has to be installed to start.
@@ -67,7 +67,7 @@ The installed game opens at its own address, as a game-only screen, and its shel
 
 The shell — pages, scripts and styles — is cached when the game is installed or after a first visit on a secure address, so it opens without a connection. The **songs** need saving one at a time: choose one and press **Download** in the now-playing panel.
 
-**Downloads** lists what is saved, the storage used of the browser's quota, and **Remove** and **Clear all downloads**; clearing everything asks for a second press. A downloaded song plays offline, seeking included; one that has not been downloaded needs a connection the first time. A download is one job for the page, so leaving the jukebox does not cancel it, and it can be cancelled from the panel or the manager. A full device writes nothing, and a playlist's save stops rather than failing every later song. YouTube-backed songs cannot be downloaded, and a local folder is already on the device. [Songs and playlists](songs.md#downloads) has the rules.
+**Downloads** lists what is saved, the storage used of the browser's quota, and **Remove** and **Clear all downloads**; clearing everything asks for a second press. A downloaded song plays offline, seeking included; one that has not been downloaded needs a connection the first time. A download is one job for the page, so leaving Songs does not cancel it, and it can be cancelled from the panel or the manager. A full device writes nothing, and a playlist's save stops rather than failing every later song. YouTube-backed songs cannot be downloaded, and a local folder is already on the device. [Songs and playlists](songs.md#downloads) has the rules.
 
 ## Storage, and what can disappear
 

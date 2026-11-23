@@ -3,22 +3,38 @@ import { useLocale, useT } from "../../../i18n/react";
 
 interface Props {
   onQuickPlay: () => void;
+  onJukebox: () => void;
   onOptions: () => void;
   onCredits: () => void;
   /** The wordmark is the way back to the welcome, as a wordmark usually is. */
   onBack: () => void;
+  /**
+   * The `/arcade` entry is the game playing itself, not a chart-making tool: the
+   * menu there has no door to the charter.
+   */
+  arcade?: boolean;
 }
 
 /**
- * The wordmark and the three big, tilted doors into the game.
+ * The wordmark and the three big, tilted doors into the game, with a smaller
+ * side door to the Jukebox under them.
  *
  * The masthead is the poster's: a graffiti tag, the wordmark (its "Star" lit like
  * the welcome's), a strip of hazard tape and the strapline. The wordmark itself is
  * the door back to the welcome, and the three doors below are numbered the way the
  * landing page's sticker cards are, each saying in a line where it leads — so the
- * hub reads as three ways in rather than three identical yellow bars.
+ * hub reads as three ways in rather than three identical yellow bars. The Jukebox
+ * is the listening mode rather than a fourth way to play, so it sits lower and
+ * quieter.
  */
-export function Menu({ onQuickPlay, onOptions, onCredits, onBack }: Props) {
+export function Menu({
+  onQuickPlay,
+  onJukebox,
+  onOptions,
+  onCredits,
+  onBack,
+  arcade = false,
+}: Props) {
   const t = useT();
   const locale = useLocale();
 
@@ -28,19 +44,28 @@ export function Menu({ onQuickPlay, onOptions, onCredits, onBack }: Props) {
     name: string,
     hint: string,
     onPress: () => void,
+    side = false,
   ) => (
-    <li className="menu__entry" key={id}>
+    <li className={side ? "menu__entry menu__entry--side" : "menu__entry"} key={id}>
       <button
         type="button"
-        className="band-btn band-btn--primary band-btn--big menu__item"
-        data-sound="select"
+        className={
+          side
+            ? "band-btn band-btn--big menu__item menu__item--side"
+            : "band-btn band-btn--primary band-btn--big menu__item"
+        }
+        data-sound={side ? "open" : "select"}
         data-nav-id={id}
         data-nav-default={id === "quick-play" ? "true" : undefined}
         onClick={onPress}
       >
-        <span className="menu__index" aria-hidden="true">
-          {index}
-        </span>
+        {side ? (
+          <span className="menu__disc" aria-hidden="true" />
+        ) : (
+          <span className="menu__index" aria-hidden="true">
+            {index}
+          </span>
+        )}
         <span className="menu__text">
           <span className="menu__name">{name}</span>
           <span className="menu__hint">{hint}</span>
@@ -91,10 +116,20 @@ export function Menu({ onQuickPlay, onOptions, onCredits, onBack }: Props) {
             )}
             {item("options", "02", t("screen.options"), t("screen.optionsHint"), onOptions)}
             {item("credits", "03", t("screen.credits"), t("screen.creditsHint"), onCredits)}
+            {item(
+              "jukebox",
+              "",
+              t("screen.jukebox"),
+              t("screen.jukeboxHint"),
+              onJukebox,
+              true,
+            )}
           </ul>
-          <a className="menu__charter" href={localePath(locale, "/charter")}>
-            {t("charter.menu")}
-          </a>
+          {arcade ? null : (
+            <a className="menu__charter" href={localePath(locale, "/charter")}>
+              {t("charter.menu")}
+            </a>
+          )}
         </nav>
       </div>
     </div>

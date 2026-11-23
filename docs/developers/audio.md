@@ -82,9 +82,10 @@ player joining.
 | `background` | track | 4–6 | A whole piece, **2:00–3:00 for a new asset** (the shipped four are the author's Suno generations at ~4:55, ~4:55, ~4:55 and ~2:40), low-key and unhurried, **no vocals**, nothing that competes with a song preview. One sonic world across the bank: same instrumentation, same room, same era. Each must survive ten minutes without grating. **The first one listed is the one the game always opens on**, so make it the best. *4 already in (Ogg/Opus at 64 kbps).* | ✓ |
 
 Welcome and band play `background` — it does not matter which one they land on, and
-the bank runs through them. The jukebox plays only the chosen song's preview, and is
-silent when there is none. The loading screen keeps the `background` bed; the stage's
-entrance plays the band's own `hype_*` entrances, and the pause has its own quiet crowd.
+the bank runs through them. Songs plays only the chosen song's preview, and is
+silent when there is none. The **Jukebox** plays the whole song, so it asks for no
+bed at all. The loading screen keeps the `background` bed; the stage's entrance plays
+the band's own `hype_*` entrances, and the pause has its own quiet crowd.
 **The brand's identity lives in the stings** (`win`, `best`), not in a theme bed,
 because there is no single bed any more.
 
@@ -249,9 +250,9 @@ trick depends on them.
   mid-song drifts out of time. Bounce them together, from one session, in one go.
 - **Which stems**: `master`, `drums`, `bass`, `lead_guitar`, `rhythm_guitar`, `keys`,
   `vocals`, plus `backing` and `crowd` where the song has them. `master` is the whole
-  mix (or the backing around the parts), what `full` falls back to, and what the
-  jukebox previews when the song has no clip.
-- **The preview clip is not a stem.** `preview.ogg` (or `.opus`/`.mp3`) is a jukebox
+  mix (or the backing around the parts), what `full` falls back to, and what Songs
+  previews when the song has no clip.
+- **The preview clip is not a stem.** `preview.ogg` (or `.opus`/`.mp3`) is a preview
   clip: recorded as `audio.preview`, played from its own start, never in `mixPresets`,
   never muted, and never opened by a run. A song without one is previewed from its
   **master** at `previewStartMs` - which is worth having even when `full` is the parts.
@@ -278,7 +279,7 @@ trick depends on them.
 - **Where stems come from now**: `bun run import` reads the stems a chart folder already
   has — `song.ogg` as the master, `guitar.ogg` / `rhythm.ogg` / `bass.ogg` / `keys.ogg`,
   the `drums_1..4.ogg` a kit is split into, `vocals.ogg` and `vocals_2.ogg` for a harmony,
-  `crowd.ogg`, and `preview.ogg` for the jukebox clip — and **references** them in the song document. It copies nothing, transcodes
+  `crowd.ogg`, and `preview.ogg` for Songs clip — and **references** them in the song document. It copies nothing, transcodes
   nothing and writes an `audio-manifest.json` of what each song needs so the files can be
   hosted separately. A folder opened from this machine carries the same names as
   `folder://` URLs. A chart library is tens of gigabytes of audio: it is hosted or it is
@@ -400,16 +401,24 @@ master starts at full — it is the player's, and the mix is the mix's. A file's
   every click, already decoded, still played. Started before the resume, the bed plays
   into a suspended graph, makes no sound until it runs, and is already in the right
   place when it does.
-- **Every page wants `background`; the stage and the jukebox want none.** A menu bed
-  over a running song is the one thing the mixer must never do, and the jukebox is a
-  preview booth rather than a room with a house band.
+- **Every page wants `background`; the stage, Songs and the Jukebox want none.** A
+  menu bed over a running song is the one thing the mixer must never do. Songs is a
+  preview booth rather than a room with a house band, and the Jukebox's song is the
+  music.
 - **Asking for the bed that is already playing does nothing**, so moving between menus
   never restarts the track somebody is listening to.
-- **A jukebox preview is a guest on the music channel.** Choosing a song streams its
+- **A preview is a guest on the music channel.** Choosing a song streams its
   `preview.ogg` (or its master from `previewStartMs`) through a media element and
-  **loops** it until another song is chosen or the jukebox is left. With no preview to
-  play the jukebox is silent — the menu bed does not return behind it. It is **not** a
+  **loops** it until another song is chosen or Songs is left. With no preview to
+  play Songs is silent — the menu bed does not return behind it. It is **not** a
   manifest type — it is the song's own file, so it has no `gainDb` and no picker.
+- **The Jukebox is a full song on the one clock.** `SongAudio` streams the same `full`
+  mix a run plays, at master × the music family, and the playhead is the sound. There
+  is no preview loop, no part ducking and no judging. A YouTube-backed song uses the
+  audio-only player and its own playhead; the record and the words follow the same
+  `StageClock`. The menu bed is stopped when the screen opens and comes back when it
+  closes. A song that names no playable sound is skipped rather than played in
+  silence.
 - **Every button clicks** — one listener on the island rather than a prop on sixty
   components. **Moving onto a control makes a smaller sound** — the pointer entering
   one, or focus arriving by Tab or a pad — and the game's own focus placement (a
@@ -440,8 +449,9 @@ whose stems live outside the graph — while the band's `hype_*`
 entrances deliberately do not; a song's own stems — lane and
 voice — drop out while that part is out and come back on the next hit or at the end of
 its phrase (`onMiss.restore: "next_hit"` or `"phrase_end"`); the guide vocal is a
-setting. The jukebox **preview** is built (`preview.ogg`, else the master from
+setting. Songs' **preview** is built (`preview.ogg`, else the master from
 `previewStartMs`); a run plays a song from its start, and practice from its section.
+The Jukebox plays the `full` mix from the top and moves to the next song at its end.
 
 ## Where to look
 

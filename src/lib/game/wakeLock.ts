@@ -6,7 +6,7 @@
  * were playing with. The **Screen Wake Lock** is the browser's answer, and this is
  * the one rule for when it is wanted.
  *
- * It is deliberately narrower than "the game is open": a menu or the jukebox is a
+ * It is deliberately narrower than "the game is open": a menu or the song list is a
  * page somebody reads at their own pace, and a results screen is a place to put the
  * phone down. Only the countdown and the run itself are a song that must not be
  * interrupted by the display going to sleep. The **native shell** is skipped

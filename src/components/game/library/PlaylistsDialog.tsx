@@ -622,7 +622,7 @@ export function PlaylistsDialog({ library, offline, onClose }: Props) {
           <div className="playlists__add-row">
             <input
               id="playlists-url"
-              className="jukebox__input"
+              className="song-list__input"
               type="text"
               inputMode="url"
               autoComplete="off"

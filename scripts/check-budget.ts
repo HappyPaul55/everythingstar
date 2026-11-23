@@ -57,6 +57,14 @@
  * in the first download, not a lazy chunk moved out of place. The raw cap moved
  * 572 → 580 and the whole-payload cap 700 → 710; the gzip kept its 190.
  *
+ * **The Jukebox** (2026-11-23) added a whole listening screen to the first
+ * download: the queue and shuffle rules, the screen, the record, the timed words,
+ * the transport and its director — **588 KiB raw / 190 KiB gzipped across 23
+ * files** and **728 KiB** of `_astro` JS. The picker is lazy, so its search, rows
+ * and queue dialog are not in that graph. The raw cap moved 580 → 595, the gzip
+ * 190 → 193 and the whole-payload cap 710 → 740; the Jukebox is a main screen and
+ * cannot be a lazy chunk without a flash on the way in.
+ *
  * The script will not measure a build it cannot find: `dist/_astro`, `dist/`,
  * `public/audio` and `play.html` are each required before any number is read, and
  * a `play.html` with no initial JS is a failure rather than a zero.
@@ -167,10 +175,10 @@ const checks: Check[] = [
   {
     label: "dist/_astro JS",
     actual: sizeOf(join(DIST, "_astro"), (file) => file.endsWith(".js")),
-    limit: 710 * KIB,
+    limit: 740 * KIB,
   },
-  { label: "initial /play raw", actual: initialRaw, limit: 580 * KIB },
-  { label: "initial /play gzip", actual: initialGzip, limit: 190 * KIB },
+  { label: "initial /play raw", actual: initialRaw, limit: 595 * KIB },
+  { label: "initial /play gzip", actual: initialGzip, limit: 193 * KIB },
   { label: "dist/ total", actual: sizeOf(DIST), limit: 20 * MIB },
   { label: "public/audio", actual: sizeOf(join(ROOT, "public", "audio")), limit: 10 * MIB },
 ];

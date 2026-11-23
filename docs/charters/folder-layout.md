@@ -56,7 +56,7 @@ Audio is found by convention; each base name may be `.ogg`, `.opus`, `.mp3` or `
 | `vocals.*`, `vocals_1.*` | The lead vocal. |
 | `vocals_2.*`, `harmony.*` | A harmony. |
 | `crowd.*` | The audience, carried but **not** in the run's mix; the room's crowd is the game's own. |
-| `preview.*` | The jukebox clip; not a stem, so nothing mixes it in or ducks it. |
+| `preview.*` | Songs clip; not a stem, so nothing mixes it in or ducks it. |
 
 Which file is *the song* is not a naming question; [Audio and stems](audio-and-stems.md) owns that rule, because it is about the mix rather than the folder.
 
@@ -85,10 +85,10 @@ A plain `key = value` file beside a Guitar Hero or Clone Hero chart. Read tolera
 | `album` | The album name. |
 | `year` | The release year, when real (roughly 1000–3000). |
 | `song_length` | The length in **milliseconds**. `0` means "not stated". |
-| `preview_start_time` | Where the jukebox preview starts, in milliseconds. |
+| `preview_start_time` | Where the preview starts, in milliseconds. |
 | `offset` | The chart's shift against the audio, in milliseconds. Positive moves the chart later. |
 
-`genre` is **not read** — the jukebox has no genre field — and neither is any other key, including Clone Hero's menu keys. `[song]` is a section header and is skipped; every key shares one namespace.
+`genre` is **not read** — Songs has no genre field — and neither is any other key, including Clone Hero's menu keys. `[song]` is a section header and is skipped; every key shares one namespace.
 
 A `song.ini` also keeps a folder with subfolders **one song** (see below), so a song with art in `art/` should have one.
 
@@ -112,7 +112,7 @@ Plenty of charts never say how long they are. A stated length always wins; witho
 - A lyric sheet's last cue.
 - A song with no notes and no words stays unknown rather than inventing a three-second song.
 
-A **playlist entry** carries its own `durationMs`, and that is what the jukebox row shows. A published library has to set it even when the chart file says nothing.
+A **playlist entry** carries its own `durationMs`, and that is what a song row shows. A published library has to set it even when the chart file says nothing.
 
 ## The folder name
 

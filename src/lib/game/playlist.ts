@@ -1,5 +1,5 @@
 /**
- * The **playlist**: the index a jukebox lists and a band is offered from.
+ * The **playlist**: the index Songs lists and a band is offered from.
  *
  * A playlist file is a name and a list of songs, and a song in it is a **summary** —
  * enough to draw a row, chip it, and offer it to a band, plus the URL of the song's
