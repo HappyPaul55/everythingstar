@@ -35,9 +35,10 @@ fallback, not a stop an ordinary run makes.
   **Options**, **Credits** and the **Charter** link. The wordmark sits beside three
   large, tilted choices on desktop and two darker side doors — Jukebox and Charter —
   under them; all five share the same shape, and the side doors keep their darker
-  colour until hover. On phones the wordmark moves above them. Every door is a round
-  trip, and Escape (or a pad's B) goes back a step from every screen that has one. The
-  Charter door is not in `/arcade`.
+  colour until hover. On phones and portrait screens — including the vertical TV the
+  arcade runs on — the wordmark moves above them and the doors are sized to read from
+  across a room. Every door is a round trip, and Escape (or a pad's B) goes back a
+  step from every screen that has one. The Charter door is not in `/arcade`.
 - **Options** — the handful of things that belong to a player rather than to a song, kept
   in this browser (`src/lib/game/settings.ts`): **audio lag** (a stepper, ±300 ms in
   5 ms steps, with a **Calibrate** dialog that measures it from eight clicks and writes

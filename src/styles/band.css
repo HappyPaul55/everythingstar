@@ -2979,6 +2979,71 @@
       font-size: 0.66rem;
     }
   }
+  /* A portrait screen wider than a phone — a tablet, or the vertical TV the arcade
+     runs on — keeps the phone's stack rather than the desktop's two columns, but
+     is sized from the screen's short side so the doors read from across a room.
+     The composition is a poster: the wordmark above, the doors below. */
+  @media (orientation: portrait) and (min-width: 44.01rem) {
+    .menu-layout {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto auto;
+      justify-items: center;
+      align-content: center;
+      gap: clamp(1.5rem, 4.5vh, 3rem);
+      padding: clamp(1rem, 3vh, 2rem) 0.75rem;
+      transform: none;
+    }
+    .menu__branding {
+      align-items: center;
+      text-align: center;
+      gap: clamp(0.6rem, 1.6vmin, 1rem);
+    }
+    .menu__brand {
+      align-self: center;
+      font-size: clamp(3rem, 11vmin, 8rem);
+      line-height: 0.84;
+      text-align: center;
+      transform: none;
+    }
+    .menu__brand-star {
+      margin-top: 0.08em;
+    }
+    .menu__rule {
+      width: min(22rem, 46vw);
+      margin-top: clamp(0.8rem, 2.4vmin, 1.5rem);
+    }
+    .menu__tagline {
+      font-size: clamp(0.72rem, 1.3vmin, 0.95rem);
+      letter-spacing: 0.24em;
+      text-indent: 0.24em;
+    }
+    .menu__nav {
+      width: min(60rem, 82vw);
+    }
+    .menu {
+      gap: clamp(0.4rem, 1.1vh, 0.9rem);
+    }
+    .screen--menu .menu__item {
+      min-height: clamp(3.6rem, 9.5vmin, 6.4rem);
+      padding: 0.75rem clamp(1rem, 2.2vw, 1.6rem);
+      font-size: clamp(1.4rem, 3.4vmin, 2.6rem);
+      transform: perspective(1100px) rotateX(1deg);
+    }
+    .menu__index {
+      font-size: clamp(0.72rem, 1.3vmin, 0.95rem);
+    }
+    .menu__hint {
+      font-size: clamp(0.76rem, 1.5vmin, 1.05rem);
+    }
+    .menu__arrow {
+      font-size: clamp(1.2rem, 2.2vmin, 1.8rem);
+    }
+    .menu__disc,
+    .menu__pen {
+      width: clamp(1.4rem, 2.6vmin, 2.1rem);
+      height: clamp(1.4rem, 2.6vmin, 2.1rem);
+    }
+  }
   @media (max-height: 26rem) {
     .screen--welcome .screen__panel--title {
       min-height: min(60vh, 12rem);
