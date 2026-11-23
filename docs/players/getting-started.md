@@ -1,7 +1,7 @@
 ---
 title: Getting started
 description: "What EverythingStar is, how to open it, and how a visit goes: choose a song, build a band and play. No account and nothing to install."
-updated: "2026-11-03"
+updated: "2026-11-23"
 order: 1
 ---
 
@@ -32,10 +32,10 @@ Every visit follows the same path, and no step reloads the page:
 
 The **Jukebox** is a branch off the menu rather than a step in that run: it plays on its own and comes back when you leave.
 
-[The menu: Quick Play, Jukebox, Options and Credits, with the stage's backdrop behind them.](shot:menu)
+[The menu: Quick Play, Options and Credits, with the Jukebox and Charter doors below them and the stage's backdrop behind all of it.](shot:menu)
 
 - **Welcome** is the name and one button, **Enter the stage**.
-- **Menu** has three big doors — **Quick Play**, **Options** and **Credits** — and a smaller **Jukebox** door for listening; Escape, or a gamepad's B, goes back a step.
+- **Menu** has three big doors — **Quick Play**, **Options** and **Credits** — and two darker side doors of the same shape under them: **Jukebox** for listening and **Charter mode** for making charts; Escape, or a gamepad's B, goes back a step.
 - **Songs** is where Quick Play finds a song: the library under its letters, with a search, a now-playing panel and a preview of each row. [Songs and playlists](songs.md) covers it.
 - **Jukebox** is the listening mode: a shuffled song, its cover on a turning record and its timed words, with a queue of your own picks. [Jukebox](jukebox.md) covers it.
 - **Band** is who is playing: a box per player with what they take and how hard. Four boxes to begin with, and an empty band can choose **Listen**. [Instruments](instruments.md), [Typing](typing.md) and [Singing](singing.md) cover the ways to play.
