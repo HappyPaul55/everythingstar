@@ -1,6 +1,5 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { useT } from "../../../i18n/react";
-import type { CSSProperties } from "react";
 import type { LanePlayer } from "../../../lib/game/band/types";
 import type { HighwayView, NoteStyle } from "../../../lib/game/settings";
 import { INSTRUMENTS, chartFor } from "../../../lib/game/track";
