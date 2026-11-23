@@ -1,7 +1,7 @@
 ---
 title: Architecture
 description: "The loop, the screen machine and the one stage: how EverythingStar is laid out, what is mounted for every screen, and where the seams are."
-updated: "2026-11-03"
+updated: "2026-11-23"
 order: 1
 ---
 
@@ -32,10 +32,12 @@ fallback, not a stop an ordinary run makes.
   downloaded, on a suspended graph so nothing sounds early — the button reads
   **Loading…** and is disabled, so entering is not the thing that waits for the sound.
 - **Menu** — the board the welcome opens on to: **Quick Play** (Songs), **Jukebox**,
-  **Options** and **Credits**. The wordmark sits beside three large, tilted choices on
-  desktop and a smaller Jukebox door under them; on phones the wordmark moves above
-  them. Every door is a round trip, and Escape (or a pad's B) goes back a step from
-  every screen that has one.
+  **Options**, **Credits** and the **Charter** link. The wordmark sits beside three
+  large, tilted choices on desktop and two darker side doors — Jukebox and Charter —
+  under them; all five share the same shape, and the side doors keep their darker
+  colour until hover. On phones the wordmark moves above them. Every door is a round
+  trip, and Escape (or a pad's B) goes back a step from every screen that has one. The
+  Charter door is not in `/arcade`.
 - **Options** — the handful of things that belong to a player rather than to a song, kept
   in this browser (`src/lib/game/settings.ts`): **audio lag** (a stepper, ±300 ms in
   5 ms steps, with a **Calibrate** dialog that measures it from eight clicks and writes

@@ -11,7 +11,7 @@ The **Jukebox** is EverythingStar's listening mode. It is in the same game as Qu
 
 ## Opening it
 
-**Jukebox** is the smaller door under **Quick Play**, **Options** and **Credits** on the main menu. It starts with whatever the shuffle finds and keeps playing until you leave. Escape, or a gamepad's B, goes back to the menu.
+**Jukebox** is one of the two darker doors under **Quick Play**, **Options** and **Credits** on the main menu. It starts with whatever the shuffle finds and keeps playing until you leave. Escape, or a gamepad's B, goes back to the menu.
 
 ## The record and the words
 

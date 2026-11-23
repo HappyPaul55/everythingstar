@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { localePath } from "../../../i18n/paths";
 import { useLocale, useT } from "../../../i18n/react";
 
@@ -16,16 +17,17 @@ interface Props {
 }
 
 /**
- * The wordmark and the three big, tilted doors into the game, with a smaller
- * side door to the Jukebox under them.
+ * The wordmark and the three big, tilted doors into the game, with two darker
+ * side doors under them: the Jukebox and the Charter.
  *
  * The masthead is the poster's: a graffiti tag, the wordmark (its "Star" lit like
  * the welcome's), a strip of hazard tape and the strapline. The wordmark itself is
  * the door back to the welcome, and the three doors below are numbered the way the
  * landing page's sticker cards are, each saying in a line where it leads — so the
  * hub reads as three ways in rather than three identical yellow bars. The Jukebox
- * is the listening mode rather than a fourth way to play, so it sits lower and
- * quieter.
+ * is the listening mode and the Charter is a tool, not two more ways to play, so
+ * they sit under the three doors: all five share the doors' shape, tilt and hover,
+ * and only the side doors' resting colours say they are a different kind of place.
  */
 export function Menu({
   onQuickPlay,
@@ -38,6 +40,25 @@ export function Menu({
   const t = useT();
   const locale = useLocale();
 
+  const entryClass = (side: boolean, first = false) =>
+    side
+      ? `menu__entry menu__entry--side${first ? " menu__entry--side-first" : ""}`
+      : "menu__entry";
+
+  /** What every door says: its mark, its name over a line of where it leads, its arrow. */
+  const body = (lead: ReactNode, name: string, hint: string) => (
+    <>
+      {lead}
+      <span className="menu__text">
+        <span className="menu__name">{name}</span>
+        <span className="menu__hint">{hint}</span>
+      </span>
+      <span className="menu__arrow" aria-hidden="true">
+        →
+      </span>
+    </>
+  );
+
   const item = (
     id: string,
     index: string,
@@ -46,7 +67,7 @@ export function Menu({
     onPress: () => void,
     side = false,
   ) => (
-    <li className={side ? "menu__entry menu__entry--side" : "menu__entry"} key={id}>
+    <li className={entryClass(side, id === "jukebox")} key={id}>
       <button
         type="button"
         className={
@@ -59,20 +80,17 @@ export function Menu({
         data-nav-default={id === "quick-play" ? "true" : undefined}
         onClick={onPress}
       >
-        {side ? (
-          <span className="menu__disc" aria-hidden="true" />
-        ) : (
-          <span className="menu__index" aria-hidden="true">
-            {index}
-          </span>
+        {body(
+          side ? (
+            <span className="menu__disc" aria-hidden="true" />
+          ) : (
+            <span className="menu__index" aria-hidden="true">
+              {index}
+            </span>
+          ),
+          name,
+          hint,
         )}
-        <span className="menu__text">
-          <span className="menu__name">{name}</span>
-          <span className="menu__hint">{hint}</span>
-        </span>
-        <span className="menu__arrow" aria-hidden="true">
-          →
-        </span>
       </button>
     </li>
   );
@@ -124,12 +142,30 @@ export function Menu({
               onJukebox,
               true,
             )}
+            {arcade ? null : (
+              <li className={entryClass(true)} key="charter">
+                <a
+                  className="band-btn band-btn--big menu__item menu__item--side"
+                  href={localePath(locale, "/charter")}
+                  data-sound="open"
+                  data-nav-id="charter"
+                >
+                  {body(
+                    <svg
+                      className="menu__pen"
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
+                    </svg>,
+                    t("charter.menu"),
+                    t("charter.menuHint"),
+                  )}
+                </a>
+              </li>
+            )}
           </ul>
-          {arcade ? null : (
-            <a className="menu__charter" href={localePath(locale, "/charter")}>
-              {t("charter.menu")}
-            </a>
-          )}
         </nav>
       </div>
     </div>

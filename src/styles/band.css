@@ -2837,22 +2837,6 @@
   .menu__nav {
     perspective: 1000px;
   }
-  /* A quiet tool beside the three doors: the charter is where charts are made,
-     not a fourth way to play. */
-  .menu__charter {
-    display: inline-block;
-    margin-top: clamp(0.7rem, 2vmin, 1.1rem);
-    color: rgba(250, 250, 244, 0.62);
-    font-family: var(--font-mono);
-    font-size: clamp(0.56rem, 1.2vmin, 0.68rem);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    text-decoration: none;
-  }
-  .menu__charter:hover,
-  .menu__charter:focus-visible {
-    color: var(--color-yellow);
-  }
   .menu {
     display: flex;
     flex-direction: column;
@@ -5720,30 +5704,26 @@
     background: var(--color-yellow);
   }
 
-  /* --- The menu's side door: the Jukebox ---
-     A listening mode is not a fourth way to play, so it sits under the three
-     doors as one smaller, quieter control: a record, its name and a line of what
-     it does. The disc turns when the row is hovered or focused, which is the one
-     piece of motion the menu's side door needs. */
-  .menu__entry--side {
+  /* --- The menu's side doors: the Jukebox and the Charter ---
+     Two things that are not ways to play sit under the three doors: the listening
+     mode and the chart tool. They share the doors' shape, size and tilt, and only
+     their colours say they are a different kind of place. On hover or focus they
+     take the same cream as the primary doors. */
+  .menu__entry--side-first {
     margin-top: clamp(0.15rem, 0.8vmin, 0.45rem);
   }
   .screen--menu .menu__item--side {
-    min-height: clamp(3rem, 6.4vmin, 3.8rem);
-    padding: 0.5rem 0.8rem;
     color: var(--color-cream);
+    text-decoration: none;
     background: rgba(12, 13, 10, 0.58);
     border: 1px solid rgba(250, 250, 244, 0.22);
-    font-size: clamp(0.9rem, 1.5vw, 1.1rem);
-    transform: perspective(900px) rotateY(-7deg) rotateX(1deg);
   }
   .screen--menu .menu__item--side:hover,
   :root:not([data-game-input="pointer"]) .screen--menu .menu__item--side:focus-visible,
   .screen--menu .menu__item--side[data-nav-focus] {
-    border-color: var(--color-yellow);
-    background: rgba(255, 212, 0, 0.12);
-    box-shadow: 0.3rem 0.3rem 0 0 var(--color-yellow);
-    translate: -0.12rem -0.12rem;
+    color: var(--color-ink);
+    background: var(--color-cream);
+    border-color: var(--color-cream);
   }
   .menu__item--side .menu__name {
     color: var(--color-cream);
@@ -5753,6 +5733,33 @@
   }
   .menu__item--side .menu__arrow {
     color: var(--color-yellow);
+  }
+  .menu__item--side:hover .menu__name,
+  :root:not([data-game-input="pointer"]) .menu__item--side:focus-visible .menu__name,
+  .menu__item--side[data-nav-focus] .menu__name {
+    color: var(--color-ink);
+  }
+  .menu__item--side:hover .menu__hint,
+  :root:not([data-game-input="pointer"]) .menu__item--side:focus-visible .menu__hint,
+  .menu__item--side[data-nav-focus] .menu__hint {
+    color: rgba(12, 13, 10, 0.68);
+  }
+  .menu__item--side:hover .menu__arrow,
+  :root:not([data-game-input="pointer"]) .menu__item--side:focus-visible .menu__arrow,
+  .menu__item--side[data-nav-focus] .menu__arrow {
+    color: rgba(12, 13, 10, 0.7);
+  }
+  .menu__pen {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex: none;
+    fill: currentColor;
+    color: var(--color-yellow);
+  }
+  .menu__item--side:hover .menu__pen,
+  :root:not([data-game-input="pointer"]) .menu__item--side:focus-visible .menu__pen,
+  .menu__item--side[data-nav-focus] .menu__pen {
+    color: var(--color-ink);
   }
   .menu__disc {
     width: 1.25rem;
@@ -5778,6 +5785,7 @@
   :root:not([data-game-input="pointer"]) .menu__item--side:focus-visible .menu__disc,
   .menu__item--side[data-nav-focus] .menu__disc {
     animation: jukebox-spin 3.2s linear infinite;
+    border-color: rgba(12, 13, 10, 0.5);
   }
 
   /* --- The Jukebox ---

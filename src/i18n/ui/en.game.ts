@@ -349,6 +349,7 @@ export const enGame = {
   "song.vocals": "vocals",
   "song.lyrics": "lyrics",
   "charter.menu": "Charter mode",
+  "charter.menuHint": "Open the chart editor",
   "screen.bandTitle": "Who is playing?",
   "screen.bandLede": "“{title}” by {artist}. A slot each — what they play, and how hard.",
   "screen.playersLabel": "Players",

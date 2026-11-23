@@ -1,7 +1,7 @@
 ---
 title: Project map
 description: "Where everything lives: every module, what it owns, and the seam it sits behind — the file-by-file map of the game, the site and the scripts."
-updated: "2026-11-03"
+updated: "2026-11-23"
 order: 2
 ---
 
@@ -282,8 +282,9 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   engines: `fillMeter`/`missMeter`/`drainMeter`, so a band cannot read two meters that
   fill or drain differently.
 - `src/components/game/screens/**` — the screens: `Welcome`, `Menu` (Quick Play,
-  Jukebox, Options, Credits), `Options` (audio lag, picture lag and their measured
-  calibrations, the master volume and the music/ambience/sfx family levels, guide
+  Jukebox, Options, Credits and the Charter door), `Options` (audio lag, picture lag
+  and their measured calibrations, the master volume and the music/ambience/sfx
+  family levels, guide
   vocal, pause crowd, note
   speed, backdrop, backdrop dim, drifting lights, tap style, note view, note style,
   player setup)
