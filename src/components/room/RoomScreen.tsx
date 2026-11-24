@@ -58,12 +58,17 @@ export function RoomScreen({ session }: { session: GameSession }) {
         : songHasPart({ offer: song.offer }, slot.kind, slot.role);
     if (offered) return;
     const choice = nextSlot(song, you.seat);
-    room.setSlot({
+    const next = {
       kind: choice.kind,
       difficulty: choice.difficulty,
       ...(choice.role ? { role: choice.role } : {}),
       ...(choice.wordsMode ? { wordsMode: choice.wordsMode } : {}),
-    });
+    };
+    const playable =
+      next.kind === "words"
+        ? Boolean(song.offer.voice)
+        : songHasPart({ offer: song.offer }, next.kind, next.role);
+    if (playable) room.setSlot(next);
   }, [room, song, you]);
   const playing = members.filter((member) => member.seat !== null && member.slot);
   const allReady = remote.every((member) => member.ready && member.connected);

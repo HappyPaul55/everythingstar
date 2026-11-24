@@ -287,14 +287,22 @@ function JoinLobby({
         ? Boolean(song.offer.voice)
         : songHasPart({ offer: song.offer }, slot.kind, slot.role);
     if (offered) return;
-    const choice = nextSlot(song, seat);
-    room.setSlot(slotFromChoice(choice));
+    const next = slotFromChoice(nextSlot(song, seat));
+    const playable =
+      next.kind === "words"
+        ? Boolean(song.offer.voice)
+        : songHasPart({ offer: song.offer }, next.kind, next.role);
+    if (playable) room.setSlot(next);
   }, [room, song, seat, slot]);
 
   useEffect(() => {
     if (!song || seat === null || slot) return;
-    const choice = nextSlot(song, seat);
-    room.setSlot(slotFromChoice(choice));
+    const next = slotFromChoice(nextSlot(song, seat));
+    const playable =
+      next.kind === "words"
+        ? Boolean(song.offer.voice)
+        : songHasPart({ offer: song.offer }, next.kind, next.role);
+    if (playable) room.setSlot(next);
   }, [room, song, seat, slot]);
 
   const ready = room.ready && Boolean(room.chart);
