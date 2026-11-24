@@ -1,7 +1,7 @@
 ---
 title: Architecture
 description: "The loop, the screen machine and the one stage: how EverythingStar is laid out, what is mounted for every screen, and where the seams are."
-updated: "2026-11-23"
+updated: "2026-11-24"
 order: 1
 ---
 
@@ -119,9 +119,10 @@ fallback, not a stop an ordinary run makes.
   field and the Playlists button share the row. Difficulty is deliberately *not* a song's
   chip: it
   belongs to whoever is playing, so a song can be a gentle strum and a hard line to
-  sing, and each slot on the band screen chooses its own. The list and the
-  **now-playing** column share one height on a wide screen, with the list scrolling
-  inside it and the way on to the band below the now-playing surface.
+  sing, and each slot on the band screen chooses its own. On a wide screen the
+  list scrolls the height of the page, while the **now-playing** column keeps its
+  surface to its own contents and pins the way on to the band at the bottom; on a
+  phone the panel opens over the list.
 - **Playlists** (a button in Songs' corner, opening a native dialog) - where
   the songs come from: each playlist with its song count, when it was last read,
   anything it could not be read for, and what a reader can do about it - **Refresh**
