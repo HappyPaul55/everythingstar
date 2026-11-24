@@ -75,6 +75,12 @@ export interface StageClock {
   seekSerialRef: RefObject<number>;
   /** Run `fn` on every frame. Returns an unsubscribe. */
   subscribe: (fn: () => void) => () => void;
+  /**
+   * Move the playhead to follow a **room's** playhead without treating it as a
+   * deliberate seek. A pause/resume correction must not reset every run's combo;
+   * a host restart or a practice seek still uses `seek`, which bumps the serial.
+   */
+  syncTo: (timeMs: number) => void;
   /** The transport's speed: 0.5–1.0. The audio paths apply it to their own media. */
   rate: number;
   /** Slow the fallback frame clock down (or bring it back to the record). */
@@ -343,6 +349,12 @@ export function StageClockProvider({ durationMs, children }: ProviderProps) {
         ),
       fpsRef,
       seekSerialRef,
+      syncTo: (timeMs) => {
+        timeRef.current = clampPlayhead(timeMs, durationMs);
+        seekedAtRef.current = performance.now();
+        sampledAtRef.current = performance.now();
+        if (!playheadEnded(timeRef.current, durationMs)) setEnded(false);
+      },
       subscribe: (fn) => {
         subscribers.current.add(fn);
         return () => {

@@ -15,6 +15,9 @@ import { GamepadNav } from "./ui/GamepadNav";
 import { ScreenFocus } from "./ui/ScreenFocus";
 import { GameProviders } from "./GameProviders";
 import { useGameSession } from "./useGameSession";
+import { HostRoomBridge } from "../room/HostRoomBridge";
+import { RoomProvider } from "../room/useHostRoom";
+import { RoomRoster } from "../room/RoomRoster";
 import {
   ScreenPage,
   StageOverlay,
@@ -125,6 +128,7 @@ function GameApp({ credits, attract = false }: Props) {
   });
 
   return (
+    <RoomProvider session={session}>
     <div className="band" ref={session.bandRef}>
       {/* The room the menus sit in: the game's own artwork. A run paints the song's
           own back over the top of it, so this is what "no song" looks like. */}
@@ -161,7 +165,11 @@ function GameApp({ credits, attract = false }: Props) {
         onVolume={(level) => session.changeSettings({ volume: level })}
         levels={session.settings.levels}
         crowd={session.settings.crowd}
-        setup={session.playback.setup}
+        setup={
+          session.screen === "jukebox"
+            ? session.playback.setup
+            : session.stageSetup
+        }
         track={session.playback.track}
         seed={session.playback.song?.seed ?? 0}
         doc={session.playback.doc}
@@ -176,6 +184,7 @@ function GameApp({ credits, attract = false }: Props) {
           onPracticeStarted={session.practiceStarted}
           onPracticeEnd={session.pauseRun}
         />
+        <HostRoomBridge session={session} />
         {/* The pad as a menu cursor, on the same frame loop as the transport. It is
             inert while a song is moving; Start is the one exception, because
             pausing must not need a mouse. */}
@@ -204,7 +213,7 @@ function GameApp({ credits, attract = false }: Props) {
             run intact across the change. */}
         {session.stage ? (
           <BandStage
-            setup={session.setup}
+            setup={session.stageSetup}
             media={session.playback.media}
             view={session.settings.view}
             noteStyle={session.settings.noteStyle}
@@ -217,6 +226,7 @@ function GameApp({ credits, attract = false }: Props) {
             practice={session.practice}
           >
             <StageOverlay session={session} />
+            <RoomRoster />
           </BandStage>
         ) : null}
 
@@ -278,6 +288,7 @@ function GameApp({ credits, attract = false }: Props) {
         ) : null}
       </GameProviders>
     </div>
+    </RoomProvider>
   );
 }
 

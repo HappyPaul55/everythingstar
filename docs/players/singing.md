@@ -1,7 +1,7 @@
 ---
 title: Singing
 description: "Singing in EverythingStar: the microphone, the guide vocal, how notes are judged, duets and what is never recorded."
-updated: "2026-10-31"
+updated: "2026-11-24"
 order: 6
 ---
 
@@ -55,7 +55,7 @@ The microphone listens only while the song is moving. A pause stops judging and 
 
 ## Nothing is recorded
 
-The microphone's samples are analysed in the page by the pitch detector and then dropped. Nothing is recorded, stored or sent anywhere — not to this site, and not to anybody else. The game has no server, no account and no analytics.
+The microphone's samples are analysed in the page by the pitch detector and then dropped. Solo, nothing is recorded, stored or sent anywhere — not to this site, and not to anybody else. In a **Play together** room, the singer's device sends the host small derived pitch samples and note verdicts, never audio. The game has no accounts and no analytics.
 
 The full statement, including what the browser's own storage holds, is in the [privacy notice](https://everythingstar.happypaul55.com/privacy).
 

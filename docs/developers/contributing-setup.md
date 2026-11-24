@@ -12,6 +12,7 @@ Use **[Bun](https://bun.sh)** for everything — `bun` and `bunx`, never `npm` o
 ```bash
 bun install
 bun run dev              # http://localhost:4321; the game is /play
+bun run dev:rooms        # the optional room relay on :8788
 ```
 
 ## The gate

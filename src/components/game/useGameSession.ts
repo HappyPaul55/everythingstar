@@ -172,6 +172,14 @@ export interface GameSession {
   setWantedId: Dispatch<SetStateAction<string>>;
   plan: BandPlan;
   changePlan: (next: BandPlan) => void;
+  /**
+   * Replace the band for a room without writing it down. A room is not the
+   * player's remembered solo band: when it ends, the next Quick Play should be
+   * the band they had before they hosted.
+   */
+  setPlan: (next: BandPlan) => void;
+  /** Put the browser's remembered band back after a room's band has been used. */
+  restorePlan: () => void;
   /** How many lane players take a keyboard; the rest are played by the machine. */
   humans: number;
   setHumans: Dispatch<SetStateAction<number>>;
@@ -209,6 +217,8 @@ export interface GameSession {
   song: Song | null;
   sounds: Sounds;
   setup: BandSetup;
+  /** The players this device actually judges: `setup` without the room's remote seats. */
+  stageSetup: BandSetup;
   seats: Seat[];
   load: SongLoad;
   track: Track;
@@ -616,6 +626,21 @@ export function useGameSession(attract: AttractSession | null = null): GameSessi
     [attractActive],
   );
   /**
+   * A room's band, held for the room and never saved. The host's remembered solo
+   * band comes back when the room closes.
+   */
+  const setRoomPlan = useCallback(
+    (next: BandPlan) => {
+      if (attractActive) return;
+      setPlan(next);
+    },
+    [attractActive],
+  );
+  const restorePlan = useCallback(() => {
+    if (attractActive) return;
+    setPlan(loadPlan());
+  }, [attractActive]);
+  /**
    * Begin a practice run. The plan is clamped against the loaded track rather
    * than trusted from the dialog, and the stage's entrance is the run's count-in —
    * the same one every run gets.
@@ -726,6 +751,14 @@ export function useGameSession(attract: AttractSession | null = null): GameSessi
     return () => document.removeEventListener("visibilitychange", onVisibility);
   }, [screen, dispatch]);
 
+  // The host judges only its own seats. A remote player's chart is fetched (the
+  // host sends it and the results need its totals), but its highway is not run
+  // here: its own device does that and reports the numbers.
+  const stageSetup: BandSetup = useMemo(
+    () => ({ players: setup.players.filter((player) => !player.remote) }),
+    [setup],
+  );
+
   const stage = onStage(screen);
   // A song's own video paints the whole room. The drifting lights are the game's
   // own, and over footage they read as smudges on somebody's film — so they are set
@@ -749,6 +782,8 @@ export function useGameSession(attract: AttractSession | null = null): GameSessi
     setWantedId,
     plan: activePlan,
     changePlan,
+    setPlan: setRoomPlan,
+    restorePlan,
     humans,
     setHumans,
     board,
@@ -772,6 +807,7 @@ export function useGameSession(attract: AttractSession | null = null): GameSessi
     song,
     sounds,
     setup,
+    stageSetup,
     seats,
     load,
     track,

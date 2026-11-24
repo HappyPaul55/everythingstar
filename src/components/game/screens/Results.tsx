@@ -77,6 +77,8 @@ interface Props {
    * and would greet the next player as something they have to beat.
    */
   save?: boolean;
+  /** A room waits for the phones' final reports before writing the board down. */
+  saveDelayMs?: number;
 }
 
 export function Results({
@@ -87,6 +89,7 @@ export function Results({
   onReplay,
   onMenu,
   save = true,
+  saveDelayMs = 0,
 }: Props) {
   const t = useT();
   const board = useRunBoard();
@@ -204,45 +207,53 @@ export function Results({
   // line under the totals can say the band lost it.
   useEffect(() => {
     if (recorded.current) return;
-    recorded.current = true;
     // The demo's numbers are a read-out, not a score. There is no verdict either:
     // "new best" is a claim about a board this run did not join.
     if (!save) {
+      recorded.current = true;
       setVerdict(null);
       return;
     }
-    const previous = bestFor(saved, song.id, lineup);
-    if (!shouldSaveRun({ runs: runs.length, failed, judged, score })) {
-      // A lost run still gets its verdict. A stage that judged nothing gets none:
-      // there was no run to be better or worse than the song's best.
-      if (failed) setVerdict({ best: previous, newBest: false });
-      return;
+    const record = () => {
+      recorded.current = true;
+      const previous = bestFor(saved, song.id, lineup);
+      if (!shouldSaveRun({ runs: runs.length, failed, judged, score })) {
+        // A lost run still gets its verdict. A stage that judged nothing gets none:
+        // there was no run to be better or worse than the song's best.
+        if (failed) setVerdict({ best: previous, newBest: false });
+        return;
+      }
+      onSaved(
+        saveRun({
+          song: song.id,
+          title: song.title,
+          failed: false,
+          score,
+          bestCombo,
+          hits,
+          misses,
+          baseScore,
+          stars: rating.stars,
+          gold: rating.gold,
+          average: rating.average,
+          lineup,
+          players: runs.map((run) => ({
+            label: run.label,
+            score: run.score,
+            difficulty: run.difficulty,
+          })),
+          at: Date.now(),
+        }),
+      );
+      // A saved run is never a zero, so a first run is a best and a later one has
+      // something to beat.
+      setVerdict({ best: previous, newBest: previous === null || score > previous });
+    };
+    if (saveDelayMs > 0) {
+      const timer = window.setTimeout(record, saveDelayMs);
+      return () => window.clearTimeout(timer);
     }
-    onSaved(
-      saveRun({
-        song: song.id,
-        title: song.title,
-        failed: false,
-        score,
-        bestCombo,
-        hits,
-        misses,
-        baseScore,
-        stars: rating.stars,
-        gold: rating.gold,
-        average: rating.average,
-        lineup,
-        players: runs.map((run) => ({
-          label: run.label,
-          score: run.score,
-          difficulty: run.difficulty,
-        })),
-        at: Date.now(),
-      }),
-    );
-    // A saved run is never a zero, so a first run is a best and a later one has
-    // something to beat.
-    setVerdict({ best: previous, newBest: previous === null || score > previous });
+    record();
   }, [
     song.id,
     song.title,
@@ -261,6 +272,7 @@ export function Results({
     saved,
     onSaved,
     save,
+    saveDelayMs,
   ]);
 
   // The history stays the song's own, across lineups: a run is still a run. Its rows

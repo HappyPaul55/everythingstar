@@ -1,7 +1,7 @@
 ---
 title: What is built, and where it stops
 description: "The honest state of EverythingStar: every mode that works end to end, the parts that are deliberately out of scope, and what a next version would take on."
-updated: "2026-11-03"
+updated: "2026-11-24"
 order: 20
 ---
 
@@ -20,6 +20,13 @@ A status page ages; `updated` at the foot of this page is when it was last true.
   is only the listener's picks and the shuffle fills the gaps. Changing a song keeps
   the current one playing until the next is ready, a prefetched next song shortens the
   gap, a YouTube-backed song plays audio-only, and leaving saves the position.
+- **Play together**: a host's room on a laptop, TV or the arcade, with phones joining as
+  extra guitars, drums, singers or typists. The host keeps the song, the speakers and
+  the scores; a guest receives **only its seat's chart**, judges on its own device and
+  reports its numbers. The room relay carries membership, charts, the host's playhead
+  and scores, never audio. `Listen together` is the shared Jukebox queue. It is a
+  **same-room** design: the host's speakers are the music. The full contract is
+  [Networking](networking.md).
 - **The library**: songs come from **playlists** — JSON files at URLs, seeded once
   with **EverythingStar FOSS** and added by the player — read as the three documents a
   real library will
@@ -328,7 +335,7 @@ What is built in each area, and the boundaries that are deliberate rather than g
 - **The notes are the same on a phone.** The pads are tapped instead of strummed, so
   nothing has to be plugged in; the kick and the fills are on the same highway.
 
-**The band and its controllers — and what is a separate project**
+**The band, its controllers and its rooms**
 
 - **A strum bar that reports as an axis is learnable**, and a **MIDI control change**
   is mapped like a note, so a hi-hat pedal is a real control. Clock, aftertouch and
@@ -336,14 +343,15 @@ What is built in each area, and the boundaries that are deliberate rather than g
   control by control in the gear, like a plastic guitar. Access is only asked for at
   the gear or a learn press, so a remembered MIDI seat is reconnected by pressing
   **MIDI** in its gear on a later visit.
-- **The phone as a controller is a separate networked project.** It needs a signalling
-  room and a host; this repository is static files only. The settled plan is same-room,
-  host on the PC, a Durable Object room for WebRTC (or a plain WebSocket first), QR
-  pairing, a min-RTT clock offset, pitch *samples* rather than audio, and no typing on a
-  phone.
-- **No accounts and no server, by design.** The band, the scores and the added playlists
-  are this browser's only. A leaderboard is a later project against the same saved-run
-  shape, not a missing feature of this client.
+- **The phone as a controller is built as Play together.** It is same-room, host on a
+  browser, a Durable Object room (and a Bun server for self-hosting), a min-RTT clock
+  offset, charts rather than song files, and pitch *samples* rather than audio. A phone
+  can type only with a physical keyboard; instruments and singing are its own ways to
+  play.
+- **No accounts, and no server for solo play.** The band, the scores and the added
+  playlists are this browser's only. The optional room relay is ephemeral and carries no
+  audio. A leaderboard is a later project against the same saved-run shape, not a missing
+  feature of this client.
 
 **The run and its results**
 
@@ -393,5 +401,6 @@ The game itself is complete, and every cue the game plays has a file. What remai
    change, replacing the borrowed guitar/drum cue.
 2. **Host the imported collection** so the songs the importer already reads are served
    with audio and CORS — that is a provider, reached through Playlists, not this repo.
-3. **A phone controller and a leaderboard**, each a separate networked project; the
-   client's saved-run shape and playlist contract are already the seam they plug into.
+3. **A leaderboard**, a separate networked project; the client's saved-run shape and
+   playlist contract are already the seam it plugs into. Play together's same-room room
+   is deliberate: remote play would need each device to have the song (or host streaming).

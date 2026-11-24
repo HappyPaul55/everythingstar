@@ -19,6 +19,7 @@ export const PAGE_FILES = [
   "embed.html",
   "play.html",
   "open.html",
+  "join.html",
   "index.html",
   "privacy.html",
   "terms.html",

@@ -51,6 +51,8 @@ interface Props {
   perfect: boolean;
   /** Whether the visit has a mixer at all (the homepage preview does not). */
   audio: boolean;
+  /** A guest phone: echo cancellation for the host's speakers. */
+  room?: boolean;
   children: ReactNode;
 }
 
@@ -67,6 +69,7 @@ export function GameProviders({
   doc,
   perfect,
   audio,
+  room = false,
   children,
 }: Props) {
   // One watcher for the whole island: the menu and the transport both ask whether
@@ -91,7 +94,7 @@ export function GameProviders({
           preload={screen === "band" || screen === "loading" || screen === "jukebox"}
         >
           <StageClockProvider durationMs={track.durationMs}>
-            <StageControlsProvider setup={setup} track={track} screen={screen}>
+            <StageControlsProvider setup={setup} track={track} screen={screen} room={room}>
               <SongProvider track={track} seed={seed} doc={doc}>
                 <RunBoardProvider>
                   <PartAudioProvider>{children}</PartAudioProvider>

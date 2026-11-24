@@ -9,6 +9,8 @@ import { Menu } from "./Menu";
 import { Options } from "./Options";
 import { PauseMenu } from "./PauseMenu";
 import { Results } from "./Results";
+import { RoomScreen } from "../../room/RoomScreen";
+import { useRoomOptional } from "../../room/useHostRoom";
 import { Songs } from "./Songs";
 import { Welcome } from "./Welcome";
 
@@ -66,6 +68,7 @@ const PAGES: Record<PageScreen, PageView> = {
     <Menu
       onQuickPlay={() => session.dispatch("enter")}
       onJukebox={() => session.dispatch("jukebox")}
+      onPlayTogether={() => session.dispatch("room")}
       onOptions={() => session.dispatch("options")}
       onCredits={() => session.dispatch("credits")}
       onBack={() => session.dispatch("back")}
@@ -102,6 +105,7 @@ const PAGES: Record<PageScreen, PageView> = {
     />
   ),
   jukebox: (session) => <Jukebox session={session} />,
+  room: (session) => <RoomScreen session={session} />,
   band: (session) =>
     session.song ? (
       <Band
@@ -124,19 +128,25 @@ const PAGES: Record<PageScreen, PageView> = {
       onLoaded={() => session.dispatch("loaded")}
     />
   ),
-  results: (session) =>
-    session.song ? (
-      <Results
-        song={session.song}
-        setup={session.setup}
-        saved={session.board}
-        onSaved={session.setBoard}
-        onReplay={() => session.dispatch("replay")}
-        onMenu={() => session.dispatch("quit")}
-        save={!session.attract}
-      />
-    ) : null,
+  results: (session) => <ResultsPage session={session} />,
 };
+
+function ResultsPage({ session }: { session: GameSession }) {
+  const room = useRoomOptional();
+  if (!session.song) return null;
+  return (
+    <Results
+      song={session.song}
+      setup={session.setup}
+      saved={session.board}
+      onSaved={session.setBoard}
+      onReplay={() => session.dispatch("replay")}
+      onMenu={() => session.dispatch("quit")}
+      save={!session.attract}
+      saveDelayMs={room?.active && room.mode === "play" ? 1500 : 0}
+    />
+  );
+}
 
 /**
  * The overlay that sits **inside** `BandStage`: the pause. The countdown screen has

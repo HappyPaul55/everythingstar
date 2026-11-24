@@ -1,0 +1,32 @@
+{
+  // The room relay is a separate deployable from the static site. The site's
+  // `wrangler.jsonc` deliberately stays static: if the relay is down, solo play
+  // and the site are untouched.
+  "$schema": "https://unpkg.com/wrangler@4/config-schema.json",
+  "name": "everythingstar-rooms",
+  "main": "./server/worker.ts",
+  "compatibility_date": "2026-10-14",
+  "workers_dev": false,
+  "preview_urls": false,
+  // Same origin as the public site: a Cloudflare route takes precedence over
+  // the static-assets Worker for `/api/*`, so the client needs no second host
+  // and the CSP can keep `connect-src 'self'`. A custom domain is an ordinary
+  // alternative; the client derives the endpoint from the page's origin either
+  // way.
+  "routes": [
+    {
+      "pattern": "everythingstar.happypaul55.com/api/*",
+      "zone_name": "happypaul55.com"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [{ "name": "ROOMS", "class_name": "RoomDurableObject" }]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["RoomDurableObject"]
+    }
+  ],
+  "observability": { "enabled": true }
+}

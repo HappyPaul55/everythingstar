@@ -9,6 +9,8 @@ import { JukeboxLyrics } from "../jukebox/JukeboxLyrics";
 import { JukeboxTransport } from "../jukebox/JukeboxTransport";
 import { Vinyl } from "../jukebox/Vinyl";
 import type { GameSession } from "../useGameSession";
+import { RoomListenPanel } from "../../room/RoomListenPanel";
+import { useRoom } from "../../room/useHostRoom";
 import { ScreenBackButton } from "./ScreenBackButton";
 
 /**
@@ -42,6 +44,7 @@ interface Props {
 export function Jukebox({ session }: Props) {
   const t = useT();
   const { jukebox, playback, library } = session;
+  const room = useRoom();
   const clock = useClock();
   const [picker, setPicker] = useState<null | "songs" | "queue">(null);
   const lost = clock.sourceLost;
@@ -80,6 +83,7 @@ export function Jukebox({ session }: Props) {
 
   const back = () => {
     jukebox.savePosition(clock.timeRef.current);
+    if (room.active && room.mode === "listen") room.close();
     session.dispatch("back");
   };
 
@@ -116,6 +120,8 @@ export function Jukebox({ session }: Props) {
             </button>
           </div>
         </div>
+
+        <RoomListenPanel session={session} />
 
         {reading ? (
           <p className="jukebox__empty">{t("screen.libraryLoading")}</p>

@@ -32,6 +32,7 @@ export type Screen =
   | "credits"
   | "songs"
   | "jukebox"
+  | "room"
   | "band"
   | "loading"
   | "countdown"
@@ -50,6 +51,7 @@ export const SCREENS: Screen[] = [
   "credits",
   "songs",
   "jukebox",
+  "room",
   "band",
   "loading",
   "countdown",
@@ -64,6 +66,7 @@ export type ScreenEvent =
   | "options" // the menu's settings branch
   | "credits" // and its thanks branch
   | "jukebox" // the menu's listening branch
+  | "room" // the menu's networked-session branch
   | "open" // a song was chosen; on to the band
   | "songs" // the Jukebox's way to Songs when the library has nothing to play
   | "play" // the band is ready
@@ -84,6 +87,7 @@ const TRANSITIONS: Record<Screen, Partial<Record<ScreenEvent, Screen>>> = {
   menu: {
     enter: "songs",
     jukebox: "jukebox",
+    room: "room",
     options: "options",
     credits: "credits",
     back: "welcome",
@@ -92,6 +96,7 @@ const TRANSITIONS: Record<Screen, Partial<Record<ScreenEvent, Screen>>> = {
   credits: { back: "menu" },
   songs: { open: "band", back: "menu" },
   jukebox: { back: "menu", songs: "songs" },
+  room: { back: "menu", start: "countdown", jukebox: "jukebox" },
   band: { play: "loading", start: "countdown", back: "songs", quit: "songs" },
   loading: { loaded: "countdown", quit: "songs" },
   countdown: { go: "playing", quit: "songs" },
@@ -121,6 +126,7 @@ export function backEventFor(screen: Screen): ScreenEvent | null {
     case "credits":
     case "songs":
     case "jukebox":
+    case "room":
     case "band":
       return "back";
     case "loading":
@@ -191,7 +197,10 @@ export function isRunScreen(screen: Screen): boolean {
 export function opensRun(screen: Screen, previous: Screen | null): boolean {
   return (
     screen === "countdown" &&
-    (previous === "band" || previous === "loading" || previous === "results")
+    (previous === "band" ||
+      previous === "room" ||
+      previous === "loading" ||
+      previous === "results")
   );
 }
 
@@ -209,7 +218,12 @@ export function opensRun(screen: Screen, previous: Screen | null): boolean {
  * would arrive after the run had already started.
  */
 export function wantsCharts(screen: Screen): boolean {
-  return screen === "band" || screen === "results" || isRunScreen(screen);
+  return (
+    screen === "band" ||
+    screen === "room" ||
+    screen === "results" ||
+    isRunScreen(screen)
+  );
 }
 
 /**

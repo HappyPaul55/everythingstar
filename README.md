@@ -34,7 +34,9 @@ offline play.
   microphone, and hit markers that are controls so a phone can play. A mapping can be
   learned control by control, which is the only way a plastic guitar or a non-standard
   kit gets set up.
-- **It runs on static files.** No server, no API, no accounts, no analytics. The band,
+- **It runs on static files.** No accounts, no analytics, and solo play needs no server.
+  **Play together** is an optional room relay: a host's speakers are the music, phones
+  join as extra players, and the relay carries charts and scores, never audio. The band,
   the settings and the scores stay in the browser; a song's audio is streamed from
   wherever its playlist says it is.
 
@@ -52,16 +54,16 @@ GitHub and by the site. Four audiences:
 
 | Section | Read it on the site | Start with |
 | --- | --- | --- |
-| **Players** | <https://everythingstar.happypaul55.com/docs/players/getting-started> | songs, instruments, typing, singing, controllers, phones, practice, options |
+| **Players** | <https://everythingstar.happypaul55.com/docs/players/getting-started> | songs, instruments, typing, singing, controllers, phones, playing together, practice, options |
 | **Charters** | <https://everythingstar.happypaul55.com/docs/charters/what-a-chart-is> | the track format, chart formats, folder layout, audio stems, libraries, publishing |
 | **Developers** | <https://everythingstar.happypaul55.com/docs/developers/architecture> | architecture, project map, gotchas, audio, playlist API, testing, deployment, contributing |
 | **Other** | <https://everythingstar.happypaul55.com/privacy> | privacy, terms, copyright and takedown, credits, accessibility |
 
 The full state of the game — what is built, what is deliberately out of scope and what a
 next version would take on — is [What is built, and where it stops](docs/developers/status.md).
-It is honest about the boundaries: there is no leaderboard and no server, the band, the
-settings and the scores are this browser's, and a phone as a controller is a separate
-networked project.
+It is honest about the boundaries: there is no leaderboard, the band, settings and scores
+are this browser's, and **Play together** is a same-room room whose phones are controllers,
+not remote players. The room relay is a small optional service; it never carries audio.
 
 ## Quick start
 
@@ -70,6 +72,9 @@ Use **[Bun](https://bun.sh)** for everything — `bun` and `bunx`, never `npm` o
 ```bash
 bun install
 bun run dev              # http://localhost:4321 — the game is /play
+bun run dev:rooms        # the room relay on :8788, beside the dev server
+bun run build            # the static build and its documentation captures
+bun run serve            # the built site and the room relay on one origin
 bun run verify           # lint, knip, types, tests, build, guide PDF, PWA, docs, budget, archives
 bun run test:e2e         # browser tests (starts its own dev server)
 ```

@@ -28,7 +28,7 @@
 
 ## The static rule
 
-- [ ] No server, API, Worker, binding or new `fetch` path — providers live in their own project
+- [ ] No new server, API, Worker, binding or `fetch` path — providers live in their own project. The room relay (`server/`, `wrangler.rooms.jsonc`) is the documented exception
 - [ ] No new runtime dependency, or a reason it earns its bytes
 
 ## Docs

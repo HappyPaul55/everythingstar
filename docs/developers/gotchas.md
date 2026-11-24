@@ -1,7 +1,7 @@
 ---
 title: Gotchas
 description: "The traps that no test or owning page catches: the clock, judging, the highway, input, the library's failure modes and the few parser edges."
-updated: "2026-11-03"
+updated: "2026-11-24"
 order: 3
 ---
 
@@ -169,3 +169,26 @@ state, or that have caught us more than once.
 - The stage's three radius tokens, self-hosted fonts and generated icon set are the
   look's rules; [Design](design.md) owns them. The five fret colours are one order,
   shared by the highway and the pads, and the accent belongs to the vocals.
+
+## Rooms
+
+- **A room is not a run.** The host owns the song and the clock; a guest receives one
+  seat's chart and the host's playhead. The relay never carries audio, and a guest never
+  renders `SongAudio`.
+- **A chart is not a song.** Send the per-seat `LaneChart` or `MelodyChart`, never a URL,
+  a playlist or a source file: any song then works, including a local folder or a `.sng`,
+  and the guest does not need the source translators or CORS.
+- **`syncTo` is not `seek`.** A room pause/resume correction moves the playhead without
+  bumping `seekSerialRef`; using `seek` wipes every run's combo and score. A host replay
+  or restart is a deliberate seek and must reset.
+- **A state message is sent after welcome, not before.** A socket that is not open yet
+  drops the message; the host resets its last-sent state on `welcome` and only records a
+  send that succeeded.
+- **A remote seat is not a local keyboard.** The host's `stageSetup` filters `remote`
+  players out of `StageControlsProvider` and `BandStage`; the roster draws them. The host
+  fetches their chart for results and chart-sending, not to judge them.
+- **A remote cue is the guest's.** The host must not play a remote panel's miss, hero or
+  star cue; only the guest's own phone does. The host does duck the part on its own
+  speakers from the reported miss.
+- **The room's audio is the host's.** A guest's mixer is cues only; its `audioLagMs` is
+  the room sync (how late it hears the host), and its picture lag stays drawing-only.

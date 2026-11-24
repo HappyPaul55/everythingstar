@@ -172,10 +172,12 @@ interface Props {
   track: Track;
   /** The screen, so a run's leftovers are dropped when it ends. */
   screen: Screen;
+  /** A phone in a room: the microphone hears the host's speakers. */
+  room?: boolean;
   children: ReactNode;
 }
 
-export function StageControlsProvider({ setup, track, screen, children }: Props) {
+export function StageControlsProvider({ setup, track, screen, room = false, children }: Props) {
   const clock = useClock();
   const [pads, setPads] = useState<PadInfo[]>([]);
   const [learningDevice, setLearningDevice] = useState<LearnDevice | null>(null);
@@ -193,7 +195,7 @@ export function StageControlsProvider({ setup, track, screen, children }: Props)
   const sings = plan.seats.some(
     (seat) => seat.channel === "pitch" && seat.controller.on !== "none",
   );
-  const mic = useMicInput({ enabled: sings && clock.playing });
+  const mic = useMicInput({ enabled: sings && clock.playing, room });
   // MIDI is only asked for at a gesture (`requestAccess`), so building this hook
   // opens nothing. The listener below is installed once and stays quiet until
   // access exists and a note arrives.

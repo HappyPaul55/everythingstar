@@ -18,8 +18,13 @@ running song is a menu with a song in the way. The loop is:
 
 ```
 welcome → menu → songs → band → (loading) → entrance → playing → results → songs
-            ↕ options / credits / Jukebox             ↕ paused
+            ↕ options / credits / Jukebox / room       ↕ paused
 ```
+
+**Play together** is the `room` branch: a host's lobby that keeps its connection while
+the stage or the Jukebox is up. A guest is the separate `/join` entry — a lean player
+view that receives one chart and the host's playhead, with no library and no song audio.
+The relay is [Networking](networking.md).
 
 Opening the band starts the song's charts **and its stems**. **Play is the loader**:
 it waits until every file the run will play says it can play through, then goes
@@ -286,7 +291,9 @@ rather than the 671 KiB JPEG it replaced.
 - **Astro 7** (static) + **React 19** island (`@astrojs/react`, `client:load`)
 - **Tailwind CSS v4** with design tokens in `@theme` (`src/styles/global.css`)
 - **Cloudflare static assets** (`wrangler.jsonc`) — GitHub Actions builds and
-  uploads the files with `wrangler deploy`, with no Worker script and no API
+  uploads the files with `wrangler deploy`, with no Worker script and no API for the site.
+  The optional room relay is a separate Worker (`wrangler.rooms.jsonc`) with a
+  Durable Object per room; solo play never needs it.
 - **Bun** for installs, scripts and binaries — never `npm`/`npx`; the lockfile is
   `bun.lock`
 - Self-hosted fonts: **Permanent Marker** (display), **Space Grotesk** (body),
@@ -306,10 +313,10 @@ opens Downloads, follows a link, opens the Jukebox's picker or uses `?dev=1` doe
 pay for any of it.
 
 That matters because `/play` is the page the game starts on: the initial JavaScript
-graph is **572 KiB raw / 185 KiB gzipped across 22 files**, and every static import
+graph is **622 KiB raw / 199 KiB gzipped across 21 files**, and every static import
 in it is announced with a `modulepreload` at build time (`scripts/preload-initial.ts`),
 so the browser does not discover the graph three round trips deep. That is the first download
-only; every `_astro` JavaScript chunk in the build totals **707 KiB**, because the lazy
+only; every `_astro` JavaScript chunk in the build totals **782 KiB**, because the lazy
 chunks still ship — they are just not requested first. `scripts/check-budget.ts` walks
 `play.html`'s initial island graph, gates the initial raw and gzipped sizes directly,
 and fails if a translator marker leaks into it, so the split cannot quietly regress.
@@ -322,8 +329,8 @@ saved.
   ships no JavaScript: the window is a same-origin iframe and the link over it is the
   page's one script-free control.
 - `/play` — the **public game page**: the same game island, the welcome, the menu and its
-  branches, Songs, the Jukebox and the band screen, a run and its results, all over one
-  persistent stage. It sits in the site shell, so the marketing header and footer frame
+  branches, Songs, the Jukebox, the room lobby and the band screen, a run and its
+  results, all over one persistent stage. It sits in the site shell, so the marketing header and footer frame
   the stage, and fullscreen puts them aside. Unlike the game-only entries below it is
   **indexable**, with the site's canonical/Open Graph metadata, and it is in the
   sitemap. Screens are session state; the address bar stays on `/play`.
@@ -338,7 +345,10 @@ saved.
   an old WebView cache, service worker or task can never hand the app a website page from
   `/play`, `/app` or `/open`. The APK bundles `embed.html`; `noindex` and not in the
   sitemap.
-- `/charter` — the **charter island**: game-only, `noindex`, not in the sitemap, and deliberately a separate React root from `/play`. It carries the chart editor (up to eight 2D panes, pointer editing, keyboard/gamepad/MIDI recording) and its own clock and `SongAudio`; the run's providers are not mounted. See [Charter](charter.md).
+- `/join` — the **room guest entry**: game-only, `noindex`, not in the sitemap, and a
+  separate React root. It reads the room code from the query, receives its seat's chart
+  and the host's playhead, and renders one player's stage. It never loads the library,
+  the source translators or a song's audio. It carries the chart editor (up to eight 2D panes, pointer editing, keyboard/gamepad/MIDI recording) and its own clock and `SongAudio`; the run's providers are not mounted. See [Charter](charter.md).
 - `/open` — the **link entry**: the same game-only page, read by the intent parser. A bare
   `/open` opens the game; `?playlist=…` and `?song=…` ask to add one. `noindex` and
   excluded from the sitemap; see [`deeplinks.md`](deeplinks.md).

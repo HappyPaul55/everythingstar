@@ -1,11 +1,11 @@
 ---
 title: On a phone
 description: "Playing EverythingStar on a phone: tapping the pads, portrait screens, installing it and keeping songs available offline."
-updated: "2026-10-31"
+updated: "2026-11-24"
 order: 8
 ---
 
-EverythingStar plays on a phone: the stage fits the screen, the hit markers become controls, and a song can be kept on the device. Nothing has to be installed to start.
+EverythingStar plays on a phone: the stage fits the screen, the hit markers become controls, and a song can be kept on the device. Nothing has to be installed to start. A phone is also the way into **Play together**, where a host's speakers play the song and the phone gets one seat's notes; see [Playing together](playing-together.md).
 
 [A lone guitar on a portrait phone: the score, combo and multiplier above the highway, and the pads along the bottom.](shot:phone-pads)
 

@@ -57,7 +57,7 @@ export default defineConfig({
       // `/guide` is the documentation again on one printable page, and is
       // noindex: the sectioned pages are the ones a search result should land on.
       filter: (page) =>
-        !/^https?:\/\/[^/]+\/(?:app|arcade|embed|open|charter|guide|404|500)\/?$/.test(page),
+        !/^https?:\/\/[^/]+\/(?:app|arcade|embed|open|join|charter|guide|404|500)\/?$/.test(page),
     }),
     react(),
     cspHashes(),

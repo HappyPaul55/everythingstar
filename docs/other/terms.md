@@ -1,14 +1,15 @@
 ---
 title: Terms of use
 description: "What you may do with EverythingStar, what the AGPL-3.0 licence covers, why the songs are not part of this site, and the limits of its warranty."
-updated: "2026-10-28"
+updated: "2026-11-24"
 order: 2
 ---
 
 EverythingStar is a free browser rhythm game, published by **HappyPaul55**. These
 terms say what you may do with the site, what the licence covers, and what the
 game does not promise. They are short because there is little to agree to: there
-is no account, nothing to buy, and no server of this project's own.
+is no account, nothing to buy, and no server of this project's own — beyond the
+optional room relay described under Rooms.
 
 ## The game is free
 
@@ -19,7 +20,10 @@ nothing and trades in nothing.
 
 ## What you may do
 
-- **Play it**, alone or with other people, at home or in public.
+- **Play it**, alone or with other people, at home or in public — including a
+  same-room **Play together** session whose phones are controllers.
+- **Host or join a room**, and add a playlist or song URL to a room's library if
+  the host allows it.
 - **Link to it** — the game page at
   [everythingstar.happypaul55.com/play](https://everythingstar.happypaul55.com/play),
   the link entries that add a playlist or a song, or any page of the
@@ -34,6 +38,16 @@ nothing and trades in nothing.
 A recording of a run also contains somebody else's song, and a screenshot usually
 contains somebody else's artwork. That part is not ours to license — see
 [Songs and audio are not ours](#songs-and-audio-are-not-ours).
+
+## Rooms
+
+A room is hosted by one player's device and relayed by an optional service. The
+host controls the song, the seats and the room's end; a guest controls only their
+own seat. Do not use a room to harass people through a display name, to disrupt
+somebody else's session, or to queue material you have no right to use. Room
+codes are short and are not secrets; do not treat a room as private. The relay
+carries chart data and scores, never audio. A self-hosted relay is run by whoever
+hosts it, under their own terms and privacy notice.
 
 ## What you may not do
 

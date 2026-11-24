@@ -1,13 +1,14 @@
 ---
 title: Deployment and releases
 description: "How a build reaches Cloudflare, why GitHub records the deployment, how the live site is watched, what a release tag has to agree with, and where the printable guide ships."
-updated: "2026-11-03"
+updated: "2026-11-24"
 order: 16
 ---
 
-The live site is `https://everythingstar.happypaul55.com`. A deploy is static files and
-nothing else: **GitHub Actions builds and uploads, Cloudflare serves, GitHub records and
-verifies.**
+The live site is `https://everythingstar.happypaul55.com`. The site's deploy is static
+files: **GitHub Actions builds and uploads, Cloudflare serves, GitHub records and
+verifies.** The optional **room relay** is a second deployable — a Worker with a Durable
+Object per room — and the site works without it.
 
 ## What a deploy is
 
@@ -182,7 +183,8 @@ the GitHub Release is its home.
   enforces. A new action is added the same way, or the push is refused.
 - **`refs/tags/v*` is immutable**, and so is a published release.
 - **Do not add a `main`, a Worker script or bindings to `wrangler.jsonc`** for a game
-  feature. This repo is the client; a service it needs is a separate project, reached
-  through the Playlists feature.
+  feature. The site's config stays static. The **room relay** is the one documented
+  service, with its own `wrangler.rooms.jsonc`; any other service is a separate project,
+  reached through the Playlists feature.
 - **Keep this page accurate.** A deployment fact that lives only in a workflow is a
   fact the next maintainer finds by reading YAML.

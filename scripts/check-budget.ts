@@ -175,10 +175,10 @@ const checks: Check[] = [
   {
     label: "dist/_astro JS",
     actual: sizeOf(join(DIST, "_astro"), (file) => file.endsWith(".js")),
-    limit: 740 * KIB,
+    limit: 800 * KIB,
   },
-  { label: "initial /play raw", actual: initialRaw, limit: 595 * KIB },
-  { label: "initial /play gzip", actual: initialGzip, limit: 193 * KIB },
+  { label: "initial /play raw", actual: initialRaw, limit: 625 * KIB },
+  { label: "initial /play gzip", actual: initialGzip, limit: 202 * KIB },
   { label: "dist/ total", actual: sizeOf(DIST), limit: 20 * MIB },
   { label: "public/audio", actual: sizeOf(join(ROOT, "public", "audio")), limit: 10 * MIB },
 ];

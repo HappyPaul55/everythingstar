@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "note": "What the game has, by type. A type is what the game plays and may have several files behind it. There are 24 types and 34 files; see docs/developers/audio.md for what each is for and the brief for replacing a generated sting.",
+  "note": "What the game has, by type. A type is what the game plays and may have several files behind it. There are 25 types and 35 files; see docs/developers/audio.md for what each is for and the brief for replacing a generated sting.",
   "sounds": [
     { "id": "background_1", "type": "background", "kind": "track", "file": "background_1.ogg", "credit": "HappyPaul55, made with Suno" },
     { "id": "background_2", "type": "background", "kind": "track", "file": "background_2.ogg", "credit": "HappyPaul55, made with Suno" },
@@ -33,6 +33,7 @@
     { "id": "error_1", "type": "error", "kind": "oneshot", "file": "error_1.ogg", "gainDb": -6.5, "credit": "Pixabay Content License — pixabay.com/service/license-summary" },
     { "id": "sparkle_1", "type": "sparkle", "kind": "oneshot", "file": "sparkle.ogg", "gainDb": 2, "credit": "Generated for EverythingStar (CC0)" },
     { "id": "meter_activate_1", "type": "meter_activate", "kind": "oneshot", "file": "meter_activate.ogg", "gainDb": 6.5, "credit": "Generated for EverythingStar (CC0)" },
+    { "id": "cheer_1", "type": "cheer", "kind": "oneshot", "file": "cheer.ogg", "gainDb": 0, "credit": "stephan, pdsounds.org, public domain" },
 
     { "id": "type_key_1", "type": "type_key", "kind": "oneshot", "file": "type_key_1.ogg", "gainDb": 2, "credit": "Kenney UI Audio, CC0" },
     { "id": "type_key_2", "type": "type_key", "kind": "oneshot", "file": "type_key_2.ogg", "gainDb": 3, "credit": "Kenney UI Audio, CC0" },

@@ -1,7 +1,7 @@
 ---
 title: Privacy Policy
 description: "How EverythingStar handles what it keeps: no accounts, no analytics, no advertising, and your settings, band and scores stay in this browser."
-updated: "2026-10-27"
+updated: "2026-11-24"
 order: 1
 ---
 
@@ -19,17 +19,21 @@ anything described below. You can contact the controller through
 
 You do not need an account to play, and there are no accounts at all:
 
-- We do not ask for, store or share any personal information.
+- Solo, we do not ask for, store or share any personal information. A **Play together** room asks for a display name and sends the room data described below; it is not an account.
 - We set no cookies of our own and use no analytics, trackers or advertising
   pixels.
-- There is no server-side storage of your game or scores, and there is no API in
-  this site: it is a set of static files.
-- Everything the game remembers about you is kept by your browser, on your
+- Solo play needs no server: the site is a set of static files and your game and
+  scores stay in this browser.
+- **Play together** uses an optional room relay. It carries a room code, display
+  names, seat choices, chart data, scores, the host's playhead, queue entries and
+  — for a singer — small pitch samples. It never carries audio. It keeps a room
+  only while the room is alive and stores nothing after it closes.
+- Everything else the game remembers about you is kept by your browser, on your
   device, as described below.
 
 ## What is kept in your browser
 
-The game keeps five small records in your browser's local storage:
+The game keeps six small records in your browser's local storage:
 
 - **`everythingstar:settings`** — how the game behaves: the audio and picture
   lag, the master volume, the note speed and view, whether a song's own backdrop
@@ -47,6 +51,9 @@ The game keeps five small records in your browser's local storage:
 - **`everythingstar.offline.v1`** — which songs you downloaded for offline play,
   their size and when they were saved, so the Downloads manager can list and
   remove them.
+- **`everythingstar.room.name`** — the display name you last used to join a room.
+  A room's own guest token lives in that tab's session storage and goes when the
+  tab closes.
 
 The **library** is kept in IndexedDB, in a database named `everythingstar` with
 four stores:
@@ -132,19 +139,26 @@ The game is static files, but it does fetch what it plays:
 - **YouTube** — a song can use a YouTube video as its music and backdrop. Only
   then does the page load the YouTube IFrame Player API script and embed the
   video from `youtube.com` (see below).
+- **A room** — the room relay at this site's `/api/room` (or the self-hosted
+  server's address). Joining sends the display name; a seat sends the seat, part
+  and level; a run sends its scores and, for a singer, derived pitch samples and
+  note verdicts. A room's host also receives the charts it already has. **Audio
+  is never sent**: the host's speakers are the room's music.
 
-Nothing else leaves the device. We do not send your scores, band, settings,
-microphone audio, MIDI messages, or files from a local folder anywhere.
+Nothing else leaves the device. Outside a room we do not send your scores, band,
+settings, microphone audio, MIDI messages, or files from a local folder anywhere.
 
 ## What the host sees
 
-The site is served as static files by **Cloudflare**. There is no Worker script,
-no API and no application database in this project. Like any web host,
-Cloudflare necessarily receives the technical details of each request — such as
-your IP address, the URL requested, the time, and headers such as your browser's
-user agent — and handles them under
-[Cloudflare's privacy policy](https://www.cloudflare.com/privacypolicy/). We do
-not receive or store game or score data from those requests.
+The site is served as static files by **Cloudflare**. The optional room relay is
+a separate Cloudflare Worker with a Durable Object per room; it has no database
+and keeps a room only while it is alive. Like any web host, Cloudflare
+necessarily receives the technical details of each request — such as your IP
+address, the URL requested, the time, and headers such as your browser's user
+agent — and handles them under
+[Cloudflare's privacy policy](https://www.cloudflare.com/privacypolicy/). A room
+also has the data listed above while it is open. We do not receive or store your
+solo game or score data from static requests.
 
 ## The microphone (singing, karaoke)
 
@@ -154,10 +168,13 @@ singer — not when the page loads. The microphone is opened when a run with a
 singer starts playing.
 
 The audio is analysed in your browser, frame by frame, by the game's own pitch
-detector. The samples are used for that analysis and then dropped: they are
-**never recorded, stored or sent anywhere**. What the game keeps is the recent
-pitch it heard, in memory, so a note can be judged on how much of it was held in
-tune; the resulting score is saved locally with the run. The stream stays open
+detector. Solo, the samples are used for that analysis and then dropped: they are
+never recorded, stored or sent anywhere. What the game keeps is the recent pitch
+it heard, in memory, so a note can be judged on how much of it was held in tune;
+the resulting score is saved locally with the run. In a **room**, a singer's
+device sends the host small derived pitch samples (a MIDI note and a time) and
+the note verdicts, so the host can show the singer's cursor and count the run.
+**No audio is sent.** The stream stays open
 until the band no longer has a singer (choosing **Type** closes it) or until you
 leave the page, and your browser shows its own microphone indicator while it is
 open. Pausing stops the analysis but does not close the stream. If you decline,

@@ -13,9 +13,12 @@ ways to play on one stage**: **Instruments** (guitar, bass, keys, drums), **Typi
 words on a keyboard) and **Vocals** (karaoke into a microphone). The marketing pages are
 plain Astro; `/play` is a React island holding the stage inside the loop around a run.
 
-**Static files only.** `wrangler.jsonc` uploads `dist/` as Cloudflare static assets — no
-`main`, no Worker script, no API. A playlist and its documents live in other projects and
-are fetched by the browser from a URL the player gave it.
+**Static files by default.** The site's `wrangler.jsonc` uploads `dist/` as Cloudflare
+static assets — no `main`, no Worker script, no API. Solo play never needs anything else.
+**Play together** adds an optional **room relay** (`server/`, `wrangler.rooms.jsonc`)
+that carries membership, charts, the host's playhead and scores, and never carries audio.
+A playlist and its documents live in other projects and are fetched by the browser from a
+URL the player gave it.
 
 ## Read the right page before you change anything
 
@@ -32,6 +35,7 @@ are fetched by the browser from a URL the player gave it.
 | a screen, a chart source, a convention | [House rules](docs/developers/contributing-code.md) |
 | the audio contract | [Audio](docs/developers/audio.md) |
 | the provider contract | [Playlist API](docs/developers/playlist-api.md) |
+| rooms, charts, the relay and self-hosting | [Networking](docs/developers/networking.md) |
 | links into the game | [Links](docs/developers/deeplinks.md) |
 | a provider's documents | [Libraries](docs/charters/libraries.md) |
 | a chart, a take, an export | [Charter](docs/developers/charter.md) |
@@ -63,8 +67,9 @@ what that controller's controls mean.
   `package` job that joins the build to the
   screenshots the captures took; `verify` and `e2e` are the required
   checks. `bun run test:e2e` is the browser suite. Use **Bun**, never npm/npx.
-- **Pure logic lives in `src/lib/game/**` with a colocated `*.test.ts`.** Components
-  render; they do not decide. A rule that needs testing goes in a module, not in JSX.
+- **Pure logic lives in `src/lib/game/**` (and the shared room protocol and clock in
+  `src/lib/net/**`) with a colocated `*.test.ts`.** Components render; they do not
+  decide. A rule that needs testing goes in a module, not in JSX.
 - **The screen is session state, not a route.** One island, one screen at a time, no
   hash, no history; a reload starts at the welcome. `src/lib/game/screens.ts` is the only
   place that says where an event leads.
@@ -76,8 +81,9 @@ what that controller's controls mean.
 - **The first download is a budget.** Parsers and rarely opened dialogs are
   `React.lazy`/`import()`; `scripts/check-budget.ts` fails when the initial `/play`
   graph or `dist/` grows past its cap. Do not lazy-load a main screen.
-- **No server, no API, no accounts, no analytics, no cookies.** If a feature needs an
-  API it is a different project, reached through Playlists.
+- **Solo play never needs a server.** The room relay is optional and separate from the
+  static site; no accounts, no analytics, no cookies. If a feature needs an API that is
+  not the room relay, it is a different project, reached through Playlists.
 - **Everything fetched is untrusted.** `src/lib/game/url.ts` is the URL policy (absolute
   http(s), no credentials); documents are capped at 8 MB and packages at 128 MB;
   `chartProblems` validates a chart before it reaches the stage.
@@ -99,6 +105,8 @@ what that controller's controls mean.
 ```bash
 bun install
 bun run dev              # http://localhost:4321; the game is /play
+bun run dev:rooms        # the room relay on :8788, beside the dev server
+bun run serve            # the built site and the room relay on one origin, for self-hosting
 bun run check            # astro check (the app's type gate)
 bun run test             # unit tests
 bun run test:e2e         # Playwright, starts the dev server

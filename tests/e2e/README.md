@@ -70,6 +70,7 @@ things that need a page.
 | `play-style.spec.ts` | 1 | the CSS layer order, read from computed styles (dev **and** the built preview) |
 | `preload.spec.ts` | 2 | the band's Play button waiting for a stem that is still arriving, then starting without the load page; a ready band skipping it |
 | `profile.spec.ts` | 1 | a profile file through the input, the confirmation and the reload — and IndexedDB unchanged |
+| `rooms.spec.ts` | 1 | a host's room and a guest on a phone: the code, the seat, the chart, the start and both results, over a real Bun relay |
 | `seo.spec.ts` | 1 | the head's canonical, Open Graph and JSON-LD wiring |
 | `sng.spec.ts` | 1 | one package fetched once for the preview and the band |
 | `slide.spec.ts` | 2 | a real glide between two pads (pointerdown/move/up) landing the linked target, and a tap on that target paying the note without the glide |

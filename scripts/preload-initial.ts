@@ -14,7 +14,7 @@ import { join } from "node:path";
 import { graphUrl, initialGraph, namedEntries } from "./initial-graph";
 
 const DIST = join(process.cwd(), "dist");
-const PAGES = ["play.html", "app.html", "open.html", "embed.html"];
+const PAGES = ["play.html", "app.html", "open.html", "embed.html", "join.html"];
 
 for (const page of PAGES) {
   const path = join(DIST, page);

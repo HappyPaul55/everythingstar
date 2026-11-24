@@ -79,6 +79,18 @@ const VOICE_CONSTRAINTS: MediaTrackConstraints = {
   autoGainControl: false,
 };
 
+/**
+ * A phone in a room hears the host's speakers through its own microphone. Echo
+ * cancellation is the one place the room asks the browser to process the voice:
+ * without it the host's song is judged against the singer. Solo keeps the raw
+ * stream, because a call processor can flatten a sustained note.
+ */
+const ROOM_CONSTRAINTS: MediaTrackConstraints = {
+  echoCancellation: true,
+  noiseSuppression: false,
+  autoGainControl: false,
+};
+
 export interface MicOptions {
   /**
    * Whether a stream should be open **now**: somebody is singing and the run is
@@ -86,6 +98,8 @@ export interface MicOptions {
    * the microphone again without asking.
    */
   enabled: boolean;
+  /** A phone in a room: turn on echo cancellation for the host's speakers. */
+  room?: boolean;
 }
 
 /** The middle of the last few frames, so the cursor does not jitter. */
@@ -97,7 +111,7 @@ function median(history: number[], value: number): number {
   return sorted[Math.floor(sorted.length / 2)] ?? value;
 }
 
-export function useMicInput({ enabled }: MicOptions): MicInput {
+export function useMicInput({ enabled, room = false }: MicOptions): MicInput {
   const clock = useClock();
   const [supported, setSupported] = useState(false);
   const [status, setStatus] = useState<MicStatus>("idle");
@@ -201,7 +215,7 @@ export function useMicInput({ enabled }: MicOptions): MicInput {
       setStatus("requesting");
       const attempt = (async (): Promise<boolean> => {
         try {
-          const opened = await media.getUserMedia({ audio: VOICE_CONSTRAINTS });
+          const opened = await media.getUserMedia({ audio: room ? ROOM_CONSTRAINTS : VOICE_CONSTRAINTS });
           // Permission is the point; do not hold the microphone open across the
           // menus. The run asks for a stream again when it is actually playing.
           for (const track of opened.getTracks()) track.stop();
@@ -246,7 +260,7 @@ export function useMicInput({ enabled }: MicOptions): MicInput {
     setStatus("requesting");
     try {
       const opened = await navigator.mediaDevices.getUserMedia({
-        audio: VOICE_CONSTRAINTS,
+        audio: room ? ROOM_CONSTRAINTS : VOICE_CONSTRAINTS,
       });
       // Paused while the browser was answering: close what it handed back rather
       // than leave a microphone open on a screen that has no singer on it.

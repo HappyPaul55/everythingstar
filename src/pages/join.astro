@@ -1,0 +1,19 @@
+---
+/**
+ * The phone's way into a room.
+ *
+ * A static page: the code is read from the query on the client, exactly like
+ * `/open`, because a static host cannot vary a document by query. `noindex` and
+ * out of the sitemap: a join link is an action, not a search result.
+ */
+import GameLayout from "../layouts/GameLayout.astro";
+import JoinApp from "../components/join/JoinApp.tsx";
+import { localeFromPath, tFor } from "../i18n/astro";
+
+const locale = localeFromPath(Astro.url.pathname);
+const t = tFor(locale);
+---
+
+<GameLayout title={t("join.title")} heading={null} locale={locale}>
+  <JoinApp client:only="react" locale={locale} />
+</GameLayout>

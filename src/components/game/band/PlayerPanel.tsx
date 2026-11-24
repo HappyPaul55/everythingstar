@@ -16,6 +16,7 @@ import { useSong } from "./SongContext";
 import { useStageControls } from "./StageControls";
 import { useLaneRun } from "./useLaneRun";
 import { useHaptics } from "./useHaptics";
+import { useStreakCue } from "./useStreakCue";
 
 /**
  * One instrument panel: the score (left), the note highway (centre) and the info
@@ -99,6 +100,9 @@ export function PlayerPanel({ player, width, height, view, noteStyle, noteSpeed,
       difficulty: player.difficulty,
     },
   });
+
+  // The streak cheer is the player's own phone/device, never the host's roster.
+  useStreakCue(run.combo, !auto);
 
   // A miss takes the stems this player's instrument owns out of the song, and the
   // song document's own rule puts them back — on the next hit, or at the end of the
