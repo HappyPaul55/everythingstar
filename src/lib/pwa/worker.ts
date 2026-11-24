@@ -399,6 +399,8 @@ const PAGES: ReadonlyMap<string, string> = new Map([
   ["/play.html", "/play.html"],
   ["/open", "/open.html"],
   ["/open.html", "/open.html"],
+  ["/join", "/join.html"],
+  ["/join.html", "/join.html"],
   ["/privacy", "/privacy.html"],
   ["/privacy.html", "/privacy.html"],
   // The installed game's Credits links all three notices, and the shell has to be

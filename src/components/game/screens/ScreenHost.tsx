@@ -9,6 +9,7 @@ import { Menu } from "./Menu";
 import { Options } from "./Options";
 import { PauseMenu } from "./PauseMenu";
 import { Results } from "./Results";
+import { useRoomOptional } from "../../room/useHostRoom";
 import { Songs } from "./Songs";
 import { Welcome } from "./Welcome";
 
@@ -102,21 +103,7 @@ const PAGES: Record<PageScreen, PageView> = {
     />
   ),
   jukebox: (session) => <Jukebox session={session} />,
-  band: (session) =>
-    session.song ? (
-      <Band
-        song={session.song}
-        doc={session.load.doc}
-        problems={session.load.problems}
-        chartsReady={session.load.status === "ready"}
-        plan={session.plan}
-        onPlan={session.changePlan}
-        onPlay={session.startRun}
-        onBack={() => session.dispatch("back")}
-        fullscreen={session.fullscreen}
-        phone={session.phoneLayout}
-      />
-    ) : null,
+  band: (session) => <BandPage session={session} />,
   loading: (session) => (
     <Loading
       ready={session.load.status === "ready"}
@@ -124,19 +111,45 @@ const PAGES: Record<PageScreen, PageView> = {
       onLoaded={() => session.dispatch("loaded")}
     />
   ),
-  results: (session) =>
-    session.song ? (
-      <Results
-        song={session.song}
-        setup={session.setup}
-        saved={session.board}
-        onSaved={session.setBoard}
-        onReplay={() => session.dispatch("replay")}
-        onMenu={() => session.dispatch("quit")}
-        save={!session.attract}
-      />
-    ) : null,
+  results: (session) => <ResultsPage session={session} />,
 };
+
+function BandPage({ session }: { session: GameSession }) {
+  const room = useRoomOptional();
+  const inRoom = room?.active === true && room.mode === "play";
+  if (!session.song) return null;
+  return (
+    <Band
+      song={session.song}
+      doc={session.load.doc}
+      problems={session.load.problems}
+      chartsReady={session.load.status === "ready"}
+      plan={session.plan}
+      onPlan={inRoom ? session.setPlan : session.changePlan}
+      onPlay={session.startRun}
+      onBack={() => session.dispatch("back")}
+      fullscreen={session.fullscreen}
+      phone={session.phoneLayout}
+    />
+  );
+}
+
+function ResultsPage({ session }: { session: GameSession }) {
+  const room = useRoomOptional();
+  if (!session.song) return null;
+  return (
+    <Results
+      song={session.song}
+      setup={session.setup}
+      saved={session.board}
+      onSaved={session.setBoard}
+      onReplay={() => session.dispatch("replay")}
+      onMenu={() => session.dispatch("quit")}
+      save={!session.attract}
+      saveDelayMs={room?.active && room.mode === "play" ? 1500 : 0}
+    />
+  );
+}
 
 /**
  * The overlay that sits **inside** `BandStage`: the pause. The countdown screen has

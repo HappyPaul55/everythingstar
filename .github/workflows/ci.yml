@@ -338,8 +338,15 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Deploy the room relay
+        run: bunx wrangler deploy --config wrangler.rooms.jsonc
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - name: Smoke-test production
         run: bun scripts/smoke.ts --base https://everythingstar.happypaul55.com --expect "$(bun scripts/version.ts)"
+      - name: Smoke-test the room relay
+        run: curl -fsS https://everythingstar.happypaul55.com/api/health
 
   workflows:
     runs-on: ubuntu-latest

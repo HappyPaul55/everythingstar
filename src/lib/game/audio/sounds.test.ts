@@ -29,9 +29,9 @@ describe("the shipped sound manifest", () => {
   });
 
   test("every type has a file, and every file has an entry", () => {
-    expect(read.sounds.length).toBe(34);
+    expect(read.sounds.length).toBe(35);
     expect(read.missing).toEqual([]);
-    expect(new Set(read.sounds.map((sound) => sound.type)).size).toBe(24);
+    expect(new Set(read.sounds.map((sound) => sound.type)).size).toBe(25);
   });
 
   test("points at files that are actually there", () => {

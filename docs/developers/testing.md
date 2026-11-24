@@ -1,7 +1,7 @@
 ---
 title: Testing
 description: "The gates a change has to pass: the unit suite, the browser suite and its rule, the documentation captures, the build gates, the printable guide's PDF, and what only a real browser can prove."
-updated: "2026-11-03"
+updated: "2026-11-24"
 order: 13
 ---
 
@@ -17,6 +17,7 @@ where it is cheapest and where it can actually see the regression.
 ```bash
 bun install
 bun run dev              # dev server on http://localhost:4321
+bun run dev:rooms        # the room relay on :8788 beside it
 bun run build            # static build into dist/ (captures the docs screenshots first)
 bun run build:quick      # the static build with whatever captures are on disk
 bun run docs:shots       # capture the documentation's screenshots (Playwright)
@@ -33,6 +34,7 @@ bun run knip             # dead-code check (knip)
 bun run budget           # dist/, audio and initial-JS size caps
 bun run check:pwa        # manifest and worker gate (scripts/check-pwa.ts)
 bun run check:docs       # the built documentation, the sitemap and the offline shell
+bun run serve            # the built site and the room relay on one origin
 bun run release:assets   # game, arcade and website archives into release/
 bun run check:release    # every archive holds its plan, and both formats agree
 bun run verify           # the gate in one command (CI splits it into parallel jobs)
@@ -91,10 +93,13 @@ out of `astro check`, and the test config includes them with the runner's types.
   formats agree, and every root-absolute URL its entry page names is inside it. See
   [Deployment and releases](deployment.md#the-release-archives).
 
-The budget was last measured on 2026-11-03, after the printable guide's page joined
-the build: 707 KiB of `_astro` JS, an initial graph of 572 KiB raw / 185 KiB gzipped
-across 22 files, 18.2 MiB in `dist/` and 8.8 MiB of audio. The caps sit just above
-those numbers — 710 KiB, 580 KiB, 190 KiB, 20 MiB, 10 MiB. The **whole-build cap is
+The budget was last measured on 2026-11-24, after **Play together** joined the build:
+800 KiB of `_astro` JS, an initial graph of 612 KiB raw / 198 KiB gzipped across 23
+files, 16.5 MiB in `dist/` and 8.8 MiB of audio. The caps sit just above those
+numbers — 820 KiB, 625 KiB, 202 KiB, 20 MiB, 10 MiB. The room's guest entry is a
+separate 8-module graph; the host's connection is in `/play`'s first download because
+the band and the Jukebox both use it, while the invite dialog and its QR encoder are
+lazy. The **whole-build cap is
 the one that keeps moving**, raised when the
 documentation landed and again for its pictures: the [note-types page](../charters/note-types.md)
 in charters, then the screens across the loop, the players and the charter, each
@@ -117,6 +122,11 @@ runs on one worker. In CI each engine is split into three shards, and the two en
 not wall time; each shard uses every core but one, never fewer than two, with a single
 retry per test. A red shard on either engine is a red `e2e` check: the aggregate job
 exists so the ruleset still has one check to require when the shard count changes.
+
+The room relay has its own pure tests (`src/lib/net/clock.test.ts`,
+`src/lib/net/protocol.test.ts`) and a Bun integration path through `server/bun.ts`. A
+browser spec that needs a room starts the Bun relay and points the page at it with
+`?rooms=ws://127.0.0.1:8788/api/room`, exactly as the dev server does.
 
 A spec must be honest in **both** engines. `hasTouch` is the phone: it is what the game
 reads (`(pointer: coarse)`), and both engines implement it. `isMobile` is Chromium's

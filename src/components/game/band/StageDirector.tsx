@@ -4,6 +4,7 @@ import { isRunScreen, opensRun, type Screen } from "../../../lib/game/screens";
 import { useRunBoard } from "./RunBoard";
 import { useSongAudioProgress } from "./SongAudioStatus";
 import { useClock } from "./StageClock";
+import { useRoomOptional } from "../../room/useHostRoom";
 
 /**
  * The bridge between the screens and the clock — the only place that decides
@@ -50,6 +51,10 @@ export function StageDirector({
   // waited for it, and the clock must not begin counting if a path that skipped the
   // band (the attract demo, a replay) reaches the stage before a stem can play.
   const audio = useSongAudioProgress();
+  // A room's guests report their last frame as the song ends. The host holds the
+  // results for a beat so those reports are on the board before it is saved.
+  const room = useRoomOptional();
+  const roomHoldMs = room?.active && room.mode === "play" ? 800 : 0;
   // The clock's value changes whenever it plays, pauses or ends, so the effects
   // that move the transport must not depend on its identity: a dev pause would
   // otherwise update the clock, re-run "the playing screen must play", and resume
@@ -163,11 +168,18 @@ export function StageDirector({
   // changes, because a stage can unmount before the next animation frame and the
   // results screen must not read a frame behind the judging.
   useEffect(() => {
-    if (!practice && screen === "playing" && clock.ended) {
+    if (practice || screen !== "playing" || !clock.ended) return;
+    if (roomHoldMs === 0) {
       board.flush();
       onEnd();
+      return;
     }
-  }, [screen, clock.ended, onEnd, practice, board]);
+    const timer = window.setTimeout(() => {
+      board.flush();
+      onEnd();
+    }, roomHoldMs);
+    return () => window.clearTimeout(timer);
+  }, [screen, clock.ended, onEnd, practice, board, roomHoldMs]);
 
   return null;
 }

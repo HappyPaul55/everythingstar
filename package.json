@@ -20,6 +20,8 @@
   },
   "scripts": {
     "dev": "DOCSHOTS_DEV=1 bun --bun astro dev",
+    "dev:rooms": "bun --watch server/bun.ts",
+    "serve": "bun server/bun.ts",
     "start": "DOCSHOTS_DEV=1 bun --bun astro dev",
     "build": "bun run docs:shots && bun scripts/clean-content.ts && bun --bun astro build && bun scripts/preload-initial.ts && bun scripts/build-sw.ts",
     "build:quick": "bun scripts/clean-content.ts && bun --bun astro build && bun scripts/preload-initial.ts && bun scripts/build-sw.ts",
@@ -55,6 +57,7 @@
     "@astrojs/sitemap": "^3.7.6",
     "@tailwindcss/vite": "^4.3.5",
     "astro": "^7.4.13",
+    "qrcode-generator": "^2.0.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "tailwindcss": "^4.3.5"

@@ -22,6 +22,7 @@ import { useStageControls } from "./StageControls";
 import { useSinging } from "./useSinging";
 import { useTyping } from "./useTyping";
 import { useHaptics } from "./useHaptics";
+import { useStreakCue } from "./useStreakCue";
 
 /**
  * The full-width melody region, always at the top of the stage.
@@ -102,7 +103,7 @@ export function MelodyRegion({
   // What the results screen calls each typist. It is identity only — the score
   // comes from the run's own refs — so it can be rebuilt as the region re-renders.
   const typistIdentities = typists.map((entry, index) => ({
-    key: `type-${index}`,
+    key: `type-${entry.role.seat ?? index}-${entry.role.part}`,
     label: melodyLabel(t, "type", index, entry.role.part, roles.parts),
     kind: "words" as const,
     wordsMode: "type" as const,
@@ -148,7 +149,7 @@ export function MelodyRegion({
   // What the results screen calls each singer. Identity only; the run supplies
   // the score from its own refs, including on a flush.
   const singerIdentities = singers.map((entry, index) => ({
-    key: `sing-${index}`,
+    key: `sing-${entry.role.seat ?? index}-${entry.role.part}`,
     label: melodyLabel(t, "sing", index, entry.role.part, roles.parts),
     kind: "words" as const,
     wordsMode: "sing" as const,
@@ -309,6 +310,7 @@ function PartScore({
   // star pattern here — only what a missed word is worth in the hand. A typist or
   // singer the machine is covering is not somebody's hand to buzz.
   useHaptics({ enabled: haptics && !auto, seat, misses });
+  useStreakCue(combo, !auto);
   return (
     <div
       className={`melody-score is-part-${part}`}

@@ -7,10 +7,11 @@ order: 11
 
 ## House rules
 
-1. **Pure logic lives in `src/lib/game/**`, with a colocated `*.test.ts`.** The
-   screen machine, the judging, the geometry, the cache policy, the settings and the
-   source readers are all pure functions. If a rule can be a function over data, it
-   should be — that is how it gets tested without a browser.
+1. **Pure logic lives in `src/lib/game/**` — and the shared room protocol and clock in
+   `src/lib/net/**` — with a colocated `*.test.ts`.** The screen machine, the judging,
+   the geometry, the cache policy, the settings, the source readers and the room wire
+   are all pure functions. If a rule can be a function over data, it should be — that
+   is how it gets tested without a browser.
 2. **Components render; they do not decide.** A screen is handed a screen. The rule
    that says where an event leads is in `src/lib/game/screens.ts`; the geometry a
    panel is drawn at is in `src/lib/game/band/layout.ts`. Do not re-derive either in

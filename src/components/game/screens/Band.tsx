@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useT } from "../../../i18n/react";
 import { useCoarsePointer } from "../band/useCoarsePointer";
 import {
@@ -34,6 +34,7 @@ import { SlotSettings } from "./SlotSettings";
 import { ScreenBackButton } from "./ScreenBackButton";
 import { SongProblems } from "./SongProblems";
 import { activeRoot, defaultFocus, focusStageTarget } from "../ui/nav";
+import { useRoomOptional } from "../../room/useHostRoom";
 
 /**
  * The band: who is on stage, a character box each.
@@ -88,10 +89,26 @@ interface Props {
 /** How many boxes stand in a row before the second one is offered. */
 const FIRST_ROW = 4;
 
+const InviteDialog = lazy(() =>
+  import("../../room/InviteDialog").then((module) => ({
+    default: module.InviteDialog,
+  })),
+);
+
 export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, onBack, fullscreen, phone }: Props) {
   const t = useT();
   const coarse = useCoarsePointer();
   const { mic } = useStageControls();
+  const hostRoom = useRoomOptional();
+  const inRoom = hostRoom?.active === true && hostRoom.mode === "play";
+  const guests = hostRoom?.members.filter((member) => !member.isHost).length ?? 0;
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const remoteMembers = inRoom
+    ? hostRoom.members.filter((member) => !member.isHost && member.seat !== null)
+    : [];
+  const roomWaiting = remoteMembers.some(
+    (member) => !member.ready || !member.connected,
+  );
   /**
    * The song's own files, preloading behind this screen.
    *
@@ -112,7 +129,8 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
   const [giveUp, setGiveUp] = useState(false);
   /** The one start this screen will make, however many renders follow. */
   const started = useRef(false);
-  const ready = chartsReady && songAudio.ready;
+  const roomReady = !roomWaiting;
+  const ready = chartsReady && songAudio.ready && roomReady;
   /**
    * The charts are in hand but the **sound** is not. The grace is for that wait
    * only: starting without a chart is an empty highway, not a run the player can
@@ -262,10 +280,14 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
           })
         : t("screen.loading");
 
+  const changePlan = (next: BandPlan) => {
+    onPlan(next);
+    if (inRoom) hostRoom.updateLocalPlan(next);
+  };
   const setSlot = (index: number, patch: Partial<BandSlot>) =>
     // Patch the remembered plan, not the song's fallback: changing a difficulty on
     // a lead-only song must not forget the rhythm the player chose elsewhere.
-    onPlan(patchSlot(plan, index, patch));
+    changePlan(patchSlot(plan, index, patch));
   /**
    * What a box takes. A **different instrument is a different controller** — a
    * guitar's five frets are not a dance mat's four arrows — so whatever they had
@@ -276,7 +298,7 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
    * same five frets, so the controller and its mapping stay.
    */
   const setKind = (index: number, kind: PlayerKind, role?: LaneRole) =>
-    onPlan({
+    changePlan({
       ...plan,
       slots: plan.slots.map((slot, at) => {
         if (at !== index || slot.active === false) return slot;
@@ -296,12 +318,12 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
     // Singing and typing are the same instrument: only a *different* instrument
     // forgets the controller and its mapping, so the slot is spread rather than
     // rebuilt.
-    onPlan(
+    changePlan(
       patchSlot(plan, index, { kind: "words", wordsMode, role: undefined }),
     );
   const removeSlot = (index: number) => {
     focusAfter.current = index;
-    onPlan({
+    changePlan({
       ...plan,
       slots: plan.slots.map((slot, at) =>
         at === index ? { kind: "guitar", difficulty: "normal", active: false } : slot,
@@ -473,6 +495,52 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
     );
   };
 
+  /** A phone's seat: its owner chose the part, so the host only reads it. */
+  const remoteBox = (slot: BandSlot, index: number) => {
+    const member = hostRoom?.members.find((entry) => entry.seat === index) ?? null;
+    return (
+      <li className="slot slot--remote" key={index}>
+        <div className="slot__head">
+          <span className="slot__who">{slot.name ?? t("screen.roomGuest")}</span>
+          <span className="slot__remote-badge">{t("screen.roomPhone")}</span>
+        </div>
+        <p
+          className={`slot__portrait${
+            kindTone(slot.kind, slot.wordsMode ?? "sing") === "vocals" ? " is-vocals" : ""
+          }`}
+        >
+          {slotLabel(t, slot, hasPitch)}
+        </p>
+        <div className="slot__foot">
+          {isMelodyKind(slot.kind) && slot.wordsMode === "type" ? (
+            <p className="slot__free">{t("screen.typedFreePlay")}</p>
+          ) : (
+            <p className="slot__remote-level">
+              {t(`band.${slot.difficulty}` as "band.easy")}
+            </p>
+          )}
+          <p className={member?.ready ? "slot__remote-ready is-ready" : "slot__remote-ready"}>
+            {member?.ready ? t("room.ready") : t("room.waiting")}
+          </p>
+        </div>
+      </li>
+    );
+  };
+
+  /** A phone that has taken a seat but not chosen what it plays yet. */
+  const remoteWaitingBox = (index: number) => {
+    const member = hostRoom?.members.find((entry) => entry.seat === index) ?? null;
+    return (
+      <li className="slot slot--remote slot--waiting" key={index}>
+        <div className="slot__head">
+          <span className="slot__who">{member?.name ?? t("screen.roomGuest")}</span>
+          <span className="slot__remote-badge">{t("screen.roomPhone")}</span>
+        </div>
+        <p className="slot__remote-waiting">{t("room.choosingPart")}</p>
+      </li>
+    );
+  };
+
   /** An empty box is a place in the band, waiting for somebody to take it. */
   const emptyBox = (index: number) => {
     // Never a part the song has none of; each seat gets the next instrument or
@@ -492,7 +560,7 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
             focusAfter.current = index;
             // Patch the remembered plan, not the song's fallback: joining a seat
             // on a lead-only song must not forget a player's rhythm guitar.
-            onPlan(joinSlotAt(plan, index, offered));
+            changePlan(joinSlotAt(plan, index, offered));
           }}
         >
           <span className="slot__join-mark" aria-hidden="true">
@@ -520,6 +588,27 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
           {t("screen.bandLede", { title: song.title, artist: song.artist.name })}
         </p>
 
+        {hostRoom ? (
+          <div className="band-invite-row">
+            <button
+              type="button"
+              className="band-btn band-btn--invite"
+              aria-haspopup="dialog"
+              data-sound="open"
+              onClick={() => {
+                if (!hostRoom.active) hostRoom.open("play");
+                else if (hostRoom.mode !== "play") hostRoom.setMode("play");
+                setInviteOpen(true);
+              }}
+            >
+              {hostRoom.active && guests > 0
+                ? t("room.invitePlayersCount", { count: guests })
+                : t("room.invitePlayers")}
+            </button>
+            <span className="band-invite-hint">{t("room.inviteHint")}</span>
+          </div>
+        ) : null}
+
         {/* A song whose files could not be read is said here rather than on the stage:
             the stage's own answer is "No chart for this instrument" on every panel,
             which reads as a broken song rather than a folder that needs a press. */}
@@ -528,7 +617,16 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
         <ul className="slots" aria-label={t("screen.playersLabel")}>
           {Array.from({ length: room }, (_, index) => {
             const slot = playedPlan.slots[index];
-            return slot && slot.active !== false ? box(slot, index) : emptyBox(index);
+            if (slot && slot.active !== false) {
+              return slot.remote ? remoteBox(slot, index) : box(slot, index);
+            }
+            const phone = inRoom
+              ? hostRoom?.members.find(
+                  (member) =>
+                    !member.isHost && member.seat === index && member.slot === null,
+                )
+              : null;
+            return phone ? remoteWaitingBox(index) : emptyBox(index);
           })}
         </ul>
 
@@ -555,13 +653,13 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
                has to say "not like that" — see `refuse` in docs/developers/audio.md. While the
                loader waits, the press is ignored; once its grace passes, the same
                button is the way out and says so. */
-            aria-disabled={nothingPlays || waiting}
+            aria-disabled={nothingPlays || waiting || roomWaiting}
             aria-busy={waiting || undefined}
             aria-describedby="band-hint"
             data-nav-default={!empty ? "true" : undefined}
-            data-sound={nothingPlays ? "refuse" : "select"}
+            data-sound={nothingPlays || roomWaiting ? "refuse" : "select"}
             onClick={() => {
-              if (nothingPlays) return;
+              if (nothingPlays || roomWaiting) return;
               // The wait has an exit: the player chooses to start without what is
               // still arriving rather than being held on a spinner forever. The
               // force is what also releases the clock's start gate.
@@ -597,18 +695,28 @@ export function Band({ song, doc, problems, chartsReady, plan, onPlan, onPlay, o
           </button>
         </div>
         <p className="screen__hint" id="band-hint">
-          {starting ? loadingHint : empty
-            ? t("screen.bandListenHint")
-            : nothingPlays
-              ? t("screen.bandNothing")
-              : coarse
-                ? t("screen.handsTouchHint")
-                : t("screen.handsHint")}
+          {starting
+            ? loadingHint
+            : roomWaiting
+              ? t("room.waitingForPlayers")
+              : empty
+                ? t("screen.bandListenHint")
+                : nothingPlays
+                  ? t("screen.bandNothing")
+                  : coarse
+                    ? t("screen.handsTouchHint")
+                    : t("screen.handsHint")}
         </p>
       </div>
 
       {/* One player's controller, over the band: the band stays where it is, so
           who is playing is still legible while one of them is being set up. */}
+      {inviteOpen && hostRoom ? (
+        <Suspense fallback={null}>
+          <InviteDialog mode="play" onClose={() => setInviteOpen(false)} />
+        </Suspense>
+      ) : null}
+
       {setting !== null &&
       playedPlan.slots[setting] &&
       playedPlan.slots[setting].active !== false ? (

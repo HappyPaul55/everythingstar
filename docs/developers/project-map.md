@@ -1,7 +1,7 @@
 ---
 title: Project map
 description: "Where everything lives: every module, what it owns, and the seam it sits behind — the file-by-file map of the game, the site and the scripts."
-updated: "2026-11-23"
+updated: "2026-11-24"
 order: 2
 ---
 
@@ -102,9 +102,9 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
 - `src/layouts/GameLayout.astro` — the game-only head `/app`, `/embed` and `/open`
   share: viewport, theme, manifest link, apple tags, display-font preload, the
   worker registration and no site furniture, always `noindex`.
-  `src/layouts/BaseLayout.astro` is the website shell for `/`, `/play`, `/docs`, the
-  notices and the error pages, and loads `GameApp`'s styles with the header and footer
-  around it.
+  `src/layouts/BaseLayout.astro` is the website shell for `/`, `/play`, `/join`, `/docs`,
+  the notices and the error pages. `/join` uses it for the form and lets the entry hide
+  the shell once a room is entered.
 - `public/manifest.webmanifest` — **hand-authored** (name/id/start_url `/app`/scope,
   `display_override`, maskable icons, a Play shortcut, `launch_handler`,
   `handle_links`). `bun run icons` generates the icons and deliberately does not write
@@ -153,6 +153,25 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   old static hero SVG is gone). The iframe is decorative and the anchor over it is
   the frame's one real link, so the window is keyboard-reachable without a plaque on
   the picture.
+- `src/lib/net/**` — **the room wire and clock**, pure and shared by the browser, the Bun
+  server and the Durable Object: the protocol's types and parsers, NTP-style clock
+  arithmetic, the room membership/relay core, and the endpoint rule. `clock.test.ts` and
+  `protocol.test.ts` hold the maths and the bounds.
+- `server/bun.ts` + `server/worker.ts` + `wrangler.rooms.jsonc` — **the room relay**: the
+  same `RoomCore` behind a Bun WebSocket server (which also serves `dist/` for
+  self-hosting) and a Cloudflare Durable Object per code. No audio, no charts parsed, no
+  database. [Networking](networking.md) is the contract.
+- `src/components/room/**` — **Play together on the host**: `useHostRoom` (the connection,
+  members, host state, the local band with the phones overlaid, chart sending and queue),
+  `InviteDialog` (code, link, QR and members, over the band or Jukebox), `RoomSlotPicker`
+  (the guest's own part picker), `HostRoomBridge` (playhead, remote reports, part ducking,
+  results) and `RoomRoster` (the TV's view of the phones). The band's **Invite players**
+  and the Jukebox's **Invite listeners** are the two entry points; there is no room
+  screen. `useGuestRoom` and `useRoomSocket` are the guest side's shared connection.
+- `src/components/join/**` — **the guest entry**: `JoinApp` (the site-framed form, then
+  name, seat, part, ready, listener and results on the app surface),
+  `RoomClockDirector` (the host's playhead as this phone's clock) and `RoomReporter`
+  (reports and pitch samples). It is `/join`, a root of its own.
 - `src/components/game/GameApp.tsx` — **the game island's shell**, and the loop
   around the run: it draws the room, the provider tower, the stage, the pages, the
   corner and focus. Its root (`.band`) is the persistent fullscreen target and must

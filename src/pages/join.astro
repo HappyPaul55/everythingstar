@@ -1,0 +1,36 @@
+---
+/**
+ * The phone's way into a room.
+ *
+ * The form is a page of the website: the same header and footer as the rest of
+ * the site, with one card in the middle. Entering a room hands the viewport to
+ * the game surface (`JoinApp` marks the document), which is the same transition
+ * `/play` makes when its stage arrives.
+ *
+ * A static page: the code is read from the query on the client, exactly like
+ * `/open`, because a static host cannot vary a document by query. `noindex` and
+ * out of the sitemap: a join link is an action, not a search result.
+ */
+import { getEntry } from "astro:content";
+import "../styles/global.css";
+import "../styles/band.css";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import JoinApp from "../components/join/JoinApp.tsx";
+import { localeFromPath, tFor } from "../i18n/astro";
+import { localePath } from "../i18n/paths";
+
+const site = (await getEntry("site", "main"))!.data;
+const locale = localeFromPath(Astro.url.pathname);
+const t = tFor(locale);
+---
+
+<BaseLayout
+  title={t("join.title")}
+  description={site.description}
+  path={localePath(locale, "/join")}
+  noindex
+>
+  <main id="main" tabindex="-1" class="join-page spray-ink">
+    <JoinApp client:only="react" locale={locale} />
+  </main>
+</BaseLayout>

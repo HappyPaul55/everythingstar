@@ -1,7 +1,7 @@
 ---
 title: Audio
 description: "The audio shopping list: every sound the game needs, where it plays, the delivery contract behind each one, and what its manifest entry means."
-updated: "2026-10-28"
+updated: "2026-11-24"
 order: 6
 ---
 
@@ -16,11 +16,11 @@ document's (see the last section), and a real song brings its own stems.
 
 ## The whole list
 
-**26 types are asked for below; 24 are playable and 34 files have arrived.** `in place`
+**26 types are asked for below; 25 are playable and 35 files have arrived.** `in place`
 marks a sound that has arrived. `want` is how many **files** behind the type — more is better where
 a sound repeats (a click, a move), pointless where it does not (a `win`).
 
-**In place** (all 34 files, 24 of the 26 types playable): the whole UI family — click,
+**In place** (all 35 files, 25 of the 26 types playable): the whole UI family — click,
 move, confirm, back, refuse, open and the screen whoosh — plus the typing feedback and
 the results tick come from **Kenney's UI Audio pack** (CC0 — credit
 "Kenney, kenney.nl"). Each wired file carries a **measured trim** in `sounds.json`,
@@ -142,6 +142,7 @@ not the cause**.
 | `combo_milestone` | oneshot | 2 | The multiplier stepping up. **0.2–0.4s** rising — two of them, or one that we pitch up as the combo climbs. **Not in the game at the moment** — see below. | — |
 | `meter_full` | oneshot | 1 | The meter filling. **1–2s** swell. **Not in the game at the moment** — see below. | — |
 | `meter_activate` | oneshot | 1 | Spending it. **0.4–0.8s** burst. | ✓ |
+| `cheer` | oneshot | 1 | A run's first ×4 streak, on the device that reached it. **0.8–1.6s** — a short room cheer, local to the player, never part of the song. | ✓ |
 
 **`combo_milestone` is not in the game at the moment**, and the row above is what a
 replacement would be. The cue it shipped with played on every multiplier step, and it
@@ -187,6 +188,10 @@ seconds of **star power**, and the held note keeps sounding as it is. The pause 
 because the only sound asked for is the `crowd` loop; the mixer adds no muffle filter.
 
 ## Types and variants
+
+In **Play together**, the per-player cues are local: a guest's phone plays its own
+`miss`, `error`, `sparkle`, `meter_activate` and `cheer`; the host's speakers play the
+song. The host does not play a remote seat's per-note cues.
 
 The game does not play a file, it plays a **type** — `click`, `background`, `miss`. A
 type may have several files behind it, and which file answers is decided by **what the

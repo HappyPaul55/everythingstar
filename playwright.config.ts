@@ -96,15 +96,28 @@ export default defineConfig({
       },
     })),
   ],
-  webServer: {
-    // `--ignore-lock` keeps the dev server in the foreground: Astro's agent
-    // detection otherwise daemonises it when a test run is started by an agent,
-    // and Playwright would see the wrapper exit instead of a server to wait on.
-    command: `bun run dev --host 127.0.0.1 --port ${PORT} --ignore-lock`,
-    url: `http://127.0.0.1:${PORT}/play`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-    stdout: "pipe",
-    stderr: "pipe",
-  },
+  webServer: [
+    {
+      // `--ignore-lock` keeps the dev server in the foreground: Astro's agent
+      // detection otherwise daemonises it when a test run is started by an agent,
+      // and Playwright would see the wrapper exit instead of a server to wait on.
+      command: `bun run dev --host 127.0.0.1 --port ${PORT} --ignore-lock`,
+      url: `http://127.0.0.1:${PORT}/play`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+    {
+      // The room suite is the only behavioural test that needs the relay. It is
+      // a second process in dev and in CI, exactly as `bun run dev:rooms` is.
+      command: "bun server/bun.ts",
+      url: "http://127.0.0.1:8788/api/health",
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
+      stdout: "pipe",
+      stderr: "pipe",
+      env: { PORT: "8788" },
+    },
+  ],
 });

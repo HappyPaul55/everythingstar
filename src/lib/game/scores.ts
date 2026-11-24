@@ -3,7 +3,7 @@
  * screen read back.
  *
  * It is deliberately **local** for now — this browser's own storage, no account
- * and no server — but it is the shape a real board will arrive in rather than a
+ * and no server for solo play — but it is the shape a real board will arrive in rather than a
  * different design. Everything except the two storage calls is pure, so the
  * rules that matter (what counts as a best, how many are kept) are unit-tested.
  */

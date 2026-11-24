@@ -1,7 +1,7 @@
 ---
 title: Libraries, scores and local records
 description: "How the library is cached, fetched and saved, what a playlist may reach, and the four records a player owns on this device."
-updated: "2026-11-01"
+updated: "2026-11-24"
 order: 4
 ---
 
@@ -163,7 +163,7 @@ own group and never matches a specific lineup. The results screen compares the n
 score with the best **for this band** and shows the last few runs song-wide
 (`recentFor`, newest first), each row naming its lineup. The **band** is remembered
 the same way
-(`src/lib/game/band/store.ts`). There is **no account and no server**: a leaderboard
+(`src/lib/game/band/store.ts`). There is **no account and no server for solo play**: a leaderboard
 is a later addition to the same shape, not a different design. Every run also
 publishes its own totals to a publish-only board (`RunBoard`) that the results screen
 reads — that is a read-out, never an input, so no player's judging can be affected by

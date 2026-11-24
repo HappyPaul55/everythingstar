@@ -38,6 +38,8 @@ jobs:
       # No `bun install`: the smoke test imports nothing.
       - name: Check the site
         run: bun scripts/smoke.ts --base https://everythingstar.happypaul55.com
+      - name: Check the room relay
+        run: curl -fsS https://everythingstar.happypaul55.com/api/health
       - name: Is production serving a build from main?
         env:
           GH_TOKEN: ${{ github.token }}

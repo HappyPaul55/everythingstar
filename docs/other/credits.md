@@ -1,7 +1,7 @@
 ---
 title: Credits
 description: "Who made EverythingStar, every sound credit as the manifest records it, the fonts and tools behind it, and where its songs come from."
-updated: "2026-10-28"
+updated: "2026-11-24"
 order: 4
 ---
 
@@ -26,7 +26,7 @@ same file the game plays them from.
 ## Sounds
 
 `public/audio/sounds.json` is the game's own sound — everything it plays that is
-not a song: 24 types across 34 files when this page was written. Every file
+not a song: 25 types across 35 files when this page was written. Every file
 carries the credit it is used under, and the strings below are reproduced exactly
 as the manifest records them, grouped by what they are for. A sound's type is what
 the game asks for; a type may have several files behind it.
@@ -75,9 +75,10 @@ down, the guitar is also the keys' entrance, and the drum roll is the dance mat'
 | `miss` | 1 | Generated for EverythingStar (CC0) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | `sparkle` | 1 | Generated for EverythingStar (CC0) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
 | `meter_activate` | 1 | Generated for EverythingStar (CC0) | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) |
+| `cheer` | 1 | stephan, pdsounds.org, public domain | Public domain |
 | `error` | 1 | Pixabay Content License — pixabay.com/service/license-summary | [Pixabay Content License](https://pixabay.com/service/license-summary) |
 
-`miss`, `sparkle` and `meter_activate` are a generated chiptune first pass, and
+`miss`, `sparkle` and `meter_activate` are a generated chiptune first pass, `cheer` is a short slice of the pause crowd, and
 they are the part of the sound the game most expects to replace. `error` is not
 the sound of a miss but of a part going out of the mix; it is a Pixabay sound, and
 the licence asks for no attribution, but the manifest records it anyway.

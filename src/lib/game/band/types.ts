@@ -101,6 +101,13 @@ export interface Player {
    */
   auto: boolean;
   name?: string;
+  /**
+   * A player on another device in a room. The host still fetches their chart and
+   * includes them in the results, but **does not judge them**: their own device
+   * runs the chart and reports the numbers. The host's stage draws them as a
+   * roster card rather than a highway.
+   */
+  remote?: boolean;
 }
 
 /** A player with an instrument: they get a panel in the lanes region. */
@@ -128,6 +135,15 @@ export interface BandSlot {
   active?: boolean;
   /** Pitched songs can be sung or typed; lyrics-only songs always type. */
   wordsMode?: WordsMode;
+  /**
+   * The room identity for a seat, when the band came from a room. It keeps the
+   * host's and a guest's run entry on the same key without either inventing one.
+   */
+  id?: string;
+  /** The name the room shows for this player. */
+  name?: string;
+  /** A player on another device: the host draws a roster card, not a highway. */
+  remote?: boolean;
   /**
    * What this player plays with, once they have said so in the settings: a device
    * and, if they have learned one, their own mapping. Left out, the stage decides
@@ -419,18 +435,24 @@ export function makeBand(plan: BandPlan, humans = 1): BandSetup {
   return {
     players: plan.slots.slice(0, MAX_PLAYERS).flatMap((slot, index) => {
       if (slot.active === false) return [];
-      const auto = slot.controller
-        ? slot.controller.on === "none"
-        : isLaneKind(slot.kind) && lane >= humans;
-      if (isLaneKind(slot.kind)) lane += 1;
+      const auto = slot.remote
+        ? false
+        : slot.controller
+          ? slot.controller.on === "none"
+          : isLaneKind(slot.kind) && lane >= humans;
+      // A remote lane is not one of the host's keyboards: it must not consume the
+      // local human count and push the host's own seat onto the machine.
+      if (isLaneKind(slot.kind) && !slot.remote) lane += 1;
       return [{
-        id: `player-${index + 1}`,
+        id: slot.id ?? `player-${index + 1}`,
         seat: index,
         kind: slot.kind,
         ...(slot.role ? { role: slot.role } : {}),
         difficulty: slot.difficulty,
         ...(slot.wordsMode ? { wordsMode: slot.wordsMode } : {}),
         ...(slot.controller ? { controller: slot.controller } : {}),
+        ...(slot.name ? { name: slot.name } : {}),
+        ...(slot.remote ? { remote: true } : {}),
         auto,
       }];
     }),

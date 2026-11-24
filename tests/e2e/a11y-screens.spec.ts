@@ -64,5 +64,13 @@ test("welcome, menu, the Jukebox, songs, options and the Playlists dialog have n
   await page.keyboard.press("Escape");
   await expect(playlists).toBeHidden();
 
+  // The room's join form is a page of the site, not a game screen: it carries the
+  // site's landmarks and one labelled form in the middle.
+  await page.goto("/join");
+  await expect(page.getByRole("heading", { name: "Join a room" })).toBeVisible();
+  await expect(page.locator("#site-header")).toBeVisible();
+  const join = await seriousViolations(page);
+  expect(describeViolations(join)).toBe("");
+
   expect(leaked, "unexpected external requests").toEqual([]);
 });

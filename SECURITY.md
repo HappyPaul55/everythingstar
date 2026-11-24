@@ -1,10 +1,17 @@
 # Security policy
 
 EverythingStar is a **static site**: the browser downloads files, and everything
-after that happens in the tab. There is no server, no API, no database, no account,
-no cookie, no analytics and no secret in this repository. A run's band, settings and
+after that happens in the tab. Solo there is no server, no database, no account, no
+cookie, no analytics and no secret in this repository. A run's band, settings and
 scores are kept in the player's own browser storage; playlist documents and audio
 are fetched from URLs the player chose.
+
+**Play together** is an optional room relay (`server/`, `wrangler.rooms.jsonc`). It
+carries membership, seats, chart data, the host's playhead and scores over a
+WebSocket, and never audio. It is a separate deployable from the static site; a
+self-hosted relay is the operator's service. Report a relay issue with the same
+care as a client one, and never include a room token or somebody's IP in a public
+report.
 
 That removes most of the usual attack surface, and leaves a small one worth
 reporting carefully.
@@ -70,6 +77,6 @@ The parts that handle somebody else's data:
 
 ## What we will not do
 
-We will not add a server to fix a security report. If a fix needs a service, it
-belongs in a separate project reached through the Playlists feature — the client
-stays static files and a browser.
+We will not add a new service to fix a security report. The room relay is the one
+documented service; anything else belongs in a separate project reached through the
+Playlists feature. The site stays static files and a browser.

@@ -1,7 +1,7 @@
 ---
 title: Contributing
 description: "What is welcome and what is deliberately out of scope, and the short set of pages that take a change from an idea to a merged pull request."
-updated: "2026-10-30"
+updated: "2026-11-24"
 order: 9
 ---
 
@@ -33,12 +33,13 @@ at the repository root is the short orientation for any change, and it links bac
 
 ## What is out of scope
 
-- **A server, an API, or a Worker.** This repository is static files only:
-  `wrangler.jsonc` has no `main`, `run_worker_first` or bindings, and the deploy is
-  a static upload from GitHub Actions, not a Worker script — all deliberate.
-  Anything the game needs at runtime is fetched by the browser from a URL the
-  player gave it. A provider is a **separate project**, reached through the
-  Playlists feature — not a route here.
+- **A server, an API, or a Worker beyond the room relay.** The site is static
+  files: `wrangler.jsonc` has no `main`, `run_worker_first` or bindings, and the
+  deploy is a static upload from GitHub Actions. The one exception is the optional
+  **room relay** (`server/`, `wrangler.rooms.jsonc`), documented in
+  [Networking](networking.md); it carries charts and scores, never audio, and solo
+  play never needs it. A library provider is still a **separate project**, reached
+  through Playlists.
 - **Accounts, analytics, trackers, cookies.** The game is local: the band, the
   settings and the scores stay in the player's browser.
 - **A new runtime dependency** without a reason that survives review. The first
