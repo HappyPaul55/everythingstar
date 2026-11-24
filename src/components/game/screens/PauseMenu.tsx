@@ -1,6 +1,7 @@
 import { lazy, Suspense, useId, useState } from "react";
 import { useT } from "../../../i18n/react";
 import { useCoarsePointer } from "../band/useCoarsePointer";
+import { useRoomOptional } from "../../room/useHostRoom";
 import {
   isMelodyKind,
   type BandSetup,
@@ -94,6 +95,9 @@ export function PauseMenu({
   const [choosing, setChoosing] = useState<Choosing>(null);
   /** The plan "Practice this section" seeded, read once at the press. */
   const [seed, setSeed] = useState<PracticePlan | null>(null);
+  // Practice is a solo loop: a room's guests follow one host timeline and cannot
+  // rewind with it. A pause in a room keeps resume, restart and leave.
+  const inRoom = useRoomOptional()?.active === true;
   const speedLabel = useId();
   const lagLabel = useId();
   const vocalLabel = useId();
@@ -240,31 +244,33 @@ export function PauseMenu({
             </div>
           ) : null}
         </div>
-        <div className="screen__practice">
-          <button
-            type="button"
-            className="band-btn"
-            aria-haspopup="dialog"
-            onClick={() => setChoosing("open")}
-          >
-            {t("practice.open")}
-          </button>
-          {sections.length > 0 ? (
+        {inRoom ? null : (
+          <div className="screen__practice">
             <button
               type="button"
               className="band-btn"
               aria-haspopup="dialog"
-              onClick={practiceHere}
+              onClick={() => setChoosing("open")}
             >
-              {t("pause.practiceHere")}
+              {t("practice.open")}
             </button>
-          ) : null}
-          {practice ? (
-            <button type="button" className="band-btn" onClick={onStopPractice}>
-              {t("practice.stop")}
-            </button>
-          ) : null}
-        </div>
+            {sections.length > 0 ? (
+              <button
+                type="button"
+                className="band-btn"
+                aria-haspopup="dialog"
+                onClick={practiceHere}
+              >
+                {t("pause.practiceHere")}
+              </button>
+            ) : null}
+            {practice ? (
+              <button type="button" className="band-btn" onClick={onStopPractice}>
+                {t("practice.stop")}
+              </button>
+            ) : null}
+          </div>
+        )}
         <div className="screen__actions">
           {passOver && practice ? (
             <button
