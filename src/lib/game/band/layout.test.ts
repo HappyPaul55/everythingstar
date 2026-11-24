@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { DEFAULT_GAP, MELODY_SHARE, computeBandLayout, fitPanels } from "./layout";
+import { DEFAULT_GAP, MELODY_SHARE, computeBandLayout, fitPanels, loneLastPanel } from "./layout";
 import { makeBand, type BandSlot } from "./types";
 
 const GAP = DEFAULT_GAP;
@@ -90,6 +90,18 @@ describe("fitPanels", () => {
       width: 0,
       height: 0,
     });
+  });
+
+  test("a panel alone on the last row is the one that centres", () => {
+    // The arcade's three instruments in a 2×2.
+    expect(loneLastPanel(3, 2)).toBe(true);
+    // Two full rows, and a lone lane in its own column, are not.
+    expect(loneLastPanel(4, 2)).toBe(false);
+    expect(loneLastPanel(1, 1)).toBe(false);
+    expect(loneLastPanel(0, 2)).toBe(false);
+    // Five in two columns leaves one; five in three leaves two.
+    expect(loneLastPanel(5, 2)).toBe(true);
+    expect(loneLastPanel(5, 3)).toBe(false);
   });
 });
 

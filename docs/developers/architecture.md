@@ -35,9 +35,10 @@ fallback, not a stop an ordinary run makes.
   **Options**, **Credits** and the **Charter** link. The wordmark sits beside three
   large, tilted choices on desktop and two darker side doors — Jukebox and Charter —
   under them; all five share the same shape, and the side doors keep their darker
-  colour until hover. On phones the wordmark moves above them. Every door is a round
-  trip, and Escape (or a pad's B) goes back a step from every screen that has one. The
-  Charter door is not in `/arcade`.
+  colour until hover. On phones and portrait screens — including the vertical TV the
+  arcade runs on — the wordmark moves above them and the doors are sized to read from
+  across a room. Every door is a round trip, and Escape (or a pad's B) goes back a
+  step from every screen that has one. The Charter door is not in `/arcade`.
 - **Options** — the handful of things that belong to a player rather than to a song, kept
   in this browser (`src/lib/game/settings.ts`): **audio lag** (a stepper, ±300 ms in
   5 ms steps, with a **Calibrate** dialog that measures it from eight clicks and writes
@@ -267,7 +268,9 @@ rather than the 671 KiB JPEG it replaced.
     being lower; a refusal is not an error, it is a band that plays itself (the
     score rail says so), and nothing leaves the device.
 - **Lanes region** — one panel per player (guitar, bass, drums, keys, dance),
-  side by side. Each panel holds the score (left), the note highway (centre) and
+  side by side. They wrap only when the stage is too narrow for one row, and a
+  panel left alone on the last row is centred rather than stranded in its first
+  column. Each panel holds the score (left), the note highway (centre) and
   the info rail (right — the power meter, a full-height bar). A highway note is a
   **button**: it is hit where it lands. The pads are one pointer surface — the hit
   row captures the pointer, not the pad — so a finger already on the line may

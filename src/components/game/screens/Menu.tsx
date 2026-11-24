@@ -28,6 +28,8 @@ interface Props {
  * is the listening mode and the Charter is a tool, not two more ways to play, so
  * they sit under the three doors: all five share the doors' shape, tilt and hover,
  * and only the side doors' resting colours say they are a different kind of place.
+ * On a phone or a portrait screen — including the vertical TV the arcade runs on —
+ * the wordmark sits above them, sized to be read from across a room.
  */
 export function Menu({
   onQuickPlay,

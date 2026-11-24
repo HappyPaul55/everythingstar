@@ -105,6 +105,15 @@ export function fitPanels(area: Box, count: number, gap: number): PanelGrid {
   return best;
 }
 
+/**
+ * True when the last panel sits alone on its row — three players in a 2×2, or
+ * five in a 2-column grid — so the grid should centre it rather than leave it in
+ * the first column. Pure: the caller decides how to place it.
+ */
+export function loneLastPanel(count: number, columns: number): boolean {
+  return count > 0 && columns > 0 && count % columns === 1;
+}
+
 /** Lay out the whole band for a stage of `area`. Pure. */
 export function computeBandLayout(
   setup: BandSetup,

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { useT } from "../../../i18n/react";
 import type { LanePlayer } from "../../../lib/game/band/types";
 import type { HighwayView, NoteStyle } from "../../../lib/game/settings";
@@ -41,9 +41,14 @@ interface Props {
   haptics: boolean;
   /** A lone player on an empty stage: no panel frame, just its parts. */
   bare?: boolean;
+  /**
+   * Where this panel sits in the lanes grid, for the one left over on its own
+   * row: it spans the row and centres rather than sitting in the first column.
+   */
+  place?: CSSProperties;
 }
 
-export function PlayerPanel({ player, width, height, view, noteStyle, noteSpeed, visualLagMs, tap, haptics, bare = false }: Props) {
+export function PlayerPanel({ player, width, height, view, noteStyle, noteSpeed, visualLagMs, tap, haptics, bare = false, place }: Props) {
   const t = useT();
   const coarse = useCoarsePointer();
   const { track, seed } = useSong();
@@ -158,7 +163,7 @@ export function PlayerPanel({ player, width, height, view, noteStyle, noteSpeed,
   return (
     <section
       className={bare ? "player-panel player-panel--bare" : "player-panel"}
-      style={{ width, height }}
+      style={{ width, height, ...place }}
       aria-label={`${name} — ${label}`}
     >
       <ScoreRail name={name} kind={player.kind} difficulty={player.difficulty} auto={auto} run={run} />

@@ -138,3 +138,37 @@ test("both calibration dialogs open from Options, and Escape gives their buttons
 
   expect(leaked, "unexpected external requests").toEqual([]);
 });
+
+/**
+ * The arcade is meant for a wall display. A 1080x1920 TV is wider than the phone
+ * breakpoint, so the menu must not fall back to the desktop's two columns: it
+ * stacks the wordmark above the doors and gives them the screen's width.
+ */
+test("a portrait screen wider than a phone gets the stacked poster", async ({
+  context,
+  page,
+}) => {
+  await installFixtures(context);
+  await disableFullscreen(page);
+  await page.setViewportSize({ width: 1080, height: 1920 });
+  await enterGame(page);
+
+  const menu = page.getByRole("navigation", { name: "Main menu" });
+  await expect(menu).toBeVisible();
+  const nav = await menu.boundingBox();
+  const brand = await page
+    .getByRole("button", { name: "EverythingStar", exact: true })
+    .boundingBox();
+  expect(nav, "the menu has a box").not.toBeNull();
+  expect(brand, "the wordmark has a box").not.toBeNull();
+
+  // The phone column is capped at 28rem (448px); the poster uses most of a TV.
+  expect(nav?.width ?? 0).toBeGreaterThan(700);
+  // The wordmark sits over the doors, not beside them.
+  expect((brand?.y ?? 0) + (brand?.height ?? 0)).toBeLessThan(nav?.y ?? 0);
+  // Every door is the same shape, side doors included.
+  const heights = await page
+    .locator(".menu__item")
+    .evaluateAll((items) => items.map((item) => Math.round(item.getBoundingClientRect().height)));
+  expect(new Set(heights).size).toBe(1);
+});

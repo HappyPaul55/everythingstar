@@ -417,8 +417,9 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   player takes an instrument or one of the melody's roles, plus `BandPlan`,
   `makeBand`, `lanePlayers`/`melodyPlayers`, `melodyRoles`, `melodyView`),
   `store.ts` (the remembered plan), `layout.ts` (the **pure region/panel geometry**:
-  `fitPanels`, `computeBandLayout`, `STAGE_GUTTER` — the clear space each stage
-  keeps at its edge), `melody.ts` (the **pure vocal geometry**: `rowCentre`,
+  `fitPanels`, `computeBandLayout`, `loneLastPanel` for the odd panel that centres,
+  and `STAGE_GUTTER`, the clear space each stage keeps at its edge), `melody.ts` (the
+  **pure vocal geometry**: `rowCentre`,
   `barSpanMs`/`nextOnsets`, which keep a note's bar inside its own turn,
   `rollNotes`, which draws each note once however many parts are on it, and
   `lineSpanMs`/`linePlace`/`mountedLines`/`linesInWindow`, the words' twin of
