@@ -7141,6 +7141,11 @@
   letter-spacing: .12em;
 }
 
+.join-stage__error {
+  color: var(--warn, #e0a04a);
+  font-size: .66rem;
+}
+
 .join-stage__settings {
   position: fixed;
   z-index: 10;

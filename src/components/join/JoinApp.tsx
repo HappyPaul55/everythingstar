@@ -455,6 +455,11 @@ function JoinStage({
             >
               {t("join.leave")}
             </button>
+            {room.error ? (
+              <span className="join-stage__error" role="status">
+                {room.error}
+              </span>
+            ) : null}
           </div>
         </BandStage>
       </GameProviders>
