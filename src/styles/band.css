@@ -3613,10 +3613,12 @@
       flex-direction: column;
       min-height: 0;
     }
-    /* Stretched, but never squeezed: on a viewport too short for the column's own
-       contents, the page scrolls rather than the panel painting over itself. */
-    .song-list__display {
-      flex: 1 1 auto;
+    /* The slot is only as tall as what it holds: a now-playing box stretched to
+       the full height of a long list is a mile of empty panel on a tall screen.
+       The way on stays pinned to the floor of the column, level with the list's
+       last row. */
+    .screen__panel--songs .song-list__display {
+      flex: 0 1 auto;
       min-height: 0;
     }
     .song-list__scroller {

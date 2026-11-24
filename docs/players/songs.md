@@ -1,7 +1,7 @@
 ---
 title: Songs and playlists
 description: "The Songs screen: finding a song, previews, playlists and folders, imported files, .sng packages and downloads for offline play."
-updated: "2026-10-31"
+updated: "2026-11-24"
 order: 2
 ---
 
@@ -29,7 +29,7 @@ If nothing contains what you typed, the game forgives **one typo** — a substit
 
 ### The now-playing panel
 
-The panel is the chosen song: art, length, title, artist and what it offers. Under it is a table of up to ten recent runs — when, how many players and the score — or **no score yet**, with **Next: your band** below. On a wide screen list and panel share one height; on a phone the panel opens over the list.
+The panel is the chosen song: art, length, title, artist and what it offers. Under it is a table of up to ten recent runs — when, how many players and the score — or **no score yet**, with **Next: your band** below. On a wide screen the panel keeps to the height of what it holds, at the top of its column, and the button stays at the bottom; on a phone the panel opens over the list.
 
 ### Previews
 
