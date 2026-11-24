@@ -6509,7 +6509,11 @@
 .room-screen,
 .join {
   display: grid;
+  align-content: start;
   gap: 1rem;
+  width: 100%;
+  max-width: 64rem;
+  margin-inline: auto;
 }
 
 .room__heading,
@@ -6981,19 +6985,154 @@
 
 .join__field {
   display: grid;
-  gap: .25rem;
-  font-size: .8rem;
-  color: var(--color-muted);
+  gap: .35rem;
+  font-family: var(--font-mono);
+  font-size: .68rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(250, 250, 244, .66);
 }
 
 .join__field input {
-  color: var(--color-ink);
+  width: 100%;
+  min-height: 3rem;
+  padding: .7rem .8rem;
+  color: var(--color-cream);
+  background: rgba(12, 13, 10, .72);
+  border: 1px solid rgba(250, 250, 244, .24);
+  border-radius: var(--radius-inner);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  text-transform: none;
+}
+
+.join__field input::placeholder {
+  color: rgba(250, 250, 244, .32);
+}
+
+.join__field input:focus-visible {
+  border-color: var(--color-yellow);
+}
+
+.join__field--code input {
+  font-size: 1.4rem;
+  letter-spacing: .22em;
+  text-transform: uppercase;
 }
 
 .join__home {
-  justify-self: start;
-  color: var(--color-muted);
+  justify-self: center;
+  color: rgba(250, 250, 244, .68);
   font-size: .82rem;
+}
+
+.join__home:hover,
+.join__home:focus-visible {
+  color: var(--color-yellow);
+}
+
+/* ------------------------------------------------------------------
+   The join page and its handover to the room
+   The form is a page of the website: the header and footer stay around a
+   single card. Pressing Join is the handover — the document is marked and
+   the room's screen takes the viewport, the way /play's stage does.
+------------------------------------------------------------------ */
+.join-page {
+  display: grid;
+  place-items: center;
+  min-height: calc(100dvh - 4.6rem);
+  padding: clamp(2.5rem, 8vw, 6rem) clamp(1rem, 5vw, 2rem);
+  background-color: var(--color-ink);
+  color: var(--color-cream);
+}
+
+.join-landing {
+  display: grid;
+  gap: 1.1rem;
+  width: min(30rem, 100%);
+}
+
+.join-landing__intro {
+  display: grid;
+  gap: .35rem;
+}
+
+.join-landing .join__comment {
+  margin: 0 0 .2rem;
+}
+
+.join-landing h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 7vw, 3.8rem);
+  line-height: .95;
+  color: var(--color-cream);
+}
+
+.join-landing__hint {
+  margin: 0;
+  max-width: 32rem;
+  color: rgba(250, 250, 244, .68);
+  font-size: .92rem;
+  line-height: 1.5;
+}
+
+.join-card {
+  display: grid;
+  gap: .9rem;
+  padding: clamp(1.1rem, 3vw, 1.5rem);
+  border: 1px solid rgba(250, 250, 244, .18);
+  border-radius: var(--radius-brand);
+  background: rgba(20, 21, 17, .94);
+  box-shadow: 0 1.4rem 3rem rgba(0, 0, 0, .4);
+}
+
+.join-card .band-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.join__error {
+  margin: 0;
+  color: var(--warn, #e0a04a);
+  font-size: .82rem;
+}
+
+.join-app {
+  position: relative;
+  width: 100%;
+  min-height: 100dvh;
+  color: var(--color-cream);
+  background:
+    radial-gradient(85% 60% at 50% 0%, rgba(255, 212, 0, .1), transparent 62%),
+    radial-gradient(70% 55% at 100% 100%, rgba(34, 224, 255, .07), transparent 62%),
+    var(--color-ink);
+}
+
+.join-app--stage {
+  background: var(--color-ink);
+}
+
+html[data-join-app] #site-header,
+html[data-join-app] body > footer {
+  display: none;
+}
+
+html[data-join-app],
+html[data-join-app] body {
+  background: var(--color-ink);
+}
+
+html[data-join-app] {
+  overflow: hidden;
+}
+
+html[data-join-app] .join-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  padding: 0;
+  background: transparent;
 }
 
 .join__who {

@@ -67,7 +67,7 @@
  *
  * **Play together** (2026-11-24) put the host's room connection and the relay client
  * in `/play`'s first download, because the band and the Jukebox both use them; the
- * invite dialog and its QR encoder are lazy. That is **799 KiB** of `_astro` JS and
+ * invite dialog and its QR encoder are lazy. That is **800 KiB** of `_astro` JS and
  * an initial graph of **612 KiB raw / 198 KiB gzipped across 23 files**, so the
  * whole-payload cap moved 800 → 820 and the initial caps kept their headroom. The
  * guest entry is its own 8-module graph.

@@ -86,6 +86,22 @@ function JoinApp() {
     setSettings(loadSettings());
   }, []);
 
+  // A joined guest is the app, not a page of the website. The marker hides the
+  // site's header and footer and lets the room's screen take the viewport; the
+  // form before it keeps them, so a join link still opens as a page of the site.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (entered) {
+      root.dataset.joinApp = "true";
+      window.scrollTo({ top: 0 });
+    } else {
+      delete root.dataset.joinApp;
+    }
+    return () => {
+      delete root.dataset.joinApp;
+    };
+  }, [entered]);
+
   const room = useGuestRoom({ code, enabled: entered, name });
   const sounds = useSounds(DEFAULT_SOUNDS, entered);
   const phase = room.state?.phase ?? "lobby";
@@ -121,49 +137,17 @@ function JoinApp() {
 
   if (!entered) {
     return (
-      <JoinShell title={t("join.title")}>
-        <p className="comment join__comment">
-          <span className="slash" aria-hidden="true">//</span> {t("join.comment")}
-        </p>
-        <label className="join__field" htmlFor="join-code">
-          <span>{t("join.code")}</span>
-          <input
-            id="join-code"
-            className="song-list__input"
-            value={code}
-            inputMode="text"
-            autoCapitalize="characters"
-            autoComplete="off"
-            spellCheck={false}
-            maxLength={6}
-            onChange={(event) => setCode(event.target.value.toUpperCase())}
-          />
-        </label>
-        <label className="join__field" htmlFor="join-name">
-          <span>{t("join.name")}</span>
-          <input
-            id="join-name"
-            className="song-list__input"
-            value={name}
-            maxLength={24}
-            autoComplete="nickname"
-            onChange={(event) => setName(event.target.value)}
-          />
-        </label>
-        {formError ? <p className="is-warn">{formError}</p> : null}
-        <button
-          type="button"
-          className="band-btn band-btn--primary band-btn--big"
-          data-sound="select"
-          disabled={!code.trim() || !name.trim()}
-          onClick={submit}
-        >
-          {t("join.enter")}
-        </button>
-        <a className="join__home" href="/play">
-          {t("join.backHome")}
-        </a>
-      </JoinShell>
+      <JoinLanding
+        code={code}
+        name={name}
+        formError={formError}
+        onCode={(next) => {
+          setCode(next.toUpperCase());
+          setFormError(null);
+        }}
+        onName={setName}
+        onSubmit={submit}
+      />
     );
   }
 
@@ -179,6 +163,9 @@ function JoinApp() {
             {t("join.enter")}
           </a>
         ) : null}
+        <a className="join__home" href="/play">
+          {t("join.backHome")}
+        </a>
       </JoinShell>
     );
   }
@@ -230,6 +217,90 @@ function JoinApp() {
   );
 }
 
+/** The website's side of the entry: one card, in the site's header and footer. */
+function JoinLanding({
+  code,
+  name,
+  formError,
+  onCode,
+  onName,
+  onSubmit,
+}: {
+  code: string;
+  name: string;
+  formError: string | null;
+  onCode: (next: string) => void;
+  onName: (next: string) => void;
+  onSubmit: () => void;
+}) {
+  const t = useT();
+  return (
+    <section className="join-landing" aria-labelledby="join-heading">
+      <div className="join-landing__intro">
+        <p className="comment on-ink join__comment">
+          <span className="slash" aria-hidden="true">//</span>{" "}
+          {t("join.comment")}
+        </p>
+        <h1 id="join-heading">{t("join.title")}</h1>
+        <p className="join-landing__hint">{t("join.formHint")}</p>
+      </div>
+
+      <form
+        className="join-card"
+        onSubmit={(event) => {
+          event.preventDefault();
+          onSubmit();
+        }}
+      >
+        <label className="join__field join__field--code" htmlFor="join-code">
+          <span>{t("join.code")}</span>
+          <input
+            id="join-code"
+            className="song-list__input"
+            value={code}
+            inputMode="text"
+            autoCapitalize="characters"
+            autoComplete="off"
+            spellCheck={false}
+            maxLength={6}
+            placeholder="ABC123"
+            aria-invalid={formError ? true : undefined}
+            onChange={(event) => onCode(event.target.value)}
+          />
+        </label>
+        <label className="join__field" htmlFor="join-name">
+          <span>{t("join.name")}</span>
+          <input
+            id="join-name"
+            className="song-list__input"
+            value={name}
+            maxLength={24}
+            autoComplete="nickname"
+            onChange={(event) => onName(event.target.value)}
+          />
+        </label>
+        {formError ? (
+          <p className="join__error" role="alert">
+            {formError}
+          </p>
+        ) : null}
+        <button
+          type="submit"
+          className="band-btn band-btn--primary band-btn--big"
+          data-sound="select"
+          disabled={!code.trim() || !name.trim()}
+        >
+          {t("join.enter")}
+        </button>
+      </form>
+
+      <a className="join__home" href="/play">
+        {t("join.backHome")}
+      </a>
+    </section>
+  );
+}
+
 function JoinShell({
   title,
   room,
@@ -241,23 +312,29 @@ function JoinShell({
 }) {
   const t = useT();
   return (
-    <div className="screen screen--join">
-      <div className="screen__panel screen__panel--page join">
-        <header className="join__head">
-          <div>
-            <p className="join__eyebrow">
-              {room ? t("join.room", { code: room.code }) : t("join.title")}
+    <div className="join-app">
+      <div className="screen screen--join">
+        <div className="screen__panel screen__panel--page join">
+          <header className="join__head">
+            <div>
+              <p className="join__eyebrow">
+                {room ? t("join.room", { code: room.code }) : t("join.title")}
+              </p>
+              <h1 className="screen__title">{title}</h1>
+            </div>
+            {room ? (
+              <span className="join__who">
+                {t("join.who", { name: room.you?.name ?? room.name })}
+              </span>
+            ) : null}
+          </header>
+          {room && (room.error || room.state?.notice) ? (
+            <p className="room__notice is-warn" role="status">
+              {room.error ?? room.state?.notice}
             </p>
-            <h1 className="screen__title">{title}</h1>
-          </div>
-          {room ? <span className="join__who">{t("join.who", { name: room.you?.name ?? room.name })}</span> : null}
-        </header>
-        {room && (room.error || room.state?.notice) ? (
-          <p className="room__notice is-warn" role="status">
-            {room.error ?? room.state?.notice}
-          </p>
-        ) : null}
-        {children}
+          ) : null}
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -309,7 +386,7 @@ function JoinLobby({
   const ready = room.ready && Boolean(room.chart);
   return (
     <div className="join-lobby">
-      <p className="comment join__comment">
+      <p className="comment on-ink join__comment">
         <span className="slash" aria-hidden="true">//</span> {t("join.hostSpeakers")}
       </p>
 
@@ -414,69 +491,71 @@ function JoinStage({
 }) {
   const t = useT();
   return (
-    <div className="screen screen--join-stage">
-      <GameProviders
-        screen="playing"
-        sounds={sounds}
-        volume={settings.volume}
-        onVolume={(volume) => onChangeSettings({ volume })}
-        levels={settings.levels}
-        crowd={false}
-        setup={turn.setup}
-        track={turn.track}
-        seed={room.chart?.song.seed ?? 0}
-        doc={null}
-        perfect={false}
-        audio
-        room
-      >
-        <RoomClockDirector room={room} settings={settings} />
-        <RoomReporter room={room} singing={turn.singing} />
-        <BandStage
+    <div className="join-app join-app--stage">
+      <div className="screen screen--join-stage">
+        <GameProviders
+          screen="playing"
+          sounds={sounds}
+          volume={settings.volume}
+          onVolume={(volume) => onChangeSettings({ volume })}
+          levels={settings.levels}
+          crowd={false}
           setup={turn.setup}
-          media={{ kind: "image", src: DEFAULT_BACKDROP }}
-          view={settings.view}
-          noteStyle={settings.noteStyle}
-          noteSpeed={settings.noteSpeed}
-          visualLagMs={settings.visualLagMs}
-          backdropDim={settings.backdropDim}
-          tap={settings.tap}
-          haptics={settings.haptics}
-          youtube={null}
-          practice={null}
+          track={turn.track}
+          seed={room.chart?.song.seed ?? 0}
+          doc={null}
+          perfect={false}
+          audio
+          room
         >
-          <div className="join-stage__hud">
-            <span className="join-stage__code">{room.code}</span>
-            <span>{room.you?.name}</span>
-            <span className="join-stage__part">
-              {room.you?.slot ? t(slotLabel(room.you.slot)) : ""}
-            </span>
-            <button type="button" className="band-btn" data-sound="open" onClick={onSettings}>
-              {t("join.settings")}
-            </button>
-            <button
-              type="button"
-              className="band-btn"
-              data-sound="back"
-              onClick={() => {
-                window.location.href = "/play";
-              }}
-            >
-              {t("join.leave")}
-            </button>
-            {room.error ? (
-              <span className="join-stage__error" role="status">
-                {room.error}
+          <RoomClockDirector room={room} settings={settings} />
+          <RoomReporter room={room} singing={turn.singing} />
+          <BandStage
+            setup={turn.setup}
+            media={{ kind: "image", src: DEFAULT_BACKDROP }}
+            view={settings.view}
+            noteStyle={settings.noteStyle}
+            noteSpeed={settings.noteSpeed}
+            visualLagMs={settings.visualLagMs}
+            backdropDim={settings.backdropDim}
+            tap={settings.tap}
+            haptics={settings.haptics}
+            youtube={null}
+            practice={null}
+          >
+            <div className="join-stage__hud">
+              <span className="join-stage__code">{room.code}</span>
+              <span>{room.you?.name}</span>
+              <span className="join-stage__part">
+                {room.you?.slot ? t(slotLabel(room.you.slot)) : ""}
               </span>
-            ) : null}
+              <button type="button" className="band-btn" data-sound="open" onClick={onSettings}>
+                {t("join.settings")}
+              </button>
+              <button
+                type="button"
+                className="band-btn"
+                data-sound="back"
+                onClick={() => {
+                  window.location.href = "/play";
+                }}
+              >
+                {t("join.leave")}
+              </button>
+              {room.error ? (
+                <span className="join-stage__error" role="status">
+                  {room.error}
+                </span>
+              ) : null}
+            </div>
+          </BandStage>
+        </GameProviders>
+        {settingsOpen ? (
+          <div className="join-stage__settings">
+            <JoinSettings settings={settings} onChange={onChangeSettings} />
           </div>
-        </BandStage>
-      </GameProviders>
-      {settingsOpen ? (
-        <div className="join-stage__settings">
-          <JoinSettings settings={settings} onChange={onChangeSettings} />
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -598,7 +677,7 @@ function JoinListen({ room }: { room: GuestRoom }) {
 
   return (
     <div className="join-listen">
-      <p className="comment join__comment">
+      <p className="comment on-ink join__comment">
         <span className="slash" aria-hidden="true">//</span> {t("join.hostSpeakers")}
       </p>
       <section className="join-listen__now">

@@ -21,7 +21,7 @@ The host needs the song's charts and its sound. Guests need neither the playlist
 
 ## Joining
 
-Open the join link, or go to `/join?room=CODE`, enter a name and press **Join the room**. Choose a free seat. What can be played is the song's own offer, exactly as it is on the host's band screen.
+Open the join link, or go to `/join?room=CODE`. The site opens on the join page, with the same header and footer as the rest of EverythingStar and one form in the middle; enter your name and press **Join the room**. The page then hands the screen to the game. Choose a free seat. What can be played is the song's own offer, exactly as it is on the host's band screen.
 
 - **Instruments** are tapped on the pads, or played with a keyboard, a gamepad, a MIDI keyboard or a kit.
 - **Vocals** use the phone's microphone. The room's speakers are the music, so a singer should stand away from them; echo cancellation is on for the room's microphone.

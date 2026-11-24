@@ -94,7 +94,7 @@ out of `astro check`, and the test config includes them with the runner's types.
   [Deployment and releases](deployment.md#the-release-archives).
 
 The budget was last measured on 2026-11-24, after **Play together** joined the build:
-799 KiB of `_astro` JS, an initial graph of 612 KiB raw / 198 KiB gzipped across 23
+800 KiB of `_astro` JS, an initial graph of 612 KiB raw / 198 KiB gzipped across 23
 files, 16.5 MiB in `dist/` and 8.8 MiB of audio. The caps sit just above those
 numbers — 820 KiB, 625 KiB, 202 KiB, 20 MiB, 10 MiB. The room's guest entry is a
 separate 8-module graph; the host's connection is in `/play`'s first download because

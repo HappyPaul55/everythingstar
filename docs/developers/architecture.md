@@ -317,7 +317,7 @@ That matters because `/play` is the page the game starts on: the initial JavaScr
 graph is **612 KiB raw / 198 KiB gzipped across 23 files**, and every static import
 in it is announced with a `modulepreload` at build time (`scripts/preload-initial.ts`),
 so the browser does not discover the graph three round trips deep. That is the first download
-only; every `_astro` JavaScript chunk in the build totals **799 KiB**, because the lazy
+only; every `_astro` JavaScript chunk in the build totals **800 KiB**, because the lazy
 chunks still ship — they are just not requested first. `scripts/check-budget.ts` walks
 `play.html`'s initial island graph, gates the initial raw and gzipped sizes directly,
 and fails if a translator marker leaks into it, so the split cannot quietly regress.
@@ -346,10 +346,15 @@ saved.
   an old WebView cache, service worker or task can never hand the app a website page from
   `/play`, `/app` or `/open`. The APK bundles `embed.html`; `noindex` and not in the
   sitemap.
-- `/join` — the **room guest entry**: game-only, `noindex`, not in the sitemap, and a
-  separate React root. It reads the room code from the query, receives its seat's chart
-  and the host's playhead, and renders one player's stage. It never loads the library,
-  the source translators or a song's audio. It carries the chart editor (up to eight 2D panes, pointer editing, keyboard/gamepad/MIDI recording) and its own clock and `SongAudio`; the run's providers are not mounted. See [Charter](charter.md).
+- `/join` — the **room guest entry**: a page of the site for its form (the same header
+  and footer around one card), then a game-only surface once a room is entered;
+  `noindex`, not in the sitemap, and a separate React root. It reads the room code from
+  the query, receives its seat's chart and the host's playhead, and renders one player's
+  stage. It never loads the library, the source translators or a song's audio.
+- `/charter` — the **chart editor**: game-only, `noindex`, not in the sitemap, and a
+  separate island. It carries up to eight 2D panes, pointer editing, keyboard/gamepad/MIDI
+  recording, its own clock and `SongAudio`; the run's providers are not mounted. See
+  [Charter](charter.md).
 - `/open` — the **link entry**: the same game-only page, read by the intent parser. A bare
   `/open` opens the game; `?playlist=…` and `?song=…` ask to add one. `noindex` and
   excluded from the sitemap; see [`deeplinks.md`](deeplinks.md).

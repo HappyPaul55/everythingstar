@@ -34,8 +34,14 @@ test("a guest joins the host's room, plays and reaches the results", async ({
   await installFixtures(guestContext);
   const guest = await guestContext.newPage();
   await guest.goto(`/join?room=${code}`);
+  // The join form is a page of the site; entering the room is what hands the
+  // viewport to the game surface.
+  await expect(guest.locator("#site-header")).toBeVisible();
+  await expect(guest.locator("body > footer")).toBeVisible();
   await guest.fill("#join-name", "Phone");
   await guest.getByRole("button", { name: /join the room/i }).click();
+  await expect(guest.locator("#site-header")).toBeHidden();
+  await expect(guest.locator("body > footer")).toBeHidden();
   await guest.locator(".join-seat").nth(1).click();
 
   // Close the invite modal; the room stays open, and the band's Play waits for

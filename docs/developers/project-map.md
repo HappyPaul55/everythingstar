@@ -102,9 +102,9 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
 - `src/layouts/GameLayout.astro` — the game-only head `/app`, `/embed` and `/open`
   share: viewport, theme, manifest link, apple tags, display-font preload, the
   worker registration and no site furniture, always `noindex`.
-  `src/layouts/BaseLayout.astro` is the website shell for `/`, `/play`, `/docs`, the
-  notices and the error pages, and loads `GameApp`'s styles with the header and footer
-  around it.
+  `src/layouts/BaseLayout.astro` is the website shell for `/`, `/play`, `/join`, `/docs`,
+  the notices and the error pages. `/join` uses it for the form and lets the entry hide
+  the shell once a room is entered.
 - `public/manifest.webmanifest` — **hand-authored** (name/id/start_url `/app`/scope,
   `display_override`, maskable icons, a Play shortcut, `launch_handler`,
   `handle_links`). `bun run icons` generates the icons and deliberately does not write
@@ -168,9 +168,10 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   results) and `RoomRoster` (the TV's view of the phones). The band's **Invite players**
   and the Jukebox's **Invite listeners** are the two entry points; there is no room
   screen. `useGuestRoom` and `useRoomSocket` are the guest side's shared connection.
-- `src/components/join/**` — **the guest entry**: `JoinApp` (name, seat, part, ready,
-  listener, results), `RoomClockDirector` (the host's playhead as this phone's clock) and
-  `RoomReporter` (reports and pitch samples). It is `/join`, a root of its own.
+- `src/components/join/**` — **the guest entry**: `JoinApp` (the site-framed form, then
+  name, seat, part, ready, listener and results on the app surface),
+  `RoomClockDirector` (the host's playhead as this phone's clock) and `RoomReporter`
+  (reports and pitch samples). It is `/join`, a root of its own.
 - `src/components/game/GameApp.tsx` — **the game island's shell**, and the loop
   around the run: it draws the room, the provider tower, the stage, the pages, the
   corner and focus. Its root (`.band`) is the persistent fullscreen target and must
