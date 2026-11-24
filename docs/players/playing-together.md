@@ -11,12 +11,11 @@ It is built for a **room**, not the internet: the host's speakers are the music.
 
 ## Hosting
 
-1. On the host, open **Play together** from the main menu.
-2. Choose **Play together** or **Listen together**.
-3. Pick a song from the host's library. Any song the host can play works — a playlist, a folder, a download, a `.sng` package or a YouTube-backed song.
-4. Share the **room code** or the **join link**. On a phone, open the link or type the code; it is six letters and numbers and is not case-sensitive.
-5. Each player takes a seat and chooses what they play. The host can remove a player who has left.
-6. When every phone says **Ready**, press **Start the song**.
+1. On the host, open **Quick Play → Songs**, pick a song and go on to the band. Any song the host can play works — a playlist, a folder, a download, a `.sng` package or a YouTube-backed song.
+2. Press **Invite players** on the band screen. The room code, join link and QR code appear in a modal over the band.
+3. Share the **code**, **link** or **QR code**. On a phone, open the link, scan the QR or type the code; it is six letters and numbers and is not case-sensitive.
+4. Each player takes a seat and chooses what they play. The seat appears on the host's band as a remote box, beside the host's own boxes.
+5. When every phone says **Ready**, close the modal and press the band's **Play**. The host can remove a player who has left from the same modal, and the invite button stays on the band so the code can be shown again.
 
 The host needs the song's charts and its sound. Guests need neither the playlist nor the audio: the host sends each seat the notes it will judge.
 
@@ -38,7 +37,9 @@ A phone should stay awake and on this screen during a run. A phone that loses th
 
 ## Listening together
 
-**Listen together** turns the same room into a shared Jukebox. The host's speakers play the music; phones see what is playing and the queue, search the host's library and add songs. A guest can also add a playlist or song URL to the host's library. The host can clear the queue or close the room.
+**Invite listeners** is the same modal in the **Jukebox**. The host's speakers play the music; phones see what is playing and the queue, search the room's library, add songs, play now or next, remove queue entries, and add a playlist or song URL to the room's library. The host can clear the queue or close the room.
+
+A listening room shares **only songs from URL playlists** — the FOSS library, YouTube-backed songs, downloads and pinned songs. A song from a local folder or an OPFS import has no address another device can fetch, so it stays on the host's device and is not in the room's library.
 
 ## When a room will not start
 

@@ -162,10 +162,12 @@ The vocabulary is exact — player, panel, highway, column, part, role, chart, s
   self-hosting) and a Cloudflare Durable Object per code. No audio, no charts parsed, no
   database. [Networking](networking.md) is the contract.
 - `src/components/room/**` — **Play together on the host**: `useHostRoom` (the connection,
-  members, host state, chart sending and queue), `RoomScreen` (code, seats, song, start),
-  `RoomSlotPicker`, `RoomSongPicker`, `HostRoomBridge` (playhead, remote reports, part
-  ducking, results), `RoomRoster` (the TV's view of the phones) and `RoomListenPanel`.
-  `useGuestRoom` and `useRoomSocket` are the guest side's shared connection.
+  members, host state, the local band with the phones overlaid, chart sending and queue),
+  `InviteDialog` (code, link, QR and members, over the band or Jukebox), `RoomSlotPicker`
+  (the guest's own part picker), `HostRoomBridge` (playhead, remote reports, part ducking,
+  results) and `RoomRoster` (the TV's view of the phones). The band's **Invite players**
+  and the Jukebox's **Invite listeners** are the two entry points; there is no room
+  screen. `useGuestRoom` and `useRoomSocket` are the guest side's shared connection.
 - `src/components/join/**` — **the guest entry**: `JoinApp` (name, seat, part, ready,
   listener, results), `RoomClockDirector` (the host's playhead as this phone's clock) and
   `RoomReporter` (reports and pitch samples). It is `/join`, a root of its own.

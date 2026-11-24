@@ -36,7 +36,7 @@ export interface GuestRoom {
   sendReport: (entry: RoomRunEntry) => void;
   sendPitch: (samples: PitchSample[]) => void;
   addLibrary: (kind: "playlist" | "song", url: string) => void;
-  queueOp: (op: "add" | "next" | "playNow" | "remove" | "clear", songId?: string) => void;
+  queueOp: (op: "add" | "next" | "playNext" | "playNow" | "remove" | "clear", songId?: string) => void;
   setName: (name: string) => void;
   serverNow: () => number;
   rttMs: number;
@@ -231,7 +231,7 @@ export function useGuestRoom({ code, enabled, name }: Options): GuestRoom {
     socketRef.current?.send({ type: "libraryAdd", kind, url });
   }, []);
   const queueOp = useCallback(
-    (op: "add" | "next" | "playNow" | "remove" | "clear", songId?: string) => {
+    (op: "add" | "next" | "playNext" | "playNow" | "remove" | "clear", songId?: string) => {
       socketRef.current?.send({ type: "queue", op, ...(songId ? { songId } : {}) });
     },
     [],

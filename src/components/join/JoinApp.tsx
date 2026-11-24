@@ -15,7 +15,8 @@ import { useWakeLock } from "../game/band/useWakeLock";
 import { DEFAULT_SOUNDS, useSounds } from "../game/audio/useSounds";
 import { RoomClockDirector } from "./RoomClockDirector";
 import { RoomReporter } from "./RoomReporter";
-import { RoomSlotPicker, slotLabel } from "../room/RoomSlotPicker";
+import { RoomSlotPicker } from "../room/RoomSlotPicker";
+import { slotLabel } from "../../lib/game/roomSlot";
 import { useGuestRoom, type GuestRoom } from "../room/useGuestRoom";
 
 const EMPTY_MELODY: MelodyChart = {
@@ -611,14 +612,32 @@ function JoinListen({ room }: { room: GuestRoom }) {
         {room.queue.queue.length === 0 ? (
           <p className="room-muted">{t("join.queueEmpty")}</p>
         ) : (
-          <ol>
-            {room.queue.queue.map((entry) => (
-              <li key={entry.id}>
-                <span>{entry.title}</span>
-                <span className="room-muted">{entry.artist}</span>
-              </li>
-            ))}
-          </ol>
+          <>
+            <ol>
+              {room.queue.queue.map((entry) => (
+                <li key={entry.id}>
+                  <span>{entry.title}</span>
+                  <span className="room-muted">{entry.artist}</span>
+                  <button
+                    type="button"
+                    className="band-btn join-listen__row-action"
+                    data-sound="back"
+                    onClick={() => room.queueOp("remove", entry.id)}
+                  >
+                    {t("screen.jukeboxRemove")}
+                  </button>
+                </li>
+              ))}
+            </ol>
+            <button
+              type="button"
+              className="band-btn join__home"
+              data-sound="back"
+              onClick={() => room.queueOp("clear")}
+            >
+              {t("screen.jukeboxClearQueue")}
+            </button>
+          </>
         )}
       </section>
 
@@ -639,23 +658,49 @@ function JoinListen({ room }: { room: GuestRoom }) {
                 <strong>{entry.title}</strong>
                 <span className="room-muted">{entry.artist}</span>
               </div>
-              <button
-                type="button"
-                className="band-btn"
-                data-sound="select"
-                onClick={() => {
-                  room.queueOp("add", entry.id);
-                  setStatus(t("join.added"));
-                }}
-              >
-                {t("join.addQueue")}
-              </button>
+              <div className="join-listen__row-actions">
+                <button
+                  type="button"
+                  className="band-btn join-listen__row-action"
+                  data-sound="select"
+                  onClick={() => {
+                    room.queueOp("playNow", entry.id);
+                    setStatus(t("screen.jukeboxPlayNow"));
+                  }}
+                >
+                  {t("screen.jukeboxPlayNow")}
+                </button>
+                <button
+                  type="button"
+                  className="band-btn join-listen__row-action"
+                  data-sound="select"
+                  onClick={() => {
+                    room.queueOp("playNext", entry.id);
+                    setStatus(t("screen.jukeboxPlayNext"));
+                  }}
+                >
+                  {t("screen.jukeboxPlayNext")}
+                </button>
+                <button
+                  type="button"
+                  className="band-btn"
+                  data-sound="select"
+                  onClick={() => {
+                    room.queueOp("add", entry.id);
+                    setStatus(t("join.added"));
+                  }}
+                >
+                  {t("join.addQueue")}
+                </button>
+              </div>
             </div>
           ))}
         </div>
       </section>
 
       <a className="band-btn join__home" href="/play">{t("join.leave")}</a>
+
+      <p className="room-muted">{t("room.urlOnly")}</p>
 
       <section className="join-listen__add">
         <h2>{t("screen.roomAddLibrary")}</h2>

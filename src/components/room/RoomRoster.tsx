@@ -3,7 +3,7 @@ import type { MessageKey } from "../../i18n";
 import { activeLineIndex } from "../../lib/game/run";
 import { useClockMs } from "../game/band/StageClock";
 import { useSong } from "../game/band/SongContext";
-import { slotLabel } from "./RoomSlotPicker";
+import { slotLabel } from "../../lib/game/roomSlot";
 import { useRoom } from "./useHostRoom";
 
 /** The host/TV's view of the players on phones: names, parts, scores and pitch. */

@@ -9,7 +9,6 @@ import { Menu } from "./Menu";
 import { Options } from "./Options";
 import { PauseMenu } from "./PauseMenu";
 import { Results } from "./Results";
-import { RoomScreen } from "../../room/RoomScreen";
 import { useRoomOptional } from "../../room/useHostRoom";
 import { Songs } from "./Songs";
 import { Welcome } from "./Welcome";
@@ -68,7 +67,6 @@ const PAGES: Record<PageScreen, PageView> = {
     <Menu
       onQuickPlay={() => session.dispatch("enter")}
       onJukebox={() => session.dispatch("jukebox")}
-      onPlayTogether={() => session.dispatch("room")}
       onOptions={() => session.dispatch("options")}
       onCredits={() => session.dispatch("credits")}
       onBack={() => session.dispatch("back")}
@@ -105,22 +103,7 @@ const PAGES: Record<PageScreen, PageView> = {
     />
   ),
   jukebox: (session) => <Jukebox session={session} />,
-  room: (session) => <RoomScreen session={session} />,
-  band: (session) =>
-    session.song ? (
-      <Band
-        song={session.song}
-        doc={session.load.doc}
-        problems={session.load.problems}
-        chartsReady={session.load.status === "ready"}
-        plan={session.plan}
-        onPlan={session.changePlan}
-        onPlay={session.startRun}
-        onBack={() => session.dispatch("back")}
-        fullscreen={session.fullscreen}
-        phone={session.phoneLayout}
-      />
-    ) : null,
+  band: (session) => <BandPage session={session} />,
   loading: (session) => (
     <Loading
       ready={session.load.status === "ready"}
@@ -130,6 +113,26 @@ const PAGES: Record<PageScreen, PageView> = {
   ),
   results: (session) => <ResultsPage session={session} />,
 };
+
+function BandPage({ session }: { session: GameSession }) {
+  const room = useRoomOptional();
+  const inRoom = room?.active === true && room.mode === "play";
+  if (!session.song) return null;
+  return (
+    <Band
+      song={session.song}
+      doc={session.load.doc}
+      problems={session.load.problems}
+      chartsReady={session.load.status === "ready"}
+      plan={session.plan}
+      onPlan={inRoom ? session.setPlan : session.changePlan}
+      onPlay={session.startRun}
+      onBack={() => session.dispatch("back")}
+      fullscreen={session.fullscreen}
+      phone={session.phoneLayout}
+    />
+  );
+}
 
 function ResultsPage({ session }: { session: GameSession }) {
   const room = useRoomOptional();

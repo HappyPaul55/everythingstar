@@ -7,15 +7,15 @@ order: 22
 
 EverythingStar's site is still static files. **Play together** adds one optional service: a **room relay** that carries membership, seats, the host's snapshot, each seat's chart, the playhead and the scores. It carries **no audio**, and it never judges a note.
 
-The invite link is `/join?room=CODE`; the host's room is a page in the game island, and the relay is a separate deployable.
+The invite link is `/join?room=CODE`; the host opens the room from **Invite players** on the band screen or **Invite listeners** in the Jukebox, and the relay is a separate deployable.
 
 ## The split
 
-- **Host device** — a browser. It owns the library, the song's audio, the charts, the band, the clock and the results. Its speakers are the room's sound.
+- **Host device** — a browser. It owns the library, the song's audio, the charts, the band, the clock and the results. Its speakers are the room's sound. The invite is a modal over the band or the Jukebox, not a separate screen.
 - **Room relay** — `server/bun.ts` or `server/worker.ts` around `src/lib/net/roomCore.ts`. It owns the room code, membership, seat claims, the latest host snapshot, the latest per-seat chart and the queue. It does not fetch or parse a song.
 - **Guest device** — `/join`. It receives one seat's chart, the host's playhead and the room's queue. It renders the same highway or words the host would, judges them locally, and reports its numbers.
 
-The relay's protocol is `src/lib/net/protocol.ts` (version 1). The wire is JSON over one WebSocket per device. The host is authoritative for the room's state; the relay stores the latest state so a guest who reloads can rejoin.
+The relay's protocol is `src/lib/net/protocol.ts` (version 1). The wire is JSON over one WebSocket per device. The host is authoritative for the room's state; the relay stores the latest state so a guest who reloads can rejoin. The host's invite modal shows the code, link and QR code; the Band screen and the Jukebox keep running underneath it.
 
 ## Why charts, not songs
 
@@ -25,6 +25,15 @@ A guest does not need the host's library. `useSongTrack` already assembles the c
 - A lane chart is validated with `chartProblems` on arrival; the melody is the host's own parsed, bounded track.
 - A new song or part asks for the notes again; the relay keeps the last chart per member in memory for a reconnect.
 - The guest has **no `SongAudio`**. Its `StageClock` follows a `RoomClock`: the host's `playhead` message, extrapolated with the server clock, minus the guest's own room sync (`audioLagMs`). The pause/resume correction uses `StageClock.syncTo`, which does **not** bump the deliberate-seek serial, so a room correction never wipes a run's combo.
+
+## The band and the Jukebox
+
+The band screen keeps the host's local boxes and lays the phones over the seats they
+claim: a guest box shows the phone's part and readiness, and the host's local player at
+that seat comes back when the phone leaves. The host's **Play** waits for every phone
+that has taken a seat to be ready. In the Jukebox the host's own library stays local;
+only songs from URL playlists are published to the room index, because a guest cannot
+preview or resolve a folder on the host's disk.
 
 ## Sound is local
 
@@ -70,4 +79,4 @@ bunx wrangler deploy --config wrangler.rooms.jsonc
 
 ## What is not here
 
-No remote play across the internet: host-only audio means the players must hear the host's speakers. No accounts, global leaderboard, chat, voice chat, spectator mode, host migration or local-folder uploads. A guest's own local folder is not sent; the host's library is the room's library.
+No remote play across the internet: host-only audio means the players must hear the host's speakers. No accounts, global leaderboard, chat, voice chat, spectator mode, host migration or local-folder uploads. A guest's own local folder is not sent. In a game room any host song can be played because the guest receives only its chart; the Jukebox room index is URL-playlist songs only, because a guest cannot preview a folder on the host's disk.

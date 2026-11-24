@@ -20,11 +20,12 @@ A status page ages; `updated` at the foot of this page is when it was last true.
   is only the listener's picks and the shuffle fills the gaps. Changing a song keeps
   the current one playing until the next is ready, a prefetched next song shortens the
   gap, a YouTube-backed song plays audio-only, and leaving saves the position.
-- **Play together**: a host's room on a laptop, TV or the arcade, with phones joining as
-  extra guitars, drums, singers or typists. The host keeps the song, the speakers and
-  the scores; a guest receives **only its seat's chart**, judges on its own device and
-  reports its numbers. The room relay carries membership, charts, the host's playhead
-  and scores, never audio. `Listen together` is the shared Jukebox queue. It is a
+- **Play together**: an **Invite players** modal over the band, with phones joining as
+  extra guitars, drums, singers or typists and appearing in the host's band boxes. The
+  host keeps the song, the speakers and the scores; a guest receives **only its seat's
+  chart**, judges on its own device and reports its numbers. The room relay carries
+  membership, charts, the host's playhead and scores, never audio. The Jukebox has the
+  same modal as **Invite listeners**, for a shared queue of URL-playlist songs. It is a
   **same-room** design: the host's speakers are the music. The full contract is
   [Networking](networking.md).
 - **The library**: songs come from **playlists** — JSON files at URLs, seeded once

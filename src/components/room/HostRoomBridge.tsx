@@ -34,8 +34,7 @@ export function HostRoomBridge({ session }: { session: GameSession }) {
   useEffect(() => {
     if (!room.active) return;
     return clock.subscribe(() => {
-      if (session.screen === "room" || session.screen === "results") return;
-      if (session.screen === "countdown" || session.screen === "loading") return;
+      if (session.screen !== "playing" && session.screen !== "paused") return;
       const now = performance.now();
       if (now - lastPlayhead.current < 100) return;
       lastPlayhead.current = now;

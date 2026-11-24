@@ -15,7 +15,6 @@ const SCREEN_ROOT: Record<Screen, string> = {
   credits: ".screen--credits",
   songs: ".screen--songs",
   jukebox: ".screen--jukebox",
-  room: ".screen--room",
   band: ".screen--band",
   loading: ".screen--loading",
   countdown: ".band__stage",

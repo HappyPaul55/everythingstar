@@ -9,7 +9,6 @@ import { JukeboxLyrics } from "../jukebox/JukeboxLyrics";
 import { JukeboxTransport } from "../jukebox/JukeboxTransport";
 import { Vinyl } from "../jukebox/Vinyl";
 import type { GameSession } from "../useGameSession";
-import { RoomListenPanel } from "../../room/RoomListenPanel";
 import { useRoom } from "../../room/useHostRoom";
 import { ScreenBackButton } from "./ScreenBackButton";
 
@@ -37,6 +36,12 @@ const JukeboxPicker = lazy(() =>
   })),
 );
 
+const InviteDialog = lazy(() =>
+  import("../../room/InviteDialog").then((module) => ({
+    default: module.InviteDialog,
+  })),
+);
+
 interface Props {
   session: GameSession;
 }
@@ -47,6 +52,8 @@ export function Jukebox({ session }: Props) {
   const room = useRoom();
   const clock = useClock();
   const [picker, setPicker] = useState<null | "songs" | "queue">(null);
+  const [invite, setInvite] = useState(false);
+  const listeners = room.members.filter((member) => !member.isHost).length;
   const lost = clock.sourceLost;
 
   const song = jukebox.current;
@@ -104,6 +111,21 @@ export function Jukebox({ session }: Props) {
               className="band-btn jukebox__heading-action"
               aria-haspopup="dialog"
               data-sound="open"
+              onClick={() => {
+                if (!room.active) room.open("listen");
+                else if (room.mode !== "listen") room.setMode("listen");
+                setInvite(true);
+              }}
+            >
+              {room.active && listeners > 0
+                ? t("room.inviteListenersCount", { count: listeners })
+                : t("room.inviteListeners")}
+            </button>
+            <button
+              type="button"
+              className="band-btn jukebox__heading-action"
+              aria-haspopup="dialog"
+              data-sound="open"
               onClick={() => setPicker("songs")}
             >
               {t("screen.jukeboxPick")}
@@ -120,8 +142,6 @@ export function Jukebox({ session }: Props) {
             </button>
           </div>
         </div>
-
-        <RoomListenPanel session={session} />
 
         {reading ? (
           <p className="jukebox__empty">{t("screen.libraryLoading")}</p>
@@ -237,6 +257,12 @@ export function Jukebox({ session }: Props) {
           </div>
         ) : null}
       </div>
+
+      {invite ? (
+        <Suspense fallback={null}>
+          <InviteDialog mode="listen" onClose={() => setInvite(false)} />
+        </Suspense>
+      ) : null}
 
       {picker ? (
         <Suspense fallback={null}>

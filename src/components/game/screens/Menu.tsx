@@ -5,7 +5,6 @@ import { useLocale, useT } from "../../../i18n/react";
 interface Props {
   onQuickPlay: () => void;
   onJukebox: () => void;
-  onPlayTogether: () => void;
   onOptions: () => void;
   onCredits: () => void;
   /** The wordmark is the way back to the welcome, as a wordmark usually is. */
@@ -18,25 +17,23 @@ interface Props {
 }
 
 /**
- * The wordmark and the three big, tilted doors into the game, with three darker
- * side doors under them: the Jukebox, Play together and the Charter.
+ * The wordmark and the three big, tilted doors into the game, with two darker
+ * side doors under them: the Jukebox and the Charter.
  *
  * The masthead is the poster's: a graffiti tag, the wordmark (its "Star" lit like
  * the welcome's), a strip of hazard tape and the strapline. The wordmark itself is
  * the door back to the welcome, and the three doors below are numbered the way the
  * landing page's sticker cards are, each saying in a line where it leads — so the
  * hub reads as three ways in rather than three identical yellow bars. The Jukebox
- * is the listening mode, Play together is the same room with phones, and the
- * Charter is a tool, not another way to play, so they sit under the three doors:
- * all six share the doors' shape, tilt and hover, and only the side doors' resting
- * colours say they are a different kind of place.
+ * is the listening mode and the Charter is a tool, not two more ways to play, so
+ * they sit under the three doors: all five share the doors' shape, tilt and hover,
+ * and only the side doors' resting colours say they are a different kind of place.
  * On a phone or a portrait screen — including the vertical TV the arcade runs on —
  * the wordmark sits above them, sized to be read from across a room.
  */
 export function Menu({
   onQuickPlay,
   onJukebox,
-  onPlayTogether,
   onOptions,
   onCredits,
   onBack,
@@ -147,28 +144,6 @@ export function Menu({
               onJukebox,
               true,
             )}
-            <li className={entryClass(true)} key="play-together">
-              <button
-                type="button"
-                className="band-btn band-btn--big menu__item menu__item--side"
-                data-sound="open"
-                data-nav-id="play-together"
-                onClick={onPlayTogether}
-              >
-                {body(
-                  <svg
-                    className="menu__pen"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <path d="M7 1.5h10A2.5 2.5 0 0 1 19.5 4v16a2.5 2.5 0 0 1-2.5 2.5H7A2.5 2.5 0 0 1 4.5 20V4A2.5 2.5 0 0 1 7 1.5zm0 2A.5.5 0 0 0 6.5 4v16a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V4a.5.5 0 0 0-.5-.5H7zm3 14.25h4a1 1 0 1 1 0 2h-4a1 1 0 1 1 0-2zM12 4a3 3 0 1 1 0 6 3 3 0 0 1 0-6zm0 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2z" />
-                  </svg>,
-                  t("screen.playTogether"),
-                  t("screen.playTogetherHint"),
-                )}
-              </button>
-            </li>
             {arcade ? null : (
               <li className={entryClass(true)} key="charter">
                 <a

@@ -94,11 +94,12 @@ out of `astro check`, and the test config includes them with the runner's types.
   [Deployment and releases](deployment.md#the-release-archives).
 
 The budget was last measured on 2026-11-24, after **Play together** joined the build:
-782 KiB of `_astro` JS, an initial graph of 620 KiB raw / 199 KiB gzipped across 21
-files, 15.3 MiB in `dist/` and 8.8 MiB of audio. The caps sit just above those
-numbers — 800 KiB, 625 KiB, 202 KiB, 20 MiB, 10 MiB. The room's guest entry is a
-separate 7-module graph; its host lobby and relay client are in `/play`'s first
-download because the room is a main screen. The **whole-build cap is
+799 KiB of `_astro` JS, an initial graph of 612 KiB raw / 198 KiB gzipped across 23
+files, 16.5 MiB in `dist/` and 8.8 MiB of audio. The caps sit just above those
+numbers — 820 KiB, 625 KiB, 202 KiB, 20 MiB, 10 MiB. The room's guest entry is a
+separate 8-module graph; the host's connection is in `/play`'s first download because
+the band and the Jukebox both use it, while the invite dialog and its QR encoder are
+lazy. The **whole-build cap is
 the one that keeps moving**, raised when the
 documentation landed and again for its pictures: the [note-types page](../charters/note-types.md)
 in charters, then the screens across the loop, the players and the charter, each

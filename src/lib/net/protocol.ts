@@ -155,7 +155,7 @@ export type RoomClientMessage =
   | { type: "queueState"; queue: RoomQueueState }
   | {
       type: "queue";
-      op: "add" | "next" | "playNow" | "remove" | "clear";
+      op: "add" | "next" | "playNext" | "playNow" | "remove" | "clear";
       songId?: string;
       entryId?: string;
     }
@@ -188,7 +188,7 @@ export type RoomServerMessage =
   | {
       type: "queue";
       from: string;
-      op: "add" | "next" | "playNow" | "remove" | "clear";
+      op: "add" | "next" | "playNext" | "playNow" | "remove" | "clear";
       songId?: string;
       entryId?: string;
       serverMs: number;
@@ -469,6 +469,7 @@ export function parseClientMessage(raw: string): RoomClientMessage | null {
       if (
         message.op !== "add" &&
         message.op !== "next" &&
+        message.op !== "playNext" &&
         message.op !== "playNow" &&
         message.op !== "remove" &&
         message.op !== "clear"

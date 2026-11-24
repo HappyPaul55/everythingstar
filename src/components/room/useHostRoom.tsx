@@ -9,9 +9,10 @@ import {
   type ReactNode,
 } from "react";
 import { chartFor } from "../../lib/game/track";
-import type { BandSlot } from "../../lib/game/band/types";
+import type { BandPlan, BandSlot } from "../../lib/game/band/types";
 import { hashString } from "../../lib/game/hash";
 import { fetchableUrl } from "../../lib/game/url";
+import { roomLibrarySongs } from "../../lib/game/roomLibrary";
 import { MAX_SEATS, type RoomChart, type RoomLibrarySong, type RoomMember, type RoomMode, type RoomPhase, type RoomQueueState, type RoomResults, type RoomRunEntry, type RoomServerMessage, type RoomSlot, type RoomSong, type RoomState } from "../../lib/net/protocol";
 import { newRoomCode } from "../../lib/net/protocol";
 import type { GameSession } from "../game/useGameSession";
@@ -39,6 +40,8 @@ export interface HostRoom {
   setMode: (mode: RoomMode) => void;
   setSlot: (slot: RoomSlot | null) => void;
   setSeat: (seat: number | null) => void;
+  /** Merge a host edit into the room's local band and re-apply the remote seats. */
+  updateLocalPlan: (next: BandPlan) => void;
   kick: (memberId: string) => void;
   addLibrary: (kind: "playlist" | "song", url: string) => void;
   setResults: (results: RoomResults | null) => void;
@@ -86,17 +89,6 @@ function phaseFor(screen: GameSession["screen"]): RoomPhase {
   return "lobby";
 }
 
-function librarySongs(session: GameSession): RoomLibrarySong[] {
-  return session.library.songs.map((song) => ({
-    id: song.id,
-    title: song.title,
-    artist: song.artist.name,
-    durationMs: song.durationMs,
-    art: fetchableUrl(song.art ?? ""),
-    accent: song.accent,
-  }));
-}
-
 function queueSongs(session: GameSession): RoomQueueState {
   const summary = (song: { id: string; title: string; artist: { name: string }; durationMs: number; art: string | null; accent: string | null } | null): RoomLibrarySong | null =>
     song
@@ -115,22 +107,60 @@ function queueSongs(session: GameSession): RoomQueueState {
   };
 }
 
-/** The band the host will play: a slot per member, and remote seats marked. */
-function planFor(members: readonly RoomMember[], hostId: string | null) {
-  const slots: BandSlot[] = Array.from({ length: MAX_SEATS }, () => ({
-    kind: "guitar" as const,
-    difficulty: "normal" as const,
-    active: false,
-  }));
+const EMPTY_SLOT: BandSlot = {
+  kind: "guitar",
+  difficulty: "normal",
+  active: false,
+};
+
+function emptySlots(): BandSlot[] {
+  return Array.from({ length: MAX_SEATS }, () => ({ ...EMPTY_SLOT }));
+}
+
+/**
+ * The host's local band with the room's phones laid over it.
+ *
+ * The host's own boxes stay exactly as they are on the band screen: a phone claims
+ * a seat and sits in it, and when it leaves the local player it covered comes back.
+ * The host is not overlaid — the host's own seat is theirs to edit.
+ */
+function mergeRemote(base: BandPlan, members: readonly RoomMember[]): BandPlan {
+  const slots = emptySlots();
+  for (let index = 0; index < MAX_SEATS; index += 1) {
+    const local = base.slots[index];
+    if (local) slots[index] = { ...local, active: local.active !== false };
+  }
   for (const member of members) {
+    if (member.isHost) continue;
     if (member.seat === null || member.seat < 0 || member.seat >= MAX_SEATS || !member.slot) continue;
     slots[member.seat] = {
       ...member.slot,
       id: member.id,
       name: member.name,
-      remote: member.id !== hostId,
+      remote: true,
       active: true,
     };
+  }
+  return { slots };
+}
+
+/**
+ * A plan the Band screen just edited, with the remote seats put back to the
+ * host's local plan. A host cannot edit a phone's box from the TV; the phone does.
+ */
+function localOnly(
+  next: BandPlan,
+  previous: BandPlan | null,
+  members: readonly RoomMember[],
+): BandPlan {
+  const slots = emptySlots();
+  for (let index = 0; index < MAX_SEATS; index += 1) {
+    const remote = members.some(
+      (member) => !member.isHost && member.seat === index,
+    );
+    const chosen = next.slots[index];
+    const old = previous?.slots[index];
+    slots[index] = remote ? { ...(old ?? EMPTY_SLOT) } : { ...(chosen ?? EMPTY_SLOT) };
   }
   return { slots };
 }
@@ -155,6 +185,7 @@ export function RoomProvider({ session, children }: { session: GameSession; chil
   const sessionRef = useRef(session);
   sessionRef.current = session;
   const planJson = useRef("");
+  const localPlan = useRef<BandPlan | null>(null);
   const libraryJson = useRef("");
   const queueJson = useRef("");
   const stateJson = useRef("");
@@ -263,6 +294,7 @@ export function RoomProvider({ session, children }: { session: GameSession; chil
           else if (message.op === "remove") current.jukebox.removeFromQueue(message.songId ?? message.entryId ?? "");
           else if (message.op === "clear") current.jukebox.clearQueue();
           else if (message.op === "next") current.jukebox.next();
+          else if (message.op === "playNext" && message.songId) current.jukebox.playNext(message.songId);
           else if (message.op === "playNow" && message.songId) current.jukebox.playNow(message.songId);
           break;
         }
@@ -312,6 +344,8 @@ export function RoomProvider({ session, children }: { session: GameSession; chil
     token.current = newToken();
     setCode(newRoomCode());
     setModeState(nextMode);
+    // The band before the room is the host's local band. Phones are laid over it.
+    localPlan.current = nextMode === "play" ? sessionRef.current.plan : null;
     setError(null);
     setActive(true);
   }, [active]);
@@ -329,9 +363,11 @@ export function RoomProvider({ session, children }: { session: GameSession; chil
     setPitch(new Map());
     setResultsState(null);
     setError(null);
-    sessionRef.current.restorePlan();
+    // Only a play room replaced the band; a listening room never touched it.
+    if (localPlan.current) sessionRef.current.restorePlan();
     chartsSent.current.clear();
     planJson.current = "";
+    localPlan.current = null;
   }, [socket]);
 
   const setMode = useCallback((next: RoomMode) => {
@@ -375,18 +411,37 @@ export function RoomProvider({ session, children }: { session: GameSession; chil
     [socket],
   );
 
-  // The host's band is the room's band. A remote seat is marked so the host's
-  // stage judges only its own players; the results still read the whole band.
-  useEffect(() => {
-    // The band is locked when the song starts. A guest dropping out mid-run must
-    // not reload the host's charts and reset its run; the lobby is where seats move.
-    if (!active || mode !== "play" || session.screen !== "room") return;
-    const plan = planFor(members, you?.id ?? "host");
-    const json = JSON.stringify(plan);
+  const applyPlan = useCallback((base: BandPlan, current: readonly RoomMember[]) => {
+    const merged = mergeRemote(base, current);
+    const json = JSON.stringify(merged);
     if (planJson.current === json) return;
     planJson.current = json;
-    sessionRef.current.setPlan(plan);
-  }, [active, mode, members, you?.id, session.screen]);
+    sessionRef.current.setPlan(merged);
+  }, []);
+
+  /**
+   * The Band screen edited its boxes. Keep the host's local plan — including any
+   * local player a phone has temporarily covered — and lay the phones back over it.
+   * A phone's box is not the host's to edit; the phone changes it.
+   */
+  const updateLocalPlan = useCallback(
+    (next: BandPlan) => {
+      if (!active || mode !== "play") return;
+      const base = localOnly(next, localPlan.current, members);
+      localPlan.current = base;
+      applyPlan(base, members);
+    },
+    [active, mode, members, applyPlan],
+  );
+
+  // The host's band is the room's band. It is redrawn when a phone takes or
+  // changes a seat, but only on the band screen: a guest dropping out mid-run
+  // must not reload the host's charts and reset its run.
+  useEffect(() => {
+    if (!active || mode !== "play" || session.screen !== "band") return;
+    if (!localPlan.current) localPlan.current = sessionRef.current.plan;
+    applyPlan(localPlan.current, members);
+  }, [active, mode, members, session.screen, applyPlan, welcomed]);
 
   // The host's snapshot. It is sent on every meaningful change; the relay keeps
   // the latest so a guest who reloads sees the room it is joining.
@@ -409,7 +464,7 @@ export function RoomProvider({ session, children }: { session: GameSession; chil
   // a library of thousands is a message of its own rather than part of state.
   useEffect(() => {
     if (!active || mode !== "listen") return;
-    const songs = librarySongs(sessionRef.current);
+    const songs = roomLibrarySongs(sessionRef.current.library.songs);
     const json = JSON.stringify(songs);
     if (libraryJson.current === json) return;
     if (socket.send({ type: "library", songs })) libraryJson.current = json;
@@ -433,22 +488,12 @@ export function RoomProvider({ session, children }: { session: GameSession; chil
     }
   }, [active, mode, members, session.track, session.load.status, sendChart, socket, welcomed]);
 
-  // Escape out of the lobby is "back", not a hidden room left running. The
-  // screens that are *part of* the room keep it; a menu or a solo page closes it.
+  // A room belongs to the Quick Play or Jukebox flow it was invited from. Leaving
+  // either flow for the menu or the welcome ends it; moving between Songs, the
+  // band, the Jukebox and a run keeps it.
   useEffect(() => {
     if (!active) return;
-    if (
-      session.screen === "room" ||
-      session.screen === "jukebox" ||
-      session.screen === "loading" ||
-      session.screen === "countdown" ||
-      session.screen === "playing" ||
-      session.screen === "paused" ||
-      session.screen === "results"
-    ) {
-      return;
-    }
-    close();
+    if (session.screen === "menu" || session.screen === "welcome") close();
   }, [active, session.screen, close]);
 
   const joinUrl = useMemo(() => {
@@ -480,6 +525,7 @@ export function RoomProvider({ session, children }: { session: GameSession; chil
     setMode,
     setSlot,
     setSeat,
+    updateLocalPlan,
     kick,
     addLibrary,
     setResults,

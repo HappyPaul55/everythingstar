@@ -94,8 +94,6 @@ function screenLabel(screen: Screen, song: Song | null, t: ReturnType<typeof use
       return t("screen.songsTitle");
     case "jukebox":
       return song ? `${t("screen.jukeboxTitle")} — ${song.title}` : t("screen.jukeboxTitle");
-    case "room":
-      return t("screen.roomTitle");
     case "band":
       return song ? `${t("screen.bandTitle")} — ${song.title}` : t("screen.bandTitle");
     case "loading":

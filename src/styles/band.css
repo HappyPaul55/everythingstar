@@ -6500,7 +6500,6 @@
    The host's page, the phone's join view and the host/TV roster.
    ================================================================== */
 
-.screen--room,
 .screen--join,
 .screen--join-stage {
   overflow: auto;
@@ -7250,5 +7249,179 @@
   .join-settings__row small {
     grid-column: 1 / -1;
     text-align: left;
+  }
+}
+
+/* ==================================================================
+   Room invitation modal and the band's remote seats
+   ================================================================== */
+
+.band-invite-row {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  flex-wrap: wrap;
+  margin: .2rem 0 .8rem;
+}
+
+.band-invite-hint {
+  color: var(--color-muted);
+  font-size: .78rem;
+}
+
+.slot--remote {
+  border-color: color-mix(in srgb, var(--color-accent) 40%, var(--color-line-ink));
+}
+
+.slot__remote-badge {
+  margin-left: auto;
+  padding: .12rem .4rem;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 50%, transparent);
+  border-radius: var(--radius-pill);
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: .6rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.slot__remote-level,
+.slot__remote-ready,
+.slot__remote-waiting {
+  margin: 0;
+  font-size: .76rem;
+  color: var(--color-muted);
+}
+
+.slot__remote-level {
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.slot__remote-ready.is-ready {
+  color: var(--ok, #6cd48a);
+}
+
+.slot__remote-waiting {
+  padding: .8rem 0;
+  font-style: italic;
+}
+
+.invite {
+  display: grid;
+  gap: .9rem;
+}
+
+.invite__comment {
+  margin: 0;
+}
+
+.invite__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.invite__details {
+  display: grid;
+  gap: .15rem;
+  min-width: 13rem;
+  flex: 1 1 16rem;
+}
+
+.invite__code {
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+}
+
+.invite__actions,
+.invite__foot {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+  margin-top: .35rem;
+}
+
+.invite__foot {
+  justify-content: flex-end;
+  padding-top: .6rem;
+  border-top: 1px solid var(--color-line-ink);
+}
+
+.invite__qr {
+  flex: 0 0 auto;
+  width: 10rem;
+  padding: .4rem;
+  border-radius: var(--radius-brand);
+  background: #fff;
+}
+
+.invite__qr svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.invite__people h3 {
+  margin: 0 0 .4rem;
+  font-size: .9rem;
+}
+
+.invite__people ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: .3rem;
+}
+
+.invite__people li {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex-wrap: wrap;
+  padding: .35rem .45rem;
+  border-bottom: 1px solid var(--color-line-ink);
+  font-size: .82rem;
+}
+
+.invite__ready {
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: .64rem;
+  margin-left: auto;
+}
+
+.invite__ready.is-ready {
+  color: var(--ok, #6cd48a);
+}
+
+.invite__kick {
+  font-size: .66rem;
+  padding: .15rem .4rem;
+}
+
+.invite__end {
+  border-color: color-mix(in srgb, var(--warn, #e0a04a) 55%, transparent);
+  color: var(--warn, #e0a04a);
+}
+
+.join-listen__row-actions {
+  display: flex;
+  gap: .3rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.join-listen__row-action {
+  font-size: .64rem;
+  padding: .2rem .45rem;
+}
+
+@media (max-width: 40rem) {
+  .invite__qr {
+    width: 8.5rem;
   }
 }

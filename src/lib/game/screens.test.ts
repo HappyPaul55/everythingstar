@@ -33,8 +33,6 @@ describe("screenAfter", () => {
     expect(screenAfter("credits", "back")).toBe("menu");
     expect(screenAfter("menu", "jukebox")).toBe("jukebox");
     expect(screenAfter("jukebox", "back")).toBe("menu");
-    expect(screenAfter("menu", "room")).toBe("room");
-    expect(screenAfter("room", "back")).toBe("menu");
     // The empty Jukebox sends a player to Songs to find a playlist.
     expect(screenAfter("jukebox", "songs")).toBe("songs");
     // And back out of the menu is the title it came from.
@@ -170,7 +168,6 @@ describe("opensRun", () => {
 describe("wantsCharts", () => {
   test("browsing is not playing", () => {
     expect(SCREENS.filter(wantsCharts)).toEqual([
-      "room",
       "band",
       "loading",
       "countdown",

@@ -18,13 +18,14 @@ running song is a menu with a song in the way. The loop is:
 
 ```
 welcome → menu → songs → band → (loading) → entrance → playing → results → songs
-            ↕ options / credits / Jukebox / room       ↕ paused
+            ↕ options / credits / Jukebox            ↕ paused
 ```
 
-**Play together** is the `room` branch: a host's lobby that keeps its connection while
-the stage or the Jukebox is up. A guest is the separate `/join` entry — a lean player
-view that receives one chart and the host's playhead, with no library and no song audio.
-The relay is [Networking](networking.md).
+**Play together** is not a screen: it is an **Invite players** modal over the band, and
+**Invite listeners** over the Jukebox. The room keeps its connection while the band, the
+Jukebox, a run or the results are up. A guest is the separate `/join` entry — a lean
+player view that receives one chart and the host's playhead, with no library and no song
+audio. The relay is [Networking](networking.md).
 
 Opening the band starts the song's charts **and its stems**. **Play is the loader**:
 it waits until every file the run will play says it can play through, then goes
@@ -313,10 +314,10 @@ opens Downloads, follows a link, opens the Jukebox's picker or uses `?dev=1` doe
 pay for any of it.
 
 That matters because `/play` is the page the game starts on: the initial JavaScript
-graph is **622 KiB raw / 199 KiB gzipped across 21 files**, and every static import
+graph is **612 KiB raw / 198 KiB gzipped across 23 files**, and every static import
 in it is announced with a `modulepreload` at build time (`scripts/preload-initial.ts`),
 so the browser does not discover the graph three round trips deep. That is the first download
-only; every `_astro` JavaScript chunk in the build totals **782 KiB**, because the lazy
+only; every `_astro` JavaScript chunk in the build totals **799 KiB**, because the lazy
 chunks still ship — they are just not requested first. `scripts/check-budget.ts` walks
 `play.html`'s initial island graph, gates the initial raw and gzipped sizes directly,
 and fails if a translator marker leaks into it, so the split cannot quietly regress.
@@ -329,7 +330,7 @@ saved.
   ships no JavaScript: the window is a same-origin iframe and the link over it is the
   page's one script-free control.
 - `/play` — the **public game page**: the same game island, the welcome, the menu and its
-  branches, Songs, the Jukebox, the room lobby and the band screen, a run and its
+  branches, Songs, the Jukebox, the band screen and its invite modal, a run and its
   results, all over one persistent stage. It sits in the site shell, so the marketing header and footer frame
   the stage, and fullscreen puts them aside. Unlike the game-only entries below it is
   **indexable**, with the site's canonical/Open Graph metadata, and it is in the

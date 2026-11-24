@@ -5,17 +5,8 @@ import { nextSlot } from "../../lib/game/band/types";
 import type { Song } from "../../lib/game/song";
 import { songDifficulties, songHasPitch } from "../../lib/game/song";
 import type { RoomSlot } from "../../lib/net/protocol";
-import { DIFFICULTIES, INSTRUMENTS, nearestDifficulty } from "../../lib/game/track";
-
-/** The part a room slot is playing, in words a phone can read. */
-export function slotLabel(slot: RoomSlot): MessageKey {
-  if (slot.kind === "words") {
-    return slot.wordsMode === "type" ? "band.type" : "band.sing";
-  }
-  if (slot.kind === "guitar" && slot.role === "lead") return "band.leadGuitar";
-  if (slot.kind === "guitar" && slot.role === "rhythm") return "band.rhythmGuitar";
-  return INSTRUMENTS[slot.kind].labelKey;
-}
+import { DIFFICULTIES, nearestDifficulty } from "../../lib/game/track";
+import { slotLabel } from "../../lib/game/roomSlot";
 
 function fromBandSlot(slot: BandSlot): RoomSlot {
   return {
